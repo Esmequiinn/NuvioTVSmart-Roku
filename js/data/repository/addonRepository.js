@@ -34,6 +34,8 @@ class AddonRepository {
     this.manifestErrorCache = new Map();
     this.manifestRequests = new Map();
     this.manifestRefreshRequests = new Map();
+    this.lastManifestRefreshAttemptAt = 0;
+    this.backgroundManifestRefreshRequest = null;
     this.manifestCachePersistTimer = null;
     this.installedAddonsCache = null;
     this.installedAddonsCacheKey = "";
@@ -139,10 +141,13 @@ class AddonRepository {
     return didDelete;
   }
 
-  isManifestCacheStale(baseUrl) {
-    const cleanBaseUrl = this.canonicalizeUrl(baseUrl);
-    const cachedAtMs = Number(this.manifestCacheTimestamps.get(cleanBaseUrl) || 0);
-    return !cachedAtMs || Date.now() - cachedAtMs >= MANIFEST_CACHE_TTL_MS;
+  isManifestCacheStale() {
+    // Android revalidates disk snapshots in each new process and spaces refresh
+    // attempts within that session, including attempts that fail while offline.
+    return (
+      !this.lastManifestRefreshAttemptAt ||
+      Date.now() - this.lastManifestRefreshAttemptAt > MANIFEST_CACHE_TTL_MS
+    );
   }
 
   canonicalizeUrl(url) {
@@ -663,18 +668,28 @@ class AddonRepository {
     const timeoutMs = options?.timeoutMs;
 
     if (staleWhileRevalidate && !force) {
-      const refreshUrls = urls.filter(
-        (url) =>
-          !this.manifestCache.has(this.canonicalizeUrl(url)) || this.isManifestCacheStale(url)
-      );
+      const missingUrls = urls.filter((url) => !this.manifestCache.has(this.canonicalizeUrl(url)));
+      const refreshCached = !this.backgroundManifestRefreshRequest && this.isManifestCacheStale();
+      const refreshUrls = refreshCached ? urls : missingUrls;
       if (refreshUrls.length) {
-        void this.refreshInstalledAddons({
+        // Record the attempt before starting IO so repeated Home loads cannot
+        // launch another sweep. Cache misses remain eligible independently.
+        if (refreshCached) this.lastManifestRefreshAttemptAt = Date.now();
+        const request = this.refreshInstalledAddons({
           urls: refreshUrls,
           includeDisabled,
           timeoutMs
-        }).catch((error) => {
-          console.warn("Background addon manifest refresh failed", error);
         });
+        if (refreshCached) this.backgroundManifestRefreshRequest = request;
+        void request
+          .catch((error) => {
+            console.warn("Background addon manifest refresh failed", error);
+          })
+          .finally(() => {
+            if (this.backgroundManifestRefreshRequest === request) {
+              this.backgroundManifestRefreshRequest = null;
+            }
+          });
       }
       return this.getCachedInstalledAddons(urls, { includeDisabled });
     }
