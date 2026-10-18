@@ -7,6 +7,9 @@ export function createDiscoverScreenMethods02() {
   return {
     async reloadItems({ suppressLoadingRender = false, preserveExistingItems = false, partialRender = false } = {}) {
       const selectedCatalog = this.getSelectedCatalog();
+      // Like Android cancelling discoverJob on reset: a filter change must
+      // discard responses still in flight for the previous selection.
+      this.discoverRequestToken = (this.discoverRequestToken || 0) + 1;
       this.captureViewState();
       this.nextSkip = 0;
       this.hasMore = true;
@@ -54,6 +57,7 @@ export function createDiscoverScreenMethods02() {
       }
 
       const token = this.loadToken;
+      const requestToken = this.discoverRequestToken;
       const selectedCatalog = this.getSelectedCatalog();
       if (!selectedCatalog) {
         this.hasMore = false;
@@ -92,7 +96,7 @@ export function createDiscoverScreenMethods02() {
         supportsSkip: selectedCatalog.supportsSkip !== false
       });
 
-      if (token !== this.loadToken) return;
+      if (token !== this.loadToken || requestToken !== this.discoverRequestToken) return;
       if (result.status !== "success") {
         this.loading = false;
         this.hasMore = false;
