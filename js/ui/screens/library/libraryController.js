@@ -8,6 +8,7 @@ import {
   libraryTypeLabel
 } from "../../../data/repository/libraryRepository.js";
 import { AuthManager } from "../../../core/auth/authManager.js";
+import { ProfileManager } from "../../../core/profile/profileManager.js";
 import { watchedItemsRepository } from "../../../data/repository/watchedItemsRepository.js";
 import { watchedTitleStateRepository } from "../../../data/repository/watchedTitleStateRepository.js";
 import { I18n } from "../../../i18n/index.js";
@@ -67,6 +68,28 @@ export const LIBRARY_PRIVACY_OPTIONS = [
 
 let persistedPosterFocusKey = null;
 let persistedLibraryViewMode = LIBRARY_VIEW_MODE.SAVED;
+// Android keeps LibraryViewModel alive on the back stack (Detail push, drawer
+// saveState/restoreState), so filter and sort picks survive leaving the screen.
+let persistedFilterSelections = null;
+
+function activeProfileKey() {
+  return String(ProfileManager.getActiveProfileId?.() ?? "");
+}
+
+function restoredFilterSelections() {
+  const saved = persistedFilterSelections;
+  if (!saved || saved.profileKey !== activeProfileKey()) {
+    return {};
+  }
+  return {
+    sourceMode: saved.sourceMode,
+    selectedTypeKey: saved.selectedTypeKey,
+    selectedGenre: saved.selectedGenre,
+    selectedYear: saved.selectedYear,
+    selectedWatchedFilter: saved.selectedWatchedFilter,
+    selectedSortKey: saved.selectedSortKey
+  };
+}
 
 function makeInitialState() {
   return {
@@ -109,6 +132,7 @@ function makeInitialState() {
       providers: [],
       items: []
     },
+    ...restoredFilterSelections(),
     visibleCloudItems: [],
     availableCloudProviders: [],
     availableCloudTypes: [],
@@ -489,6 +513,17 @@ export class LibraryController {
   }
 
   dispose() {
+    if (!this.disposed) {
+      persistedFilterSelections = {
+        profileKey: activeProfileKey(),
+        sourceMode: this.state.sourceMode,
+        selectedTypeKey: this.state.selectedTypeKey,
+        selectedGenre: this.state.selectedGenre,
+        selectedYear: this.state.selectedYear,
+        selectedWatchedFilter: this.state.selectedWatchedFilter,
+        selectedSortKey: this.state.selectedSortKey
+      };
+    }
     this.disposed = true;
     this.reloadToken += 1;
     this.unsubscribeDebridSettings?.();
@@ -528,24 +563,28 @@ export class LibraryController {
       ...patch
     };
     const facets = buildFacets(this.state.allItems, this.state);
+    // While items are still loading the facets are not final; reload() validates
+    // the (possibly restored) selections once the repository data is in.
+    const keepSelections = this.state.isLoading === true;
     const selectedGenre =
       this.state.selectedGenre &&
-      facets.availableGenres.some((item) => item.key === this.state.selectedGenre)
+      (keepSelections ||
+        facets.availableGenres.some((item) => item.key === this.state.selectedGenre))
         ? this.state.selectedGenre
         : null;
     const selectedYear =
       this.state.selectedYear &&
-      facets.availableYears.some((item) => item.key === this.state.selectedYear)
+      (keepSelections || facets.availableYears.some((item) => item.key === this.state.selectedYear))
         ? this.state.selectedYear
         : null;
     this.state = {
       ...this.state,
       ...facets,
-      selectedTypeKey: facets.availableTypeTabs.some(
-        (item) => item.key === this.state.selectedTypeKey
-      )
-        ? this.state.selectedTypeKey
-        : ALL_KEY,
+      selectedTypeKey:
+        keepSelections ||
+        facets.availableTypeTabs.some((item) => item.key === this.state.selectedTypeKey)
+          ? this.state.selectedTypeKey
+          : ALL_KEY,
       selectedGenre,
       selectedYear
     };
