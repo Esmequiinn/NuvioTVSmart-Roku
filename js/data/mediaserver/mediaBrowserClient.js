@@ -38,7 +38,7 @@ export function mediaServerUrl(connection, path, query = {}) {
 }
 export function mediaServerHeaders(connection) {
   const safe = (value) => String(value || "").replace(/["\r\n\\]/g, "");
-  const auth = `MediaBrowser Client="Nuvio", Device="Smart TV", DeviceId="${safe(mediaServerDeviceId())}", Version="1.2.7"${connection.token ? `, Token="${safe(connection.token)}"` : ""}`;
+  const auth = `MediaBrowser Client="Nuvio", Device="Smart TV", DeviceId="${safe(mediaServerDeviceId())}", Version="1.2.8"${connection.token ? `, Token="${safe(connection.token)}"` : ""}`;
   return { [connection.providerId === "emby" ? "X-Emby-Authorization" : "Authorization"]: auth };
 }
 export async function mediaServerRequest(

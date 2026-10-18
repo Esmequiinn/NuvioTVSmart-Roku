@@ -1,3 +1,12 @@
+## 1.2.8
+
+### Improvements & Fixes
+
+- Revalidated cached addon manifests at each app session so addon updates are picked up without reinstalling (@WhiteGiso)
+- Kept Library filter and sort selections when returning to the screen, per profile, aligned with Android TV (@WhiteGiso)
+- Discarded stale Discover results when changing filters quickly, aligned with Android TV (@WhiteGiso)
+- Fixed audio transcoding stalls on webOS when the player requests frames beyond the buffer limit (@WhiteGiso)
+
 ## 1.2.7
 
 ### Improvements & Fixes
