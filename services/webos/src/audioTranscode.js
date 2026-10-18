@@ -96,6 +96,7 @@ function createGeneration(unit) {
     frames: [],
     partial: Buffer.alloc(0),
     frameIndex: 0,
+    wanted: 0,
     anchor: null,
     cancelled: false,
     inputBytes: 0,
@@ -161,11 +162,15 @@ async function buildConverted(s, index) {
     if (s.error) throw Error(s.error);
     if (s.anchor !== null) {
       const wanted = Math.max(0, Math.ceil((ctx.last - s.anchor - 0.5) / 32) - s.frameIndex);
+      // /output must keep accepting frames until this unit's demand is met.
+      if (wanted * 2560 > 8 * 1024 * 1024) throw Error("frame-budget");
+      s.wanted = wanted;
       if (s.frames.length >= wanted) {
         const converted = mkv.project(ctx, s.frames.slice(0, wanted), s.anchor, s.frameIndex);
         if (converted.used !== wanted) throw Error("slot-capacity");
         s.frames.splice(0, converted.used);
         s.frameIndex += converted.used;
+        s.wanted = 0;
         s.cache.set(index, converted.out);
         while (s.cache.size > 2) s.cache.delete(s.cache.keys().next().value);
         s.contexts.delete(index);
@@ -246,7 +251,7 @@ async function handleRequest(req, res) {
         req.on("end", r);
         req.on("error", j);
       });
-      while (!s.cancelled && s.frames.length > 96) await wait();
+      while (!s.cancelled && s.frames.length > Math.max(96, s.wanted)) await wait();
       if (s.cancelled) throw Error("cancelled");
       const b = Buffer.concat([s.partial, ...parts]);
       let p = 0;
