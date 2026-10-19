@@ -1,6 +1,7 @@
 import "./ui/components/serverWatchedNotice.js";
 import { MediaServerSyncService } from "./core/profile/mediaServerSyncService.js";
 import { installCustomPosterFallback } from "./core/poster/customPoster.js";
+import { installWebOsImgurImageFallback } from "./core/media/imageProxy.js";
 import { AmbientMode } from "./ui/ambient/ambientMode.js";
 /* global __NUVIO_APP_VERSION__ */
 
@@ -578,6 +579,7 @@ async function bootstrapApp() {
   PlayerController.init();
 
   installCustomPosterFallback();
+  installWebOsImgurImageFallback();
   MediaServerSyncService.start();
   AmbientMode.start();
   FocusEngine.init();

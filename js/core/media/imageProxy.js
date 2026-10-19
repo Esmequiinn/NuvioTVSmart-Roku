@@ -164,3 +164,37 @@ export function proxifyImageUrl(value = "", options = {}) {
 export function normalizeImageUrl(value = "", options = {}) {
   return proxifyImageUrl(value, options);
 }
+
+let imgurImageFallbackInstalled = false;
+
+// Imgur rejects image requests sent by the webOS browser (HTTP 429), so any
+// direct Imgur <img> that fails is retried once through the local proxy.
+export function installWebOsImgurImageFallback() {
+  if (imgurImageFallbackInstalled || !Environment.isWebOS()) {
+    return;
+  }
+  imgurImageFallbackInstalled = true;
+  document.addEventListener(
+    "error",
+    (event) => {
+      const image = event.target;
+      if (!image || image.tagName !== "IMG") {
+        return;
+      }
+      const source = String(image.getAttribute("src") || "").trim();
+      if (!isProxyableImgurImageUrl(source) || image.dataset.imgurProxyRetried === source) {
+        return;
+      }
+      image.dataset.imgurProxyRetried = source;
+      event.stopImmediatePropagation();
+      ensureWebOsImageProxyReady().then((ready) => {
+        if (image.getAttribute("src") !== source) {
+          return;
+        }
+        // Without the proxy, reload the original so the next failure reaches the element's own handlers.
+        image.src = (ready && proxifyImageUrl(source)) || source;
+      });
+    },
+    true
+  );
+}
