@@ -179,8 +179,19 @@ function updateChildren(parent, source, protectedNode) {
   }
 }
 
+let inertDocument = null;
+
+// The comparison tree is parsed in a document without a browsing context, so its
+// <img> nodes never start fetching or decoding; inserted clones load once adopted.
+function createSourceRoot(ownerDocument) {
+  if (!inertDocument) {
+    inertDocument = ownerDocument.implementation?.createHTMLDocument?.("") || ownerDocument;
+  }
+  return inertDocument.createElement("div");
+}
+
 export function updateHomeDom(container, markup, { incremental = false, focusedNode = null } = {}) {
-  const source = container.ownerDocument.createElement("div");
+  const source = createSourceRoot(container.ownerDocument);
   source.innerHTML = markup;
   const canUpdate = incremental && hasMountedHomeDom(container);
   if (canUpdate) {
