@@ -123,7 +123,7 @@ export function createTmdbMetadataServiceMethods01() {
         description: data.overview || null,
         backdrop: toImageUrl(data.backdrop_path, "backdrop"),
         poster: toImageUrl(data.poster_path, "poster"),
-        logo: toImageUrl(logoPath, "logo"),
+        logo: toImageUrl(logoPath, "titleLogo"),
         genres: Array.isArray(data.genres) ? data.genres.map((genre) => genre.name).filter(Boolean) : [],
         rating: typeof data.vote_average === "number" ? data.vote_average : null,
         releaseInfo: releaseInfoValue || null,
