@@ -6,6 +6,7 @@ import { build } from "esbuild";
 import { readAppMetadata, syncVersionFiles } from "./appMetadata.mjs";
 import { compatibilityPolicy } from "./compatibilityPolicy.mjs";
 import { runWebOsToolsBinary } from "./aresCli.mjs";
+import { pruneCssFileForPlatform } from "./pruneCssForPlatform.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
@@ -181,6 +182,7 @@ ${webOsScriptTag}  <script>
 async function stageApp() {
   const { version } = await readAppMetadata();
   await cp(distDir, appStageDir, { recursive: true });
+  await pruneCssFileForPlatform(path.join(appStageDir, "css", "bundle.css"), "webos");
 
   const appInfoPath = path.join(appStageDir, "appinfo.json");
   const appInfo = JSON.parse(await readFile(appInfoPath, "utf8"));
