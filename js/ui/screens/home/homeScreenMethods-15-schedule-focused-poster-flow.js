@@ -8,7 +8,6 @@ export function createHomeScreenMethods15() {
     getModernSidebarSelectedNode,
     setModernSidebarExpanded,
     setModernSidebarPillIconOnly,
-    parseCssPx,
     MODERN_SIDEBAR_PILL_AUTO_COLLAPSE_MS
   } = internals;
 
@@ -271,12 +270,13 @@ export function createHomeScreenMethods15() {
       if (!(targetShell instanceof HTMLElement)) {
         return { horizontal: 0, vertical: 0 };
       }
-      const shellStyles = getComputedStyle(targetShell);
       const expandedFrame = expanded.querySelector(".home-poster-frame");
       const isLandscape = expanded.classList.contains("is-landscape");
-      const collapsedHeight = isLandscape
-        ? parseCssPx(shellStyles.getPropertyValue("--home-landscape-poster-height"), expandedFrame?.offsetHeight || 0)
-        : parseCssPx(shellStyles.getPropertyValue("--home-modern-portrait-poster-height"), expandedFrame?.offsetHeight || 0);
+      // render() pins these metrics as inline shell variables, so the cache matches computed style.
+      const metrics = isLandscape
+        ? this.getCachedModernLandscapePosterMetrics(targetShell)
+        : this.getCachedModernPortraitPosterMetrics(targetShell);
+      const collapsedHeight = Number.isFinite(metrics?.height) ? metrics.height : Number(expandedFrame?.offsetHeight || 0);
 
       const vertical = direction === "down" && isLandscape ? Math.max(0, Number(expandedFrame?.offsetHeight || 0) - collapsedHeight) : 0;
 
