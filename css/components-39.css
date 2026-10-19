@@ -87,7 +87,6 @@
   padding: 10px 10px 12px;
   background: rgba(11, 15, 22, 0.68);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(6px);
   box-sizing: border-box;
 }
 
