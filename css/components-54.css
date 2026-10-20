@@ -484,3 +484,19 @@
   color: rgba(255, 255, 255, 0.45);
   font-weight: 500;
 }
+
+/* Android MoreLikeThis source label: bodySmall, tertiary, end-aligned 10dp
+   from the edge with 2dp vertical padding. */
+.detail-more-like-source {
+  margin: 0;
+  padding: 4px 20px 4px 0;
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: 0.8px;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 1;
+}

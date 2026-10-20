@@ -120,7 +120,8 @@
 
 .detail-meta-row .detail-meta-genres {
   min-width: 0;
-  flex: 1 1 auto;
+  /* Android weight(1f, fill = false): only its own width, so the year follows it. */
+  flex: 0 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

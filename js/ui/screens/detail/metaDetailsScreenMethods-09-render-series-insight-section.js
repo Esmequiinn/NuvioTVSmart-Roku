@@ -54,8 +54,11 @@ export function createMetaDetailsScreenMethods09() {
     },
     renderMoreLikeThisAttribution() {
       if (!this.moreLikeThisSource) return "";
-      const provider = this.moreLikeThisSource === "trakt" ? "Trakt" : "TMDB";
-      return `<p class="detail-more-like-source">Related titles provided by ${provider}.</p>`;
+      const label =
+        this.moreLikeThisSource === "trakt"
+          ? t("detail_more_like_this_powered_by_trakt", {}, "Powered by Trakt")
+          : t("detail_more_like_this_powered_by_tmdb", {}, "Powered by TMDB");
+      return `<p class="detail-more-like-source">${escapeHtml(label)}</p>`;
     },
     renderPeopleTabs(kind, activeTab, items = []) {
       const normalized = items.filter(([, label]) => Boolean(label));
