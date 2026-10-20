@@ -73,7 +73,6 @@ async function reload(controller, state, url) {
     position,
     duration: Number(controller.getDurationSeconds?.() || video.duration || 0)
   };
-  const muted = state.originalMuted;
   state.presentationBaseline = position;
   setBuffering(controller, state, true);
   video.muted = true;
@@ -87,7 +86,7 @@ async function reload(controller, state, url) {
     };
     const failed = () => {
       cleanup();
-      if (active(controller, state)) video.muted = muted;
+      if (active(controller, state)) video.muted = state.originalMuted;
       reject(new Error("Audio conversion playback failed"));
     };
     const loaded = () => {
@@ -101,7 +100,7 @@ async function reload(controller, state, url) {
         if (controller.startupAudioGateActive) video.play()?.catch(() => {});
         else controller.resume();
       } else video.pause();
-      video.muted = muted;
+      video.muted = state.originalMuted;
       controller.emitVideoEvent("webosaudioconversionchanged", {});
       resolve();
     };

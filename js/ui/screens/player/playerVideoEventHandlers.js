@@ -54,9 +54,12 @@ export function createPlayerVideoEventHandlers(video, isTizenAvPlayPlayback) {
     }
 
     if (status === "failed") {
-      if (samePendingSelection && existingPending.automaticFallback) {
-        this.failedAutomaticAudioFallbackEntryId = existingPending.entryId || "";
+      if (samePendingSelection) {
+        if (existingPending.automaticFallback) {
+          this.failedAutomaticAudioFallbackEntryId = existingPending.entryId || "";
+        }
         if (this.startupAudioGateActive) {
+          // A failed preferred selection also settles startup on the native default.
           this.clearStartupAudioPreferenceRetry();
           this.startupAudioPreferenceApplied = true;
         }
