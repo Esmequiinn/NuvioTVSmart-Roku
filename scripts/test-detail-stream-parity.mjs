@@ -258,6 +258,17 @@ for (const placement of ["TOP", "BOTTOM"]) {
   );
 }
 
+const filenameMarkup = renderCard.call(
+  { isCardActionFocused: () => false },
+  { ...stream, description: "📁 The.Substance_2024-2160p.mkv <unsafe>" },
+  0,
+  false,
+  {}
+);
+assert.ok(filenameMarkup.includes("The.<wbr>Substance_<wbr>2024-<wbr>2160p.<wbr>mkv"));
+assert.ok(filenameMarkup.includes("&lt;unsafe>"), "wrap opportunities must preserve escaping");
+assert.ok(filenameMarkup.replaceAll("<wbr>", "").includes("📁 The.Substance_2024-2160p.mkv"));
+
 let isFocusable = false,
   role;
 const preview = { clientHeight: 384, scrollHeight: 600 };
