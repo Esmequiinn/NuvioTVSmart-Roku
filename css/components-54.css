@@ -500,3 +500,33 @@
   white-space: nowrap;
   opacity: 1;
 }
+
+/* Android draws detail focus borders as a 2dp stroke inside the shape
+   (tv-material3 Border on the play, icon, cast and company controls). The
+   former outer spread shadow rendered broken edges on these pill/circle
+   shapes on TV browsers. */
+.series-primary-btn.focused,
+.series-secondary-btn.focused,
+.series-circle-btn.focused,
+.detail-company-card.focused {
+  box-shadow: inset 0 0 0 4px var(--detail-focus-ring);
+}
+
+.movie-cast-card.focused .movie-cast-avatar {
+  box-shadow: none;
+}
+
+/* The avatar photo covers inset shadows, so the ring is drawn above it. */
+.movie-cast-card.focused .movie-cast-avatar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  border: 4px solid var(--detail-focus-ring);
+  border-radius: inherit;
+  pointer-events: none;
+}
