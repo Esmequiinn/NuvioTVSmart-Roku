@@ -247,7 +247,7 @@ export function createMetaDetailsScreenMethods26() {
       if (action === "setMovieInsightTab") {
         const tab = String(current.dataset.tab || "cast");
         if (tab !== this.movieInsightTab) {
-          this.movieInsightTab = ["cast", "ratings", "morelike", "trailer", "collection"].includes(tab) ? tab : "cast";
+          this.movieInsightTab = ["cast", "morelike", "trailer", "collection"].includes(tab) ? tab : "cast";
           this.updateRenderedDetailSections(this.meta);
         }
         return;

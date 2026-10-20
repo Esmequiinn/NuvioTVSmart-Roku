@@ -118,9 +118,12 @@
   flex: 0 0 auto;
   width: auto;
   max-width: none;
-  padding: 20px 40px;
+  /* Android draws the 1dp tab border inside its 10dp vertical padding. */
+  padding: 19px 40px;
   border-radius: 40px;
   font-size: 32px;
+  line-height: 48px;
+  letter-spacing: 0.3px;
   box-sizing: border-box;
 }
 
@@ -137,6 +140,7 @@
 
 .series-episode-thumb {
   height: 358px;
+  margin-bottom: 0;
   border-radius: var(--detail-episode-radius, 24px);
 }
 
@@ -157,6 +161,7 @@
   display: block;
   min-height: 38px;
   font-size: 32px;
+  letter-spacing: 0.3px;
   line-height: 38px;
   -webkit-line-clamp: 1;
   line-clamp: 1;
@@ -165,7 +170,8 @@
 }
 
 .series-episode-overview {
-  font-size: 28px;
+  font-size: 24px;
+  letter-spacing: 0.8px;
   line-height: 32px;
   max-height: 96px;
   -webkit-line-clamp: 3;
@@ -177,6 +183,7 @@
   min-height: 28px;
   font-size: 20px;
   line-height: 28px;
+  letter-spacing: 1px;
 }
 
 .series-episode-runtime {
@@ -388,4 +395,90 @@
     padding: 8px 18px;
     border-radius: 14px;
   }
+}
+
+/* Android EpisodeRatingsSection at 2x: season chips labelMedium with 11x6dp
+   padding and 14dp radius, summary labelSmall, 72x46dp episode cells. */
+.series-rating-seasons,
+.series-episode-ratings-grid {
+  gap: 12px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.series-rating-season {
+  /* Android draws the 2dp focus ring inside the 6dp vertical padding. */
+  padding: 10px 22px;
+  border-radius: 28px;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.series-rating-summary {
+  padding: 4px var(--detail-safe-x);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.series-episode-rating-chip {
+  min-width: 144px;
+  width: 144px;
+  height: 92px;
+  padding: 12px 16px;
+  border-radius: 28px;
+  box-sizing: border-box;
+}
+
+.series-episode-rating-ep {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.series-episode-rating-val {
+  font-size: 28px;
+  line-height: 40px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+/* Android ratingColor/ratingTextColor bands. */
+.series-episode-rating-chip.exceptional {
+  background: #1da1f3;
+  color: #ffffff;
+}
+
+.series-episode-rating-chip.excellent {
+  background: #186a3b;
+  color: #ffffff;
+}
+
+.series-episode-rating-chip.great {
+  background: #28b463;
+  color: #ffffff;
+}
+
+.series-episode-rating-chip.good {
+  background: #f4d03f;
+  color: #1d1d1f;
+}
+
+.series-episode-rating-chip.mixed {
+  background: #f39c12;
+  color: #1d1d1f;
+}
+
+.series-episode-rating-chip.bad {
+  background: #e74c3c;
+  color: #ffffff;
+}
+
+.series-episode-rating-chip.poor {
+  background: #633974;
+  color: #ffffff;
 }

@@ -429,7 +429,7 @@ export function createMetaDetailsScreenMethods16() {
             return;
           }
           if (!isSeriesDetailMeta(this.meta, this.episodes) && tab !== this.movieInsightTab) {
-            this.movieInsightTab = ["cast", "ratings", "morelike", "trailer", "collection"].includes(tab) ? tab : "cast";
+            this.movieInsightTab = ["cast", "morelike", "trailer", "collection"].includes(tab) ? tab : "cast";
             this.updateRenderedDetailSections(this.meta);
           }
           return;
