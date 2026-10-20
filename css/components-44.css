@@ -166,11 +166,17 @@
   flex: 0 0 72px;
   margin: 0 0 16px 16px;
   padding: 0 32px;
-  border-radius: 40px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
   background: var(--card-bg);
+  color: var(--text-color);
   display: flex;
   align-items: center;
   font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
 }
 
 .stream-route-chip.selected {
