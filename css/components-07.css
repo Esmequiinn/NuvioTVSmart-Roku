@@ -572,6 +572,16 @@
   transform: translateX(-200vw) !important;
 }
 
+/* content-visibility keeps the hidden Home's layout cached, so a Back return no
+   longer relayouts every row (about 1 s on webOS), and its skipped contents are
+   never painted or composited. Tizen keeps display:none until verified there. */
+@supports (content-visibility: hidden) {
+  :root:not(.tizen-tv) #home.home-dom-preserved {
+    display: block !important;
+    content-visibility: hidden;
+  }
+}
+
 #home.home-dom-preserved .root-sidebar-legacy,
 #home.home-dom-preserved .modern-sidebar-shell {
   display: none !important;
