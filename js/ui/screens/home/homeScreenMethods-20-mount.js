@@ -290,7 +290,13 @@ export function createHomeScreenMethods20() {
       }
       this.watchedItems = Array.isArray(projectedItems) ? projectedItems : baseWatchedItems;
       this.watchedTitleIds = buildWatchedTitleIdSet(this.watchedItems);
-      this.requestBackgroundRender();
+      // Every Home return re-projects watched titles; re-rendering all rows for an unchanged set only repeats identical markup.
+      const rendered = this.renderedWatchedTitleIds;
+      const unchanged =
+        rendered instanceof Set && rendered.size === this.watchedTitleIds.size && [...rendered].every((id) => this.watchedTitleIds.has(id));
+      if (!unchanged) {
+        this.requestBackgroundRender();
+      }
     }
   };
 }

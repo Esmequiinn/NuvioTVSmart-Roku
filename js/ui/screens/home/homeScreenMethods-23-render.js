@@ -165,6 +165,7 @@ export function createHomeScreenMethods23() {
           ? HOME_GRID_SAFE_MAX_COLUMNS * homeGridRowCount
           : rowItemLimit;
       this.teardownGridStickyHeader();
+      this.renderedWatchedTitleIds = this.watchedTitleIds;
 
       let mainContentMarkup = "";
       let modernLayoutPayload = null;
