@@ -127,7 +127,7 @@ export function createStreamScreenMethods09() {
                   ${logo ? `<img src="${logo}" class="stream-route-logo" alt="${escapeHtml(title)}" />` : `<h1 class="stream-route-title" dir="${contentTextDirection(title)}">${escapeHtml(title)}</h1>`}
                   ${episodeLabel ? `<div class="stream-route-episode-code" dir="${contentTextDirection(episodeLabel)}">${escapeHtml(episodeLabel)}</div>` : ""}
                   ${subtitle ? `<div class="stream-route-subtitle" dir="${contentTextDirection(subtitle)}">${escapeHtml(subtitle)}</div>` : ""}
-                  ${detailLine ? `<div class="stream-route-detail-line" dir="${contentTextDirection(detailLine)}">${escapeHtml(detailLine)}</div>` : !isSeries && subtitle ? `<div class="stream-route-detail-line" dir="${contentTextDirection(subtitle)}">${escapeHtml(subtitle)}</div>` : ""}
+                  ${detailLine ? `<div class="stream-route-detail-line${isSeries ? "" : " is-info"}" dir="${contentTextDirection(detailLine)}">${escapeHtml(detailLine)}</div>` : !isSeries && subtitle ? `<div class="stream-route-detail-line" dir="${contentTextDirection(subtitle)}">${escapeHtml(subtitle)}</div>` : ""}
                 </div>
               </section>
               <section class="stream-route-right">

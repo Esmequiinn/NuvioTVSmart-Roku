@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import * as internals from "./streamScreen.js";
+import { startStreamBadgeMarquee, stopStreamBadgeMarquee } from "./streamBadgeMarquee.js";
 
 export function createStreamScreenMethods06() {
   const { ScreenUtils, Environment, isStreamEmptyStateVisible, clamp } = internals;
@@ -178,9 +179,11 @@ export function createStreamScreenMethods06() {
           : this.container?.querySelector(".focusable.focused");
       if (previous && previous !== target) {
         previous.classList.remove("focused");
+        stopStreamBadgeMarquee(previous.closest(".stream-route-card-row"));
       }
       target.classList.add("focused");
       this.focusedElement = target;
+      startStreamBadgeMarquee(target.closest(".stream-route-card-row"));
       try {
         target.focus({ preventScroll: true });
       } catch (_) {

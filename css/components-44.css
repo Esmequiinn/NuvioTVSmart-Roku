@@ -83,24 +83,34 @@
 
 .stream-route-episode-code {
   font-size: 40px;
-  line-height: 1.35;
+  line-height: 56px;
   font-weight: 500;
   color: var(--text-secondary);
 }
 
 .stream-route-subtitle {
   margin-top: 8px;
-  font-size: var(--tv-subtitle-text);
-  line-height: 1.35;
-  font-weight: 500;
+  font-size: 32px;
+  line-height: 48px;
+  letter-spacing: 1px;
+  font-weight: 400;
   color: var(--text-color);
 }
 
 .stream-route-detail-line {
   margin-top: 8px;
   font-size: 28px;
-  line-height: 1.4;
+  line-height: 40px;
+  letter-spacing: 0.5px;
   color: var(--text-secondary);
+}
+
+/* Movies show genres and year in bodyLarge right under the logo (Android Spacer sm). */
+.stream-route-detail-line.is-info {
+  margin-top: 0;
+  font-size: 32px;
+  line-height: 48px;
+  letter-spacing: 1px;
 }
 
 .stream-route-right {
@@ -135,13 +145,14 @@
 .stream-route-chip {
   flex-shrink: 0;
   min-height: 72px;
-  padding: 0 clamp(30px, 2vw, 40px);
+  padding: 0 32px;
   border-radius: 999px;
   border: 1px solid var(--border-color);
   background: var(--card-bg);
   color: var(--text-secondary);
-  font-size: var(--tv-secondary-text);
-  line-height: 1.35;
+  font-size: 28px;
+  line-height: 40px;
+  letter-spacing: 0.2px;
   font-weight: 500;
   display: inline-flex;
   align-items: center;

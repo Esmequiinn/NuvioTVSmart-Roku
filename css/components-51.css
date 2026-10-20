@@ -1,17 +1,19 @@
 .stream-route-stream-badge.image img {
   display: block;
-  max-height: 24px;
-  max-width: 118px;
+  max-height: 32px;
+  max-width: 184px;
   object-fit: contain;
 }
 
 .stream-route-stream-badge.size {
-  min-height: 30px;
-  padding: 0 9px;
+  min-height: 40px;
+  padding: 0 12px;
   border-color: #0a0c0c;
   background: #0a0c0c;
   color: #ffffff;
-  font-size: 16px;
+  font-size: 20px;
+  line-height: 28px;
+  letter-spacing: 1px;
   font-weight: 500;
 }
 
@@ -53,12 +55,14 @@
   margin-top: 8px;
   font-size: 24px;
   line-height: 32px;
+  letter-spacing: 0.8px;
   color: var(--text-secondary);
   overflow-wrap: anywhere;
 }
 
+/* Android renders the description as one Text block: no extra gap between its lines. */
 .stream-route-card-line.secondary {
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 .stream-route-card-meta {
@@ -138,8 +142,10 @@
 }
 
 .stream-route-addon-name {
-  font-size: 22px;
-  line-height: 32px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: 1px;
   color: var(--text-tertiary);
   text-align: end;
 }
@@ -147,12 +153,14 @@
 .stream-route-plugin-source {
   margin-top: 8px;
   color: var(--text-secondary);
-  font-size: 22px;
-  line-height: 32px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: 1px;
 }
 
 .stream-route-card-badges:first-child {
-  margin: 0 0 8px;
+  margin: 0 0 20px;
 }
 
 .stream-route-empty {

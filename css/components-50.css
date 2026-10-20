@@ -390,6 +390,7 @@
   font-size: 32px;
   line-height: 48px;
   font-weight: 500;
+  letter-spacing: 0.3px;
   color: var(--text-color);
   overflow-wrap: anywhere;
 }
@@ -405,16 +406,17 @@
 .stream-route-card-badges {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 8px 0 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  gap: 8px;
+  margin: 12px 0 0;
   max-width: 100%;
 }
 
 .stream-route-card-badges-lazy {
   flex-wrap: nowrap;
-  height: 30px;
-  min-height: 30px;
+  height: 40px;
+  min-height: 40px;
   overflow: hidden;
 }
 
@@ -426,10 +428,11 @@
   margin: 7px 0 0;
 }
 
+/* Android StreamBadgeChips: 20dp chips, 6dp radius, 4dp spacing. */
 .stream-route-stream-badge {
-  min-height: 30px;
-  padding: 0 9px;
-  border-radius: 7px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -441,13 +444,14 @@
   font-weight: 500;
   white-space: nowrap;
   box-sizing: border-box;
+  flex-shrink: 0;
   margin: 0;
 }
 
 .stream-route-stream-badge.image {
-  padding: 3px 7px;
-  min-width: 48px;
-  max-width: 132px;
+  padding: 3px 6px;
+  min-width: 68px;
+  max-width: 196px;
   line-height: 0;
   overflow: hidden;
   background: transparent;
