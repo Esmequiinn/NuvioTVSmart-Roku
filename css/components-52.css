@@ -386,7 +386,9 @@
 }
 
 /* Android TV details port. The existing profile port maps Android dp/sp to this
-   1920px TV CSS viewport at 2x, so these details metrics follow the same scale. */
+   1920px TV CSS viewport at 2x, so these details metrics follow the same scale:
+   section titles titleLarge 20sp, labels labelLarge 14sp, body bodyMedium 14sp,
+   captions labelMedium 12sp, title displayMedium 36sp. */
 
 .series-detail-shell {
   --detail-safe-x: 96px;
@@ -395,10 +397,10 @@
   --detail-button-height: 96px;
   --detail-control-size: 96px;
   --detail-title-size: 72px;
-  --detail-section-title-size: 44px;
-  --detail-label-size: 32px;
-  --detail-body-size: 32px;
-  --detail-caption-size: 28px;
+  --detail-section-title-size: 40px;
+  --detail-label-size: 28px;
+  --detail-body-size: 28px;
+  --detail-caption-size: 24px;
 }
 
 .detail-hero-section {
@@ -437,7 +439,7 @@
 }
 
 .detail-trailer-hint {
-  font-size: var(--detail-label-size);
+  font-size: var(--detail-caption-size);
 }
 
 .detail-trailer-autoplay .detail-trailer-hint {
@@ -459,6 +461,8 @@
   color: #000000;
   border-color: transparent;
   font-size: var(--detail-label-size);
-  line-height: 48px;
+  font-weight: 500;
+  line-height: 40px;
+  letter-spacing: 0.2px;
   gap: 16px;
 }

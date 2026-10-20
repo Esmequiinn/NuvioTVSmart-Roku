@@ -34,27 +34,39 @@
 .series-detail-support {
   margin-bottom: 24px;
   font-size: var(--detail-label-size);
+  font-weight: 500;
+  line-height: 40px;
+  letter-spacing: 0.2px;
 }
 
 .series-detail-description {
   margin-bottom: 24px;
   font-size: var(--detail-body-size);
-  line-height: 1.5;
+  line-height: 40px;
+  letter-spacing: 0.5px;
 }
 
 .detail-ratings-row {
-  gap: 24px;
+  gap: 28px;
   margin-bottom: 28px;
 }
 
 .detail-rating-item {
-  gap: 16px;
+  gap: 12px;
   font-size: var(--detail-caption-size);
+  line-height: 32px;
+  letter-spacing: 1px;
 }
 
+/* Android MDBListRatingsRow: IMDb icon 24dp, other providers 0.75x. */
 .detail-rating-item img {
-  width: 56px;
-  height: 56px;
+  width: 36px;
+  height: 36px;
+}
+
+.detail-rating-item img[alt="imdb"] {
+  width: 48px;
+  height: 48px;
 }
 
 .detail-meta-stack {
@@ -68,6 +80,9 @@
 .detail-meta-row {
   gap: 24px;
   font-size: var(--detail-label-size);
+  font-weight: 500;
+  line-height: 40px;
+  letter-spacing: 0.2px;
 }
 
 .detail-meta-row.secondary {
