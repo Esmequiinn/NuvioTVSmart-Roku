@@ -7,12 +7,12 @@
   .series-episode-card {
     flex-basis: 800px;
     width: 800px;
-    border-radius: 40px;
+    border-radius: var(--detail-episode-radius, 24px);
   }
 
   .series-episode-thumb {
     height: 526px;
-    border-radius: 40px;
+    border-radius: var(--detail-episode-radius, 24px);
   }
 
   .series-episode-copy {

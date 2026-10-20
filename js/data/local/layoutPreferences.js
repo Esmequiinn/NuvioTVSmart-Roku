@@ -132,7 +132,9 @@ function normalizeLayoutPreferences(value = {}) {
         ? "expanded_card"
         : "hero_media",
     posterCardWidthDp: Math.max(72, Number(merged.posterCardWidthDp ?? 126) || 126),
-    posterCardCornerRadiusDp: Math.max(0, Number(merged.posterCardCornerRadiusDp ?? 12) || 12),
+    posterCardCornerRadiusDp: Number.isFinite(Number(merged.posterCardCornerRadiusDp ?? 12))
+      ? Math.max(0, Number(merged.posterCardCornerRadiusDp ?? 12))
+      : 12,
     fastHorizontalNavigationEnabled: Boolean(
       value?.fastHorizontalNavigationEnabled ??
       LocalStore.get("fastHorizontalNavigationEnabled", false)

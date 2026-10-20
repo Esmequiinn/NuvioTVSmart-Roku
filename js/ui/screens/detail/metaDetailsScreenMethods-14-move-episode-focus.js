@@ -229,6 +229,9 @@ export function createMetaDetailsScreenMethods14() {
       const seasonNumber = Number(season || 0);
       return (this.episodes || []).filter((episode) => Number(episode?.season || 0) === seasonNumber);
     },
+    getPreviousSeasonEpisodes(season) {
+      return (this.episodes || []).filter((episode) => Number(episode?.season) > 0 && Number(episode.season) < season);
+    },
     isSeasonFullyWatched(season) {
       const episodes = this.getSeasonEpisodes(season);
       return episodes.length > 0 && episodes.every((episode) => this.isEpisodeMarkedWatched(episode));
@@ -332,6 +335,14 @@ export function createMetaDetailsScreenMethods14() {
       await this.setEpisodesWatchedState(previousEpisodes, true);
       this.episodeHoldMenu = null;
       this.syncEpisodePlaybackDom(previousEpisodes);
+      return true;
+    },
+    async markPreviousSeasonsWatched(season) {
+      const episodes = this.getPreviousSeasonEpisodes(season).filter((episode) => !this.isEpisodeMarkedWatched(episode));
+      if (!episodes.length) return false;
+      if (!(await this.setEpisodesWatchedState(episodes, true))) return false;
+      this.seasonHoldMenu = null;
+      this.syncEpisodePlaybackDom(episodes);
       return true;
     }
   };

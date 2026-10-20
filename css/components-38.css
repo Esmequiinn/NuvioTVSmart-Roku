@@ -306,7 +306,6 @@
 .series-detail-content {
   position: relative;
   z-index: 1;
-  max-width: calc(100vw - 32px);
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;

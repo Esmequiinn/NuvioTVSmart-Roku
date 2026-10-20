@@ -52,16 +52,51 @@
   font-size: var(--tv-body-text);
   line-height: 1.5;
   color: var(--detail-text-primary);
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
-  overflow: hidden;
-  text-overflow: ellipsis;
   overflow-wrap: anywhere;
   transition:
     opacity 400ms ease,
     transform 400ms ease;
+}
+
+.detail-synopsis-preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 8;
+  line-clamp: 8;
+  overflow: hidden;
+}
+
+.detail-synopsis-more {
+  font-size: 24px;
+  color: var(--text-secondary);
+}
+
+.series-detail-description.focused {
+  background: rgb(var(--focus-color-rgb) / 0.1);
+  border-radius: 16px;
+  outline: 0;
+}
+
+.nuvio-dialog-panel.detail-synopsis-dialog {
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+  padding: 48px 96px;
+  background: rgba(0, 0, 0, 0.96);
+}
+
+.detail-synopsis-full-text {
+  width: 78%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-size: 32px;
+  line-height: 48px;
+  outline: 0;
 }
 
 .detail-meta-stack {

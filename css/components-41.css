@@ -202,7 +202,7 @@
 }
 
 .detail-hero-body {
-  max-height: 760px;
+  max-height: 1100px;
   opacity: 1;
   overflow: hidden;
   transform: translateY(0);
@@ -221,9 +221,9 @@
   margin-bottom: clamp(18px, 1.4vw, 26px);
   transform-origin: left bottom;
   transition:
-    max-width 600ms cubic-bezier(0.4, 0, 0.2, 1),
-    max-height 600ms cubic-bezier(0.4, 0, 0.2, 1),
-    margin-bottom 600ms cubic-bezier(0.4, 0, 0.2, 1);
+    width 600ms cubic-bezier(0.4, 0, 0.2, 1),
+    height 600ms cubic-bezier(0.4, 0, 0.2, 1),
+    padding-bottom 600ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .detail-trailer-autoplay .series-detail-logo {

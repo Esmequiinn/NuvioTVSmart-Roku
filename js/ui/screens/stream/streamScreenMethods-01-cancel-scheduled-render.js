@@ -103,7 +103,7 @@ export function createStreamScreenMethods01() {
           return marginBottom;
         }
       }
-      this.streamVirtualRowGap = this.isLegacyWebOsRoute() ? 10 : 18;
+      this.streamVirtualRowGap = this.isLegacyWebOsRoute() ? 10 : 40;
       return this.streamVirtualRowGap;
     },
     getStreamVirtualModel(streams = this.streamVirtualItems) {

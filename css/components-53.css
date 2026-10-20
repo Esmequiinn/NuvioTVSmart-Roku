@@ -61,6 +61,10 @@
   gap: 16px;
 }
 
+.series-detail-description {
+  max-width: 60%;
+}
+
 .detail-meta-row {
   gap: 24px;
   font-size: var(--detail-label-size);
@@ -113,12 +117,12 @@
 .series-episode-card {
   flex-basis: 560px;
   width: 560px;
-  border-radius: 32px;
+  border-radius: var(--detail-episode-radius, 24px);
 }
 
 .series-episode-thumb {
   height: 358px;
-  border-radius: 32px;
+  border-radius: var(--detail-episode-radius, 24px);
 }
 
 .series-episode-copy {

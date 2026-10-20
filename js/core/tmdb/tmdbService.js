@@ -12,7 +12,10 @@ const imdbToTmdbInFlight = new Map();
 const tmdbToImdbCache = new Map();
 const tmdbToImdbInFlight = new Map();
 
-async function fetchJson(url, { signal = null } = {}) {
+export async function fetchTmdbJson(
+  url,
+  { signal = null, maxResponseBytes = TMDB_SERVICE_MAX_RESPONSE_BYTES } = {}
+) {
   // Some webOS TV runtimes can reject direct cross-origin fetches even while
   // the packaged network service can reach the same HTTPS endpoint. Keep the
   // service path scoped to webOS and retain the browser fetch as a fallback
@@ -22,7 +25,7 @@ async function fetchJson(url, { signal = null } = {}) {
       const result = await PluginServiceClient.fetch({
         url,
         method: "GET",
-        maxResponseBytes: TMDB_SERVICE_MAX_RESPONSE_BYTES,
+        maxResponseBytes,
         timeoutMs: TMDB_SERVICE_FETCH_TIMEOUT_MS,
         signal
       });
@@ -110,7 +113,14 @@ export const TmdbService = {
     // API keys, or the network. This branch must stay before all Web-only
     // configuration gates.
     if (parsed.kind === "numeric") return parsed.idPart;
-    if (parsed.kind !== "imdb") return null;
+    if (parsed.kind !== "imdb") {
+      const fallback = String(options?.fallbackImdbId || "")
+        .trim()
+        .split(":")[0];
+      return /^tt/i.test(fallback)
+        ? this.ensureTmdbId(fallback.toLowerCase(), type, { ...options, fallbackImdbId: null })
+        : null;
+    }
 
     const contentType = getContentType(type);
     const key = lookupKey(parsed.idPart, contentType);
@@ -132,7 +142,7 @@ export const TmdbService = {
 
     const url = `${TMDB_BASE_URL}/find/${encodeURIComponent(parsed.idPart)}?external_source=imdb_id&api_key=${encodeURIComponent(apiKey)}`;
     const request = (async () => {
-      const data = await fetchJson(url, { signal: options?.signal || null });
+      const data = await fetchTmdbJson(url, { signal: options?.signal || null });
       if (!data) return null;
       const list = contentType === "tv" ? data.tv_results : data.movie_results;
       const first = Array.isArray(list) ? list[0] : null;
@@ -173,7 +183,7 @@ export const TmdbService = {
 
     const url = `${TMDB_BASE_URL}/${contentType}/${encodeURIComponent(numericId)}/external_ids?api_key=${encodeURIComponent(apiKey)}`;
     const request = (async () => {
-      const data = await fetchJson(url);
+      const data = await fetchTmdbJson(url);
       if (!data) return null;
       const imdbId = String(data?.imdb_id || "").trim();
       if (!/^tt\d+$/i.test(imdbId)) {

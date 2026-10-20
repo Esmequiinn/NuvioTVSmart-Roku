@@ -48,7 +48,7 @@ export function createStreamScreenMethods09() {
       }
       // Rebuilt markup means the memoised filtered-stream list may be stale.
       this._filteredStreamsCache = null;
-      const { isSeries, title, subtitle, episodeLabel, detailLine } = this.getHeaderMeta();
+      const { isSeries, title, subtitle, episodeLabel, detailLine, resumeLabel } = this.getHeaderMeta();
       const backdrop = this.getBackdropUrl();
       const logo = this.params?.logo || "";
       const shellStableClass = this.hasRenderedStreamRouteShell ? " stable" : "";
@@ -113,9 +113,9 @@ export function createStreamScreenMethods09() {
       } else if (hasPendingForFilter || hasPendingForAllSources) {
         body = this.renderLoadingCards();
       } else if (this.error) {
-        body = `<div class="stream-route-empty">${escapeHtml(this.error)}</div>`;
+        body = `<div class="stream-route-empty stream-route-error"><span aria-hidden="true">⚠</span><p>${escapeHtml(this.error)}</p><div class="stream-route-card-row" data-stream-row="0"><button class="stream-route-retry focusable" data-card-action="play" data-action="refreshStreams" data-stream-row="0">${escapeHtml(t("stream_retry"))}</button></div></div>`;
       } else if (!filtered.length) {
-        body = `<div class="stream-route-empty">${escapeHtml(t("sources_no_streams", {}, "No streams found"))}</div>`;
+        body = `<div class="stream-route-empty"><p>${escapeHtml(t("sources_no_streams", {}, "No streams found"))}</p><p>${escapeHtml(t("stream_no_streams_hint"))}</p></div>`;
       }
 
       const routeContent = this.autoResumeUiActive
@@ -131,6 +131,7 @@ export function createStreamScreenMethods09() {
                 </div>
               </section>
               <section class="stream-route-right">
+                ${resumeLabel ? `<div class="stream-route-resume-label">${escapeHtml(resumeLabel)}</div>` : ""}
                 <div class="stream-route-chip-wrap">
                   <div class="stream-route-chip-track">${chips}</div>
                 </div>
@@ -143,7 +144,7 @@ export function createStreamScreenMethods09() {
             </div>`;
 
       const nextMarkup = `
-          <div class="stream-route-shell${shellStableClass}">
+          <div class="stream-route-shell${shellStableClass}${hasPendingForAllSources ? " is-loading" : ""}">
             <div class="stream-route-backdrop"${backdrop ? ` style="background-image:url('${String(backdrop).replace(/'/g, "%27")}')"` : ""}></div>
             <div class="stream-route-backdrop-dim"></div>
             <div class="stream-route-left-gradient"></div>
@@ -181,6 +182,16 @@ export function createStreamScreenMethods09() {
       this.restoreScrollPosition();
       this.hydrateVisibleStreamBadges();
       this.bindAddonLogoFallbacks();
+      const headerLogo = this.container.querySelector(".stream-route-logo");
+      if (headerLogo)
+        headerLogo.onerror = () => {
+          const fallback = document.createElement("h1");
+          fallback.className = "stream-route-title";
+          fallback.dir = contentTextDirection(title);
+          fallback.textContent = title;
+          headerLogo.replaceWith(fallback);
+        };
+      if (headerLogo?.complete && !headerLogo.naturalWidth) headerLogo.onerror();
       ScreenUtils.indexFocusables(this.container, ".focusable:not([hidden])");
       this.restoreScrollPosition();
       this.applyFocus();

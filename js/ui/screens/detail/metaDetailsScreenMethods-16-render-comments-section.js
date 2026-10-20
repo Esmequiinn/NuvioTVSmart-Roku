@@ -10,6 +10,8 @@ export function createMetaDetailsScreenMethods16() {
   const {
     Router,
     ScreenUtils,
+    NuvioDialog,
+    LayoutPreferences,
     t,
     detailImageLoadingMode,
     isSeriesDetailMeta,
@@ -29,6 +31,32 @@ export function createMetaDetailsScreenMethods16() {
   const RAIL_EXTEND_AHEAD = 6;
 
   return {
+    openSynopsis() {
+      if (this.synopsisDialog) return;
+      const text = document.createElement("div");
+      text.className = "detail-synopsis-full-text";
+      text.tabIndex = -1;
+      text.textContent = this.meta?.description || "";
+      const close = () => {
+        this.synopsisDialog?.destroy();
+        this.synopsisDialog = null;
+        this.focusDetailDescriptor({ selector: ".series-detail-description" });
+      };
+      this.synopsisDialog = new NuvioDialog({
+        title: this.meta?.name || "",
+        subtitle: t("hero_synopsis_dismiss_hint"),
+        widthVw: 100,
+        panelClassName: "detail-synopsis-dialog",
+        content: () => text,
+        onVerticalNavigate: (direction) => {
+          this.animateScroll(text, "y", text.scrollTop + direction * 260);
+          return true;
+        },
+        onDismiss: close
+      });
+      this.synopsisDialog.mount(document.body);
+      text.focus({ preventScroll: true });
+    },
     renderCommentsSection() {
       if (this.commentsLoading) {
         const cards = Array.from({ length: 3 })
@@ -285,8 +313,35 @@ export function createMetaDetailsScreenMethods16() {
       });
     },
     bindDetailChrome() {
+      this.container
+        ?.querySelector(".series-detail-shell")
+        ?.style.setProperty(
+          "--detail-episode-radius",
+          `${Math.max(0, Number(LayoutPreferences.get().posterCardCornerRadiusDp ?? 12)) * 2}px`
+        );
+      const logo = this.container?.querySelector(".series-detail-logo");
+      if (logo) {
+        logo.onerror = () => {
+          const title = document.createElement("h1");
+          title.className = "series-detail-title";
+          title.textContent = logo.alt;
+          logo.replaceWith(title);
+        };
+        if (logo.complete && !logo.naturalWidth) logo.onerror();
+      }
       void this.refreshPreviewWatchedBadges();
       this.observeEpisodeThumbnails();
+      const description = this.container?.querySelector(".series-detail-description");
+      const preview = description?.querySelector(".detail-synopsis-preview");
+      if (preview) {
+        const truncated = preview.scrollHeight > preview.clientHeight + 1;
+        description.classList.toggle("focusable", truncated);
+        if (truncated) description.setAttribute("role", "button");
+        else description.removeAttribute("role");
+        description.tabIndex = -1;
+        description.querySelector(".detail-synopsis-more").hidden = !truncated;
+        this._detailFocusListCache = null;
+      }
       const content = this.container?.querySelector(".series-detail-content");
       if (!content) {
         return;

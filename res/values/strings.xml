@@ -3264,4 +3264,7 @@
     <string name="party_invite_scan">Scan with a phone to join</string>
     <string name="party_invite_share">Or share the code. Friends can enter it in Watch party on any Nuvio app.</string>
     <string name="party_invite_qr">Watch party invite QR code</string>
+
+    <string name="stream_resume_from_time">Resume from %1$s</string>
+    <string name="stream_resume_from_percent">Resume from %1$d%</string>
 </resources>

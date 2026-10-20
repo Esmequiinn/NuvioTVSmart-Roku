@@ -1,5 +1,7 @@
 /* eslint-disable no-unused-vars */
 import * as internals from "./tmdbMetadataService.js";
+import { fetchTmdbJson } from "./tmdbService.js";
+import { mapWithConcurrency } from "../network/mapWithConcurrency.js";
 
 export function createTmdbMetadataServiceMethods02() {
   const {
@@ -39,14 +41,13 @@ export function createTmdbMetadataServiceMethods02() {
         return new Map();
       }
 
-      const entries = await Promise.all(
-        seasons.map(async (seasonNumber) => {
+      const entries = await mapWithConcurrency(seasons, 4, async (seasonNumber) => {
+        try {
           const url = `${TMDB_BASE_URL}/tv/${encodeURIComponent(String(tmdbId))}/season/${encodeURIComponent(String(seasonNumber))}?api_key=${encodeURIComponent(apiKey)}&language=${encodeURIComponent(lang)}`;
-          const response = await fetch(url);
-          if (!response.ok) {
+          const data = await fetchTmdbJson(url);
+          if (!data) {
             return [];
           }
-          const data = await response.json();
           return (Array.isArray(data?.episodes) ? data.episodes : [])
             .map((episode) => ({
               key: `${seasonNumber}:${Number(episode?.episode_number || 0)}`,
@@ -57,8 +58,11 @@ export function createTmdbMetadataServiceMethods02() {
               runtime: Number(episode?.runtime || 0) || null
             }))
             .filter((episode) => !episode.key.endsWith(":0"));
-        })
-      );
+        } catch (error) {
+          console.warn(`TMDB season ${seasonNumber} enrichment failed`, error);
+          return [];
+        }
+      });
 
       const map = new Map();
       entries.flat().forEach((episode) => {

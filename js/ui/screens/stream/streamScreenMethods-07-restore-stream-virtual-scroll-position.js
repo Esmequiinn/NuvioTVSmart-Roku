@@ -1,4 +1,6 @@
 import { MediaServerRepository, canResolveMediaServerStream } from "../../../data/mediaserver/mediaServerRepository.js";
+import { formatHeroRuntime, formatPlaybackTime } from "../detail/episodeCardMetadata.js";
+import { isWatchProgressInProgress } from "../../../domain/model/watchProgress.js";
 /* eslint-disable no-unused-vars */
 import * as internals from "./streamScreen.js";
 
@@ -15,7 +17,8 @@ export function createStreamScreenMethods07() {
     isLocalOnlyPlaybackUrl,
     guessMimeTypeFromUrl,
     normalizeType,
-    normalizeEpisodeCode
+    normalizeEpisodeCode,
+    t
   } = internals;
 
   return {
@@ -154,10 +157,23 @@ export function createStreamScreenMethods07() {
         ? String(this.params?.episodeTitle || this.params?.playerSubtitle || "").trim()
         : String(this.params?.itemSubtitle || "").trim();
       const episodeLabel = normalizeEpisodeCode(this.params?.season, this.params?.episode);
+      const runtimeMinutes = Number(this.params?.runtime);
+      const positionMs = Number(this.params?.resumePositionMs || 0);
+      const percent = Number(this.params?.resumeProgressPercent || 0);
+      const resume =
+        !this.params?.startFromBeginning &&
+        isWatchProgressInProgress({ positionMs, progressPercent: percent, durationMs: this.params?.resumeDurationMs });
+      const resumeLabel = resume
+        ? positionMs > 0
+          ? t("stream_resume_from_time", [formatPlaybackTime(positionMs / 1000)])
+          : t("stream_resume_from_percent", [Math.floor(percent)])
+        : "";
       const detailLine = isSeries
-        ? ""
+        ? Number.isFinite(runtimeMinutes) && runtimeMinutes > 0
+          ? formatHeroRuntime(runtimeMinutes)
+          : ""
         : [localizedGenreText(this.params?.genres), String(this.params?.year || "").trim()].filter(Boolean).join(" • ");
-      return { isSeries, title, subtitle, episodeLabel, detailLine };
+      return { isSeries, title, subtitle, episodeLabel, detailLine, resumeLabel };
     },
     async detectWebOsNativePlayerApp() {
       if (!Environment.isWebOS() || !WebOsLunaService.isAvailable()) {

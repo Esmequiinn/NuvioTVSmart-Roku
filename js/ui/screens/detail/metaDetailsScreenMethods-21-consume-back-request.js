@@ -16,6 +16,12 @@ export function createMetaDetailsScreenMethods21() {
 
   return {
     consumeBackRequest() {
+      if (this.synopsisDialog) {
+        this.synopsisDialog.destroy();
+        this.synopsisDialog = null;
+        this.focusDetailDescriptor({ selector: ".series-detail-description" });
+        return true;
+      }
       if (this.shuffleDialog) {
         this.shuffleDialog.destroy();
         this.shuffleDialog = null;
@@ -204,7 +210,7 @@ export function createMetaDetailsScreenMethods21() {
           fromDetailRoute: true,
           itemTitle: this.meta?.name || this.params?.fallbackTitle || this.params?.itemId || "Untitled",
           itemSubtitle: "",
-          genres: Array.isArray(this.meta?.genres) ? this.meta.genres.slice(0, 3).join(" • ") : "",
+          genres: Array.isArray(this.meta?.genres) ? this.meta.genres.join(" • ") : "",
           year: releaseYear,
           backdrop: streamBackdrop,
           poster: this.meta?.poster || null,

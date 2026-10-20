@@ -284,6 +284,5 @@ export function getStreamDescriptionLines(stream = {}) {
   return displayDescription
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .filter(Boolean)
-    .slice(0, 12);
+    .filter(Boolean);
 }

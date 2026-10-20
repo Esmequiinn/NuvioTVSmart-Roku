@@ -5,6 +5,7 @@ import { TMDB_API_KEY } from "../../config.js";
 import { tmdbShowReleaseInfo, tmdbYearPart } from "../util/tmdbReleaseRange.js";
 
 import { sortCollectionPartsByReleaseDate } from "./tmdbCollectionOrdering.js";
+import { fetchTmdbJson } from "./tmdbService.js";
 
 import {
   resolvePersonName,
@@ -223,10 +224,9 @@ export function rankTmdbVideoCandidates(results = [], preferredLanguageCode = TM
 
 export async function fetchTmdbVideos({ type, tmdbId, apiKey, language }) {
   const url = `${TMDB_BASE_URL}/${type}/${encodeURIComponent(String(tmdbId))}/videos?api_key=${encodeURIComponent(apiKey)}&language=${encodeURIComponent(language)}`;
-  const response = await fetch(url);
-  if (!response.ok) {
+  const data = await fetchTmdbJson(url);
+  if (!data) {
     return [];
   }
-  const data = await response.json();
   return Array.isArray(data?.results) ? data.results : [];
 }

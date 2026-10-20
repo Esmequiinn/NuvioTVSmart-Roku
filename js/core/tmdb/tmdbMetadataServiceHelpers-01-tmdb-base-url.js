@@ -5,8 +5,11 @@ import { TMDB_API_KEY } from "../../config.js";
 import { tmdbShowReleaseInfo, tmdbYearPart } from "../util/tmdbReleaseRange.js";
 
 import { sortCollectionPartsByReleaseDate } from "./tmdbCollectionOrdering.js";
+import { fetchTmdbJson } from "./tmdbService.js";
 
 export const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+// Aggregate series credits can exceed the ID-lookup response limit.
+export const TMDB_METADATA_MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 
 export const TMDB_IMAGE_SIZES = {
   poster: "w342",
@@ -85,7 +88,7 @@ export const moreLikeThisCache = new Map();
 
 export function resolveType(contentType) {
   const normalized = String(contentType || "").toLowerCase();
-  if (normalized === "series" || normalized === "tv" || normalized === "show") {
+  if (normalized === "series" || normalized === "tv" || normalized === "show" || normalized === "tvshow") {
     return "tv";
   }
   return "movie";
@@ -202,22 +205,37 @@ export function addEnglishPersonNames(target, people = []) {
   });
 }
 
+export function resolveTmdbCredits(data, type) {
+  if (type !== "tv") return data?.credits || null;
+  const aggregate = data?.aggregate_credits;
+  if (!aggregate) return null;
+  return {
+    cast: (Array.isArray(aggregate.cast) ? aggregate.cast : []).map((member) => ({
+      ...member,
+      character: member.roles?.[0]?.character || null
+    })),
+    crew: (Array.isArray(aggregate.crew) ? aggregate.crew : []).flatMap((member) =>
+      (Array.isArray(member.jobs) ? member.jobs : []).map((job) => ({ ...member, job: job.job }))
+    )
+  };
+}
+
 export async function fetchEnglishPersonNames({ type, tmdbId, apiKey, data, language } = {}) {
   if (!needsEnglishPersonNameFallback(data, language)) {
     return new Map();
   }
 
   try {
-    const params = `api_key=${encodeURIComponent(apiKey)}&language=${encodeURIComponent(TMDB_ENGLISH_CREDIT_LANGUAGE)}&append_to_response=credits`;
+    const params = `api_key=${encodeURIComponent(apiKey)}&language=${encodeURIComponent(TMDB_ENGLISH_CREDIT_LANGUAGE)}&append_to_response=${type === "tv" ? "aggregate_credits" : "credits"}`;
     const url = `${TMDB_BASE_URL}/${type}/${encodeURIComponent(String(tmdbId))}?${params}`;
-    const response = await fetch(url);
-    if (!response.ok) {
+    const englishData = await fetchTmdbJson(url, { maxResponseBytes: TMDB_METADATA_MAX_RESPONSE_BYTES });
+    if (!englishData) {
       return new Map();
     }
-    const englishData = await response.json();
+    const credits = resolveTmdbCredits(englishData, type);
     const names = new Map();
-    addEnglishPersonNames(names, englishData?.credits?.cast);
-    addEnglishPersonNames(names, englishData?.credits?.crew);
+    addEnglishPersonNames(names, credits?.cast);
+    addEnglishPersonNames(names, credits?.crew);
     addEnglishPersonNames(names, englishData?.created_by);
     return names;
   } catch (error) {
@@ -230,11 +248,10 @@ export async function fetchEnglishTitle({ type, tmdbId, apiKey } = {}) {
   const params = `api_key=${encodeURIComponent(apiKey)}&language=en`;
   const url = `${TMDB_BASE_URL}/${type}/${encodeURIComponent(String(tmdbId))}?${params}`;
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
+    const data = await fetchTmdbJson(url);
+    if (!data) {
       return "";
     }
-    const data = await response.json();
     return String(data?.title || data?.name || "")
       .trim()
       .replace(/\s+/g, " ");

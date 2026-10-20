@@ -176,11 +176,22 @@
               return player.loadModule && player.loadModule("cc");
             }, null);
           } else {
+            var modules = safeCall(function getCaptionModules() {
+              return player.getOptions ? player.getOptions() : null;
+            }, null);
             safeCall(function unloadCaptionsModule() {
-              return player.unloadModule && player.unloadModule("captions");
+              return (
+                player.unloadModule &&
+                (!Array.isArray(modules) || modules.indexOf("captions") >= 0) &&
+                player.unloadModule("captions")
+              );
             }, null);
             safeCall(function unloadCcModule() {
-              return player.unloadModule && player.unloadModule("cc");
+              return (
+                player.unloadModule &&
+                (!Array.isArray(modules) || modules.indexOf("cc") >= 0) &&
+                player.unloadModule("cc")
+              );
             }, null);
           }
         }

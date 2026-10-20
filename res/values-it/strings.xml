@@ -3293,4 +3293,7 @@
     <string name="party_invite_scan">Inquadra con il telefono per unirti</string>
     <string name="party_invite_share">Oppure condividi il codice. Gli amici possono inserirlo in Watch Party su qualsiasi app Nuvio.</string>
     <string name="party_invite_qr">Codice QR di invito al Watch Party</string>
+
+    <string name="stream_resume_from_time">Riprendi da %1$s</string>
+    <string name="stream_resume_from_percent">Riprendi dal %1$d%</string>
 </resources>

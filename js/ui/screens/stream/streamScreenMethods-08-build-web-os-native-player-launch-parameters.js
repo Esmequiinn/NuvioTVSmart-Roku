@@ -21,7 +21,6 @@ export function createStreamScreenMethods08() {
     normalizeExternalLaunchFileName,
     getAddonBadgeLabel,
     getStreamHeadline,
-    getStreamQuality,
     getStreamDescriptionLines,
     renderStreamBadges,
     hasStreamBadges,
@@ -199,7 +198,7 @@ export function createStreamScreenMethods08() {
       { streamKey = index, virtualized = false, virtualRowGap = null, virtualLast = false } = {}
     ) {
       const headline = getStreamHeadline(stream);
-      const quality = getStreamQuality(stream);
+      const pluginSourceName = String(stream.pluginSourceName || "").trim();
       const partyShared = Boolean(stream.partyShared);
       const partySource = !partyShared && Boolean(this.isPartySourceStream?.(stream));
       const lazyBadges = isPerformanceConstrainedRuntime() && hasStreamBadges(stream, streamBadgesEnabled, badgeSettings);
@@ -251,9 +250,9 @@ export function createStreamScreenMethods08() {
                      data-stream-id="${escapeHtml(stream.id)}"
                      data-stream-row="${index}">
               <div class="stream-route-card-copy">
-                <div class="stream-route-card-heading" dir="${contentTextDirection(headline)}">${escapeHtml(headline)}${partySource ? `<span class="stream-route-party-chip">${escapeHtml(t("party_source", {}, "Party's source"))}</span>` : ""}</div>
                 ${topBadges || ""}
-                ${!badges ? `<div class="stream-route-card-quality" dir="${contentTextDirection(quality)}">${escapeHtml(quality)}</div>` : ""}
+                <div class="stream-route-card-heading" dir="${contentTextDirection(headline)}">${escapeHtml(headline)}${partySource ? `<span class="stream-route-party-chip">${escapeHtml(t("party_source", {}, "Party's source"))}</span>` : ""}</div>
+                ${pluginSourceName && pluginSourceName !== stream.addonName ? `<div class="stream-route-plugin-source" dir="${contentTextDirection(pluginSourceName)}">${escapeHtml(pluginSourceName)}</div>` : ""}
                 ${descriptionLines.map((line, lineIndex) => `<div class="stream-route-card-line${lineIndex > 0 ? " secondary" : ""}" dir="${contentTextDirection(line)}">${escapeHtml(line)}</div>`).join("")}
                 ${bottomBadges || ""}
               </div>
@@ -291,7 +290,7 @@ export function createStreamScreenMethods08() {
         `;
     },
     renderStableStreamEmptyState() {
-      return `<div class="stream-route-empty" data-stream-empty hidden style="display:none">${escapeHtml(t("sources_no_streams", {}, "No streams found"))}</div>`;
+      return `<div class="stream-route-empty" data-stream-empty hidden style="display:none"><p>${escapeHtml(t("sources_no_streams", {}, "No streams found"))}</p><p>${escapeHtml(t("stream_no_streams_hint"))}</p></div>`;
     }
   };
 }

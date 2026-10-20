@@ -58,7 +58,7 @@ export function createMetaDetailsScreenMethods12() {
         return [];
       }
       const fullyWatched = this.isSeasonFullyWatched(season);
-      return [
+      const options = [
         {
           action: fullyWatched ? "markSeasonUnwatched" : "markSeasonWatched",
           label: fullyWatched
@@ -66,6 +66,10 @@ export function createMetaDetailsScreenMethods12() {
             : t("episodes_mark_season_watched", {}, "Mark season as watched")
         }
       ];
+      if (this.getPreviousSeasonEpisodes(season).length) {
+        options.push({ action: "markPreviousSeasonsWatched", label: t("episodes_mark_previous_seasons_watched") });
+      }
+      return options;
     },
     getCurrentLibraryItem() {
       return {

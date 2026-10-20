@@ -123,7 +123,7 @@ export const layout_settings = {
       focused_poster_backdrop_trailer_playback_target: normalizeTrailerTargetForAndroid(layout.focusedPosterBackdropTrailerPlaybackTarget),
       poster_card_width_dp: Math.max(72, Math.trunc(Number(layout.posterCardWidthDp ?? 126) || 126)),
       poster_card_height_dp: Math.max(108, Math.trunc((Math.trunc(Number(layout.posterCardWidthDp ?? 126) || 126) * 3) / 2)),
-      poster_card_corner_radius_dp: Math.max(0, Math.trunc(Number(layout.posterCardCornerRadiusDp ?? 12) || 12)),
+      poster_card_corner_radius_dp: Math.max(0, Math.trunc(Number(layout.posterCardCornerRadiusDp ?? 12))),
       card_depth_enabled: Boolean(layout.cardDepthEnabled),
       card_depth_edge_strength: Math.min(100, Math.max(0, Math.trunc(Number(layout.cardDepthEdgeStrength ?? 28) || 0))),
       card_depth_sheen_strength: Math.min(100, Math.max(0, Math.trunc(Number(layout.cardDepthSheenStrength ?? 10) || 0))),

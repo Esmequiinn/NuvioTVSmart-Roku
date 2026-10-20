@@ -8,43 +8,41 @@
 }
 
 .stream-route-backdrop {
-  background: var(--bg-color) center center / cover no-repeat;
-  transform: scale(1.02);
+  background: var(--bg-color) right top / cover no-repeat;
+  opacity: 0.5;
+  transition: opacity 500ms ease;
+}
+
+.stream-route-shell.is-loading .stream-route-backdrop {
+  opacity: 0.7;
 }
 
 .stream-route-backdrop-dim {
-  background: rgb(var(--bg-color-rgb) / 0.24);
+  background: transparent;
 }
 
 .stream-route-left-gradient {
   background: linear-gradient(
     90deg,
     rgb(var(--bg-color-rgb) / 1) 0%,
-    rgb(var(--bg-color-rgb) / 0.96) 15%,
-    rgb(var(--bg-color-rgb) / 0.88) 31%,
-    rgb(var(--bg-color-rgb) / 0.66) 48%,
-    rgb(var(--bg-color-rgb) / 0.36) 68%,
-    rgb(var(--bg-color-rgb) / 0) 100%
+    rgb(var(--bg-color-rgb) / 0.85) 15%,
+    rgb(var(--bg-color-rgb) / 0.4) 30%,
+    rgb(var(--bg-color-rgb) / 0.15) 50%,
+    rgb(var(--bg-color-rgb) / 0.4) 70%,
+    rgb(var(--bg-color-rgb) / 0.85) 85%,
+    rgb(var(--bg-color-rgb) / 1) 100%
   );
 }
 
 .stream-route-right-gradient {
-  background: linear-gradient(
-    270deg,
-    rgb(var(--bg-color-rgb) / 1) 0%,
-    rgb(var(--bg-color-rgb) / 0.95) 14%,
-    rgb(var(--bg-color-rgb) / 0.82) 31%,
-    rgb(var(--bg-color-rgb) / 0.58) 48%,
-    rgb(var(--bg-color-rgb) / 0.24) 72%,
-    rgb(var(--bg-color-rgb) / 0) 100%
-  );
+  background: none;
 }
 
 .stream-route-content {
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(320px, 0.4fr) minmax(760px, 0.6fr);
-  padding: 48px;
+  grid-template-columns: minmax(0, 0.4fr) minmax(0, 0.6fr);
+  padding: 0;
   box-sizing: border-box;
 }
 
@@ -57,12 +55,12 @@
 .stream-route-left {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding-right: 24px;
+  justify-content: flex-start;
+  padding-inline: 96px 48px;
 }
 
 .stream-route-left-inner {
-  width: min(80%, 420px);
+  width: 80%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -71,9 +69,9 @@
 
 .stream-route-logo {
   width: 100%;
-  max-height: 140px;
+  height: 240px;
   object-fit: contain;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .stream-route-title {
@@ -84,14 +82,14 @@
 }
 
 .stream-route-episode-code {
-  font-size: clamp(30px, 2vw, 38px);
+  font-size: 40px;
   line-height: 1.35;
   font-weight: 500;
   color: var(--text-secondary);
 }
 
 .stream-route-subtitle {
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: var(--tv-subtitle-text);
   line-height: 1.35;
   font-weight: 500;
@@ -99,8 +97,8 @@
 }
 
 .stream-route-detail-line {
-  margin-top: 6px;
-  font-size: var(--tv-secondary-text);
+  margin-top: 8px;
+  font-size: 28px;
   line-height: 1.4;
   color: var(--text-secondary);
 }
@@ -109,22 +107,23 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 1060px;
+  padding: 96px 96px 96px 0;
   justify-self: end;
 }
 
 .stream-route-chip-wrap {
-  height: clamp(64px, 4.2vw, 78px);
-  margin-bottom: 20px;
+  height: 112px;
+  flex: 0 0 112px;
+  margin-bottom: 32px;
 }
 
 .stream-route-chip-track {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 32px;
   height: 100%;
   overflow-x: auto;
-  padding: 6px 8px;
+  padding: 8px 16px;
   box-sizing: border-box;
   scrollbar-width: none;
 }
@@ -135,7 +134,7 @@
 
 .stream-route-chip {
   flex-shrink: 0;
-  min-height: clamp(56px, 3.8vw, 70px);
+  min-height: 72px;
   padding: 0 clamp(30px, 2vw, 40px);
   border-radius: 999px;
   border: 1px solid var(--border-color);
@@ -148,6 +147,19 @@
   align-items: center;
   gap: 10px;
   white-space: nowrap;
+}
+
+.stream-route-resume-label {
+  align-self: flex-start;
+  height: 72px;
+  flex: 0 0 72px;
+  margin: 0 0 16px 16px;
+  padding: 0 32px;
+  border-radius: 40px;
+  background: var(--card-bg);
+  display: flex;
+  align-items: center;
+  font-size: 28px;
 }
 
 .stream-route-chip.selected {
@@ -182,16 +194,16 @@
 .stream-route-panel-shell {
   flex: 1;
   min-height: 0;
-  border-radius: 22px;
-  background: rgb(var(--bg-elevated-rgb) / 0.22);
+  border-radius: 32px;
+  background: rgb(var(--bg-elevated-rgb) / 0.65);
   box-shadow: inset 0 0 0 1px rgb(var(--focus-color-rgb) / 0.035);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
-  padding: 22px 20px 22px;
+  padding: 0;
   box-sizing: border-box;
   overflow: hidden;
   opacity: 0;
-  transform: translateX(4%);
+  transform: translateX(6%);
   animation: streamRoutePanelEnter 260ms ease forwards;
 }
 
@@ -212,7 +224,7 @@
   height: 100%;
   overflow-y: auto;
   overflow-anchor: none;
-  padding: 8px 8px 10px;
+  padding: 48px 48px 96px;
   box-sizing: border-box;
   scrollbar-width: none;
   scroll-padding-top: 8px;
@@ -245,7 +257,7 @@
   display: flex;
   align-items: stretch;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 40px;
 }
 
 .stream-route-card-row[data-stream-loading-row][hidden],
@@ -260,15 +272,15 @@
 .stream-route-card {
   flex: 1 1 auto;
   width: 100%;
-  min-height: 214px;
-  padding: 28px 32px;
-  border-radius: 20px;
+  min-height: 0;
+  padding: 32px;
+  border-radius: 24px;
   border: 1px solid rgb(var(--focus-color-rgb) / 0.06);
-  background: rgb(var(--card-bg-rgb) / 0.94);
+  background: var(--bg-elevated);
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 32px;
   transform-origin: center;
   transition:
     transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1),

@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import * as internals from "./tmdbMetadataService.js";
+import { fetchTmdbJson } from "./tmdbService.js";
 
 export function createTmdbMetadataServiceMethods01() {
   const {
@@ -8,6 +9,7 @@ export function createTmdbMetadataServiceMethods01() {
     TMDB_API_KEY,
     tmdbShowReleaseInfo,
     TMDB_BASE_URL,
+    TMDB_METADATA_MAX_RESPONSE_BYTES,
     TMDB_TRAILER_FALLBACK_LANGUAGE,
     ENTITY_RAIL_MAX_ITEMS,
     TOP_RATED_VOTE_COUNT_FLOOR,
@@ -23,6 +25,7 @@ export function createTmdbMetadataServiceMethods01() {
     fetchEnglishPersonNames,
     fetchEnglishTitle,
     resolveCredits,
+    resolveTmdbCredits,
     toImageUrl,
     buildTmdbImageLanguageFilter,
     selectBestLocalizedLogoPath,
@@ -50,15 +53,16 @@ export function createTmdbMetadataServiceMethods01() {
       const type = resolveType(contentType);
       const lang = normalizeMoreLikeThisLanguage(language || settings.language);
       const imageLanguages = buildTmdbImageLanguageFilter(lang);
-      const params = `api_key=${encodeURIComponent(apiKey)}&language=${encodeURIComponent(lang)}&append_to_response=images,credits,release_dates,content_ratings,videos,external_ids&include_image_language=${encodeURIComponent(imageLanguages)}`;
+      const creditType = type === "tv" ? "aggregate_credits" : "credits";
+      const params = `api_key=${encodeURIComponent(apiKey)}&language=${encodeURIComponent(lang)}&append_to_response=images,${creditType},release_dates,content_ratings,videos,external_ids&include_image_language=${encodeURIComponent(imageLanguages)}`;
       const url = `${TMDB_BASE_URL}/${type}/${encodeURIComponent(String(tmdbId))}?${params}`;
 
-      const response = await fetch(url);
-      if (!response.ok) {
+      const data = await fetchTmdbJson(url, { maxResponseBytes: TMDB_METADATA_MAX_RESPONSE_BYTES });
+      if (!data) {
         return null;
       }
 
-      const data = await response.json();
+      data.credits = resolveTmdbCredits(data, type);
       const englishPersonNames = await fetchEnglishPersonNames({
         type,
         tmdbId,

@@ -189,6 +189,10 @@ export function createMetaDetailsScreenMethods26() {
       }
 
       const action = current.dataset.action;
+      if (action === "openSynopsis") {
+        if (current.classList.contains("focusable")) this.openSynopsis();
+        return;
+      }
       if (action === "goBack") {
         if (this.navigateBackFromDetail()) {
           return;

@@ -198,25 +198,37 @@ export function createMetaDetailsScreenMethods03() {
 
       // Background enrichments: do not block initial screen rendering.
       (async () => {
-        const enrichedMeta = await withTimeout(this.enrichMeta(meta), 4000, meta);
+        const enrichedMeta = await this.enrichMeta(meta);
         if (token !== this.detailLoadToken) {
           return;
         }
 
+        // Metadata can arrive after a watched-state edit on the visible page.
+        const [currentProgressItems, currentWatchedItems] = await Promise.all([
+          getDetailAllProgressPromise(),
+          watchedItemsRepository.getAll()
+        ]);
+        if (token !== this.detailLoadToken) {
+          return;
+        }
+        const currentProgressItemsForDetail = this.resumeProgress ? [this.resumeProgress, ...currentProgressItems] : currentProgressItems;
         this.meta = enrichedMeta || meta;
         this.episodes = normalizeEpisodes(this.meta?.videos || [], this.meta?.type || this.params?.itemType);
         this.castItems = extractCast(this.meta);
-        this.buildEpisodeState(progressItemsForDetail, allWatchedItems);
+        this.buildEpisodeState(currentProgressItemsForDetail, currentWatchedItems, this.enrichedWatchedState);
         this.trailerSource = resolveTrailerSource(this.meta);
         if (!this.castItems.length) {
           const fallbackCast = await withTimeout(this.fetchTmdbCastFallback(this.meta), 3200, []);
+          if (token !== this.detailLoadToken) {
+            return;
+          }
           if (Array.isArray(fallbackCast) && fallbackCast.length) {
             this.castItems = fallbackCast;
           }
         }
-        this.selectedSeason = this.resolveInitialSelectedSeason(this.resumeProgress || progress, progressItemsForDetail);
+        this.selectedSeason = this.resolveInitialSelectedSeason(this.resumeProgress, currentProgressItemsForDetail);
         this.selectedRatingSeason = this.selectedRatingSeason || this.selectedSeason || 1;
-        this.nextEpisodeToWatch = this.computeNextEpisodeToWatch(this.resumeProgress || progress);
+        this.nextEpisodeToWatch = this.computeNextEpisodeToWatch(this.resumeProgress);
         this.updateRenderedDetailSections(this.meta);
         void this.loadMdbListRatings(this.meta, token);
         void this.refreshTrailerSource(this.meta, token);
@@ -250,8 +262,15 @@ export function createMetaDetailsScreenMethods03() {
         if (isSeriesDetailMeta(this.meta, this.episodes)) {
           this.seriesRatingsBySeason = mergeSeasonRatings(addonRatingsBySeason(this.episodes), results[0] || {});
           if (this.meta?.ids?.trakt && results[1] instanceof Map) {
+            const [latestProgressItems, latestWatchedItems] = await Promise.all([
+              getDetailAllProgressPromise(),
+              watchedItemsRepository.getAll()
+            ]);
+            if (token !== this.detailLoadToken) {
+              return;
+            }
             this.enrichedWatchedState = results[1];
-            this.buildEpisodeState(allProgressItems, allWatchedItems, this.enrichedWatchedState);
+            this.buildEpisodeState(latestProgressItems, latestWatchedItems, this.enrichedWatchedState);
             this.updateRenderedDetailSections(this.meta);
           }
         } else {

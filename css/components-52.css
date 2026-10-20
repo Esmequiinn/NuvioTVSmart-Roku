@@ -394,7 +394,7 @@
   --detail-action-gap: 24px;
   --detail-button-height: 96px;
   --detail-control-size: 96px;
-  --detail-title-size: 88px;
+  --detail-title-size: 72px;
   --detail-section-title-size: 44px;
   --detail-label-size: 32px;
   --detail-body-size: 32px;
@@ -404,7 +404,7 @@
 .detail-hero-section {
   min-height: 100vh;
   height: 100vh;
-  padding: 0 var(--detail-safe-x) 32px calc(var(--detail-safe-x) - 24px);
+  padding: 0 var(--detail-safe-x) 32px;
 }
 
 .detail-hero-brand {
@@ -412,15 +412,23 @@
 }
 
 .series-detail-logo {
-  max-width: 37vw;
-  max-height: 180px;
-  margin-bottom: 40px;
+  width: 40%;
+  height: 200px;
+  max-width: none;
+  max-height: none;
+  padding-bottom: 32px;
+  margin-bottom: 0;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .detail-trailer-autoplay .series-detail-logo {
-  max-width: 25vw;
-  max-height: 120px;
-  margin-bottom: 48px;
+  width: 25%;
+  height: 120px;
+  max-width: none;
+  max-height: none;
+  padding-bottom: 48px;
+  margin-bottom: 0;
 }
 
 .series-detail-title {
@@ -439,7 +447,7 @@
 
 .series-detail-actions {
   gap: var(--detail-action-gap);
-  padding: 6px;
+  padding: 0;
   margin: 0 0 30px;
 }
 
@@ -451,5 +459,6 @@
   color: #000000;
   border-color: transparent;
   font-size: var(--detail-label-size);
+  line-height: 48px;
   gap: 16px;
 }

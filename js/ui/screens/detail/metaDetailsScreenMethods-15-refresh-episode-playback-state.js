@@ -163,6 +163,10 @@ export function createMetaDetailsScreenMethods15() {
       if (season == null || !option) {
         return false;
       }
+      if (option.action === "markPreviousSeasonsWatched") {
+        this.closeSeasonHoldMenu({ restoreFocus: false });
+        return this.markPreviousSeasonsWatched(season);
+      }
       if (option.action === "markSeasonWatched" || option.action === "markSeasonUnwatched") {
         this.closeSeasonHoldMenu({ restoreFocus: false });
         return this.setSeasonWatchedState(season, option.action === "markSeasonWatched");

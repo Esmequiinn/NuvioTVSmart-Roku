@@ -253,7 +253,7 @@ export function createMetaDetailsScreenMethods07() {
               ${this.renderResumeIndicator()}
               ${creditLine ? `<p class="series-detail-support">${escapeHtml(creditPrefix)}: ${escapeHtml(creditLine)}</p>` : ""}
               ${externalRatings}
-              <p class="series-detail-description" dir="${contentTextDirection(heroDescription)}">${escapeHtml(heroDescription)}</p>
+              <div class="series-detail-description" data-action="openSynopsis" dir="${contentTextDirection(heroDescription)}"><span class="detail-synopsis-preview">${escapeHtml(heroDescription)}</span><span class="detail-synopsis-more" hidden>${escapeHtml(t("hero_synopsis_read_more"))}</span></div>
               ${this.renderHeroMetaRows(meta)}
             </div>
           </section>
