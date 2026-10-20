@@ -206,7 +206,8 @@ export function createPosterCardMarkup(
   isExpanded = false,
   preferLandscapePoster = false,
   deferImages = false,
-  watchedTitleIds = null
+  watchedTitleIds = null,
+  posterSettings
 ) {
   const suppressPosterText = Boolean(rowData?.suppressPosterText);
   const rowKey = String(rowData?.homeCatalogKey || buildModernRowKey(rowData || {})).trim();
@@ -287,7 +288,8 @@ export function createPosterCardMarkup(
   const normalized = customPosterForItem(
     normalizeCatalogItem(item, itemType),
     Router.getCurrent() === "folderDetail" || rowData?.rowKind === "collection" ? "collections" : "home",
-    layoutMode === "modern" && preferLandscapePoster ? "landscape" : "poster"
+    layoutMode === "modern" && preferLandscapePoster ? "landscape" : "poster",
+    posterSettings
   );
   const subtitle = buildPosterSubtitle(normalized, layoutMode);
   const preferredLandscapePosterSrc = firstNonEmpty(normalized.landscapePoster);
