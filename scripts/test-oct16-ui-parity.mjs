@@ -221,6 +221,8 @@ function renderCase(index, moved, virtualized = true) {
     getStreamVirtualKeys: () => current,
     renderStreamVirtualMarkup: () => "",
     renderStreamCard: () => "",
+    renderStableStreamEmptyState: () => "",
+    renderStableStreamLoadingRow: () => "",
     renderContinueWatchingResumeOverlay: () => "",
     renderAutoPlayOverlay: () => "",
     stopStreamVirtualization() {
@@ -229,6 +231,7 @@ function renderCase(index, moved, virtualized = true) {
   };
   for (const name of [
     "cancelScheduledRender",
+    "applyAddonFilterDomState",
     "restoreScrollPosition",
     "hydrateVisibleStreamBadges",
     "bindAddonLogoFallbacks",

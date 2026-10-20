@@ -91,7 +91,10 @@ const fixtures = {
   normalizeHomeImdbRatingsVisibility: (value) => value,
   t: (key, args = []) => key + (args.length ? ":" + args[0] : ""),
   escapeHtml: (value) =>
-    String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;"),
+    String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll('"', "&quot;"),
   normalizeType: (value) => (["tv", "series"].includes(value) ? "series" : "movie"),
   normalizeEpisodeCode: (season, episode) => (season && episode ? `S${season} E${episode}` : ""),
   localizedGenreText: (value) => value || "",
@@ -192,7 +195,7 @@ assert.equal(
 );
 assert.equal(header.call({ params: { resumeProgressPercent: 100 } }).resumeLabel, "");
 
-function renderState(error) {
+function renderState(error, overrides = {}) {
   const state = {
     params: {},
     streams: [],
@@ -218,6 +221,7 @@ function renderState(error) {
     "bindListScrollState"
   ])
     state[name] = () => {};
+  Object.assign(state, overrides);
   api.createStreamScreenMethods09().render.call(state);
   return state.container.innerHTML;
 }
@@ -246,17 +250,89 @@ const stream = {
   addonName: "Addon",
   pluginSourceName: "<Provider>"
 };
+let stableListApplied = false;
+renderState(null, {
+  streams: [stream],
+  getFilteredStreams: () => [stream],
+  renderStreamCard: () => "<article></article>",
+  renderStableStreamEmptyState: () => "",
+  renderStableStreamLoadingRow: () => "",
+  applyAddonFilterDomState() {
+    stableListApplied = true;
+  }
+});
+assert.equal(stableListApplied, true, "modern TVs must retain keyed cards on filter changes");
 for (const placement of ["TOP", "BOTTOM"]) {
   const html = renderCard.call({ isCardActionFocused: () => false }, stream, 0, true, {
     testBadges: true,
     badgePlacement: placement
   });
   assert.ok(html.includes("&lt;Provider>"));
+  assert.ok(html.includes('data-stream-key="0"'), "the first card must keep its zero key");
   assert.equal(
     html.indexOf("TEST-BADGES") < html.indexOf('class="stream-route-card-heading"'),
     placement === "TOP"
   );
 }
+
+const filterRows = [0, 1, 2].map((index) => {
+  const card = { dataset: {}, style: {} };
+  return {
+    dataset: { streamKey: String(index) },
+    style: {},
+    card,
+    querySelector: () => card,
+    querySelectorAll: () => []
+  };
+});
+const filterList = {
+  querySelectorAll: () => filterRows,
+  querySelector: (selector) => (selector.includes("loading-row") ? loadingFilterRow : null),
+  appendChild() {
+    assert.fail("filter changes must not move already ordered cards");
+  }
+};
+const loadingFilterRow = { style: {} };
+const sourceA = {},
+  sourceB = {};
+const allSources = [sourceA, sourceB, sourceA];
+const filterState = {
+  container: { querySelector: () => filterList, querySelectorAll: () => [] },
+  hasPendingSourceLoads: () => false
+};
+for (const [filter, visible, expectedRows] of [
+  ["A", [sourceA, sourceA], [0, -1, 1]],
+  ["all", [], [0, 1, 2]],
+  ["B", [sourceB], [-1, 0, -1]],
+  ["A", [sourceA, sourceA], [0, -1, 1]]
+]) {
+  filterState.addonFilter = filter;
+  assert.equal(
+    api
+      .createStreamScreenMethods06()
+      .applyAddonFilterDomState.call(filterState, visible, allSources),
+    true
+  );
+  assert.deepEqual(
+    filterRows.map((row) => Number(row.dataset.streamRow)),
+    expectedRows
+  );
+  assert.deepEqual(
+    filterRows.map((row) => row.hidden),
+    expectedRows.map((index) => index < 0)
+  );
+}
+filterState.addonFilter = "empty";
+filterState.hasPendingSourceLoads = (filter) => filter === "all";
+api.createStreamScreenMethods06().applyAddonFilterDomState.call(filterState, [], allSources);
+assert.equal(
+  loadingFilterRow.hidden,
+  false,
+  "an empty filter must retain loading feedback while sources resolve"
+);
+filterState.hasPendingSourceLoads = () => false;
+api.createStreamScreenMethods06().applyAddonFilterDomState.call(filterState, [], allSources);
+assert.equal(loadingFilterRow.hidden, true);
 
 const filenameMarkup = renderCard.call(
   { isCardActionFocused: () => false },

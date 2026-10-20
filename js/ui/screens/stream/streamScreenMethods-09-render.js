@@ -85,9 +85,7 @@ export function createStreamScreenMethods09() {
       } else if (this.streamVirtualized) {
         this.stopStreamVirtualization();
       }
-      const stableStreamList = Boolean(
-        isPerformanceConstrainedRuntime() && filtered.length && addonLogosReady && allStreams.length && !virtualizedStreamList
-      );
+      const stableStreamList = Boolean(filtered.length && addonLogosReady && allStreams.length && !virtualizedStreamList);
 
       if (filtered.length && showAddonLogo && !addonLogosReady) {
         this.requestAddonLogoPrerender(filtered);
@@ -101,9 +99,7 @@ export function createStreamScreenMethods09() {
         }
       } else if (stableStreamList) {
         body = allStreams.map((stream, index) => this.renderStreamCard(stream, index, streamBadgesEnabled, badgeSettings)).join("");
-        if (hasPendingForFilter) {
-          body += this.renderStableStreamLoadingRow();
-        }
+        body += this.renderStableStreamLoadingRow();
         body += this.renderStableStreamEmptyState();
       } else if (filtered.length) {
         body = filtered.map((stream, index) => this.renderStreamCard(stream, index, streamBadgesEnabled, badgeSettings)).join("");

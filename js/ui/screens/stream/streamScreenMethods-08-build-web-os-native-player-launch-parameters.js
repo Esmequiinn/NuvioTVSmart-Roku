@@ -243,7 +243,7 @@ export function createStreamScreenMethods08() {
           ? ` style="margin-bottom:${virtualLast ? 0 : Math.max(0, Number(virtualRowGap))}px"`
           : "";
       return `
-          <div class="stream-route-card-row${partyShared ? " is-party-shared" : ""}" data-stream-key="${escapeHtml(streamKey)}" data-stream-row="${index}"${virtualRowStyle}>
+          <div class="stream-route-card-row${partyShared ? " is-party-shared" : ""}" data-stream-key="${escapeHtml(String(streamKey))}" data-stream-row="${index}"${virtualRowStyle}>
             ${partyShared ? `<div class="stream-route-party-label">${escapeHtml(t("party_shared_by", [stream.partyHostName || ""], "Shared by %1$s"))}</div>` : ""}
             <article class="stream-route-card stream-route-card-action focusable${partyShared || partySource ? " is-party-marked" : ""}${this.isCardActionFocused(index, "play") ? " focused" : ""}"
                      data-action="playStream"
