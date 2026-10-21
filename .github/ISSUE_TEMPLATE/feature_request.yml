@@ -1,0 +1,21 @@
+name: "Feature request / Pedir función"
+description: "Suggest a new feature or an improvement / Sugiere una función nueva o una mejora"
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: "What would you like? / ¿Qué te gustaría?"
+      placeholder: "Describe the feature / Describe la función"
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: "Why is it useful? / ¿Por qué sería útil?"
+  - type: textarea
+    id: nuvio
+    attributes:
+      label: "Does Nuvio already have it? / ¿Nuvio ya lo tiene?"
+      description: "If it exists in Nuvio TV or the mobile app, tell us where / Si existe en Nuvio TV o en la app del celular, dinos dónde"
