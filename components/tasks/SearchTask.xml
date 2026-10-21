@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="SearchTask" extends="Task">
+    <interface>
+        <field id="manifests" type="array" />
+        <field id="query" type="string" />
+        <field id="limit" type="integer" />
+        <field id="searchable" type="integer" />
+        <field id="total" type="integer" />
+        <field id="row" type="node" alwaysNotify="true" />
+        <field id="done" type="boolean" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Store.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Http.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Addon.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Content.brs" />
+    <script type="text/brightscript" uri="pkg:/components/tasks/SearchTask.brs" />
+</component>

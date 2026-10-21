@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="MetaTask" extends="Task">
+    <interface>
+        <field id="manifests" type="array" />
+        <field id="kind" type="string" />
+        <field id="metaId" type="string" />
+        <field id="meta" type="assocarray" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Store.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Http.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Addon.brs" />
+    <script type="text/brightscript" uri="pkg:/components/tasks/MetaTask.brs" />
+</component>

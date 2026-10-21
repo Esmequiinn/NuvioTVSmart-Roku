@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="ServerTask" extends="Task">
+    <interface>
+        <field id="catalogs" type="array" />
+        <field id="addonNames" type="assocarray" />
+        <field id="status" type="string" />
+        <field id="searchQuery" type="string" />
+        <field id="changed" type="string" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Store.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Http.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Addon.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Streams.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Account.brs" />
+    <script type="text/brightscript" uri="pkg:/components/tasks/ServerTask.brs" />
+</component>

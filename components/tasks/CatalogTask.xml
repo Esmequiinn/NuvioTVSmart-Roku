@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="CatalogTask" extends="Task">
+    <interface>
+        <field id="content" type="node" />
+        <field id="catalogs" type="array" />
+        <field id="manifests" type="array" />
+        <field id="addonCount" type="integer" />
+        <field id="failed" type="integer" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Store.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Http.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Addon.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Content.brs" />
+    <script type="text/brightscript" uri="pkg:/components/tasks/CatalogTask.brs" />
+</component>
