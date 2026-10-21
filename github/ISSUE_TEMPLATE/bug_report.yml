@@ -1,0 +1,46 @@
+name: "Bug report / Reportar bug"
+description: "Something doesn't work as expected / Algo no funciona como debería"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: "What happened? / ¿Qué pasó?"
+      placeholder: "Describe the problem / Describe el problema"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to reproduce / Pasos para reproducirlo"
+      placeholder: |
+        1. Open... / Abre...
+        2. Press... / Presiona...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "What did you expect? / ¿Qué esperabas que pasara?"
+  - type: input
+    id: version
+    attributes:
+      label: "Channel version / Versión del canal"
+      placeholder: "2.2.0"
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: "Roku model and OS version / Modelo de Roku y versión del sistema"
+      description: "Settings → System → About / Configuración → Sistema → Acerca de"
+      placeholder: "Roku Express 3960X, OS 14.0"
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: "Screenshots, addon or extra info / Capturas, addon o información extra"
+      description: "Don't share passwords, API keys or private addon links / No compartas contraseñas, API keys ni links privados de addons"
