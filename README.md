@@ -144,5 +144,5 @@ Bug reports, problems, ideas and feature requests are all very welcome. Open an 
 
 ## Credits and license
 
-- Based on [Nuvio](https://github.com/NuvioMedia) by the Nuvio team, used with their permission. Nuvio name and logos belong to their owners.
+- Based on [Nuvio](https://github.com/NuvioMedia) by the Nuvio team. Nuvio name and logos belong to their owners.
 - Licensed under the [GNU General Public License v3.0](LICENSE).
