@@ -1,5 +1,15 @@
 # Nuvio TV for Roku
 
+<div align="center">
+
+  <img src="assets/brand/app_logo_wordmark.png" alt="Nuvio" width="300" />
+
+  <p>
+    A free, open-source media app for your phone, your desktop, and the TV you already own.
+    <br />
+    Bring your own sources. Nuvio turns them into a library with artwork, ratings, subtitles, and your place saved on every screen.
+  </p>
+
 An unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia), built with permission from the Nuvio developers. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
 
 > **This is not an official Nuvio app** and it is not affiliated with or endorsed by the Nuvio team. It does not host, store or distribute any content. Everything you see comes from the addons you install.
