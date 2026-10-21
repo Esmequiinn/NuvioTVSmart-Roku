@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="ProfilePicker" extends="Group">
+    <interface>
+        <field id="profiles" type="array" onChange="build" />
+        <field id="selected" type="string" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/ProfilePicker.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x000000FF" />
+        <Poster id="glow" translation="[160,140]" width="1600" height="1000" uri="pkg:/images/glow.png" loadDisplayMode="scaleToFill" opacity="0.55" />
+        <Label id="heading" translation="[0,250]" width="1920" horizAlign="center" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" text="¿Quién está viendo?" />
+        <Label id="subheading" translation="[0,340]" width="1920" horizAlign="center" font="font:SmallSystemFont" color="0xB4B4C0FF" text="Cada perfil tiene su propia lista y su propio progreso." />
+        <Group id="row" translation="[0,440]" />
+    </children>
+</component>

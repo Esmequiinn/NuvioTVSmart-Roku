@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="StreamsScreen" extends="Group">
+    <interface>
+        <field id="info" type="assocarray" onChange="onInfo" />
+        <field id="streams" type="array" onChange="onStreams" />
+        <field id="loading" type="boolean" onChange="updateStatus" />
+        <field id="note" type="string" onChange="updateStatus" />
+        <field id="resume" type="string" />
+        <field id="fromStart" type="boolean" onChange="buildChips" />
+        <field id="accent" type="string" value="0x7C4DFFFF" onChange="paintChips" />
+        <field id="event" type="assocarray" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/StreamsScreen.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x0C0C0FFF" />
+        <Poster id="bg" width="1920" height="1080" loadWidth="1280" loadHeight="720" loadDisplayMode="scaleToZoom" opacity="0.38" />
+        <Poster width="1500" height="1080" uri="pkg:/images/grad_left.png" loadDisplayMode="scaleToFill" />
+        <Rectangle width="1920" height="1080" color="0x0C0C0F80" />
+        <Poster id="logo" translation="[110,170]" width="520" height="170" loadDisplayMode="scaleToFit" />
+        <Label id="title" translation="[110,150]" width="540" height="190" wrap="true" maxLines="3" vertAlign="bottom" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+        <Label id="code" translation="[110,380]" width="540" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+        <Label id="epTitle" translation="[110,430]" width="540" wrap="true" maxLines="2" font="font:MediumSystemFont" color="0xC9C9D4FF" />
+        <Label id="hint" translation="[110,950]" width="540" wrap="true" maxLines="3" font="font:SmallestSystemFont" color="0x8E8E9CFF" />
+        <Group id="chips" translation="[700,64]" />
+        <MarkupGrid id="grid" translation="[700,140]" itemComponentName="StreamCard" numColumns="1" numRows="4" itemSize="[1110,236]" itemSpacing="[0,18]" vertFocusAnimationStyle="floatingFocus" drawFocusFeedback="false" />
+        <Label id="status" translation="[700,460]" width="1110" horizAlign="center" wrap="true" maxLines="4" font="font:MediumSystemFont" color="0x9A9AAAFF" />
+        <Label id="footer" translation="[110,1000]" width="540" font="font:SmallestSystemFont" color="0x8E8E9CFF" />
+    </children>
+</component>

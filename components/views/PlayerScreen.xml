@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="PlayerScreen" extends="Group">
+    <interface>
+        <field id="video" type="node" />
+        <field id="info" type="assocarray" onChange="onInfo" />
+        <field id="sources" type="array" />
+        <field id="sourceIndex" type="integer" />
+        <field id="accent" type="string" value="0x7C4DFFFF" />
+        <field id="active" type="boolean" onChange="onActive" />
+        <field id="event" type="assocarray" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/PlayerScreen.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x000000FF" />
+        <Video id="video" width="1920" height="1080" enableUI="false" enableTrickPlay="false" focusable="false" />
+        <Label id="buffering" visible="false" translation="[0,500]" width="1920" horizAlign="center" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" text="Cargando..." />
+        <Group id="pauseScreen" visible="false">
+            <Rectangle width="1920" height="1080" color="0x000000FF" opacity="0.55" />
+            <Poster id="pauseBg" width="1920" height="1080" loadWidth="1280" loadHeight="720" loadDisplayMode="scaleToZoom" opacity="0.45" />
+            <Poster translation="[0,480]" width="1920" height="600" uri="pkg:/images/player_bottom.png" loadDisplayMode="scaleToFill" />
+            <Label id="pauseLabel" translation="[120,600]" font="font:SmallSystemFont" color="0xB4B4C0FF" text="Estás viendo" />
+            <Poster id="pauseLogo" translation="[120,640]" width="620" height="150" loadDisplayMode="scaleToFit" />
+            <Label id="pauseTitle" translation="[120,650]" width="1300" height="140" vertAlign="bottom" wrap="true" maxLines="2" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="pauseMeta" translation="[120,812]" width="1400" font="font:MediumSystemFont" color="0xD4D4DCFF" />
+            <Label id="pauseDesc" translation="[120,862]" width="1100" height="100" wrap="true" maxLines="2" font="font:SmallSystemFont" color="0xC4C4CEFF" />
+            <Label id="pauseHint" translation="[120,980]" font="font:SmallestSystemFont" color="0x9A9AAAFF" text="Presiona OK para continuar" />
+        </Group>
+        <Group id="controls" visible="false">
+            <Poster width="1920" height="220" uri="pkg:/images/player_top.png" loadDisplayMode="scaleToFill" />
+            <Label id="clock" translation="[1100,56]" width="700" horizAlign="right" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="ends" translation="[1100,100]" width="700" horizAlign="right" font="font:SmallestSystemFont" color="0xC4C4CEFF" />
+            <Poster translation="[0,520]" width="1920" height="560" uri="pkg:/images/player_bottom.png" loadDisplayMode="scaleToFill" />
+            <Poster id="logo" translation="[120,700]" width="460" height="120" loadDisplayMode="scaleToFit" />
+            <Label id="title" translation="[120,740]" width="1400" height="80" vertAlign="bottom" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="meta" translation="[120,836]" width="1400" font="font:SmallSystemFont" color="0xC4C4CEFF" />
+            <Rectangle id="track" translation="[120,890]" width="1680" height="6" color="0xFFFFFF44" />
+            <Rectangle id="fill" translation="[120,890]" width="0" height="6" color="0x7C4DFFFF" />
+            <Poster id="knob" translation="[110,883]" width="20" height="20" uri="pkg:/images/circle.png" visible="false" />
+            <Label id="time" translation="[1300,916]" width="500" horizAlign="right" font="font:SmallSystemFont" color="0xFFFFFFFF" />
+            <Group id="buttons" translation="[120,920]" />
+            <Label id="hint" translation="[120,1010]" width="900" font="font:SmallestSystemFont" color="0xC4C4CEFF" />
+        </Group>
+        <Group id="panel" visible="false">
+            <Rectangle translation="[1280,0]" width="640" height="1080" color="0x111116F5" />
+            <Label id="panelTitle" translation="[1340,80]" width="540" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+            <LabelList id="panelList" translation="[1340,160]" itemSize="[540,64]" itemSpacing="[0,6]" numRows="12" vertFocusAnimationStyle="floatingFocus" color="0xD6D6E0FF" focusedColor="0x0C0C0FFF" focusBitmapBlendColor="0xFFFFFFFF" />
+        </Group>
+    </children>
+</component>

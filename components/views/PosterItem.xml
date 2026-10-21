@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="PosterItem" extends="Group">
+    <interface>
+        <field id="itemContent" type="node" onChange="onContent" />
+        <field id="width" type="float" onChange="onSize" />
+        <field id="height" type="float" onChange="onSize" />
+        <field id="itemHasFocus" type="boolean" onChange="onItemFocus" />
+        <field id="focusPercent" type="float" onChange="onItemFocus" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/PosterItem.brs" />
+    <children>
+        <Poster id="frame" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1E1E26FF" />
+        <Label id="name" translation="[14,14]" width="172" height="272" wrap="true" maxLines="5" horizAlign="center" vertAlign="center" font="font:SmallestSystemFont" color="0xC9C9D6FF" />
+        <MaskGroup id="mask" maskUri="pkg:/images/mask_poster.png" maskSize="[200,300]">
+            <Poster id="art" width="200" height="300" loadWidth="200" loadHeight="300" loadDisplayMode="scaleToZoom" />
+            <Poster id="shade" visible="false" uri="pkg:/images/card_shade.png" loadDisplayMode="scaleToFill" />
+        </MaskGroup>
+        <Label id="cardTitle" visible="false" font="font:SmallBoldSystemFont" color="0xFFFFFFFF" />
+        <Label id="cardSub" visible="false" font="font:SmallestSystemFont" color="0xD4D4DCFF" />
+        <Rectangle id="track" visible="false" translation="[12,282]" width="176" height="6" color="0xFFFFFF40" />
+        <Rectangle id="bar" visible="false" translation="[12,282]" width="0" height="6" color="0x7C4DFFFF" />
+    </children>
+</component>

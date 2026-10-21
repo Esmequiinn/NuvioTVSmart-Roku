@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="SettingsScreen" extends="Group">
+    <interface>
+        <field id="model" type="assocarray" onChange="render" />
+        <field id="accent" type="string" value="0x7C4DFFFF" onChange="paint" />
+        <field id="event" type="assocarray" alwaysNotify="true" />
+        <field id="back" type="boolean" alwaysNotify="true" />
+        <field id="reset" type="boolean" alwaysNotify="true" onChange="onReset" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/SettingsScreen.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x0C0C0FFF" />
+        <Rectangle width="540" height="1080" color="0x131318FF" />
+        <Poster translation="[64,58]" width="56" height="56" uri="pkg:/images/ic_settings.png" />
+        <Label id="navTitle" translation="[136,58]" height="56" vertAlign="center" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" text="Ajustes" />
+        <Group id="nav" translation="[40,170]" />
+        <Label id="sectionTitle" translation="[620,58]" width="1200" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+        <Label id="sectionSubtitle" translation="[620,128]" width="1200" font="font:SmallSystemFont" color="0x9A9AAAFF" />
+        <Group id="rows" translation="[620,200]" />
+        <Label id="moreUp" visible="false" translation="[1720,176]" font="font:SmallestSystemFont" color="0x8E8E9CFF" text="···" />
+        <Label id="moreDown" visible="false" translation="[1720,1040]" font="font:SmallestSystemFont" color="0x8E8E9CFF" text="···" />
+    </children>
+</component>

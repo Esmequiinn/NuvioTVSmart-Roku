@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="ExpandedCard" extends="Group">
+    <interface>
+        <field id="data" type="assocarray" onChange="onData" />
+        <field id="trailer" type="assocarray" onChange="onTrailer" />
+        <field id="muted" type="boolean" value="true" />
+        <field id="w" type="float" onChange="layout" />
+        <field id="h" type="float" onChange="layout" />
+        <field id="open" type="boolean" onChange="onOpen" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/ExpandedCard.brs" />
+    <children>
+        <Poster id="ring" uri="pkg:/images/focus_ring.9.png" blendColor="0xFFFFFFFF" />
+        <MaskGroup id="mask" maskUri="pkg:/images/mask_landscape.png" maskSize="[400,225]">
+            <Rectangle id="base" color="0x1E1E26FF" />
+            <Poster id="art" loadWidth="1280" loadHeight="720" loadDisplayMode="scaleToZoom" />
+        </MaskGroup>
+        <Video id="video" enableUI="false" focusable="false" visible="false" />
+        <Poster id="shade" uri="pkg:/images/card_shade.png" loadDisplayMode="scaleToFill" />
+        <Poster id="logo" loadDisplayMode="scaleToFit" />
+        <Label id="title" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+        <Label id="meta" font="font:SmallestSystemFont" color="0xD4D4DCFF" />
+        <Group id="tween" opacity="0" />
+        <Animation id="grow" duration="0.24" easeFunction="outQuad">
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="tween.opacity" />
+        </Animation>
+    </children>
+</component>

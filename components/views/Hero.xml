@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="Hero" extends="Group">
+    <interface>
+        <field id="data" type="assocarray" onChange="render" />
+        <field id="fullscreen" type="boolean" value="false" onChange="layout" />
+        <field id="videoMode" type="boolean" value="false" onChange="onVideoMode" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/Hero.brs" />
+    <children>
+        <Poster id="backdrop" translation="[560,0]" width="1360" height="765" loadWidth="1280" loadHeight="720" loadDisplayMode="scaleToZoom" />
+        <Rectangle id="solid" width="562" height="1080" color="0x0C0C0FFF" />
+        <Poster id="fadeLeft" translation="[560,0]" width="760" height="765" uri="pkg:/images/grad_left.png" loadDisplayMode="scaleToFill" />
+        <Poster id="fadeBottom" translation="[0,420]" width="1920" height="346" uri="pkg:/images/grad_bottom.png" loadDisplayMode="scaleToFill" />
+        <Rectangle id="floor" translation="[0,764]" width="1920" height="316" color="0x0C0C0FFF" />
+        <Poster id="logo" translation="[160,120]" width="620" height="180" loadDisplayMode="scaleToFit" />
+        <Label id="title" translation="[160,150]" width="1000" height="150" wrap="true" maxLines="2" vertAlign="bottom" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+        <LayoutGroup id="metaRow" translation="[160,330]" layoutDirection="horiz" itemSpacings="[14]" vertAlignment="center">
+            <Poster id="imdb" width="84" height="38" uri="pkg:/images/imdb.png" />
+            <Label id="rating" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="metaLine" font="font:MediumSystemFont" color="0xC9C9D4FF" />
+        </LayoutGroup>
+        <Label id="description" translation="[160,392]" width="940" height="130" wrap="true" maxLines="3" font="font:SmallSystemFont" color="0xD4D4DCFF" lineSpacing="4" />
+    </children>
+</component>

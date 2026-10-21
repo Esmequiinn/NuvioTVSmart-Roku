@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="DetailsScreen" extends="Group">
+    <interface>
+        <field id="data" type="assocarray" onChange="render" />
+        <field id="buttons" type="array" onChange="buildButtons" />
+        <field id="status" type="string" onChange="onStatus" />
+        <field id="accent" type="string" value="0x7C4DFFFF" />
+        <field id="focusIndex" type="integer" alwaysNotify="true" onChange="onFocusIndex" />
+        <field id="selected" type="string" alwaysNotify="true" />
+        <field id="back" type="boolean" alwaysNotify="true" />
+        <field id="trailer" type="assocarray" onChange="onTrailer" />
+        <field id="trailerPlaying" type="boolean" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/DetailsScreen.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x0C0C0FFF" />
+        <Video id="trailerVideo" width="1920" height="1080" enableUI="false" focusable="false" visible="false" />
+        <Hero id="hero" fullscreen="true" />
+        <LayoutGroup id="buttonRow" translation="[160,720]" layoutDirection="horiz" itemSpacings="[20]" />
+        <Label id="statusLabel" translation="[160,830]" width="1200" font="font:SmallSystemFont" color="0xA9A9B8FF" />
+        <Label id="trailerHint" visible="false" translation="[160,1000]" width="1200" font="font:SmallestSystemFont" color="0x9A9AAAFF" text="Tráiler en reproducción  ·  Atrás para detenerlo" />
+        <Timer id="trailerTimer" repeat="false" />
+    </children>
+</component>

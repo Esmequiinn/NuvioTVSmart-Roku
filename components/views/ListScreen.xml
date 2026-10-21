@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="ListScreen" extends="Group">
+    <interface>
+        <field id="config" type="assocarray" onChange="render" />
+        <field id="accent" type="string" onChange="applyAccent" />
+        <field id="selected" type="integer" alwaysNotify="true" />
+        <field id="back" type="boolean" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/ListScreen.brs" />
+    <children>
+        <Rectangle id="bg" width="1920" height="1080" color="0x0C0C0FFF" />
+        <Poster id="backdrop" width="1920" height="1080" loadWidth="1280" loadHeight="720" loadDisplayMode="scaleToZoom" opacity="0.22" />
+        <Rectangle id="mark" translation="[80,92]" width="8" height="56" color="0x7C4DFFFF" />
+        <Label id="title" translation="[112,84]" width="1700" height="72" vertAlign="center" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+        <Label id="subtitle" translation="[112,166]" width="1700" wrap="true" maxLines="3" font="font:SmallSystemFont" color="0xA9A9B8FF" />
+        <Poster id="poster" visible="false" translation="[80,300]" width="420" height="600" loadDisplayMode="scaleToFit" />
+        <LabelList id="list" translation="[112,300]" itemSize="[1700,66]" itemSpacing="[0,8]" numRows="8" vertFocusAnimationStyle="floatingFocus" color="0xD6D6E0FF" focusedColor="0x0C0C0FFF" focusBitmapUri="pkg:/images/pill.9.png" focusBitmapBlendColor="0xFFFFFFFF" />
+        <Rectangle id="divider" translation="[112,906]" width="1700" height="2" color="0x2A2A36FF" />
+        <Label id="detail" translation="[112,926]" width="1700" height="130" wrap="true" maxLines="4" font="font:SmallestSystemFont" color="0xA9A9B8FF" />
+    </children>
+</component>

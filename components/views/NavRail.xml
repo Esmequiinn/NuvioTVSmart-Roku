@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="NavRail" extends="Group">
+    <interface>
+        <field id="active" type="string" value="home" onChange="paint" />
+        <field id="profileName" type="string" onChange="paint" />
+        <field id="profileColor" type="string" onChange="paint" />
+        <field id="accent" type="string" value="0x7C4DFFFF" onChange="paint" />
+        <field id="chosen" type="string" alwaysNotify="true" />
+        <field id="leave" type="boolean" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/NavRail.brs" />
+    <children>
+        <Poster id="panel" visible="false" width="700" height="1080" uri="pkg:/images/rail_bg.png" loadDisplayMode="scaleToFill" />
+        <Group id="entries" />
+    </children>
+</component>
