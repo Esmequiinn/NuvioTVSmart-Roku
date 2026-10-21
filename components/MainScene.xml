@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="MainScene" extends="Scene">
+    <interface>
+        <field id="externalInput" type="assocarray" alwaysNotify="true" onChange="onExternalInput" />
+        <field id="exitApp" type="boolean" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Store.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Content.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Streams.brs" />
+    <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Pages.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Playback.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Menus.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Settings.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x0C0C0FFF" />
+        <Hero id="hero" />
+        <Group id="homePage">
+            <RowList
+                id="homeRows"
+                translation="[160,560]"
+                itemComponentName="PosterItem"
+                numRows="2"
+                itemSize="[1760,380]"
+                itemSpacing="[0,10]"
+                rowItemSize="[[200,300]]"
+                rowItemSpacing="[[26,0]]"
+                showRowLabel="[true]"
+                rowLabelOffset="[[0,18]]"
+                rowLabelColor="0xF2F2F7FF"
+                rowFocusAnimationStyle="floatingFocus"
+                vertFocusAnimationStyle="fixedFocus"
+                focusBitmapUri="pkg:/images/focus_ring.9.png"
+                focusBitmapBlendColor="0xFFFFFFFF" />
+            <Group id="emptyState" visible="false">
+                <Label id="emptyTitle" translation="[160,200]" width="1100" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+                <Label id="emptyBody" translation="[160,290]" width="1100" wrap="true" maxLines="12" font="font:MediumSystemFont" color="0xC9C9D6FF" />
+                <Poster id="emptyQr" translation="[1380,200]" width="400" height="400" loadDisplayMode="scaleToFit" />
+            </Group>
+        </Group>
+        <Group id="searchPage" visible="false">
+            <Label id="searchHeading" translation="[160,70]" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" text="Buscar" />
+            <Label id="searchText" visible="false" />
+            <Group id="keyboardHolder" translation="[140,170]" />
+            <Label id="searchHint" translation="[160,880]" width="580" wrap="true" font="font:SmallestSystemFont" color="0x8E8E9CFF" text="También puedes escribir desde tu celular, en la página de configuración." />
+            <Label id="searchStatus" translation="[800,420]" width="1000" horizAlign="center" wrap="true" font="font:MediumSystemFont" color="0x9A9AAAFF" text="Escribe para buscar películas y series en tus addons." />
+            <RowList
+                id="searchRows"
+                translation="[800,80]"
+                itemComponentName="PosterItem"
+                numRows="2"
+                itemSize="[1100,440]"
+                itemSpacing="[0,10]"
+                rowItemSize="[[220,330]]"
+                rowItemSpacing="[[24,0]]"
+                showRowLabel="[true]"
+                rowLabelOffset="[[0,18]]"
+                rowLabelColor="0xF2F2F7FF"
+                rowFocusAnimationStyle="floatingFocus"
+                vertFocusAnimationStyle="fixedFocus"
+                focusBitmapUri="pkg:/images/focus_ring.9.png"
+                focusBitmapBlendColor="0xFFFFFFFF" />
+        </Group>
+        <Group id="libraryPage" visible="false">
+            <RowList
+                id="libraryRows"
+                translation="[160,560]"
+                itemComponentName="PosterItem"
+                numRows="2"
+                itemSize="[1760,380]"
+                itemSpacing="[0,10]"
+                rowItemSize="[[200,300]]"
+                rowItemSpacing="[[26,0]]"
+                showRowLabel="[true]"
+                rowLabelOffset="[[0,18]]"
+                rowLabelColor="0xF2F2F7FF"
+                rowFocusAnimationStyle="floatingFocus"
+                vertFocusAnimationStyle="fixedFocus"
+                focusBitmapUri="pkg:/images/focus_ring.9.png"
+                focusBitmapBlendColor="0xFFFFFFFF" />
+            <Label id="libraryEmpty" visible="false" translation="[160,620]" width="1500" wrap="true" font="font:MediumSystemFont" color="0x9A9AAAFF" text="Tu biblioteca está vacía. Abre cualquier título y elige Mi lista para guardarlo aquí." />
+        </Group>
+        <ExpandedCard id="expanded" />
+        <NavRail id="nav" />
+        <DetailsScreen id="details" visible="false" />
+        <SettingsScreen id="settings" visible="false" />
+        <ListScreen id="list" visible="false" />
+        <StreamsScreen id="streamsScreen" visible="false" />
+        <ProfilePicker id="profiles" visible="false" />
+        <PlayerScreen id="player" visible="false" />
+        <TrailerPlayer id="trailerPlayer" visible="false" />
+        <Group id="loading" visible="false">
+            <Rectangle width="1920" height="1080" color="0x000000FF" opacity="0.72" />
+            <Label id="loadingText" translation="[0,500]" width="1920" horizAlign="center" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="loadingHint" translation="[0,570]" width="1920" horizAlign="center" font="font:SmallestSystemFont" color="0x9A9AAAFF" text="Atrás para cancelar" />
+        </Group>
+        <Timer id="heroTimer" duration="0.45" repeat="false" />
+        <Timer id="searchTimer" duration="1.0" repeat="false" />
+        <Timer id="loginTimer" duration="5" repeat="false" />
+        <Timer id="expandTimer" duration="3" repeat="false" />
+        <Timer id="autoTimer" duration="3" repeat="false" />
+    </children>
+</component>
