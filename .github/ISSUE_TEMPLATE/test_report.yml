@@ -1,0 +1,60 @@
+name: "Test report / Reporte de prueba"
+description: "Tell us how a feature worked on your Roku / Cuéntanos cómo funcionó una función en tu Roku"
+title: "[Test]: "
+labels: ["testing"]
+body:
+  - type: dropdown
+    id: feature
+    attributes:
+      label: "Feature tested / Función que probaste"
+      multiple: true
+      options:
+        - TMDB integration
+        - MDBList integration
+        - Trakt
+        - Simkl
+        - Nuvio account sign-in and sync
+        - Sources with addon formatter text
+        - Badges (quality, HDR, codec, audio, size and Fusion)
+        - Continue Watching in landscape
+        - Collections import
+        - Auto-play (first source and regex pattern)
+        - Reuse last link and same source for next episode
+        - Preferred and secondary audio and subtitle languages
+        - Custom poster URL patterns
+        - Expanding focused poster
+        - Trailers
+        - English interface
+        - Other / Otra
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: "Result / Resultado"
+      options:
+        - "Works / Funciona"
+        - "Partly works / Funciona a medias"
+        - "Doesn't work / No funciona"
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: "Details / Detalles"
+      placeholder: "What worked and what didn't / Qué funcionó y qué no"
+  - type: input
+    id: version
+    attributes:
+      label: "Channel version / Versión del canal"
+      placeholder: "2.2.0"
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: "Roku model and OS version / Modelo de Roku y versión del sistema"
+      description: "Settings → System → About / Configuración → Sistema → Acerca de"
+      placeholder: "Roku Streaming Stick 4K, OS 14.0"
+    validations:
+      required: true
