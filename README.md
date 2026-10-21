@@ -14,11 +14,11 @@
 
 </div>
 
-This is a unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia), built with permission from the Nuvio developers. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
+This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
 
 > **This is not an official Nuvio app** and it is not affiliated with or endorsed by the Nuvio team. It does not host, store or distribute any content. Everything you see comes from the addons you install.
 
-> **AI was madly used on this, so any thoughts you have about that, keep them to yourself.**
+> **AI was madly used on this, so any thoughts you have about that, keep them to yourself I just wanted to have nuvio on my sh@ty Roku.**
 
 ---
 
@@ -43,7 +43,7 @@ This is a unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia
 
 ## Status
 
-So far the channel has only been tested on a real Roku by the author, so some features haven't been tried yet. If you test any of the **Not tested yet** items, please open an issue and tell us how it went.
+So far the channel has only been tested on a real Roku by me, so some features haven't been tried yet. If you test any of the **Not tested yet** items, please open an issue and tell us how it went.
 
 | Feature | Status |
 | --- | --- |
@@ -131,20 +131,6 @@ The channel is plain BrightScript and SceneGraph, so there is nothing to compile
 ```
 zip -r NuvioTV-Roku.zip manifest source components images web locale LICENSE
 ```
-
-Just like the official Nuvio repositories, the Nuvio server addresses are left empty in the source. Set them in `components/Config.brs` for your own build, or add a server from the phone page after installing:
-
-```brightscript
-function Config_NuvioServer() as string
-    return ""
-end function
-
-function Config_NuvioWeb() as string
-    return ""
-end function
-```
-
-The release `.zip` files are already configured.
 
 ### Translations
 
