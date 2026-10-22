@@ -130,6 +130,7 @@ end sub
 
 sub onFocus()
     focused = m.top.itemHasFocus or m.top.focusPercent > 0.5
+    if m.global.hasField("accent") then m.ring.blendColor = m.global.accent
     m.ring.visible = m.top.itemHasFocus
     if focused
         m.bg.blendColor = "0xFFFFFF2E"

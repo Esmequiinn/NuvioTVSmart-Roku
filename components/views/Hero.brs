@@ -11,6 +11,8 @@ sub init()
     m.rating = m.top.findNode("rating")
     m.metaLine = m.top.findNode("metaLine")
     m.description = m.top.findNode("description")
+    m.video = m.top.findNode("video")
+    m.video.observeField("state", "onVideoState")
     m.title.font.size = 64
     m.logo.observeField("loadStatus", "onLogoStatus")
     m.lastLogo = ""
@@ -101,6 +103,30 @@ function textOf(v as dynamic) as string
     if GetInterface(v, "ifString") <> invalid then return v
     return ""
 end function
+
+sub onTrailer()
+    t = m.top.trailer
+    if t = invalid or Str_Of(t.url) = ""
+        if m.video.state <> "none" and m.video.state <> "stopped" then m.video.control = "stop"
+        m.video.visible = false
+        m.backdrop.visible = not m.top.videoMode
+        return
+    end if
+    m.video.mute = m.top.muted
+    m.video.content = Trailer_Content(t)
+    m.video.control = "play"
+end sub
+
+sub onVideoState()
+    state = m.video.state
+    if state = "playing"
+        m.video.visible = true
+        m.backdrop.visible = false
+    else if state = "finished" or state = "error" or state = "stopped"
+        m.video.visible = false
+        m.backdrop.visible = not m.top.videoMode
+    end if
+end sub
 
 sub onVideoMode()
     m.backdrop.visible = not m.top.videoMode

@@ -6,6 +6,7 @@
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
     <script type="text/brightscript" uri="pkg:/components/views/ProfilePicker.brs" />
     <children>
         <Rectangle width="1920" height="1080" color="0x000000FF" />

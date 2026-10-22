@@ -35,6 +35,11 @@ sub init()
     m.panelKind = ""
     m.panelValues = []
     m.seekTarget = -1
+    m.seekClock = CreateObject("roTimespan")
+    m.seekCount = 0
+    m.seekDir = 0
+    m.seekLast = 0
+    m.fallbackDur = 0
 
     m.hideTimer = createTimer(5.0)
     m.hideTimer.observeField("fire", "onHideTimer")
@@ -54,6 +59,7 @@ sub init()
     m.video.observeField("focusedChild", "onVideoFocus")
     m.video.observeField("position", "onPosition")
     m.panelList.observeField("itemSelected", "onPanelSelect")
+    m.top.observeField("focusedChild", "onTopFocus")
     m.logo.observeField("loadStatus", "onLogoStatus")
     m.pauseLogo.observeField("loadStatus", "onPauseLogoStatus")
 end sub
@@ -85,11 +91,17 @@ sub onVideoFocus()
     if m.top.active and m.video.hasFocus() and not m.panel.visible then m.top.setFocus(true)
 end sub
 
+sub onTopFocus()
+    if m.panel.visible and m.top.hasFocus() then m.panelList.setFocus(true)
+end sub
+
 sub onInfo()
     info = m.top.info
     if info = invalid then return
     m.audioApplied = false
     m.subsApplied = false
+    m.fallbackDur = 0
+    if not Bool_Of(info.isSeries, false) then m.fallbackDur = runtimeOf(Str_Of(info.metaLine))
     m.clock.visible = Bool_Of(info.clock, true)
     m.ends.visible = Bool_Of(info.clock, true)
     m.title.text = Str_Of(info.title)
@@ -320,8 +332,27 @@ sub updateClock()
     end if
 end sub
 
+function totalTime() as float
+    if m.video.duration > 0 then return m.video.duration
+    if m.fallbackDur <> invalid and m.fallbackDur > 0 then return m.fallbackDur
+    return 0
+end function
+
+function runtimeOf(text as string) as integer
+    re = CreateObject("roRegex", "(\d+)\s*h(?:\s*(\d+)\s*m)?|(\d+)\s*(?:m\b|min)", "i")
+    found = re.Match(text)
+    if found.Count() = 0 then return 0
+    if found.Count() > 1 and found[1] <> ""
+        mins = found[1].ToInt() * 60
+        if found.Count() > 2 and found[2] <> "" then mins = mins + found[2].ToInt()
+        return mins * 60
+    end if
+    if found.Count() > 3 and found[3] <> "" then return found[3].ToInt() * 60
+    return 0
+end function
+
 sub updateBar()
-    duration = m.video.duration
+    duration = totalTime()
     current = m.video.position
     if m.seekTarget >= 0 then current = m.seekTarget
     if duration > 0
@@ -366,12 +397,29 @@ sub togglePlay()
     end if
 end sub
 
+function seekStep(direction as integer) as integer
+    now = m.seekClock.TotalMilliseconds()
+    if direction = m.seekDir and now - m.seekLast < 1200
+        m.seekCount = m.seekCount + 1
+    else
+        m.seekCount = 0
+    end if
+    m.seekDir = direction
+    m.seekLast = now
+    stepSize = 10
+    if m.seekCount >= 3 then stepSize = 30
+    if m.seekCount >= 7 then stepSize = 60
+    if m.seekCount >= 12 then stepSize = 120
+    return stepSize * direction
+end function
+
 sub seekBy(delta as integer)
     base = m.video.position
     if m.seekTarget >= 0 then base = m.seekTarget
     target = base + delta
     if target < 0 then target = 0
-    if m.video.duration > 0 and target > m.video.duration - 5 then target = m.video.duration - 5
+    total = totalTime()
+    if total > 0 and target > total - 5 then target = total - 5
     m.seekTarget = target
     updateBar()
     m.seekTimer.control = "stop"
@@ -476,7 +524,11 @@ sub openSources()
 end sub
 
 sub onPanelSelect()
-    index = m.panelList.itemSelected
+    choosePanel(m.panelList.itemSelected)
+end sub
+
+sub choosePanel(index as integer)
+    if not m.panel.visible then return
     if index < 0 or index >= m.panelValues.Count() then return
     value = m.panelValues[index]
     if m.panelKind = "subs"
@@ -506,6 +558,17 @@ function onKeyEvent(key as string, press as boolean) as boolean
             closePanel()
             return true
         end if
+        count = m.panelValues.Count()
+        current = m.panelList.itemFocused
+        if current < 0 then current = 0
+        m.panelList.setFocus(true)
+        if key = "up" and current > 0
+            m.panelList.jumpToItem = current - 1
+        else if key = "down" and current < count - 1
+            m.panelList.jumpToItem = current + 1
+        else if key = "OK"
+            choosePanel(current)
+        end if
         return true
     end if
     if m.pauseScreen.visible
@@ -525,11 +588,11 @@ function onKeyEvent(key as string, press as boolean) as boolean
         showControls("buttons")
         return true
     else if key = "fastforward"
-        seekBy(30)
+        seekBy(seekStep(1) * 3)
         showControls("bar")
         return true
     else if key = "rewind"
-        seekBy(-30)
+        seekBy(seekStep(-1) * 3)
         showControls("bar")
         return true
     end if
@@ -537,10 +600,10 @@ function onKeyEvent(key as string, press as boolean) as boolean
         if key = "back"
             m.top.event = { type: "close" }
         else if key = "left"
-            seekBy(-10)
+            seekBy(seekStep(-1))
             showControls("bar")
         else if key = "right"
-            seekBy(10)
+            seekBy(seekStep(1))
             showControls("bar")
         else if key = "OK"
             togglePlay()
@@ -557,9 +620,9 @@ function onKeyEvent(key as string, press as boolean) as boolean
         hideControls()
     else if m.zone = "bar"
         if key = "left"
-            seekBy(-10)
+            seekBy(seekStep(-1))
         else if key = "right"
-            seekBy(10)
+            seekBy(seekStep(1))
         else if key = "down"
             m.zone = "buttons"
             paintButtons()

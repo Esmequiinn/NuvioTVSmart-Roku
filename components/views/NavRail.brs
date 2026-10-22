@@ -25,6 +25,17 @@ sub init()
             icon.width = 60
             icon.height = 60
             icon.translation = [8, 8]
+            mask = g.createChild("MaskGroup")
+            mask.maskUri = "pkg:/images/circle.png"
+            mask.maskSize = [60, 60]
+            mask.translation = [8, 8]
+            m.avatar = mask.createChild("Poster")
+            m.avatar.width = 60
+            m.avatar.height = 60
+            m.avatar.loadWidth = 120
+            m.avatar.loadHeight = 120
+            m.avatar.loadDisplayMode = "scaleToZoom"
+            m.avatar.observeField("loadStatus", "paint")
             initial = g.createChild("Label")
             initial.width = 60
             initial.height = 60
@@ -98,6 +109,11 @@ sub paint()
             if name <> "" then n.initial.text = UCase(Left(name, 1))
             color = m.top.profileColor
             if color <> "" then n.icon.blendColor = "0x" + color + "FF"
+            avatar = m.top.profileAvatar
+            if m.avatar.uri <> avatar then m.avatar.uri = avatar
+            ready = avatar <> "" and m.avatar.loadStatus = "ready"
+            m.avatar.visible = ready
+            n.initial.visible = not ready
         end if
     end for
 end sub

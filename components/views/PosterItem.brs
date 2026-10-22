@@ -4,42 +4,90 @@ sub init()
     m.mask = m.top.findNode("mask")
     m.art = m.top.findNode("art")
     m.shade = m.top.findNode("shade")
+    m.cw = m.top.findNode("cw")
+    m.badgeBg = m.top.findNode("badgeBg")
+    m.badge = m.top.findNode("badge")
+    m.kicker = m.top.findNode("kicker")
     m.cardTitle = m.top.findNode("cardTitle")
     m.cardSub = m.top.findNode("cardSub")
     m.track = m.top.findNode("track")
     m.bar = m.top.findNode("bar")
+    m.ring = m.top.findNode("ring")
+    m.seenRow = false
+    m.body = m.top.findNode("body")
+    paintRing()
+    m.global.observeField("accent", "paintRing")
+    if m.global.hasField("expandShift") then m.global.observeField("expandShift", "applyShift")
+    m.badge.font.size = 19
+    m.kicker.font.size = 22
+    m.cardTitle.font.size = 27
+    m.cardSub.font.size = 22
     m.landscape = false
     m.reported = false
     m.art.observeField("loadStatus", "onArtStatus")
 end sub
 
 sub onArtStatus()
+    m.frame.visible = m.art.loadStatus <> "ready"
     if m.art.loadStatus <> "failed" then return
     item = m.top.itemContent
     if item = invalid or not item.hasField("fallback") then return
     if item.fallback <> "" and m.art.uri <> item.fallback then m.art.uri = item.fallback
 end sub
 
+function fieldOf(item as object, name as string) as string
+    if not item.hasField(name) then return ""
+    v = item.getField(name)
+    if v = invalid or GetInterface(v, "ifString") = invalid then return ""
+    return v
+end function
+
+sub applyShift()
+    shift = m.global.expandShift
+    dx = 0
+    if shift > 0
+        item = m.top.itemContent
+        row = m.global.expandRow
+        if item <> invalid and row <> invalid
+            parent = item.getParent()
+            if parent <> invalid and parent.isSameNode(row)
+                if itemIndex(item, parent) > m.global.expandIndex then dx = shift
+            end if
+        end if
+    end if
+    m.body.translation = [dx, 0]
+end sub
+
+function itemIndex(item as object, parent as object) as integer
+    if item.hasField("idx") then return item.idx
+    if m.indexOf <> invalid and m.indexOf.isSameNode(item) then return m.indexCache
+    idx = -1
+    for i = 0 to parent.getChildCount() - 1
+        if parent.getChild(i).isSameNode(item)
+            idx = i
+            exit for
+        end if
+    end for
+    m.indexOf = item
+    m.indexCache = idx
+    return idx
+end function
+
 sub onContent()
     item = m.top.itemContent
     if item = invalid then return
+    if m.global.hasField("expandShift") then applyShift()
     m.name.text = item.title
     m.art.uri = item.HDPosterUrl
     if m.landscape
         m.name.visible = false
         m.shade.visible = true
-        m.cardTitle.visible = true
-        m.cardSub.visible = true
-        m.cardTitle.text = item.title
-        subText = ""
-        if item.hasField("episodeLabel") then subText = item.episodeLabel
-        if subText = "" then subText = item.description
-        m.cardSub.text = subText
+        m.cw.visible = true
+        layoutCard(item)
     else
         m.name.visible = true
         m.shade.visible = false
-        m.cardTitle.visible = false
-        m.cardSub.visible = false
+        m.cw.visible = false
     end if
     progress = 0.0
     if item.hasField("progress") then progress = item.progress
@@ -57,6 +105,53 @@ sub onContent()
     end if
 end sub
 
+sub layoutCard(item as object)
+    w = m.top.width
+    h = m.top.height
+    if w <= 0 or h <= 0 then return
+    pad = 22
+    badge = fieldOf(item, "badge")
+    m.badge.text = badge
+    m.badgeBg.visible = badge <> ""
+    m.badge.visible = badge <> ""
+    if badge <> ""
+        m.badge.width = 0
+        m.badge.height = 0
+        bw = m.badge.boundingRect().width
+        if bw <= 0 then bw = Len(badge) * 10
+        bw = bw + 30
+        if bw > w - 32 then bw = w - 32
+        m.badgeBg.width = bw
+        m.badgeBg.height = 40
+        m.badgeBg.translation = [w - 15 - bw, 15]
+        m.badge.width = bw
+        m.badge.height = 40
+        m.badge.translation = [w - 15 - bw, 15]
+    end if
+    kicker = fieldOf(item, "kicker")
+    subText = fieldOf(item, "subtitle")
+    m.kicker.text = kicker
+    m.cardTitle.text = item.title
+    m.cardSub.text = subText
+    m.kicker.visible = kicker <> ""
+    m.cardSub.visible = subText <> ""
+    textW = w - pad * 2
+    m.kicker.width = textW
+    m.cardTitle.width = textW
+    m.cardSub.width = textW
+    y = h - pad
+    if subText <> ""
+        y = y - 30
+        m.cardSub.translation = [pad, y]
+    end if
+    y = y - 38
+    m.cardTitle.translation = [pad, y]
+    if kicker <> ""
+        y = y - 30
+        m.kicker.translation = [pad, y]
+    end if
+end sub
+
 sub onSize()
     w = m.top.width
     h = m.top.height
@@ -70,27 +165,45 @@ sub onSize()
         m.mask.maskUri = "pkg:/images/mask_poster.png"
     end if
     m.mask.maskSize = [w, h]
+    m.ring.width = w + 8
+    m.ring.height = h + 8
     m.art.width = w
     m.art.height = h
     m.art.loadWidth = w
     m.art.loadHeight = h
     m.shade.width = w
-    m.shade.height = Int(h * 0.6)
-    m.shade.translation = [0, h - Int(h * 0.6)]
+    m.shade.height = h
+    m.shade.translation = [0, 0]
     m.name.width = w - 28
     m.name.height = h - 28
-    m.cardTitle.width = w - 32
-    m.cardTitle.translation = [16, h - 84]
-    m.cardSub.width = w - 32
-    m.cardSub.translation = [16, h - 48]
-    m.track.width = w - 24
-    m.track.translation = [12, h - 14]
-    m.bar.translation = [12, h - 14]
+    if m.landscape
+        m.track.width = w - 40
+        m.track.height = 6
+        m.track.color = "0x0000004D"
+        m.track.translation = [20, h - 14]
+        m.bar.height = 6
+        m.bar.translation = [20, h - 14]
+    else
+        m.track.width = w - 24
+        m.track.height = 6
+        m.track.color = "0xFFFFFF40"
+        m.track.translation = [12, h - 14]
+        m.bar.height = 6
+        m.bar.translation = [12, h - 14]
+    end if
     onContent()
 end sub
 
+sub paintRing()
+    if m.global.hasField("accent") then m.ring.blendColor = m.global.accent
+end sub
+
 sub onItemFocus()
-    focused = m.top.itemHasFocus or m.top.focusPercent >= 0.99
+    item = m.top.itemHasFocus or m.top.focusPercent >= 0.99
+    m.ring.visible = item and m.top.rowHasFocus and m.top.rowListHasFocus
+    if not m.seenRow and (m.top.rowHasFocus or m.top.rowListHasFocus) then m.seenRow = true
+    if not m.seenRow then m.ring.visible = item
+    focused = m.ring.visible
     if focused = m.reported then return
     m.reported = focused
     if focused and not m.landscape and m.global.hasField("focusCard") then m.global.focusCard = m.top

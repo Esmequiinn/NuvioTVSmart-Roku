@@ -4,12 +4,16 @@
         <field id="data" type="assocarray" onChange="render" />
         <field id="fullscreen" type="boolean" value="false" onChange="layout" />
         <field id="videoMode" type="boolean" value="false" onChange="onVideoMode" />
+        <field id="trailer" type="assocarray" onChange="onTrailer" />
+        <field id="muted" type="boolean" value="true" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
     <script type="text/brightscript" uri="pkg:/components/views/Hero.brs" />
     <children>
         <Poster id="backdrop" translation="[560,0]" width="1360" height="765" loadWidth="1280" loadHeight="720" loadDisplayMode="scaleToZoom" />
+        <Video id="video" translation="[560,0]" width="1360" height="765" enableUI="false" focusable="false" visible="false" />
         <Rectangle id="solid" width="562" height="1080" color="0x0C0C0FFF" />
         <Poster id="fadeLeft" translation="[560,0]" width="760" height="765" uri="pkg:/images/grad_left.png" loadDisplayMode="scaleToFill" />
         <Poster id="fadeBottom" translation="[0,420]" width="1920" height="346" uri="pkg:/images/grad_bottom.png" loadDisplayMode="scaleToFill" />

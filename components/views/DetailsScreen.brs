@@ -36,6 +36,9 @@ sub onTrailerState()
     if state = "playing"
         m.video.visible = true
         m.hero.videoMode = true
+        m.hero.visible = false
+        m.buttonRow.visible = false
+        m.statusLabel.visible = false
         m.trailerHint.visible = true
         m.top.trailerPlaying = true
     else if state = "finished" or state = "error" or state = "stopped"
@@ -52,6 +55,9 @@ end sub
 sub endTrailer()
     m.video.visible = false
     m.hero.videoMode = false
+    m.hero.visible = true
+    m.buttonRow.visible = true
+    m.statusLabel.visible = true
     m.trailerHint.visible = false
     m.top.trailerPlaying = false
 end sub
@@ -124,6 +130,10 @@ end sub
 
 function onKeyEvent(key as string, press as boolean) as boolean
     if not press then return false
+    if m.top.trailerPlaying
+        stopTrailer()
+        return true
+    end if
     if key = "left"
         if m.index > 0 then m.index = m.index - 1
         paint()

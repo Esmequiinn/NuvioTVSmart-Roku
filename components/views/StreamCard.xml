@@ -11,7 +11,7 @@
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
     <script type="text/brightscript" uri="pkg:/components/views/StreamCard.brs" />
     <children>
-        <Poster id="ring" visible="false" translation="[-7,-7]" width="1124" height="250" uri="pkg:/images/focus_ring.9.png" blendColor="0xFFFFFFFF" />
+        <Poster id="ring" visible="false" translation="[-4,-4]" width="1118" height="244" uri="pkg:/images/ring.9.png" blendColor="0xFFFFFFFF" />
         <Poster id="bg" width="1110" height="236" uri="pkg:/images/card.9.png" blendColor="0xFFFFFF14" />
         <Label id="name" translation="[30,22]" width="250" wrap="true" maxLines="3" font="font:SmallBoldSystemFont" color="0xFFFFFFFF" />
         <Label id="desc" translation="[310,22]" width="770" wrap="true" maxLines="5" lineSpacing="2" font="font:SmallestSystemFont" color="0xC4C4CEFF" />

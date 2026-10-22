@@ -34,6 +34,14 @@ function sections() as object
 end function
 
 sub render()
+    try
+        drawAll()
+    catch e
+        showError(e)
+    end try
+end sub
+
+sub drawAll()
     list = sections()
     if list.Count() = 0 then return
     if m.sectionIndex >= list.Count() then m.sectionIndex = list.Count() - 1
@@ -46,21 +54,29 @@ sub render()
         pill = g.createChild("Poster")
         pill.uri = "pkg:/images/pill.9.png"
         pill.width = 460
-        pill.height = 70
+        pill.height = 64
         label = g.createChild("Label")
         label.translation = [32, 0]
         label.width = 400
-        label.height = 70
+        label.height = 64
         label.vertAlign = "center"
         label.font = "font:MediumSystemFont"
         label.text = s.label
         m.navNodes.Push({ pill: pill, label: label })
-        y = y + 80
+        y = y + 72
     end for
     renderRows()
 end sub
 
 sub renderRows()
+    try
+        drawRows()
+    catch e
+        showError(e)
+    end try
+end sub
+
+sub drawRows()
     list = sections()
     if list.Count() = 0 then return
     section = list[m.sectionIndex]
@@ -245,3 +261,13 @@ function Bool_Of(v as dynamic, fallback as boolean) as boolean
     if GetInterface(v, "ifBoolean") <> invalid then return v
     return fallback
 end function
+
+sub showError(e as object)
+    text = Str_Of(e.message)
+    if type(e.backtrace) = "roArray" and e.backtrace.Count() > 0
+        b = e.backtrace[0]
+        if type(b) = "roAssociativeArray" then text = text + "  " + Str_Of(b.function) + " " + Str(b.line_number).Trim()
+    end if
+    m.sectionTitle.text = "Error"
+    m.sectionSubtitle.text = text
+end sub

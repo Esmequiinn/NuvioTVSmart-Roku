@@ -4,6 +4,7 @@
         <field id="active" type="string" value="home" onChange="paint" />
         <field id="profileName" type="string" onChange="paint" />
         <field id="profileColor" type="string" onChange="paint" />
+        <field id="profileAvatar" type="string" onChange="paint" />
         <field id="accent" type="string" value="0x7C4DFFFF" onChange="paint" />
         <field id="chosen" type="string" alwaysNotify="true" />
         <field id="leave" type="boolean" alwaysNotify="true" />

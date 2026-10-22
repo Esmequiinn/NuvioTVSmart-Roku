@@ -14,7 +14,7 @@ sub build()
     if list = invalid then list = []
     entries = []
     for each p in list
-        entries.Push({ id: p.id, name: p.name, color: p.color })
+        entries.Push({ id: p.id, name: p.name, color: p.color, avatar: Str_Of(p.avatar) })
     end for
     if entries.Count() < 8 then entries.Push({ id: "__add", name: L("Agregar"), color: "3A3A46" })
     size = 220
@@ -47,6 +47,18 @@ sub build()
             initial.text = "+"
         else
             initial.text = UCase(Left(e.name, 1))
+        end if
+        if Str_Of(e.avatar) <> ""
+            mask = g.createChild("MaskGroup")
+            mask.maskUri = "pkg:/images/circle.png"
+            mask.maskSize = [size, size]
+            pic = mask.createChild("Poster")
+            pic.width = size
+            pic.height = size
+            pic.loadWidth = size
+            pic.loadHeight = size
+            pic.loadDisplayMode = "scaleToZoom"
+            pic.uri = e.avatar
         end if
         name = g.createChild("Label")
         name.translation = [-40, size + 34]
