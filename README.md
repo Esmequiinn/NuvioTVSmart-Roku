@@ -121,7 +121,7 @@ You can also add an addon from your computer with Roku's External Control: `curl
 
 ### API keys and accounts
 
-The release `.zip` already includes the TMDB, Trakt and Simkl keys used by Nuvio, so you don't need to create anything:
+The release `.zip` already includes the TMDB, Trakt and Simkl keys, so you don't need to create anything:
 
 | Service | What you need to do |
 | --- | --- |
