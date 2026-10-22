@@ -31,14 +31,17 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - Profiles, with shared or per-profile addons
 - My List and Continue Watching
 - Phone setup page: add addons, import collections, manage catalogs and settings from your phone's browser
-- Nuvio account sign-in (QR or email) to bring your profiles, addons, library, progress and settings
+- Nuvio account sign-in (QR or email) with two-way sync of profiles, addons, library, progress, settings and home catalogs
+- Nuvio collections, profile pictures and theme color from your account
 - TMDB metadata in your language and MDBList ratings
-- Trakt and Simkl scrobbling
+- Trakt and Simkl scrobbling, just link your account
+- Works with debrid services through your addons (for example AIOStreams)
 - Auto-play: first source, manual or regex match, compatible with your Nuvio TV regex patterns
 - Nuvio-style source list with full formatter text, quality badges and Fusion badges
 - Custom poster URL patterns (RPDB-style placeholders)
-- Trailers from IMDb and YouTube
+- Trailers from IMDb and YouTube, on the details page, the home hero or the expanded card
 - Focused poster that expands into a landscape card
+- Landscape and square catalogs
 - English and Spanish interface
 
 ## Status
@@ -58,6 +61,11 @@ So far the channel has only been tested on a real Roku by me, so some features h
 | Side navigation rail | ✅ Working |
 | Episodes view | ✅ Working |
 | Phone setup page (add addons from your phone) | ✅ Working |
+| Settings screen | ✅ Working |
+| Debrid services (through addons like AIOStreams) | ✅ Working |
+| Switching audio and subtitle tracks | ✅ Working |
+| Trailers | ✅ Working |
+| Expanding focused poster | ✅ Working |
 | TMDB integration | ⚠️ Not tested yet |
 | MDBList integration | ⚠️ Not tested yet |
 | Trakt | ⚠️ Not tested yet |
@@ -67,19 +75,23 @@ So far the channel has only been tested on a real Roku by me, so some features h
 | Badges (quality, HDR, codec, audio, size and Fusion) | ⚠️ Not tested yet |
 | Continue Watching in landscape | ⚠️ Not tested yet |
 | Collections import | ⚠️ Not tested yet |
+| Nuvio collections | ⚠️ Not tested yet |
+| Sync from the Roku to your Nuvio account | ⚠️ Not tested yet |
+| Profile pictures and theme color from Nuvio | ⚠️ Not tested yet |
+| Landscape and square catalogs | ⚠️ Not tested yet |
 | Auto-play (first source and regex pattern) | ⚠️ Not tested yet |
 | Reuse last link and same source for next episode | ⚠️ Not tested yet |
 | Preferred and secondary audio and subtitle languages | ⚠️ Not tested yet |
 | Custom poster URL patterns | ⚠️ Not tested yet |
-| Expanding focused poster | ⚠️ Not tested yet |
-| Trailers | ⚠️ Not tested yet |
 | English interface | ⚠️ Not tested yet |
 
 ### Known limitations
 
 - Roku can only play direct links. Torrent, magnet and external links are skipped.
 - Playable formats depend on your Roku model (MP4, MKV, HLS and DASH are the usual ones).
-- Account sync only pulls from your Nuvio account. Changes made on the Roku are not sent back.
+- Profiles created on the Roku and collection edits are not sent to your Nuvio account. Collections can only be viewed.
+- Folders inside Nuvio collections that use TMDB or Trakt sources are not shown yet, only addon catalogs.
+- Roku can't show emojis. Flag emojis in source descriptions are shown as the language name and other emojis are removed.
 - Watch Party is not available.
 
 ## Install
@@ -102,25 +114,25 @@ When the channel is open, go to `http://YOUR_ROKU_IP:8888` on a phone or compute
 - Show, hide and reorder home rows
 - Create profiles
 - Sign in to your Nuvio account
-- Paste your own API keys
+- Paste your own TMDB or MDBList key (optional)
 - Set the auto-play regex, custom poster pattern and Fusion badges
 
 You can also add an addon from your computer with Roku's External Control: `curl -d "" "http://YOUR_ROKU_IP:8060/launch/dev?addon_url=ADDON_MANIFEST_URL"`
 
-### Your own API keys
+### API keys and accounts
 
-The channel doesn't ship with any API keys. Each person uses their own:
+The release `.zip` already includes the TMDB, Trakt and Simkl keys used by Nuvio, so you don't need to create anything:
 
-| Service | What you need | Where |
-| --- | --- | --- |
-| TMDB | Free API key (v3) from [themoviedb.org](https://www.themoviedb.org/settings/api) | Phone page → Account |
-| MDBList | Free API key from [mdblist.com](https://mdblist.com) | Phone page → Account, or it comes in automatically if it's saved in your Nuvio account |
-| Trakt | Create an app at [trakt.tv/oauth/applications](https://trakt.tv/oauth/applications) with the redirect URI `urn:ietf:wg:oauth:2.0:oob`, then paste its Client ID and Client Secret | Phone page → Account, then connect on the Roku in Settings → Tracking |
-| Simkl | Create an app at [simkl.com/settings/developer](https://simkl.com/settings/developer) and paste its Client ID | Phone page → Account, then connect on the Roku in Settings → Tracking |
+| Service | What you need to do |
+| --- | --- |
+| TMDB | Nothing. You can still paste your own key on the phone page (Account) if you want. |
+| MDBList | Paste your free key from [mdblist.com](https://mdblist.com) on the phone page (Account), or it comes in automatically if it's saved in your Nuvio account. |
+| Trakt | Link your account on the Roku in **Settings → Tracking** and enter the code. |
+| Simkl | Link your account on the Roku in **Settings → Tracking** and enter the code. |
 
 ### Nuvio account
 
-Sign in from **Settings → Account** on the Roku (QR code) or from the phone page (email and password). The Roku pulls your profiles, addons, library, Continue Watching and your Nuvio TV settings (audio and subtitle languages, auto-play rules, badges, custom posters, trailers and more).
+Sign in from **Settings → Account** on the Roku (QR code) or from the phone page (email and password). The Roku brings your profiles, profile pictures, addons, library, Continue Watching, collections, home catalogs and your Nuvio TV settings (audio and subtitle languages, auto-play rules, badges, custom posters, trailers, theme color and more). It syncs every time the channel opens, and changes you make on the Roku are sent back to your account a few seconds later.
 
 You can also connect to a [self-hosted Nuvio server](https://github.com/NuvioMedia/self-host) from the phone page (**Account → Your own server**).
 
@@ -131,6 +143,8 @@ The channel is plain BrightScript and SceneGraph, so there is nothing to compile
 ```
 zip -r NuvioTV-Roku.zip manifest source components images web locale LICENSE
 ```
+
+The Nuvio server address and the TMDB, Trakt and Simkl keys are left empty in `components/Config.brs`, like the official Nuvio repositories. The release `.zip` files are already configured. For your own build, fill them in or add a server from the phone page after installing.
 
 ### Translations
 
