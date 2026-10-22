@@ -152,7 +152,7 @@ Interface text is written in Spanish in the code and translated through `locale/
 
 Bug reports, problems, ideas and feature requests are all very welcome. Open an issue and include your Roku model and OS version (**Settings → System → About**).
 
-**New testers are very welcome too!** If you have a Roku and some time, try the features marked **Not tested yet** and tell us what works and what doesn't.
+**New testers are very welcome too!** If you have a Roku and some time, try the features marked **Not tested yet** and tell me what works and what doesn't.
 
 ## Credits and license
 
