@@ -18,7 +18,7 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 
 > **This is not an official Nuvio app** and it is not affiliated with or endorsed by the Nuvio team. It does not host, store or distribute any content. Everything you see comes from the addons you install.
 
-> **AI was madly used on this, so any thoughts you have about that, keep them to yourself I just wanted to have nuvio on my sh@ty Roku.**
+> **AI was madly used on this, so any thoughts you have about that, keep them to yourself I just wanted to have nuvio on my sh!ty Roku.**
 
 ---
 
