@@ -28,7 +28,7 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 - The Settings side menu now fits every section.
 
 ### Fixed
-- Settings did not open on real Roku devices.
+- Settings did not open.
 - Audio and subtitle tracks could not be changed in the player.
 - The expanded poster appeared in the top left corner of the screen.
 - Dark pixels around the expanded poster and behind poster corners.
