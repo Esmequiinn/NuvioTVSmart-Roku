@@ -70,20 +70,20 @@ So far the channel has only been tested on a real Roku by me, so some features h
 | MDBList integration | ⚠️ Not tested yet |
 | Trakt | ⚠️ Not tested yet |
 | Simkl | ⚠️ Not tested yet |
-| Nuvio account sign-in and sync | ⚠️ Not tested yet |
-| Sources with addon formatter text | ⚠️ Not tested yet |
-| Badges (quality, HDR, codec, audio, size and Fusion) | ⚠️ Not tested yet |
-| Continue Watching in landscape | ⚠️ Not tested yet |
+| Nuvio account sign-in and sync | ✅ Sign-in works, ⚠️ sync not tested yet |
+| Sources with addon formatter text | ✅ Working but with no emojis |
+| Badges (quality, HDR, codec, audio, size and Fusion) | ✅ Working |
+| Continue Watching in landscape | ✅ Working |
 | Collections import | ⚠️ Not tested yet |
 | Nuvio collections | ⚠️ Not tested yet |
 | Sync from the Roku to your Nuvio account | ⚠️ Not tested yet |
-| Profile pictures and theme color from Nuvio | ⚠️ Not tested yet |
+| Profile pictures and theme color from Nuvio | ✅ Working |
 | Landscape and square catalogs | ⚠️ Not tested yet |
-| Auto-play (first source and regex pattern) | ⚠️ Not tested yet |
+| Auto-play (first source and regex pattern) | ✅ Auto select first source works ⚠️ Regex pattern not tested yet |
 | Reuse last link and same source for next episode | ⚠️ Not tested yet |
 | Preferred and secondary audio and subtitle languages | ⚠️ Not tested yet |
 | Custom poster URL patterns | ⚠️ Not tested yet |
-| English interface | ⚠️ Not tested yet |
+| English interface | ✅ Working |
 
 ### Known limitations
 
@@ -143,8 +143,6 @@ The channel is plain BrightScript and SceneGraph, so there is nothing to compile
 ```
 zip -r NuvioTV-Roku.zip manifest source components images web locale LICENSE
 ```
-
-The Nuvio server address and the TMDB, Trakt and Simkl keys are left empty in `components/Config.brs`, like the official Nuvio repositories. The release `.zip` files are already configured. For your own build, fill them in or add a server from the phone page after installing.
 
 ### Translations
 
