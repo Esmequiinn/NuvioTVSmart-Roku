@@ -2,6 +2,42 @@
 
 All notable changes to Nuvio TV for Roku are listed here. This changelog only covers the Roku channel.
 
+## [2.2.1] - 2026-10-21
+
+### Added
+- Two-way Nuvio sync. The channel syncs with your Nuvio account every time it opens, and changes made on the Roku are sent back a few seconds later: addons, My List, Continue Watching progress, settings and home catalog order. Only the settings you change on the Roku are updated in your account.
+- Addons are read from your account's addon list for each profile, like Nuvio TV for Smart TVs.
+- Home catalog order, hidden catalogs and custom catalog names from your Nuvio account.
+- Nuvio collections on the home screen, in the same place as in Nuvio. Opening a folder shows its catalogs.
+- Profile pictures from your Nuvio account, on the profile screen and the side menu.
+- Your Nuvio theme color is used as the channel accent color.
+- Trailer for the focused poster, played in the home hero or in the expanded card, like Nuvio.
+- Trakt, Simkl and TMDB work without creating your own apps or keys. You only need to link your Trakt or Simkl account.
+- Continue Watching cards like Nuvio: time left badge, episode number, title, episode name and a thin progress bar. Focusing one shows the episode, genre, year and time left at the top.
+- Landscape and square catalogs keep their shape instead of being shown as posters.
+- Flag emojis in source descriptions are shown as the language name (for example Latino, Castellano or English).
+- Skipping in the player speeds up the longer you hold or keep pressing left and right: 10 seconds, then 30 seconds, 1 minute and 2 minutes.
+
+### Changed
+- The expanded poster now looks like Nuvio (backdrop with only the logo or title), and the posters after it move to the right instead of being covered.
+- Rows keep the focused title on the left edge, like Nuvio.
+- The focus border uses your accent color and hugs posters and cards.
+- The details page hides while its trailer plays. Any button brings it back.
+- Trakt and Simkl no longer ask for a Client ID or Client Secret on the phone page.
+- Clearer name and description for the profile color setting.
+- The Settings side menu now fits every section.
+
+### Fixed
+- Settings did not open on real Roku devices.
+- Audio and subtitle tracks could not be changed in the player.
+- The expanded poster appeared in the top left corner of the screen.
+- Dark pixels around the expanded poster and behind poster corners.
+- The progress bar stayed at the start on videos where the Roku doesn't report a length.
+- The phone setup page could stop responding ("Could not reach the Roku"). It now shows the real error and restarts by itself.
+- Emojis that Roku can't show appeared as empty boxes in source descriptions.
+- The focus border was cut off on the left side of rows.
+- Some checks with missing values could stop the channel on real Roku devices.
+
 ## [2.2.0] - 2026-10-21
 
 First public release.
