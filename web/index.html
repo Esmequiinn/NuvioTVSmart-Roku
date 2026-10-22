@@ -209,24 +209,17 @@ li.item:first-child{border-top:0}
     </div>
     <div class="card">
       <h2>TMDB</h2>
-      <p class="hint">Metadata, logos y episodios en tu idioma. Crea tu clave gratis en themoviedb.org (Ajustes de la cuenta > API).</p>
+      <p class="hint">Metadata, logos y episodios en tu idioma. Opcional: si el canal ya incluye una clave no necesitas pegar la tuya. Tambi&#233;n puedes usar tu propia clave gratis de themoviedb.org.</p>
       <div class="row"><input id="tmdbKey" autocomplete="off" placeholder="Clave de API (v3)"><button class="btn" data-integ="tmdbKey">Guardar</button></div>
     </div>
     <div class="card">
       <h2>MDBList</h2>
       <p class="hint">Calificaciones de IMDb, Rotten Tomatoes, Metacritic, Letterboxd y m&#225;s. Clave gratis en mdblist.com.</p>
-      <div class="row"><input id="mdbKey" autocomplete="off" placeholder="Clave de API"><button class="btn" data-integ="mdbKey">Guardar</button></div>
+      <div class="row"><input id="mdbKey" autocomplete="off" placeholder="Clave de API"><button cl    <div class="card">
+      <h2>Trakt y Simkl</h2>
+      <p class="hint">Ya no necesitas crear apps ni pegar claves. Conecta tu cuenta desde el Roku en Ajustes > Seguimiento y escanea el c&#243;digo.</p>
     </div>
-    <div class="card">
-      <h2>Trakt</h2>
-      <p class="hint">Crea una app en trakt.tv/oauth/applications (Redirect URI: urn:ietf:wg:oauth:2.0:oob) y pega sus datos. Despu&#233;s conecta desde el Roku en Ajustes > Seguimiento.</p>
-      <div class="row"><input id="traktClientId" autocomplete="off" placeholder="Client ID"><button class="btn" data-integ="traktClientId">Guardar</button></div>
-      <div class="row mt"><input id="traktSecret" autocomplete="off" placeholder="Client Secret"><button class="btn" data-integ="traktSecret">Guardar</button></div>
-    </div>
-    <div class="card">
-      <h2>Simkl</h2>
-      <p class="hint">Crea una app en simkl.com/settings/developer y pega su Client ID. Despu&#233;s conecta desde el Roku en Ajustes > Seguimiento.</p>
-      <div class="row"><input id="simklClientId" autocomplete="off" placeholder="Client ID"><button class="btn" data-integ="simklClientId">Guardar</button></div>
+n" data-integ="simklClientId">Guardar</button></div>
     </div>
   </section>
 
@@ -345,7 +338,7 @@ function render() {
   $('#cw').checked = !!state.prefs.continueWatching;
   $('#captions').checked = !!state.prefs.captions;
   const ig = state.integrations || {};
-  ['tmdbKey', 'mdbKey', 'traktClientId', 'traktSecret', 'simklClientId'].forEach(k => { $('#' + k).placeholder = ig[k] ? 'Guardada: ' + ig[k] : $('#' + k).getAttribute('data-ph') || $('#' + k).placeholder; });
+  ['tmdbKey', 'mdbKey'].forEach(k => { $('#' + k).placeholder = ig[k] ? 'Guardada: ' + ig[k] : $('#' + k).getAttribute('data-ph') || $('#' + k).placeholder; });
   const server = ig.nuvioOfficial ? 'servidor oficial de Nuvio' : 'servidor ' + hostOf(ig.nuvioUrl || '');
   $('#nuvioStatus').textContent = ig.nuvioLogged ? 'Sesi\u00f3n iniciada' + (ig.nuvioEmail ? ' como ' + ig.nuvioEmail : '') + ' en el ' + server + '.' : 'Inicia sesi\u00f3n con tu cuenta de Nuvio (' + server + ').';
   $('#nuvioLogoutBtn').style.display = ig.nuvioLogged ? '' : 'none';

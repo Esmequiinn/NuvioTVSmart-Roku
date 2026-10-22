@@ -209,24 +209,17 @@ li.item:first-child{border-top:0}
     </div>
     <div class="card">
       <h2>TMDB</h2>
-      <p class="hint">Metadata, logos and episodes in your language. Get a free key at themoviedb.org (Account settings > API).</p>
+      <p class="hint">Metadata, logos and episodes in your language. Optional: if the channel already includes a key you do not need yours. You can also use your own free key from themoviedb.org.</p>
       <div class="row"><input id="tmdbKey" autocomplete="off" placeholder="API key (v3)"><button class="btn" data-integ="tmdbKey">Save</button></div>
     </div>
     <div class="card">
       <h2>MDBList</h2>
       <p class="hint">Ratings from IMDb, Rotten Tomatoes, Metacritic, Letterboxd and more. Free key at mdblist.com.</p>
-      <div class="row"><input id="mdbKey" autocomplete="off" placeholder="API key"><button class="btn" data-integ="mdbKey">Save</button></div>
+      <div class="row"><input id="mdbKey" autocomplete="off" placeholder="API key"><bu    <div class="card">
+      <h2>Trakt and Simkl</h2>
+      <p class="hint">No apps or keys needed. Connect your account from the Roku in Settings > Tracking and scan the code.</p>
     </div>
-    <div class="card">
-      <h2>Trakt</h2>
-      <p class="hint">Create an app at trakt.tv/oauth/applications (Redirect URI: urn:ietf:wg:oauth:2.0:oob) and paste its details. Then connect from the Roku in Settings > Tracking.</p>
-      <div class="row"><input id="traktClientId" autocomplete="off" placeholder="Client ID"><button class="btn" data-integ="traktClientId">Save</button></div>
-      <div class="row mt"><input id="traktSecret" autocomplete="off" placeholder="Client Secret"><button class="btn" data-integ="traktSecret">Save</button></div>
-    </div>
-    <div class="card">
-      <h2>Simkl</h2>
-      <p class="hint">Create an app at simkl.com/settings/developer and paste its Client ID. Then connect from the Roku in Settings > Tracking.</p>
-      <div class="row"><input id="simklClientId" autocomplete="off" placeholder="Client ID"><button class="btn" data-integ="simklClientId">Save</button></div>
+ass="btn" data-integ="simklClientId">Save</button></div>
     </div>
   </section>
 
@@ -345,7 +338,7 @@ function render() {
   $('#cw').checked = !!state.prefs.continueWatching;
   $('#captions').checked = !!state.prefs.captions;
   const ig = state.integrations || {};
-  ['tmdbKey', 'mdbKey', 'traktClientId', 'traktSecret', 'simklClientId'].forEach(k => { $('#' + k).placeholder = ig[k] ? 'Guardada: ' + ig[k] : $('#' + k).getAttribute('data-ph') || $('#' + k).placeholder; });
+  ['tmdbKey', 'mdbKey'].forEach(k => { $('#' + k).placeholder = ig[k] ? 'Guardada: ' + ig[k] : $('#' + k).getAttribute('data-ph') || $('#' + k).placeholder; });
   const server = ig.nuvioOfficial ? 'the official Nuvio server' : 'server ' + hostOf(ig.nuvioUrl || '');
   $('#nuvioStatus').textContent = ig.nuvioLogged ? 'Signed in' + (ig.nuvioEmail ? ' as ' + ig.nuvioEmail : '') + ' on ' + server + '.' : 'Sign in with your Nuvio account (' + server + ').';
   $('#nuvioLogoutBtn').style.display = ig.nuvioLogged ? '' : 'none';
