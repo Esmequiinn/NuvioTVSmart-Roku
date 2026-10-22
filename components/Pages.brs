@@ -1,10 +1,10 @@
 sub showPage(name as string)
     hideExpanded()
     m.page = name
-    m.nav.active = name
+    if name = "folder" then m.nav.active = "home" else m.nav.active = name
     m.homePage.visible = name = "home"
     m.searchPage.visible = name = "search"
-    m.libraryPage.visible = name = "library"
+    m.libraryPage.visible = name = "library" or name = "folder"
     m.hero.visible = false
     if name = "home"
         if m.needsReload or not m.homeLoaded
@@ -18,6 +18,11 @@ sub showPage(name as string)
         end if
     else if name = "library"
         buildLibrary()
+    else if name = "folder"
+        m.libraryRows.visible = true
+        m.libraryEmpty.visible = false
+        m.hero.visible = true
+        showHeroFor(getRowItem(m.libraryRows, [0, 0]))
     else if name = "search"
         m.searchFocus = "keyboard"
     end if
@@ -39,7 +44,7 @@ sub focusPage()
             m.searchFocus = "keyboard"
             m.keyboard.setFocus(true)
         end if
-    else if m.page = "library"
+    else if m.page = "library" or m.page = "folder"
         if m.libraryRows.visible
             m.libraryRows.setFocus(true)
         else
@@ -50,20 +55,36 @@ end sub
 
 sub applyRowSizes(rows as object)
     root = rows.content
-    landscape = false
+    sizes = []
+    heights = []
     if root <> invalid
-        first = root.getChild(0)
-        if first <> invalid
-            if first.id = "cw" and St_Pref("cwStyle") <> "poster" then landscape = true
-        end if
+        cwLandscape = St_Pref("cwStyle") <> "poster"
+        for i = 0 to root.getChildCount() - 1
+            row = root.getChild(i)
+            shape = "poster"
+            if row.hasField("shape") then shape = row.shape
+            if row.id = "cw" and cwLandscape then shape = "card"
+            if shape = "card"
+                sizes.Push([400, 225])
+                heights.Push(305)
+            else if shape = "landscape"
+                sizes.Push([356, 200])
+                heights.Push(280)
+            else if shape = "square"
+                sizes.Push([240, 240])
+                heights.Push(320)
+            else
+                sizes.Push([200, 300])
+                heights.Push(380)
+            end if
+        end for
     end if
-    if landscape
-        rows.rowItemSize = [[400, 225], [200, 300]]
-        rows.rowHeights = [305, 380]
-    else
-        rows.rowItemSize = [[200, 300]]
-        rows.rowHeights = [380]
+    if sizes.Count() = 0
+        sizes.Push([200, 300])
+        heights.Push(380)
     end if
+    rows.rowItemSize = sizes
+    rows.rowHeights = heights
 end sub
 
 sub refreshContinueRow()

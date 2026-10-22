@@ -718,7 +718,7 @@ sub playStream(index as integer, startAt as integer)
 end sub
 
 sub rememberStream()
-    if m.ctx.savedLink = true then return
+    if Bool_Of(m.ctx.savedLink, false) then return
     s = m.ctx.playingStream
     if s = invalid then return
     m.ctx.savedLink = true

@@ -1,20 +1,20 @@
 function Trakt_Headers(integ as object, withAuth as boolean) as object
-    h = { "trakt-api-version": "2", "trakt-api-key": integ.traktClientId }
+    h = { "trakt-api-version": "2", "trakt-api-key": Key_TraktId(integ) }
     if withAuth and integ.traktToken <> "" then h["Authorization"] = "Bearer " + integ.traktToken
     return h
 end function
 
 function Trakt_Code() as object
     integ = St_Integrations()
-    if integ.traktClientId = "" or integ.traktSecret = "" then return { ok: false, error: L("Falta el Client ID y el Client Secret de Trakt. Agrégalos desde el celular.") }
-    r = Http_Request("POST", "https://api.trakt.tv/oauth/device/code", Trakt_Headers(integ, false), { client_id: integ.traktClientId }, 15000)
+    if Key_TraktId(integ) = "" or Key_TraktSecret(integ) = "" then return { ok: false, error: L("Trakt no está disponible en esta versión del canal.") }
+    r = Http_Request("POST", "https://api.trakt.tv/oauth/device/code", Trakt_Headers(integ, false), { client_id: Key_TraktId(integ) }, 15000)
     if r.code <> 200 or type(r.json) <> "roAssociativeArray" then return { ok: false, error: L("Trakt respondió con error ") + r.code.ToStr() + "." }
     return { ok: true, userCode: Str_Of(r.json.user_code), deviceCode: Str_Of(r.json.device_code), url: Str_Of(r.json.verification_url), interval: ToInt(r.json.interval, 5), expires: ToInt(r.json.expires_in, 600) }
 end function
 
 function Trakt_Poll(deviceCode as string) as object
     integ = St_Integrations()
-    body = { code: deviceCode, client_id: integ.traktClientId, client_secret: integ.traktSecret }
+    body = { code: deviceCode, client_id: Key_TraktId(integ), client_secret: Key_TraktSecret(integ) }
     r = Http_Request("POST", "https://api.trakt.tv/oauth/device/token", Trakt_Headers(integ, false), body, 15000)
     if r.code = 200 and type(r.json) = "roAssociativeArray"
         integ.traktToken = Str_Of(r.json.access_token)
@@ -35,12 +35,12 @@ end function
 function Simkl_Url(path as string, integ as object) as string
     sep = "?"
     if Instr(1, path, "?") > 0 then sep = "&"
-    return "https://api.simkl.com" + path + sep + "client_id=" + integ.simklClientId + "&app-name=nuviotv-roku&app-version=2.1"
+    return "https://api.simkl.com" + path + sep + "client_id=" + Key_SimklId(integ) + "&app-name=nuviotv-roku&app-version=2.1"
 end function
 
 function Simkl_Pin() as object
     integ = St_Integrations()
-    if integ.simklClientId = "" then return { ok: false, error: L("Falta el Client ID de Simkl. Agrégalo desde el celular.") }
+    if Key_SimklId(integ) = "" then return { ok: false, error: L("Simkl no está disponible en esta versión del canal.") }
     r = Http_Request("GET", Simkl_Url("/oauth/pin", integ), {}, invalid, 15000)
     if r.code <> 200 or type(r.json) <> "roAssociativeArray" then return { ok: false, error: L("Simkl respondió con error ") + r.code.ToStr() + "." }
     url = Str_Of(r.json.verification_url)
@@ -127,6 +127,7 @@ function Nuvio_Discover(raw as string, keepSession = false as boolean) as object
     integ = St_Integrations()
     integ.nuvioUrl = backend
     integ.nuvioKey = key
+    integ.nuvioAvatarBase = Str_Of(d.avatar_public_base_url)
     if not keepSession
         integ.nuvioAccess = ""
         integ.nuvioRefresh = ""
@@ -239,25 +240,59 @@ function Nuvio_QrPoll(code as string, nonce as string) as object
     return { ok: true, status: "pending" }
 end function
 
-function Nuvio_Rpc(name as string, args as object) as dynamic
+function Nuvio_Call(method as string, path as string, body as dynamic) as object
     integ = St_Integrations()
-    r = Http_Request("POST", integ.nuvioUrl + "/rest/v1/rpc/" + name, Nuvio_Headers(integ, true), args, 20000)
+    r = Http_Request(method, integ.nuvioUrl + path, Nuvio_Headers(integ, true), body, 20000)
     if r.code = 401 and Nuvio_Refresh()
         integ = St_Integrations()
-        r = Http_Request("POST", integ.nuvioUrl + "/rest/v1/rpc/" + name, Nuvio_Headers(integ, true), args, 20000)
+        r = Http_Request(method, integ.nuvioUrl + path, Nuvio_Headers(integ, true), body, 20000)
     end if
+    return r
+end function
+
+function Nuvio_Rpc(name as string, args as object) as dynamic
+    r = Nuvio_Call("POST", "/rest/v1/rpc/" + name, args)
     if r.code >= 200 and r.code < 300 then return r.json
     return invalid
+end function
+
+function Nuvio_Select(table as string, query as string) as dynamic
+    r = Nuvio_Call("GET", "/rest/v1/" + table + "?" + query, invalid)
+    if r.code >= 200 and r.code < 300 and type(r.json) = "roArray" then return r.json
+    return invalid
+end function
+
+function Nuvio_Owner() as string
+    r = Nuvio_Call("POST", "/rest/v1/rpc/get_sync_owner", {})
+    if r.code >= 200 and r.code < 300
+        v = r.json
+        if type(v) = "roArray" and v.Count() > 0 then v = v[0]
+        if IsStr(v) and v.Trim() <> "" then return v.Trim()
+        if type(v) = "roAssociativeArray"
+            for each k in ["get_sync_owner", "owner_id", "user_id", "id"]
+                if IsStr(v[k]) and v[k] <> "" then return v[k]
+            end for
+        end if
+        if IsStr(r.body)
+            t = r.body.Trim().Replace(chr(34), "")
+            if Len(t) >= 32 and Instr(1, t, "{") = 0 and Instr(1, t, "[") = 0 then return t
+        end if
+    end if
+    u = Nuvio_Call("GET", "/auth/v1/user", invalid)
+    if type(u.json) = "roAssociativeArray" and IsStr(u.json.id) then return u.json.id
+    return ""
 end function
 
 function Nuvio_Sync() as object
     Nuvio_Ensure()
     integ = St_Integrations()
     if not Nuvio_Configured(integ) or integ.nuvioAccess = "" then return { ok: false, error: L("No has iniciado sesión en Nuvio.") }
+    if St_SyncDirty(St_ActiveProfile().id).Count() > 0 then Nuvio_Push()
     rows = Nuvio_Rpc("sync_pull_profiles", {})
     if type(rows) <> "roArray" then return { ok: false, error: L("No se pudieron leer tus perfiles de Nuvio.") }
     profiles = []
     usesPrimary = {}
+    avatars = Nuvio_Avatars()
     for each row in rows
         if type(row) = "roAssociativeArray"
             index = ToInt(row.profile_index, ToInt(row.id, 0))
@@ -266,7 +301,10 @@ function Nuvio_Sync() as object
                 if name = "" then name = L("Perfil ") + index.ToStr()
                 color = Str_Of(row.avatar_color_hex)
                 if Left(color, 1) = "#" then color = Mid(color, 2)
-                profiles.Push({ id: "n" + index.ToStr(), name: Left(name, 24), color: UCase(Left(color, 6)), remote: index })
+                avatar = Str_Of(row.avatar_url).Trim()
+                avatarId = Str_Any(row.avatar_id)
+                if avatar = "" and avatarId <> "" and IsStr(avatars[avatarId]) then avatar = avatars[avatarId]
+                profiles.Push({ id: "n" + index.ToStr(), name: Left(name, 24), color: UCase(Left(color, 6)), remote: index, avatar: avatar, primaryAddons: Bool_Of(row.uses_primary_addons, false) and index <> 1 })
                 usesPrimary["n" + index.ToStr()] = Bool_Of(row.uses_primary_addons, false)
             end if
         end if
@@ -277,12 +315,12 @@ function Nuvio_Sync() as object
     s.shared = false
     if St_ProfileIndex(profiles, s.active) < 0 then s.active = profiles[0].id
     St_SaveSettings(s)
-    primaryAddons = invalid
+    owner = Nuvio_Owner()
     counts = { addons: 0, library: 0, progress: 0 }
     for each p in profiles
-        addons = Nuvio_PullAddons(p.remote)
-        if p.remote = 1 then primaryAddons = addons
-        if usesPrimary[p.id] and primaryAddons <> invalid then addons = primaryAddons
+        addonProfile = p.remote
+        if usesPrimary[p.id] then addonProfile = 1
+        addons = Nuvio_PullAddons(owner, addonProfile)
         if addons <> invalid
             St_Set("addons_" + p.id, addons)
             counts.addons = counts.addons + addons.Count()
@@ -298,6 +336,7 @@ function Nuvio_Sync() as object
             counts.progress = counts.progress + progress.Count()
         end if
         Nuvio_PullSettings(p.id, p.remote, p.id = s.active)
+        Nuvio_PullCollections(p.id, p.remote)
     end for
     now = CreateObject("roDateTime")
     now.ToLocalTime()
@@ -305,18 +344,116 @@ function Nuvio_Sync() as object
     return { ok: true, profiles: profiles.Count(), addons: counts.addons, library: counts.library, progress: counts.progress }
 end function
 
-function Nuvio_PullAddons(index as integer) as dynamic
-    rows = Nuvio_Rpc("sync_pull_addons", { p_profile_id: index })
-    if type(rows) <> "roArray" then return invalid
+function Nuvio_Avatars() as object
+    out = {}
+    rows = Nuvio_Rpc("get_avatar_catalog", {})
+    if type(rows) <> "roArray" then return out
+    integ = St_Integrations()
+    base = Str_Of(integ.nuvioAvatarBase)
+    if base = "" then base = integ.nuvioUrl + "/storage/v1/object/public/avatars"
+    while Right(base, 1) = "/"
+        base = Left(base, Len(base) - 1)
+    end while
+    for each row in rows
+        if type(row) = "roAssociativeArray"
+            id = Str_Any(row.id)
+            path = Str_Of(row.storage_path).Trim()
+            while Left(path, 1) = "/"
+                path = Mid(path, 2)
+            end while
+            if id <> "" and path <> "" then out[id] = base + "/" + path
+        end if
+    end for
+    return out
+end function
+
+sub Nuvio_PullCollections(pid as string, index as integer)
+    resp = Nuvio_Rpc("sync_pull_collections", { p_profile_id: index })
+    if resp = invalid then return
+    row = resp
+    if type(resp) = "roArray"
+        row = invalid
+        if resp.Count() > 0 then row = resp[0]
+    end if
+    raw = row
+    if type(row) = "roAssociativeArray" and row.collections_json <> invalid then raw = row.collections_json
+    if IsStr(raw) then raw = ParseJson(raw)
+    if type(raw) = "roAssociativeArray" and type(raw.collections) = "roArray" then raw = raw.collections
+    out = []
+    if type(raw) = "roArray"
+        for each col in raw
+            if type(col) = "roAssociativeArray" and Str_Any(col.id) <> "" and Str_Of(col.title) <> ""
+                folders = []
+                if type(col.folders) = "roArray"
+                    for each folder in col.folders
+                        if type(folder) = "roAssociativeArray" and Str_Any(folder.id) <> "" and Str_Of(folder.title) <> ""
+                            sources = []
+                            list = folder.sources
+                            if type(list) <> "roArray" or list.Count() = 0 then list = folder.catalogSources
+                            if type(list) = "roArray"
+                                for each src in list
+                                    if type(src) = "roAssociativeArray"
+                                        provider = LCase(Str_Of(src.provider))
+                                        if provider = "" or provider = "addon"
+                                            base = Str_Of(src.addonBaseUrl)
+                                            if base = "" then base = Str_Of(src.addon_base_url)
+                                            addonId = Str_Of(src.addonId)
+                                            if addonId = "" then addonId = Str_Of(src.addon_id)
+                                            kind = LCase(Str_Of(src["type"]))
+                                            catId = Str_Of(src.catalogId)
+                                            if catId = "" then catId = Str_Of(src.catalog_id)
+                                            title = Str_Of(src.title)
+                                            if title = "" then title = Str_Of(src.catalogName)
+                                            if (addonId <> "" or base <> "") and kind <> "" and catId <> "" then sources.Push({ base: base, addonId: addonId, type: kind, catalogId: catId, title: title, genre: Str_Of(src.genre) })
+                                        end if
+                                    end if
+                                end for
+                            end if
+                            shape = LCase(Str_Of(folder.tileShape))
+                            if shape = "wide" then shape = "landscape"
+                            if shape <> "landscape" and shape <> "poster" then shape = "square"
+                            folders.Push({ id: Str_Any(folder.id), title: folder.title, cover: Str_Of(folder.coverImageUrl), backdrop: Str_Of(folder.heroBackdropUrl), shape: shape, sources: sources })
+                        end if
+                    end for
+                end if
+                out.Push({ id: Str_Any(col.id), title: col.title, pin: Bool_Of(col.pinToTop, false), folders: folders })
+            end if
+        end for
+    end if
+    St_WriteFile("collections_" + pid, out)
+end sub
+
+function Nuvio_PullAddons(owner as string, index as integer) as dynamic
+    rows = invalid
+    if owner <> ""
+        rows = Nuvio_Select("addons", "user_id=eq." + owner + "&profile_id=eq." + index.ToStr() + "&select=*&order=sort_order.asc")
+        if rows = invalid or rows.Count() = 0
+            tv = Nuvio_Select("tv_addons", "owner_id=eq." + owner + "&select=*&order=position.asc")
+            if tv <> invalid and tv.Count() > 0 then rows = tv
+        end if
+    end if
+    if rows = invalid or rows.Count() = 0
+        rpc = Nuvio_Rpc("sync_pull_addons", { p_profile_id: index })
+        if type(rpc) = "roArray" then rows = rpc
+    end if
+    if rows = invalid then return invalid
     items = []
+    seen = {}
     for each row in rows
         if type(row) = "roAssociativeArray"
             url = Str_Of(row.url)
             if url = "" then url = Str_Of(row.base_url)
             enabled = Bool_Of(row.enabled, true)
-            if url <> "" and enabled then items.Push({ url: St_NormalizeUrl(url), order: ToInt(row.sort_order, ToInt(row.position, items.Count())) })
+            if url <> "" and enabled
+                clean = St_NormalizeUrl(url)
+                if not seen.DoesExist(clean)
+                    seen[clean] = true
+                    items.Push({ url: clean, order: ToInt(row.sort_order, ToInt(row.position, items.Count())) })
+                end if
+            end if
         end if
     end for
+    if items.Count() = 0 then return invalid
     sorted = []
     while items.Count() > 0
         best = 0
@@ -328,6 +465,52 @@ function Nuvio_PullAddons(index as integer) as dynamic
     end while
     return sorted
 end function
+
+sub Nuvio_PullCatalogs(prefs as object, index as integer)
+    resp = Nuvio_Rpc("sync_pull_home_catalog_settings", { p_profile_id: index, p_platform: "home_catalog_shared" })
+    row = resp
+    if type(resp) = "roArray"
+        if resp.Count() = 0 then return
+        row = resp[0]
+    end if
+    if type(row) <> "roAssociativeArray" then return
+    data = row
+    if row.settings_json <> invalid then data = row.settings_json
+    if IsStr(data) then data = ParseJson(data)
+    if type(data) <> "roAssociativeArray" or type(data.items) <> "roArray" then return
+    entries = []
+    for each item in data.items
+        if type(item) = "roAssociativeArray"
+            addonId = Str_Of(item.addon_id)
+            kind = LCase(Str_Of(item["type"]))
+            catId = Str_Of(item.catalog_id)
+            colId = Str_Any(item.collection_id)
+            if Bool_Of(item.is_collection, false) and colId <> ""
+                entries.Push({ key: "col:" + colId, order: ToInt(item.order, entries.Count()), enabled: Bool_Of(item.enabled, true), title: "" })
+            else if addonId <> "" and kind <> "" and catId <> ""
+                entries.Push({ key: addonId + "|" + kind + "|" + catId, order: ToInt(item.order, entries.Count()), enabled: Bool_Of(item.enabled, true), title: Str_Of(item.custom_title).Trim() })
+            end if
+        end if
+    end for
+    if entries.Count() = 0 then return
+    order = []
+    hidden = {}
+    titles = {}
+    while entries.Count() > 0
+        best = 0
+        for i = 1 to entries.Count() - 1
+            if entries[i].order < entries[best].order then best = i
+        end for
+        e = entries[best]
+        order.Push(e.key)
+        if not e.enabled then hidden[e.key] = true
+        if e.title <> "" then titles[e.key] = e.title
+        entries.Delete(best)
+    end while
+    prefs["order"] = order
+    prefs["hidden"] = hidden
+    prefs["titles"] = titles
+end sub
 
 function Nuvio_PullLibrary(index as integer) as dynamic
     rows = Nuvio_Rpc("sync_pull_library", { p_profile_id: index, p_limit: 100, p_offset: 0 })
@@ -365,7 +548,7 @@ function Nuvio_PullProgress(index as integer) as dynamic
                 label = L("T") + season.ToStr() + ":E" + episode.ToStr()
                 if video = id then video = id + ":" + season.ToStr() + ":" + episode.ToStr()
             end if
-            if id <> "" and secs > 0 and (dur = 0 or secs < dur * 0.95) then out.Push({ metaId: id, videoId: video, kind: kind, title: "", poster: "", background: "", episode: label, position: secs, duration: dur })
+            if id <> "" and secs > 0 and (dur = 0 or secs < dur * 0.95) then out.Push({ metaId: id, videoId: video, kind: kind, title: "", poster: "", background: "", episode: label, position: secs, duration: dur, season: season, ep: episode, updatedMs: row.last_watched })
         end if
     end for
     return out
@@ -389,6 +572,41 @@ function Nuvio_SubPref(v as dynamic) as string
     if c = "pt_br" or c = "br" or c = "pob" then return "pt-br"
     if c = "pt_pt" or c = "por" then return "pt"
     return c
+end function
+
+function Nuvio_ThemeAccent(th as object) as string
+    name = UCase(Str_Of(th.selected_theme))
+    if name = "CUSTOM"
+        colors = th.custom_theme_colors
+        if IsStr(colors) then colors = colors.Split(",")
+        if type(colors) = "roAssociativeArray" then colors = [colors.first, colors.second, colors.third]
+        if type(colors) = "roArray" and colors.Count() > 1 then return Nuvio_Hex(colors[1])
+        return ""
+    end if
+    map = { WHITE: "F5F5F5", CRIMSON: "E53935", OCEAN: "1E88E5", VIOLET: "8E24AA", EMERALD: "43A047", AMBER: "FB8C00", ROSE: "D81B60", GOLD: "E8A91C", JADE: "22D37C", ROSE_GOLD: "EC70A9", ARCTIC_BLUE: "3185F5", GRAPHITE: "AAB2BE" }
+    if map.DoesExist(name) then return map[name]
+    return ""
+end function
+
+function Nuvio_Hex(v as dynamic) as string
+    if IsStr(v)
+        t = v.Trim()
+        if Left(t, 1) = "#" then t = Mid(t, 2)
+        if Len(t) = 8 then t = Mid(t, 3)
+        if Len(t) = 6 and CreateObject("roRegex", "^[0-9a-fA-F]{6}$", "").IsMatch(t) then return UCase(t)
+        if CreateObject("roRegex", "^-?[0-9]+$", "").IsMatch(t) then v = t.ToFloat() else return ""
+    end if
+    if v = invalid then return ""
+    n = 0.0 + v
+    if n < 0 then n = n + 4294967296.0
+    rgb = n - Int(n / 16777216.0) * 16777216.0
+    out = ""
+    for each shift in [65536.0, 256.0, 1.0]
+        part = Int(rgb / shift)
+        rgb = rgb - part * shift
+        out = out + Right("0" + LCase(StrI(part, 16)), 2)
+    end for
+    return UCase(out)
 end function
 
 sub Nuvio_SetBool(prefs as object, name as string, v as dynamic)
@@ -419,13 +637,21 @@ sub Nuvio_PullSettings(pid as string, index as integer, primary as boolean)
             end if
         end for
     end if
+    prefs = St_Get("prefs_" + pid, invalid)
+    if type(prefs) <> "roAssociativeArray" then prefs = {}
+    Nuvio_PullCatalogs(prefs, index)
     if f = invalid
+        St_Set("prefs_" + pid, prefs)
         if primary then St_SaveIntegrations(integ)
         return
     end if
-    prefs = St_Get("prefs_" + pid, invalid)
-    if type(prefs) <> "roAssociativeArray" then prefs = {}
 
+    Nuvio_MapFeatures(prefs, f, integ, pid, primary, true)
+    St_Set("prefs_" + pid, prefs)
+    if primary then St_SaveIntegrations(integ)
+end sub
+
+sub Nuvio_MapFeatures(prefs as object, f as object, integ as object, pid as string, primary as boolean, apply as boolean)
     pl = f.player_settings
     if type(pl) = "roAssociativeArray"
         a1 = Nuvio_AudioPref(pl.preferred_audio_language)
@@ -493,6 +719,9 @@ sub Nuvio_PullSettings(pid as string, index as integer, primary as boolean)
         if ly.focused_poster_backdrop_expand_delay_seconds <> invalid then prefs["expandDelay"] = ToInt(ly.focused_poster_backdrop_expand_delay_seconds, 3)
         Nuvio_SetBool(prefs, "expandTrailer", ly.focused_poster_backdrop_trailer_enabled)
         Nuvio_SetBool(prefs, "expandMuted", ly.focused_poster_backdrop_trailer_muted)
+        target = LCase(Str_Of(ly.focused_poster_backdrop_trailer_playback_target))
+        if target = "expanded_card" then prefs["trailerTarget"] = "card"
+        if target = "hero_media" then prefs["trailerTarget"] = "hero"
         Nuvio_SetBool(prefs, "trailerButton", ly.detail_page_trailer_button_enabled)
     end if
 
@@ -507,7 +736,7 @@ sub Nuvio_PullSettings(pid as string, index as integer, primary as boolean)
         lang = Str_Of(tm.tmdb_language)
         if lang <> "" then prefs["tmdbLanguage"] = lang
         if primary
-            if IsBool(tm.tmdb_enabled) and integ.tmdbKey <> "" then integ["tmdbEnabled"] = tm.tmdb_enabled
+            if IsBool(tm.tmdb_enabled) and Key_Tmdb(integ) <> "" then integ["tmdbEnabled"] = tm.tmdb_enabled
             if IsBool(tm.tmdb_use_artwork) then integ["tmdbArtwork"] = tm.tmdb_use_artwork
         end if
     end if
@@ -523,19 +752,393 @@ sub Nuvio_PullSettings(pid as string, index as integer, primary as boolean)
         end for
     end if
 
+    th = f.theme_settings
+    if type(th) = "roAssociativeArray"
+        accent = Nuvio_ThemeAccent(th)
+        if accent <> "" then prefs["accent"] = accent
+    end if
+
     sb = f.stream_badge_settings
     if type(sb) = "roAssociativeArray"
         Nuvio_SetBool(prefs, "sizeBadges", sb.show_file_size_badges)
         Nuvio_SetBool(prefs, "addonLogo", sb.show_addon_logo)
         if UCase(Str_Of(sb.stream_badge_placement)) = "TOP" then prefs["badgePlace"] = "top" else prefs["badgePlace"] = "bottom"
         rules = Badge_Compact(sb.stream_badge_rules)
-        if rules.Count() > 0
-            St_SaveBadges(pid, rules)
-        else
-            St_ClearBadges(pid)
+        if apply
+            if rules.Count() > 0
+                St_SaveBadges(pid, rules)
+            else
+                St_ClearBadges(pid)
+            end if
         end if
     end if
 
-    St_Set("prefs_" + pid, prefs)
-    if primary then St_SaveIntegrations(integ)
 end sub
+
+function Nuvio_NowMs() as dynamic
+    return CreateObject("roDateTime").AsSeconds() * 1000&
+end function
+
+function Nuvio_Push() as object
+    Nuvio_Ensure()
+    integ = St_Integrations()
+    if not Nuvio_Configured(integ) or integ.nuvioAccess = "" then return { ok: false, error: L("No has iniciado sesión en Nuvio.") }
+    profile = St_ActiveProfile()
+    index = ToInt(profile.remote, 0)
+    if index <= 0 then return { ok: false, error: L("Este perfil no está vinculado a Nuvio.") }
+    pid = profile.id
+    dirty = St_SyncDirty(pid)
+    done = []
+    if Bool_Of(dirty.addons, false)
+        if Bool_Of(profile.primaryAddons, false) or Nuvio_PushAddons(index)
+            done.Push("addons")
+        end if
+    end if
+    if Bool_Of(dirty.library, false) and Nuvio_PushLibrary(pid, index) then done.Push("library")
+    if Bool_Of(dirty.progress, false) and Nuvio_PushProgress(index) then done.Push("progress")
+    if Bool_Of(dirty.settings, false) and Nuvio_PushSettings(pid, index) then done.Push("settings")
+    if Bool_Of(dirty.catalogs, false) and Nuvio_PushCatalogs(pid, index) then done.Push("catalogs")
+    St_ClearDirty(pid, done)
+    return { ok: true, pushed: done }
+end function
+
+function Nuvio_PushAddons(index as integer) as boolean
+    owner = Nuvio_Owner()
+    remote = invalid
+    if owner <> "" then remote = Nuvio_Select("addons", "user_id=eq." + owner + "&profile_id=eq." + index.ToStr() + "&select=*&order=sort_order.asc")
+    if remote = invalid
+        rpc = Nuvio_Rpc("sync_pull_addons", { p_profile_id: index })
+        if type(rpc) = "roArray" then remote = rpc
+    end if
+    if remote = invalid then return false
+    byUrl = {}
+    for each row in remote
+        if type(row) = "roAssociativeArray"
+            url = Str_Of(row.url)
+            if url = "" then url = Str_Of(row.base_url)
+            if url <> "" then byUrl[St_NormalizeUrl(url)] = row
+        end if
+    end for
+    items = []
+    used = {}
+    for each url in St_Addons()
+        clean = St_NormalizeUrl(url)
+        if not used.DoesExist(clean)
+            used[clean] = true
+            entry = { url: clean + "/manifest.json", sort_order: items.Count(), enabled: true }
+            row = byUrl[clean]
+            if row <> invalid
+                if Str_Of(row.url) <> "" then entry.url = row.url
+                if Str_Of(row.name) <> "" then entry.name = row.name
+            end if
+            items.Push(entry)
+        end if
+    end for
+    for each clean in byUrl
+        row = byUrl[clean]
+        if not used.DoesExist(clean) and not Bool_Of(row.enabled, true)
+            entry = { url: Str_Of(row.url), sort_order: items.Count(), enabled: false }
+            if entry.url = "" then entry.url = clean + "/manifest.json"
+            if Str_Of(row.name) <> "" then entry.name = row.name
+            items.Push(entry)
+        end if
+    end for
+    r = Nuvio_Call("POST", "/rest/v1/rpc/sync_push_addons", { p_profile_id: index, p_addons: items, p_origin_client_id: St_ClientId() })
+    return r.code >= 200 and r.code < 300
+end function
+
+function Nuvio_PushLibrary(pid as string, index as integer) as boolean
+    ops = St_Get("libops_" + pid, invalid)
+    if type(ops) <> "roArray" or ops.Count() = 0 then return true
+    remote = Nuvio_Rpc("sync_pull_library", { p_profile_id: index, p_limit: 1000, p_offset: 0 })
+    if type(remote) <> "roArray" then return false
+    items = []
+    for each row in remote
+        if type(row) = "roAssociativeArray" and Str_Of(row.content_id) <> ""
+            items.Push(Nuvio_LibraryRow(row))
+        end if
+    end for
+    for each o in ops
+        if type(o) = "roAssociativeArray"
+            id = Str_Of(o.id)
+            kept = []
+            for each it in items
+                if it.content_id <> id then kept.Push(it)
+            end for
+            items = kept
+            if o.op = "add"
+                kind = Str_Of(o.kind)
+                if kind = "" then kind = "movie"
+                name = Str_Of(o.name)
+                if name = "" then name = "Untitled"
+                items.Unshift({ content_id: id, content_type: kind, name: name, poster: Str_Of(o.poster), poster_shape: "POSTER", background: invalid, description: "", release_info: "", imdb_rating: invalid, genres: [], addon_base_url: invalid, added_at: Nuvio_NowMs() })
+            end if
+        end if
+    end for
+    r = Nuvio_Call("POST", "/rest/v1/rpc/sync_push_library", { p_profile_id: index, p_items: items })
+    if r.code < 200 or r.code >= 300 then return false
+    St_Set("libops_" + pid, [])
+    return true
+end function
+
+function Nuvio_LibraryRow(row as object) as object
+    added = row.added_at
+    if added = invalid then added = row.updated_at
+    if IsStr(added)
+        dt = CreateObject("roDateTime")
+        dt.FromISO8601String(added)
+        added = dt.AsSeconds() * 1000&
+    end if
+    if added = invalid then added = Nuvio_NowMs()
+    shape = UCase(Str_Of(row.poster_shape))
+    if shape <> "LANDSCAPE" and shape <> "SQUARE" then shape = "POSTER"
+    genres = row.genres
+    if type(genres) <> "roArray" then genres = []
+    name = Str_Of(row.name)
+    if name = "" then name = "Untitled"
+    kind = Str_Of(row.content_type)
+    if kind = "" then kind = "movie"
+    return { content_id: row.content_id, content_type: kind, name: name, poster: row.poster, poster_shape: shape, background: row.background, description: Str_Of(row.description), release_info: Str_Of(row.release_info), imdb_rating: row.imdb_rating, genres: genres, addon_base_url: row.addon_base_url, added_at: added }
+end function
+
+function Nuvio_PushProgress(index as integer) as boolean
+    rows = []
+    for each e in St_Progress()
+        id = Str_Of(e.metaId)
+        if id <> ""
+            season = ToInt(e.season, -1)
+            episode = ToInt(e.ep, -1)
+            video = Str_Of(e.videoId)
+            parts = video.Split(":")
+            if (season < 0 or episode < 0) and parts.Count() >= 3
+                season = parts[parts.Count() - 2].ToInt()
+                episode = parts[parts.Count() - 1].ToInt()
+            end if
+            if video = "" then video = id
+            key = id
+            entry = { content_id: id, content_type: Str_Of(e.kind), video_id: video, season: invalid, episode: invalid }
+            if entry.content_type = "" then entry.content_type = "movie"
+            if season >= 0 and episode > 0
+                entry.season = season
+                entry.episode = episode
+                key = id + "_s" + season.ToStr() + "e" + episode.ToStr()
+            end if
+            entry.position = ToInt(e.position, 0) * 1000&
+            entry.duration = ToInt(e.duration, 0) * 1000&
+            last = e.updatedMs
+            if last = invalid and e.updated <> invalid then last = ToInt(e.updated, 0) * 1000&
+            if last = invalid then last = Nuvio_NowMs()
+            entry.last_watched = last
+            entry.progress_key = key
+            rows.Push(entry)
+        end if
+    end for
+    if rows.Count() = 0 then return true
+    r = Nuvio_Call("POST", "/rest/v1/rpc/sync_push_watch_progress", { p_profile_id: index, p_entries: rows, p_origin_client_id: St_ClientId() })
+    return r.code >= 200 and r.code < 300
+end function
+
+function Nuvio_PushCatalogs(pid as string, index as integer) as boolean
+    prefs = St_Get("prefs_" + pid, invalid)
+    if type(prefs) <> "roAssociativeArray" then return true
+    order = prefs.order
+    if type(order) <> "roArray" or order.Count() = 0 then return true
+    hidden = prefs.hidden
+    if type(hidden) <> "roAssociativeArray" then hidden = {}
+    resp = Nuvio_Rpc("sync_pull_home_catalog_settings", { p_profile_id: index, p_platform: "home_catalog_shared" })
+    if resp = invalid then return false
+    row = resp
+    if type(resp) = "roArray"
+        row = invalid
+        if resp.Count() > 0 then row = resp[0]
+    end if
+    data = invalid
+    if type(row) = "roAssociativeArray"
+        data = row
+        if row.settings_json <> invalid then data = row.settings_json
+        if IsStr(data) then data = ParseJson(data)
+    end if
+    if type(data) <> "roAssociativeArray" then data = {}
+    remoteItems = data.items
+    if type(remoteItems) <> "roArray" then remoteItems = []
+    byKey = {}
+    for each item in remoteItems
+        if type(item) = "roAssociativeArray"
+            if Bool_Of(item.is_collection, false)
+                byKey["col:" + Str_Any(item.collection_id)] = item
+            else
+                byKey[Str_Of(item.addon_id) + "|" + LCase(Str_Of(item["type"])) + "|" + Str_Of(item.catalog_id)] = item
+            end if
+        end if
+    end for
+    items = []
+    used = {}
+    for each key in order
+        if IsStr(key) and not used.DoesExist(key)
+            item = byKey[key]
+            if item = invalid and Left(key, 4) <> "col:"
+                parts = key.Split("|")
+                if parts.Count() = 3 then item = { addon_id: parts[0], type: parts[1], catalog_id: parts[2], custom_title: "" }
+            end if
+            if item <> invalid
+                used[key] = true
+                item.enabled = not hidden.DoesExist(key)
+                item.order = items.Count()
+                items.Push(item)
+            end if
+        end if
+    end for
+    for each key in byKey
+        if not used.DoesExist(key)
+            item = byKey[key]
+            item.order = items.Count()
+            items.Push(item)
+        end if
+    end for
+    data.items = items
+    r = Nuvio_Call("POST", "/rest/v1/rpc/sync_push_home_catalog_settings", { p_profile_id: index, p_platform: "home_catalog_shared", p_settings_json: data })
+    return r.code >= 200 and r.code < 300
+end function
+
+function Nuvio_PushSettings(pid as string, index as integer) as boolean
+    local = St_Get("prefs_" + pid, invalid)
+    if type(local) <> "roAssociativeArray" then return true
+    resp = Nuvio_Rpc("sync_pull_profile_settings_blob", { p_profile_id: index, p_platform: "tv" })
+    row = resp
+    if type(resp) = "roArray"
+        row = invalid
+        if resp.Count() > 0 then row = resp[0]
+    end if
+    if type(row) <> "roAssociativeArray" then return false
+    blob = row.settings_json
+    if IsStr(blob) then blob = ParseJson(blob)
+    if type(blob) <> "roAssociativeArray" or type(blob.features) <> "roAssociativeArray" then return false
+    f = blob.features
+    remote = {}
+    Nuvio_MapFeatures(remote, f, St_Integrations(), pid, false, false)
+    changed = false
+    for each k in Nuvio_PushKeys()
+        if local[k] <> invalid and not Nuvio_Same(local[k], remote[k])
+            if Nuvio_WriteSetting(f, k, local) then changed = true
+        end if
+    end for
+    if not changed then return true
+    r = Nuvio_Call("POST", "/rest/v1/rpc/sync_push_profile_settings_blob", { p_profile_id: index, p_settings_json: blob, p_platform: "tv" })
+    return r.code >= 200 and r.code < 300
+end function
+
+function Nuvio_PushKeys() as object
+    return ["audioLang", "audioLang2", "subLang", "subLang2", "forcedSubs", "pauseOverlay", "clock", "autoNext", "bingeNext", "bingeReuse", "reuseLink", "reuseHours", "autoplayMode", "autoplayRegex", "autoplayTimeout", "cwStyle", "customPoster", "posterScreens", "expandPoster", "expandDelay", "expandTrailer", "expandMuted", "trailerTarget", "trailerButton", "trailerAutoplay", "trailerDelay", "tmdbLanguage", "sizeBadges", "addonLogo", "badgePlace", "accent"]
+end function
+
+function Nuvio_Same(a as dynamic, b as dynamic) as boolean
+    if a = invalid or b = invalid then return a = invalid and b = invalid
+    ta = type(a)
+    tb = type(b)
+    if GetInterface(a, "ifString") <> invalid or GetInterface(b, "ifString") <> invalid
+        return Str_Of(a) = Str_Of(b) and GetInterface(a, "ifString") <> invalid and GetInterface(b, "ifString") <> invalid
+    end if
+    if GetInterface(a, "ifBoolean") <> invalid or GetInterface(b, "ifBoolean") <> invalid
+        return IsBool(a) and IsBool(b) and a = b
+    end if
+    if ta = "roArray" or tb = "roArray" then return true
+    return ToInt(a, -99999) = ToInt(b, -99998)
+end function
+
+function Nuvio_Feature(f as object, name as string) as object
+    if type(f[name]) <> "roAssociativeArray" then f[name] = {}
+    return f[name]
+end function
+
+function Nuvio_WriteSetting(f as object, k as string, p as object) as boolean
+    v = p[k]
+    pl = invalid
+    if k = "audioLang"
+        a = Str_Of(v)
+        out = a
+        if a = "system" then out = "DEVICE"
+        if a = "original" then out = "ORIGINAL"
+        if a = "none" then out = "DEFAULT"
+        Nuvio_Feature(f, "player_settings").preferred_audio_language = out
+    else if k = "audioLang2"
+        a = Str_Of(v)
+        pl = Nuvio_Feature(f, "player_settings")
+        if a = "none" or a = "" or a = "system"
+            pl.secondary_preferred_audio_language = invalid
+        else if a = "original"
+            pl.secondary_preferred_audio_language = "ORIGINAL"
+        else
+            pl.secondary_preferred_audio_language = a
+        end if
+    else if k = "subLang" or k = "subLang2"
+        a = Str_Of(v)
+        if a = "off" or a = "" then a = "none"
+        if k = "subLang" then Nuvio_Feature(f, "player_settings").subtitle_preferred_language = a else Nuvio_Feature(f, "player_settings").subtitle_secondary_language = a
+    else if k = "forcedSubs"
+        Nuvio_Feature(f, "player_settings").subtitle_use_forced_subtitles = Bool_Of(v, false)
+    else if k = "pauseOverlay"
+        Nuvio_Feature(f, "player_settings").pause_overlay_enabled = Bool_Of(v, true)
+    else if k = "clock"
+        Nuvio_Feature(f, "player_settings").osd_clock_enabled = Bool_Of(v, true)
+    else if k = "autoNext"
+        Nuvio_Feature(f, "player_settings").stream_auto_play_next_episode_enabled = Bool_Of(v, true)
+    else if k = "bingeNext"
+        Nuvio_Feature(f, "player_settings").stream_auto_play_prefer_bingegroup_next_episode = Bool_Of(v, true)
+    else if k = "bingeReuse"
+        Nuvio_Feature(f, "player_settings").stream_auto_play_reuse_binge_group = Bool_Of(v, false)
+    else if k = "reuseLink"
+        Nuvio_Feature(f, "player_settings").stream_reuse_last_link_enabled = Bool_Of(v, false)
+    else if k = "reuseHours"
+        Nuvio_Feature(f, "player_settings").stream_reuse_last_link_cache_hours = ToInt(v, 24)
+    else if k = "autoplayMode"
+        modes = { manual: "MANUAL", first: "FIRST_STREAM", regex: "REGEX_MATCH" }
+        if not modes.DoesExist(Str_Of(v)) then return false
+        Nuvio_Feature(f, "player_settings").stream_auto_play_mode = modes[Str_Of(v)]
+    else if k = "autoplayRegex"
+        Nuvio_Feature(f, "player_settings").stream_auto_play_regex = Str_Of(v)
+    else if k = "autoplayTimeout"
+        t = ToInt(v, 3)
+        if t < 0 then t = 2147483647
+        Nuvio_Feature(f, "player_settings").stream_auto_play_timeout_seconds = t
+    else if k = "cwStyle"
+        if Str_Of(v) = "poster" then Nuvio_Feature(f, "layout_settings").continue_watching_card_style = "POSTER" else Nuvio_Feature(f, "layout_settings").continue_watching_card_style = "CARD"
+    else if k = "customPoster"
+        Nuvio_Feature(f, "layout_settings").custom_poster_url_pattern = Str_Of(v)
+    else if k = "posterScreens"
+        screens = Str_Of(v)
+        if screens = "" then screens = "none"
+        Nuvio_Feature(f, "layout_settings").custom_poster_enabled_screens = screens
+    else if k = "expandPoster"
+        Nuvio_Feature(f, "layout_settings").focused_poster_backdrop_expand_enabled = Bool_Of(v, true)
+    else if k = "expandDelay"
+        Nuvio_Feature(f, "layout_settings").focused_poster_backdrop_expand_delay_seconds = ToInt(v, 3)
+    else if k = "expandTrailer"
+        Nuvio_Feature(f, "layout_settings").focused_poster_backdrop_trailer_enabled = Bool_Of(v, false)
+    else if k = "expandMuted"
+        Nuvio_Feature(f, "layout_settings").focused_poster_backdrop_trailer_muted = Bool_Of(v, true)
+    else if k = "trailerTarget"
+        if Str_Of(v) = "card" then Nuvio_Feature(f, "layout_settings").focused_poster_backdrop_trailer_playback_target = "EXPANDED_CARD" else Nuvio_Feature(f, "layout_settings").focused_poster_backdrop_trailer_playback_target = "HERO_MEDIA"
+    else if k = "trailerButton"
+        Nuvio_Feature(f, "layout_settings").detail_page_trailer_button_enabled = Bool_Of(v, true)
+    else if k = "trailerAutoplay"
+        Nuvio_Feature(f, "trailer_settings").trailer_enabled = Bool_Of(v, false)
+    else if k = "trailerDelay"
+        Nuvio_Feature(f, "trailer_settings").trailer_delay_seconds = ToInt(v, 7)
+    else if k = "tmdbLanguage"
+        Nuvio_Feature(f, "tmdb_settings").tmdb_language = Str_Of(v)
+    else if k = "sizeBadges"
+        Nuvio_Feature(f, "stream_badge_settings").show_file_size_badges = Bool_Of(v, true)
+    else if k = "addonLogo"
+        Nuvio_Feature(f, "stream_badge_settings").show_addon_logo = Bool_Of(v, true)
+    else if k = "badgePlace"
+        if Str_Of(v) = "top" then Nuvio_Feature(f, "stream_badge_settings").stream_badge_placement = "TOP" else Nuvio_Feature(f, "stream_badge_settings").stream_badge_placement = "BOTTOM"
+    else if k = "accent"
+        hex = UCase(Str_Of(v))
+        names = { F5F5F5: "WHITE", E53935: "CRIMSON", "1E88E5": "OCEAN", "8E24AA": "VIOLET", "43A047": "EMERALD", FB8C00: "AMBER", D81B60: "ROSE", E8A91C: "GOLD", "22D37C": "JADE", EC70A9: "ROSE_GOLD", "3185F5": "ARCTIC_BLUE", AAB2BE: "GRAPHITE" }
+        if not names.DoesExist(hex) then return false
+        Nuvio_Feature(f, "theme_settings").selected_theme = names[hex]
+    else
+        return false
+    end if
+    return true
+end function

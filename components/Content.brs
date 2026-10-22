@@ -17,8 +17,37 @@ function Content_Item(row as object, data as object) as object
         logo: Str_Of(data.logo)
         rating: Str_Of(data.rating)
         fallback: Str_Of(data.fallback)
+        idx: row.getChildCount() - 1
+        badge: Str_Of(data.badge)
+        kicker: Str_Of(data.kicker)
+        subtitle: Str_Of(data.subtitle)
     })
     return item
+end function
+
+function Cw_Status(elapsed as integer, dur as integer) as string
+    if dur > 0 and elapsed > 0
+        remain = Int((dur - elapsed) / 60)
+        if remain < 1 then remain = 1
+        if remain < 60
+            time = L("{m} min").Replace("{m}", remain.ToStr())
+        else
+            hours = Int(remain / 60)
+            mins = remain mod 60
+            time = L("{h} h").Replace("{h}", hours.ToStr())
+            if mins > 0 then time = L("{h} h {m} min").Replace("{h}", hours.ToStr()).Replace("{m}", mins.ToStr())
+        end if
+        return L("Faltan {t}").Replace("{t}", time)
+    end if
+    return L("Continuar")
+end function
+
+function Cw_Episode(label as string) as object
+    label = label.Trim()
+    if label = "" then return { code: "", name: "" }
+    cut = Instr(1, label, "  ")
+    if cut = 0 then return { code: label, name: "" }
+    return { code: Left(label, cut - 1).Trim(), name: Mid(label, cut + 2).Trim() }
 end function
 
 function Content_ContinueRow() as dynamic
@@ -36,20 +65,11 @@ function Content_ContinueRow() as dynamic
         elapsed = ToInt(e.position, 0)
         dur = ToInt(e.duration, 0)
         progress = 0.0
-        remaining = ""
-        if dur > 0
-            progress = elapsed / dur
-            minsLeft = Int((dur - elapsed) / 60)
-            if minsLeft > 0 then remaining = L("Te quedan ") + minsLeft.ToStr() + L(" min")
-        end if
+        if dur > 0 then progress = elapsed / dur
         episode = Str_Of(e.episode)
+        parts = Cw_Episode(episode)
         altIds = ""
         if type(e.altIds) = "roArray" then altIds = e.altIds.Join("|")
-        desc = episode
-        if remaining <> ""
-            if desc <> "" then desc = desc + "  ·  "
-            desc = desc + remaining
-        end if
         image = Str_Of(e.poster)
         fallbackImage = ""
         if landscape
@@ -67,16 +87,19 @@ function Content_ContinueRow() as dynamic
         Content_Item(row, {
             title: Str_Of(e.title)
             poster: image
-            description: desc
+            description: ""
             kind: Str_Of(e.kind)
             metaId: e.metaId
             videoId: e.videoId
             background: Str_Of(e.background)
-            metaLine: L("Seguir viendo  ·  ") + Fmt_Time(elapsed)
+            metaLine: ""
             episodeLabel: episode
             progress: progress
             altIds: altIds
             fallback: fallbackImage
+            badge: Cw_Status(elapsed, dur)
+            kicker: parts.code
+            subtitle: parts.name
         })
     end for
     return row

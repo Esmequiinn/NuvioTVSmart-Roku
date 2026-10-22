@@ -21,7 +21,7 @@
         <Group id="homePage">
             <RowList
                 id="homeRows"
-                translation="[160,560]"
+                translation="[152,560]"
                 itemComponentName="PosterItem"
                 numRows="2"
                 itemSize="[1760,380]"
@@ -29,11 +29,12 @@
                 rowItemSize="[[200,300]]"
                 rowItemSpacing="[[26,0]]"
                 showRowLabel="[true]"
-                rowLabelOffset="[[0,18]]"
+                rowLabelOffset="[[8,18]]"
+                focusXOffset="[8]"
                 rowLabelColor="0xF2F2F7FF"
-                rowFocusAnimationStyle="floatingFocus"
+                rowFocusAnimationStyle="fixedFocus"
                 vertFocusAnimationStyle="fixedFocus"
-                focusBitmapUri="pkg:/images/focus_ring.9.png"
+                drawFocusFeedback="false"
                 focusBitmapBlendColor="0xFFFFFFFF" />
             <Group id="emptyState" visible="false">
                 <Label id="emptyTitle" translation="[160,200]" width="1100" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
@@ -49,7 +50,7 @@
             <Label id="searchStatus" translation="[800,420]" width="1000" horizAlign="center" wrap="true" font="font:MediumSystemFont" color="0x9A9AAAFF" text="Escribe para buscar películas y series en tus addons." />
             <RowList
                 id="searchRows"
-                translation="[800,80]"
+                translation="[792,80]"
                 itemComponentName="PosterItem"
                 numRows="2"
                 itemSize="[1100,440]"
@@ -57,17 +58,18 @@
                 rowItemSize="[[220,330]]"
                 rowItemSpacing="[[24,0]]"
                 showRowLabel="[true]"
-                rowLabelOffset="[[0,18]]"
+                rowLabelOffset="[[8,18]]"
+                focusXOffset="[8]"
                 rowLabelColor="0xF2F2F7FF"
-                rowFocusAnimationStyle="floatingFocus"
+                rowFocusAnimationStyle="fixedFocus"
                 vertFocusAnimationStyle="fixedFocus"
-                focusBitmapUri="pkg:/images/focus_ring.9.png"
+                drawFocusFeedback="false"
                 focusBitmapBlendColor="0xFFFFFFFF" />
         </Group>
         <Group id="libraryPage" visible="false">
             <RowList
                 id="libraryRows"
-                translation="[160,560]"
+                translation="[152,560]"
                 itemComponentName="PosterItem"
                 numRows="2"
                 itemSize="[1760,380]"
@@ -75,11 +77,12 @@
                 rowItemSize="[[200,300]]"
                 rowItemSpacing="[[26,0]]"
                 showRowLabel="[true]"
-                rowLabelOffset="[[0,18]]"
+                rowLabelOffset="[[8,18]]"
+                focusXOffset="[8]"
                 rowLabelColor="0xF2F2F7FF"
-                rowFocusAnimationStyle="floatingFocus"
+                rowFocusAnimationStyle="fixedFocus"
                 vertFocusAnimationStyle="fixedFocus"
-                focusBitmapUri="pkg:/images/focus_ring.9.png"
+                drawFocusFeedback="false"
                 focusBitmapBlendColor="0xFFFFFFFF" />
             <Label id="libraryEmpty" visible="false" translation="[160,620]" width="1500" wrap="true" font="font:MediumSystemFont" color="0x9A9AAAFF" text="Tu biblioteca está vacía. Abre cualquier título y elige Mi lista para guardarlo aquí." />
         </Group>

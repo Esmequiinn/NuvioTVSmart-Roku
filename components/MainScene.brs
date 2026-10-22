@@ -75,6 +75,12 @@ sub init()
 
     m.global.addFields({ accent: "0x7C4DFFFF" })
     m.global.addField("focusCard", "node", true)
+    m.global.addFields({ expandShift: 0.0, expandIndex: -1, syncDirty: 0 })
+    m.global.observeField("syncDirty", "onSyncDirty")
+    m.pushTimer = m.top.createChild("Timer")
+    m.pushTimer.duration = 8
+    m.pushTimer.observeField("fire", "onPushTimer")
+    m.global.addField("expandRow", "node", false)
     m.global.observeField("focusCard", "onFocusCard")
     m.expandTimer.observeField("fire", "onExpandTimer")
     m.autoTimer.observeField("fire", "onAutoTimer")
@@ -108,12 +114,56 @@ sub init()
     m.playerVideo.observeField("state", "onPlayerVideoState")
     m.scrobbleState = ""
 
-    m.server = CreateObject("roSGNode", "ServerTask")
-    m.server.observeField("changed", "onServerChanged")
-    m.server.control = "RUN"
+    startServer()
 
     applyTheme()
     showProfiles()
+    startQuietSync()
+end sub
+
+sub onSyncDirty()
+    if St_Integrations().nuvioAccess = "" then return
+    m.pushTimer.control = "stop"
+    m.pushTimer.control = "start"
+end sub
+
+sub onPushTimer()
+    if m.accountTask <> invalid or m.pushTask <> invalid
+        m.pushTimer.control = "start"
+        return
+    end if
+    m.pushTask = CreateObject("roSGNode", "AccountTask")
+    m.pushTask.mode = "nuvioPush"
+    m.pushTask.observeField("result", "onPushDone")
+    m.pushTask.control = "RUN"
+end sub
+
+sub onPushDone()
+    m.pushTask = invalid
+end sub
+
+sub startServer()
+    m.server = CreateObject("roSGNode", "ServerTask")
+    m.server.observeField("changed", "onServerChanged")
+    m.server.observeField("state", "onServerState")
+    if m.serverNames <> invalid then m.server.addonNames = m.serverNames
+    if m.catalogs <> invalid then m.server.catalogs = m.catalogs
+    m.server.control = "RUN"
+end sub
+
+sub onServerState()
+    if m.server = invalid then return
+    st = m.server.state
+    if st = "stop" or st = "done"
+        m.server.unobserveField("changed")
+        m.server.unobserveField("state")
+        m.server = invalid
+        if m.serverRestarts = invalid then m.serverRestarts = 0
+        if m.serverRestarts < 20
+            m.serverRestarts = m.serverRestarts + 1
+            startServer()
+        end if
+    end if
 end sub
 
 sub applyTheme()
@@ -131,11 +181,13 @@ sub applyTheme()
         expandDelay: ToInt(St_Pref("expandDelay"), 3)
         expandTrailer: Bool_Of(St_Pref("expandTrailer"), false)
         expandMuted: Bool_Of(St_Pref("expandMuted"), true)
+        trailerTarget: Str_Of(St_Pref("trailerTarget"))
     }
     if m.ui.expandDelay < 1 then m.ui.expandDelay = 1
     profile = St_ActiveProfile()
     m.nav.profileName = profile.name
     m.nav.profileColor = St_ProfileColor(St_ActiveProfileIndex())
+    m.nav.profileAvatar = Str_Of(profile.avatar)
     if m.prefs.captions
         m.playerVideo.globalCaptionMode = "On"
     else
@@ -147,7 +199,7 @@ sub showProfiles()
     list = []
     profiles = St_Profiles()
     for i = 0 to profiles.Count() - 1
-        list.Push({ id: profiles[i].id, name: profiles[i].name, color: St_ProfileColor(i) })
+        list.Push({ id: profiles[i].id, name: profiles[i].name, color: St_ProfileColor(i), avatar: Str_Of(profiles[i].avatar) })
     end for
     m.profiles.profiles = list
     m.profiles.visible = true
@@ -207,8 +259,11 @@ sub onCatalogsLoaded(event as object)
     for each entry in m.manifests
         names[entry.base] = entry.name
     end for
-    m.server.addonNames = names
-    m.server.catalogs = m.catalogs
+    m.serverNames = names
+    if m.server <> invalid
+        m.server.addonNames = names
+        m.server.catalogs = m.catalogs
+    end if
     if not m.busy then m.loading.visible = false
     content = task.content
     m.homeRows.content = content
@@ -329,11 +384,57 @@ sub onRowSelected(event as object)
     if m.busy then return
     rows = event.getRoSGNode()
     item = getRowItem(rows, rows.rowItemSelected)
-    if item <> invalid then openDetails(item)
+    if item = invalid then return
+    if item.itemType = "folder"
+        openFolder(item)
+        return
+    end if
+    openDetails(item)
+end sub
+
+sub openFolder(item as object)
+    if not item.hasField("folder") then return
+    hideExpanded()
+    showBusy(L("Cargando..."))
+    m.folderTitle = item.title
+    task = CreateObject("roSGNode", "CatalogTask")
+    task.baseManifests = m.manifests
+    task.folder = item.folder
+    task.observeField("content", "onFolderLoaded")
+    task.control = "RUN"
+    m.folderTask = task
+end sub
+
+sub onFolderLoaded(event as object)
+    task = event.getRoSGNode()
+    if m.folderTask = invalid or not task.isSameNode(m.folderTask) then return
+    m.folderTask = invalid
+    hideBusy()
+    root = task.content
+    if root = invalid or root.getChildCount() = 0
+        showMessage(m.folderTitle, L("Esta carpeta no tiene catálogos de tus addons instalados."))
+        return
+    end if
+    m.libraryRows.content = root
+    applyRowSizes(m.libraryRows)
+    m.area = "page"
+    showPage("folder")
 end sub
 
 sub showHeroFor(item as dynamic)
     if item = invalid then return
+    if item.itemType = "folder"
+        m.heroItem = item
+        m.heroTimer.control = "stop"
+        m.hero.data = { title: item.title, logo: "", background: item.background, rating: "", metaLine: item.metaLine, description: "" }
+        return
+    end if
+    if Bool_Of(m.heroTrailerOn, false)
+        if m.cardItem = invalid or not m.cardItem.isSameNode(item)
+            m.heroTrailerOn = false
+            m.hero.trailer = {}
+        end if
+    end if
     m.heroItem = item
     m.hero.data = heroData(item, m.metaCache[item.metaId])
     m.heroTimer.control = "stop"
@@ -359,7 +460,24 @@ function heroData(item as object, meta as dynamic) as object
         if item.videoId = "" and Len(line) > Len(metaLine) then metaLine = line
     end if
     if item.videoId <> "" and item.episodeLabel <> "" then metaLine = item.metaLine
+    if item.hasField("badge") and item.badge <> "" then metaLine = Cw_HeroLine(item, meta)
     return { title: title, logo: logo, background: background, rating: rating, metaLine: metaLine, description: description }
+end function
+
+function Cw_HeroLine(item as object, meta as dynamic) as string
+    parts = []
+    episode = [item.kicker, item.subtitle]
+    if item.subtitle = "" then episode = [item.kicker]
+    first = episode.Join("  ·  ").Trim()
+    if item.kicker = "" then first = TypeLabel(item.itemType)
+    parts.Push(first)
+    if meta <> invalid
+        if type(meta.genres) = "roArray" and meta.genres.Count() > 0 and IsStr(meta.genres[0]) then parts.Push(meta.genres[0])
+        year = Str_Of(meta.releaseInfo)
+        if Len(year) >= 4 then parts.Push(Left(year, 4))
+    end if
+    parts.Push(UCase(item.badge))
+    return parts.Join("  ·  ")
 end function
 
 function Meta_Line(kind as string, meta as object) as string
@@ -375,6 +493,7 @@ end function
 sub onHeroTimer()
     item = m.heroItem
     if item = invalid or m.manifests.Count() = 0 then return
+    if item.itemType = "folder" then return
     if m.metaCache[item.metaId] <> invalid then return
     m.heroTask = CreateObject("roSGNode", "MetaTask")
     m.heroTask.manifests = m.manifests
@@ -416,6 +535,7 @@ sub hideBusy()
 end sub
 
 sub cancelBusy()
+    m.folderTask = invalid
     m.metaTask = invalid
     m.streamTask = invalid
     m.importTask = invalid
@@ -570,6 +690,11 @@ function onKeyEvent(key as string, press as boolean) as boolean
         return true
     end if
     if m.page = "search" then return searchKey(key)
+    if m.page = "folder" and key = "back"
+        m.area = "page"
+        showPage("home")
+        return true
+    end if
     if key = "left" or key = "back"
         focusNav()
         return true
@@ -579,14 +704,15 @@ end function
 
 function activeRows() as dynamic
     if m.page = "home" then return m.homeRows
-    if m.page = "library" then return m.libraryRows
+    if m.page = "library" or m.page = "folder" then return m.libraryRows
     if m.page = "search" then return m.searchRows
     return invalid
 end function
 
 sub onFocusCard()
     hideExpanded()
-    if m.ui = invalid or not m.ui.expandOn then return
+    if m.ui = invalid then return
+    if not m.ui.expandOn and not m.ui.expandTrailer then return
     m.expandTimer.duration = m.ui.expandDelay
     m.expandTimer.control = "start"
 end sub
@@ -595,6 +721,10 @@ sub hideExpanded()
     m.expandTimer.control = "stop"
     m.cardTask = invalid
     m.cardItem = invalid
+    if Bool_Of(m.heroTrailerOn, false)
+        m.heroTrailerOn = false
+        m.hero.trailer = {}
+    end if
     if m.expanded.open then m.expanded.open = false
     if m.expandRows <> invalid
         m.expandRows.focusBitmapBlendColor = "0xFFFFFFFF"
@@ -610,23 +740,89 @@ sub onExpandTimer()
     if rows = invalid or not rows.isInFocusChain() then return
     item = card.itemContent
     if item = invalid then return
-    rect = card.sceneBoundingRect()
-    if rect = invalid or rect.height <= 0 or rect.width <= 0 then return
-    h = rect.height
-    toW = Int(h * 16 / 9)
+    if item.itemType = "folder" then return
+    focus = rows.rowItemFocused
+    if type(focus) = "roArray" and focus.Count() > 0 and rows.content <> invalid
+        row = rows.content.getChild(focus[0])
+        if row <> invalid and row.id = "cw" then return
+    end if
+    meta = m.metaCache[item.metaId]
+    m.cardItem = item
+    m.trailerToHero = m.ui.trailerTarget <> "card" or not m.ui.expandOn
+    if m.ui.expandOn then openExpanded(rows, item, meta)
+    if m.ui.expandTrailer then startCardTrailer(item, meta)
+end sub
+
+sub openExpanded(rows as object, item as object, meta as dynamic)
+    rect = Rows_FocusRect(rows)
+    if rect = invalid then return
+    h = rect.h
+    toW = Int(rect.w * 2.66)
     x = rect.x
     if x + toW > 1880 then x = 1880 - toW
-    meta = m.metaCache[item.metaId]
     hd = heroData(item, meta)
     background = hd.background
     if background = "" and Left(item.metaId, 2) = "tt" then background = Img_Background(item.metaId)
-    m.cardItem = item
-    m.expanded.data = { x: x, y: rect.y, h: h, fromW: rect.width, toW: toW, background: background, logo: hd.logo, title: hd.title, meta: hd.metaLine }
+    parent = item.getParent()
+    m.global.expandRow = parent
+    idx = -1
+    if item.hasField("idx")
+        idx = item.idx
+    else if parent <> invalid
+        for i = 0 to parent.getChildCount() - 1
+            if parent.getChild(i).isSameNode(item) then idx = i
+        end for
+    end if
+    m.global.expandIndex = idx
+    m.expanded.data = { x: x, y: rect.y, h: h, fromW: rect.w, toW: toW, background: background, logo: hd.logo, title: hd.title }
     m.expanded.open = true
     m.expandRows = rows
     rows.focusBitmapBlendColor = "0xFFFFFF00"
-    if m.ui.expandTrailer then startCardTrailer(item, meta)
 end sub
+
+function Rows_FocusRect(rows as object) as dynamic
+    focus = rows.rowItemFocused
+    if type(focus) <> "roArray" or focus.Count() < 2 then return invalid
+    row = focus[0]
+    size = Arr_At(rows.rowItemSize, row)
+    if type(size) <> "roArray" or size.Count() < 2 then return invalid
+    offset = Arr_At(rows.rowLabelOffset, row)
+    gap = 0
+    if type(offset) = "roArray" and offset.Count() > 1 then gap = offset[1]
+    shift = Arr_At(rows.focusXOffset, row)
+    if shift = invalid then shift = 0
+    x = 0
+    y = 0
+    node = rows
+    while node <> invalid
+        t = node.translation
+        if type(t) = "roArray" and t.Count() > 1
+            x = x + t[0]
+            y = y + t[1]
+        end if
+        node = node.getParent()
+    end while
+    return { x: x + shift, y: y + Rows_LabelHeight(rows) + gap, w: size[0], h: size[1] }
+end function
+
+function Arr_At(list as dynamic, index as integer) as dynamic
+    if type(list) <> "roArray" or list.Count() = 0 then return invalid
+    if index >= list.Count() then index = list.Count() - 1
+    if index < 0 then index = 0
+    return list[index]
+end function
+
+function Rows_LabelHeight(rows as object) as integer
+    if m.rowLabelH <> invalid then return m.rowLabelH
+    h = 36
+    probe = CreateObject("roSGNode", "Label")
+    if rows.rowLabelFont <> invalid then probe.font = rows.rowLabelFont
+    probe.text = "Ág"
+    r = probe.boundingRect()
+    if r <> invalid and r.height > 10 and r.height < 90 then h = Int(r.height)
+    m.rowLabelH = h
+    return h
+end function
 
 sub startCardTrailer(item as object, meta as dynamic)
     imdb = ""
@@ -651,8 +847,16 @@ sub onCardTrailer(event as object)
     if m.cardTask = invalid or not task.isSameNode(m.cardTask) then return
     m.cardTask = invalid
     r = task.result
-    if r = invalid or Str_Of(r.url) = "" or not m.expanded.open or m.cardItem = invalid then return
+    if r = invalid or Str_Of(r.url) = "" or m.cardItem = invalid then return
     if m.cardItem.metaId <> task.tag then return
+    if m.trailerToHero
+        if m.busy or m.area <> "page" or overlayOpen() then return
+        m.heroTrailerOn = true
+        m.hero.muted = m.ui.expandMuted
+        m.hero.trailer = r
+        return
+    end if
+    if not m.expanded.open then return
     m.expanded.muted = m.ui.expandMuted
     m.expanded.trailer = r
 end sub

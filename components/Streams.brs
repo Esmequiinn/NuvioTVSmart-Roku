@@ -49,8 +49,63 @@ function Stream_Build(s as object, url as string, addon as object, badgeRules as
     }
 end function
 
+function Flag_Langs() as object
+    return {
+        MX: "Latino", AR: "Latino", CO: "Latino", CL: "Latino", PE: "Latino", VE: "Latino", EC: "Latino", UY: "Latino", BO: "Latino", PY: "Latino", GT: "Latino", CR: "Latino", PA: "Latino", DO: "Latino", PR: "Latino", CU: "Latino", HN: "Latino", SV: "Latino", NI: "Latino"
+        ES: "Castellano", US: "English", GB: "English", CA: "English", AU: "English", IE: "English", NZ: "English"
+        BR: "Português (BR)", PT: "Português", FR: "Français", IT: "Italiano", DE: "Deutsch", NL: "Nederlands", PL: "Polski", TR: "Türkçe", SE: "Svenska", NO: "Norsk", DK: "Dansk", FI: "Suomi"
+        JP: "Japonés", KR: "Coreano", CN: "Chino", TW: "Chino", HK: "Chino", RU: "Ruso", UA: "Ucraniano", IN: "Hindi", TH: "Tailandés", VN: "Vietnamita", ID: "Indonesio", SA: "Árabe", AE: "Árabe", EG: "Árabe", IL: "Hebreo", GR: "Griego", HU: "Magyar", CZ: "Čeština", RO: "Română"
+    }
+end function
+
+function Str_Glyphs(text as string) as string
+    keep = { "8211": true, "8212": true, "8216": true, "8217": true, "8220": true, "8221": true, "8226": true, "8230": true }
+    out = ""
+    dirty = false
+    flag = ""
+    langs = Flag_Langs()
+    used = {}
+    lower = LCase(text)
+    n = Len(text)
+    i = 1
+    while i <= n
+        cp = Asc(Mid(text, i, 1))
+        if cp >= 55296 and cp <= 56319 and i < n
+            low = Asc(Mid(text, i + 1, 1))
+            if low >= 56320 and low <= 57343
+                cp = 65536 + (cp - 55296) * 1024 + (low - 56320)
+                i = i + 1
+            end if
+        end if
+        if cp >= 127462 and cp <= 127487
+            dirty = true
+            flag = flag + Chr(65 + cp - 127462)
+            if Len(flag) = 2
+                name = flag
+                if langs.DoesExist(flag) then name = langs[flag]
+                if not used.DoesExist(name) and Instr(1, lower, LCase(name)) = 0
+                    used[name] = true
+                    out = out + name
+                end if
+                flag = ""
+            end if
+        else
+            if flag <> "" then flag = ""
+            if cp >= 8192 and not keep.DoesExist(cp.ToStr())
+                dirty = true
+            else
+                out = out + Chr(cp)
+            end if
+        end if
+        i = i + 1
+    end while
+    if not dirty then return text
+    re = CreateObject("roRegex", "[ \t]{2,}", "")
+    return re.ReplaceAll(out, " ")
+end function
+
 function Str_Lines(v as dynamic) as string
-    text = Str_Of(v)
+    text = Str_Glyphs(Str_Of(v))
     if text = "" then return ""
     re = CreateObject("roRegex", "\r\n?", "")
     text = re.ReplaceAll(text, chr(10))

@@ -82,7 +82,7 @@ end function
 
 function Http_TrimMetas(parsed as dynamic, limit as integer) as dynamic
     if type(parsed) <> "roAssociativeArray" or type(parsed.metas) <> "roArray" then return parsed
-    keep = ["id", "imdb_id", "type", "name", "poster", "background", "description", "releaseInfo", "released", "imdbRating", "genres", "logo", "runtime"]
+    keep = ["id", "imdb_id", "type", "name", "poster", "posterShape", "background", "description", "releaseInfo", "released", "imdbRating", "genres", "logo", "runtime"]
     out = []
     for each meta in parsed.metas
         if out.Count() >= limit then exit for

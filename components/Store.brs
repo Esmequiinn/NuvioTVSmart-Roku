@@ -67,7 +67,7 @@ function St_Profiles() as object
     if type(list) = "roArray"
         for each p in list
             if type(p) = "roAssociativeArray" and IsStr(p.id) and IsStr(p.name)
-                clean.Push({ id: p.id, name: p.name, color: Str_Of(p.color), remote: ToInt(p.remote, 0) })
+                clean.Push({ id: p.id, name: p.name, color: Str_Of(p.color), remote: ToInt(p.remote, 0), avatar: Str_Of(p.avatar) })
             end if
         end for
     end if
@@ -170,6 +170,7 @@ end function
 
 sub St_SaveAddons(list as object)
     St_Set(St_AddonsKey(), list)
+    St_MarkDirty("addons")
 end sub
 
 function St_NormalizeUrl(raw as dynamic) as string
@@ -235,7 +236,62 @@ end function
 
 sub St_SavePrefs(p as object)
     St_Set(St_PrefsKey(), p)
+    St_MarkDirty("settings")
+    St_MarkDirty("catalogs")
 end sub
+
+sub St_MarkDirty(kind as string)
+    pid = St_ActiveProfile().id
+    d = St_Get("syncdirty_" + pid, invalid)
+    if type(d) <> "roAssociativeArray" then d = {}
+    d[kind] = true
+    St_Set("syncdirty_" + pid, d)
+    if m.global <> invalid
+        if m.global.hasField("syncDirty") then m.global.syncDirty = m.global.syncDirty + 1
+    end if
+end sub
+
+function St_SyncDirty(pid as string) as object
+    d = St_Get("syncdirty_" + pid, invalid)
+    if type(d) <> "roAssociativeArray" then d = {}
+    return d
+end function
+
+sub St_ClearDirty(pid as string, kinds as object)
+    d = St_SyncDirty(pid)
+    for each k in kinds
+        if d.DoesExist(k) then d.Delete(k)
+    end for
+    St_Set("syncdirty_" + pid, d)
+end sub
+
+sub St_LibraryOp(op as string, entry as object)
+    pid = St_ActiveProfile().id
+    ops = St_Get("libops_" + pid, invalid)
+    if type(ops) <> "roArray" then ops = []
+    out = []
+    for each o in ops
+        if type(o) = "roAssociativeArray" and Str_Of(o.id) <> entry.id then out.Push(o)
+    end for
+    out.Push({ op: op, id: entry.id, kind: Str_Of(entry.kind), name: Left(Str_Of(entry.name), 80), poster: Str_Of(entry.poster) })
+    while out.Count() > 30
+        out.Shift()
+    end while
+    St_Set("libops_" + pid, out)
+    St_MarkDirty("library")
+end sub
+
+function St_ClientId() as string
+    id = Str_Of(St_Get("clientId", ""))
+    if Len(id) >= 16 then return id
+    chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+    id = "roku"
+    for i = 1 to 28
+        id = id + Mid(chars, Rnd(Len(chars)), 1)
+    end for
+    St_Set("clientId", id)
+    return id
+end function
 
 function St_SetAccent(hex as string) as boolean
     for each c in St_Colors()
@@ -353,11 +409,13 @@ function St_Progress() as object
 end function
 
 sub St_SaveProgress(entry as object)
+    if entry.updated = invalid then entry.updated = CreateObject("roDateTime").AsSeconds()
     out = [entry]
     for each e in St_Progress()
         if e.metaId <> entry.metaId and out.Count() < 12 then out.Push(e)
     end for
     St_Set(St_ProgressKey(), out)
+    St_MarkDirty("progress")
 end sub
 
 function St_ResumeFor(videoId as string) as integer
@@ -445,7 +503,28 @@ function St_ToggleLibrary(entry as object) as boolean
         end while
     end if
     St_Set(St_LibraryKey(), out)
+    if found then St_LibraryOp("remove", entry) else St_LibraryOp("add", entry)
     return not found
+end function
+
+function Key_Tmdb(integ as object) as string
+    if Str_Of(integ.tmdbKey) <> "" then return integ.tmdbKey
+    return Config_TmdbKey()
+end function
+
+function Key_TraktId(integ as object) as string
+    if Config_TraktClientId() <> "" then return Config_TraktClientId()
+    return Str_Of(integ.traktClientId)
+end function
+
+function Key_TraktSecret(integ as object) as string
+    if Config_TraktClientSecret() <> "" then return Config_TraktClientSecret()
+    return Str_Of(integ.traktSecret)
+end function
+
+function Key_SimklId(integ as object) as string
+    if Config_SimklClientId() <> "" then return Config_SimklClientId()
+    return Str_Of(integ.simklClientId)
 end function
 
 function St_Integrations() as object
@@ -520,6 +599,7 @@ function St_PlayerDefaults() as object
         expandDelay: 3
         expandTrailer: false
         expandMuted: true
+        trailerTarget: "hero"
         trailerButton: true
         trailerAutoplay: false
         trailerDelay: 7
@@ -540,7 +620,11 @@ function St_ReadFile(name as string) as dynamic
     fs = CreateObject("roFileSystem")
     for each path in St_FilePaths(name)
         text = ""
-        if fs.Exists(path) then text = ReadAsciiFile(path)
+        if fs = invalid
+            text = ReadAsciiFile(path)
+        else if fs.Exists(path)
+            text = ReadAsciiFile(path)
+        end if
         if text <> ""
             parsed = ParseJson(text)
             if parsed <> invalid then return parsed
@@ -611,7 +695,11 @@ end function
 sub St_ClearBadges(pid as string)
     fs = CreateObject("roFileSystem")
     for each path in St_FilePaths("badges_" + pid)
-        fs.Delete(path)
+        if fs = invalid
+            WriteAsciiFile(path, "")
+        else
+            fs.Delete(path)
+        end if
     end for
 end sub
 
