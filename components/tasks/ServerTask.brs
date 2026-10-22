@@ -51,7 +51,7 @@ sub serve()
                                 end for
                                 req = Srv_Parse(client.data.ToAsciiString())
                                 if req <> invalid
-                                    Srv_Route(client.sock, req)
+                                    Srv_SafeRoute(client.sock, req)
                                     client.answered = true
                                     client.closeAt = clock.TotalMilliseconds() + 1500
                                 end if
@@ -99,6 +99,19 @@ function Srv_Parse(buf as string) as dynamic
     if q > 0 then path = Left(path, q - 1)
     return { method: UCase(first[0]), path: path, body: Left(body, length) }
 end function
+
+sub Srv_SafeRoute(sock as object, req as object)
+    try
+        Srv_Route(sock, req)
+    catch e
+        text = Str_Of(e.message)
+        if type(e.backtrace) = "roArray" and e.backtrace.Count() > 0
+            b = e.backtrace[e.backtrace.Count() - 1]
+            if type(b) = "roAssociativeArray" then text = text + " (" + Str_Of(b.function) + " " + Str(b.line_number).Trim() + ")"
+        end if
+        Srv_Send(sock, "200 OK", "application/json; charset=utf-8", FormatJson({ ok: false, error: L("Error en el Roku: ") + text }))
+    end try
+end sub
 
 sub Srv_Route(sock as object, req as object)
     jsonType = "application/json; charset=utf-8"
@@ -248,7 +261,7 @@ function Srv_Apply(body as dynamic) as object
         res.message = L("Buscando en la tele...")
     else if act = "setIntegration"
         name = Str_Of(body.name)
-        allowed = { tmdbKey: true, mdbKey: true, traktClientId: true, traktSecret: true, simklClientId: true }
+        allowed = { tmdbKey: true, mdbKey: true }
         if not allowed.DoesExist(name) then return Srv_Fail(res, L("Ajuste no válido."))
         value = Str_Of(body.value).Trim()
         integ = St_Integrations()

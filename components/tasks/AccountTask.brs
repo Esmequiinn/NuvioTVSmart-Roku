@@ -26,6 +26,8 @@ sub execute()
         result = Nuvio_EmailLogin(Str_Of(p.email), Str_Of(p.password))
     else if mode = "nuvioSync"
         result = Nuvio_Sync()
+    else if mode = "nuvioPush"
+        result = Nuvio_Push()
     else if mode = "nuvioServer"
         result = Nuvio_Discover(Str_Of(p.url))
     end if

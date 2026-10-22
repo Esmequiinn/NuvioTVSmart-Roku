@@ -24,7 +24,7 @@ sub execute()
     merged.imdb = imdb
     merged.Delete("raw")
     integ = St_Integrations()
-    if integ.tmdbEnabled and integ.tmdbKey <> ""
+    if integ.tmdbEnabled and Key_Tmdb(integ) <> ""
         Tmdb_Enrich(merged, integ, kind, id)
     end if
     if Str_Of(merged.logo) = "" then merged.logo = Img_Logo(merged.imdb)
@@ -36,7 +36,7 @@ sub execute()
 end sub
 
 function Tmdb_Enrich(merged as object, integ as object, kind as string, id as string) as boolean
-    key = integ.tmdbKey
+    key = Key_Tmdb(integ)
     lang = Str_Of(St_Pref("tmdbLanguage"))
     if lang = "" then lang = "es-MX"
     lang2 = LCase(Left(lang, 2))

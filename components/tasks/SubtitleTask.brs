@@ -17,7 +17,7 @@ sub execute()
             end if
         end for
     end for
-    if St_Pref("openSubs") = true
+    if Bool_Of(St_Pref("openSubs"), true)
         base = "https://opensubtitles-v3.strem.io"
         already = false
         for each entry in m.top.manifests
