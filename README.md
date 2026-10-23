@@ -74,14 +74,14 @@ So far the channel has only been tested on a real Roku by me, so some features h
 | Sources with addon formatter text | ✅ Working but with no emojis |
 | Badges (quality, HDR, codec, audio, size and Fusion) | ✅ Working |
 | Continue Watching in landscape | ✅ Working |
-| Collections import | ⚠️ Not tested yet |
+| Collections import | ✅ Working |
 | Nuvio collections | ⚠️ Not tested yet |
-| Sync from the Roku to your Nuvio account | ⚠️ Not tested yet |
+| Sync from the Roku to your Nuvio account | ✅ Working  |
 | Profile pictures and theme color from Nuvio | ✅ Working |
-| Landscape and square catalogs | ⚠️ Not tested yet |
-| Auto-play (first source and regex pattern) | ✅ Auto select first source works ⚠️ Regex pattern not tested yet |
-| Reuse last link and same source for next episode | ⚠️ Not tested yet |
-| Preferred and secondary audio and subtitle languages | ⚠️ Not tested yet |
+| Landscape and square catalogs | ✅ Working |
+| Auto-play (first source and regex pattern) | ✅ Working |
+| Reuse last link and same source for next episode | ✅ Working |
+| Preferred and secondary audio and subtitle languages | ✅ Working |
 | Custom poster URL patterns | ⚠️ Not tested yet |
 | English interface | ✅ Working |
 
