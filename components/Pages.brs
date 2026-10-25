@@ -29,13 +29,29 @@ sub showPage(name as string)
     if m.area = "page" and not overlayOpen() then focusPage()
 end sub
 
+sub Focus_Scene()
+    node = m.top.focusedChild
+    deepest = invalid
+    guard = 0
+    while node <> invalid and guard < 30
+        deepest = node
+        if node.isSameNode(m.top) then exit while
+        inner = node.focusedChild
+        if inner = invalid or inner.isSameNode(node) then exit while
+        node = inner
+        guard = guard + 1
+    end while
+    if deepest <> invalid and not deepest.isSameNode(m.top) then deepest.setFocus(false)
+    m.top.setFocus(true)
+end sub
+
 sub focusPage()
     if m.top.dialog <> invalid then return
     if m.page = "home"
         if m.homeRows.visible and m.homeRows.content <> invalid and m.homeRows.content.getChildCount() > 0
             m.homeRows.setFocus(true)
         else
-            m.top.setFocus(true)
+            Focus_Scene()
         end if
     else if m.page = "search"
         if m.searchFocus = "results" and searchHasResults()
@@ -48,7 +64,7 @@ sub focusPage()
         if m.libraryRows.visible
             m.libraryRows.setFocus(true)
         else
-            m.top.setFocus(true)
+            Focus_Scene()
         end if
     end if
 end sub
@@ -106,8 +122,6 @@ end sub
 
 sub buildLibrary()
     root = CreateObject("roSGNode", "ContentNode")
-    cw = Content_ContinueRow()
-    if cw <> invalid then root.appendChild(cw)
     saved = St_Library()
     if saved.Count() > 0
         row = root.createChild("ContentNode")
@@ -138,13 +152,22 @@ sub buildLibrary()
             })
         end for
     end if
+    prev = m.libraryRows.rowItemFocused
     m.libraryRows.content = root
     applyRowSizes(m.libraryRows)
+    if root.getChildCount() > 0
+        col = 0
+        if type(prev) = "roArray" and prev.Count() > 1 then col = prev[1]
+        last = root.getChild(0).getChildCount() - 1
+        if col > last then col = last
+        if col < 0 then col = 0
+        m.libraryRows.jumpToRowItem = [0, col]
+    end if
     hasItems = root.getChildCount() > 0
     m.libraryRows.visible = hasItems
     m.libraryEmpty.visible = not hasItems
     m.hero.visible = hasItems
-    if hasItems then showHeroFor(getRowItem(m.libraryRows, [0, 0]))
+    if hasItems then showHeroFor(getRowItem(m.libraryRows, m.libraryRows.jumpToRowItem))
 end sub
 
 function searchHasResults() as boolean

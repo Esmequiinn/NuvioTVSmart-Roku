@@ -12,7 +12,7 @@ sub renderMenu(focus as dynamic)
     if index >= cfg.items.Count() then index = cfg.items.Count() - 1
     if index < 0 then index = 0
     top.focus = index
-    m.list.config = {
+    m.list.config = Str_CleanDeep({
         title: cfg.title
         subtitle: Str_Of(cfg.subtitle)
         items: cfg.items
@@ -20,7 +20,7 @@ sub renderMenu(focus as dynamic)
         poster: Str_Of(cfg.poster)
         backdrop: Str_Of(cfg.backdrop)
         focus: index
-    }
+    })
     if not m.player.visible
         m.list.visible = true
         if m.top.dialog = invalid then m.list.setFocus(true)
@@ -267,7 +267,7 @@ function menuAppearance() as object
 end function
 
 function menuAbout() as object
-    info = L("Fork no oficial de Nuvio para Roku, hecho con permiso de los desarrolladores de Nuvio. No es una app oficial de Nuvio.") + chr(10) + L("Versión 2.2.0  ·  Basado en Nuvio (licencia GPL-3.0)")
+    info = L("Fork no oficial de Nuvio para Roku, hecho con permiso de los desarrolladores de Nuvio. No es una app oficial de Nuvio.") + chr(10) + L("Versión ") + App_Version() + L("  ·  Basado en Nuvio (licencia GPL-3.0)")
     menu = menuOf(L("Nuvio TV para Roku"), info)
     addEntry(menu, L("Volver"), "", { act: "back" })
     return menu
@@ -452,6 +452,11 @@ sub runAction(a as object)
 end sub
 
 sub handleKeyboard(kind as string, text as string, data as object)
+    if kind = "partyCode"
+        if text.Trim() = "" then return
+        Party_Join(text)
+        return
+    end if
     if kind = "regex"
         if text <> "" and CreateObject("roRegex", text, "i") = invalid
             showMessage(L("Patrón no válido"), L("Revisa el patrón regex. Ejemplo: 4K|2160p|Remux"))

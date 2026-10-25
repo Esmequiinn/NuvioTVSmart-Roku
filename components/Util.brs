@@ -26,7 +26,9 @@ end function
 function Str_Any(v as dynamic) as string
     if v = invalid then return ""
     if IsStr(v) then return v
-    if GetInterface(v, "ifInt") <> invalid or GetInterface(v, "ifFloat") <> invalid or GetInterface(v, "ifDouble") <> invalid or GetInterface(v, "ifLongInt") <> invalid
+    if GetInterface(v, "ifInt") <> invalid or GetInterface(v, "ifLongInt") <> invalid then return Str(v).Trim()
+    if GetInterface(v, "ifFloat") <> invalid or GetInterface(v, "ifDouble") <> invalid
+        if v = Int(v) and Abs(v) < 2000000000 then return Str(Int(v)).Trim()
         return Str(v).Trim()
     end if
     return ""
@@ -96,6 +98,62 @@ function Stream_Format(url as string) as string
     return ""
 end function
 
+function Stream_Attempts(url as string) as object
+    fmt = Stream_Format(url)
+    u = LCase(url)
+    q = Instr(1, u, "?")
+    path = u
+    if q > 0 then path = Left(u, q - 1)
+    auto = "hls, mp4, mkv, mp3, avi, m4v, ts, mpeg-4, flv, vob, ogg, ogv, webm, mov, wmv, asf, amv, mpg, mp2, mpeg, mpe, mpv, mpeg2"
+    list = []
+    isTs = Right(path, 3) = ".ts"
+    if isTs and Instr(1, path, "/live/") > 0
+        cut = Len(path) - 3
+        list.Push({ url: Left(url, cut) + ".m3u8" + Mid(url, Len(path) + 1), fmt: "hls" })
+    end if
+    if fmt <> ""
+        list.Push({ url: url, fmt: fmt })
+        list.Push({ url: url, fmt: auto })
+    else if isTs
+        list.Push({ url: url, fmt: auto })
+        list.Push({ url: url, fmt: "hls" })
+    else
+        list.Push({ url: url, fmt: auto })
+        list.Push({ url: url, fmt: "hls" })
+        list.Push({ url: url, fmt: "mkv" })
+    end if
+    return list
+end function
+
+function Img_Fix(url as string) as string
+    u = url.Trim()
+    if LCase(Left(u, 19)) <> "https://github.com/" then return u
+    q = Instr(1, u, "?")
+    path = u
+    if q > 0 then path = Left(u, q - 1)
+    parts = Mid(path, 20).Split("/")
+    if parts.Count() < 5 then return u
+    if parts[2] <> "blob" and parts[2] <> "raw" then return u
+    rest = []
+    for i = 3 to parts.Count() - 1
+        rest.Push(parts[i])
+    end for
+    return "https://raw.githubusercontent.com/" + parts[0] + "/" + parts[1] + "/" + rest.Join("/")
+end function
+
+function App_Version() as string
+    return CreateObject("roAppInfo").GetVersion() + " beta"
+end function
+
+function Device_Can4K() as boolean
+    info = CreateObject("roDeviceInfo")
+    mode = Str_Of(info.GetVideoMode())
+    if Left(mode, 4) <> "2160" then return false
+    r = info.CanDecodeVideo({ Codec: "hevc" })
+    if type(r) = "roAssociativeArray" and r.result = false then return false
+    return true
+end function
+
 function Net_Ip() as string
     info = CreateObject("roDeviceInfo")
     ips = info.GetIPAddrs()
@@ -160,11 +218,108 @@ function Img_Background(imdb as string) as string
     return "https://images.metahub.space/background/medium/" + imdb + "/img"
 end function
 
+function Lang_Catalog() as object
+    return [
+        { code: "af", name: "Afrikaans" }
+        { code: "sq", name: "Albanian" }
+        { code: "am", name: "Amharic" }
+        { code: "ar", name: "Arabic" }
+        { code: "hy", name: "Armenian" }
+        { code: "az", name: "Azerbaijani" }
+        { code: "eu", name: "Basque" }
+        { code: "be", name: "Belarusian" }
+        { code: "bn", name: "Bengali" }
+        { code: "bs", name: "Bosnian" }
+        { code: "bg", name: "Bulgarian" }
+        { code: "my", name: "Burmese" }
+        { code: "ca", name: "Catalan" }
+        { code: "zh", name: "Chinese" }
+        { code: "zh-CN", name: "Chinese (Simplified)" }
+        { code: "zh-TW", name: "Chinese (Traditional)" }
+        { code: "hr", name: "Croatian" }
+        { code: "cs", name: "Czech" }
+        { code: "da", name: "Danish" }
+        { code: "nl", name: "Dutch" }
+        { code: "en", name: "English" }
+        { code: "en-AU", name: "English (Australia)" }
+        { code: "en-CA", name: "English (Canada)" }
+        { code: "en-GB", name: "English (United Kingdom)" }
+        { code: "et", name: "Estonian" }
+        { code: "tl", name: "Filipino" }
+        { code: "fi", name: "Finnish" }
+        { code: "fr", name: "French" }
+        { code: "gl", name: "Galician" }
+        { code: "ka", name: "Georgian" }
+        { code: "de", name: "German" }
+        { code: "el", name: "Greek" }
+        { code: "gu", name: "Gujarati" }
+        { code: "he", name: "Hebrew" }
+        { code: "hi", name: "Hindi" }
+        { code: "hu", name: "Hungarian" }
+        { code: "is", name: "Icelandic" }
+        { code: "id", name: "Indonesian" }
+        { code: "ga", name: "Irish" }
+        { code: "it", name: "Italian" }
+        { code: "ja", name: "Japanese" }
+        { code: "kn", name: "Kannada" }
+        { code: "kk", name: "Kazakh" }
+        { code: "km", name: "Khmer" }
+        { code: "ko", name: "Korean" }
+        { code: "lo", name: "Lao" }
+        { code: "lv", name: "Latvian" }
+        { code: "lt", name: "Lithuanian" }
+        { code: "mk", name: "Macedonian" }
+        { code: "ms", name: "Malay" }
+        { code: "ml", name: "Malayalam" }
+        { code: "mt", name: "Maltese" }
+        { code: "mr", name: "Marathi" }
+        { code: "mn", name: "Mongolian" }
+        { code: "ne", name: "Nepali" }
+        { code: "no", name: "Norwegian" }
+        { code: "fa", name: "Persian" }
+        { code: "pl", name: "Polish" }
+        { code: "pt-br", name: "Portuguese (Brazil)" }
+        { code: "pt", name: "Portuguese (Portugal)" }
+        { code: "pa", name: "Punjabi" }
+        { code: "ro", name: "Romanian" }
+        { code: "ru", name: "Russian" }
+        { code: "sr", name: "Serbian" }
+        { code: "si", name: "Sinhala" }
+        { code: "sk", name: "Slovak" }
+        { code: "sl", name: "Slovenian" }
+        { code: "es", name: "Spanish" }
+        { code: "es-419", name: "Spanish (Latin America)" }
+        { code: "es-MX", name: "Spanish (Mexico)" }
+        { code: "sw", name: "Swahili" }
+        { code: "sv", name: "Swedish" }
+        { code: "ta", name: "Tamil" }
+        { code: "te", name: "Telugu" }
+        { code: "th", name: "Thai" }
+        { code: "tr", name: "Turkish" }
+        { code: "uk", name: "Ukrainian" }
+        { code: "ur", name: "Urdu" }
+        { code: "uz", name: "Uzbek" }
+        { code: "vi", name: "Vietnamese" }
+        { code: "cy", name: "Welsh" }
+        { code: "zu", name: "Zulu" }
+    ]
+end function
+
+function Lang_CatalogName(code as string) as string
+    c = LCase(code)
+    for each e in Lang_Catalog()
+        if LCase(e.code) = c then return e.name
+    end for
+    return ""
+end function
+
 function Lang_Name(code as string) as string
     c = LCase(code)
     names = { spa: L("Español"), es: L("Español"), "es-mx": L("Español (Latino)"), "es-419": L("Español (Latino)"), "es-es": L("Español (España)"), lat: L("Español (Latino)"), esl: L("Español (Latino)"), spl: L("Español (Latino)"), eng: L("Inglés"), en: L("Inglés"), por: L("Portugués"), pt: L("Portugués"), pob: L("Portugués (Brasil)"), "pt-br": L("Portugués (Brasil)"), fre: L("Francés"), fra: L("Francés"), fr: L("Francés"), ita: L("Italiano"), it: L("Italiano"), ger: L("Alemán"), deu: L("Alemán"), de: L("Alemán"), jpn: L("Japonés"), ja: L("Japonés"), kor: L("Coreano"), ko: L("Coreano"), chi: L("Chino"), zho: L("Chino"), zh: L("Chino"), rus: L("Ruso"), ru: L("Ruso"), ara: L("Árabe"), ar: L("Árabe"), hin: "Hindi", hi: "Hindi", tur: L("Turco"), tr: L("Turco"), pol: L("Polaco"), pl: L("Polaco") }
     if names.DoesExist(c) then return names[c]
     if c = "" then return L("Desconocido")
+    known = Lang_CatalogName(c)
+    if known <> "" then return known
     return UCase(code)
 end function
 
@@ -234,4 +389,122 @@ function Trailer_Content(t as object) as object
         content.HttpCertificatesFile = "common:/certs/ca-bundle.crt"
     end if
     return content
+end function
+
+function Fmt_Date(iso as string) as string
+    parts = iso.Split("-")
+    if parts.Count() < 3 then return iso
+    months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
+    mIndex = parts[1].ToInt() - 1
+    if mIndex < 0 or mIndex > 11 then return iso
+    return parts[2].ToInt().ToStr() + " " + L(months[mIndex]) + " " + parts[0]
+end function
+
+function Flag_Langs() as object
+    return {
+        MX: "Latino", AR: "Latino", CO: "Latino", CL: "Latino", PE: "Latino", VE: "Latino", EC: "Latino", UY: "Latino", BO: "Latino", PY: "Latino", GT: "Latino", CR: "Latino", PA: "Latino", DO: "Latino", PR: "Latino", CU: "Latino", HN: "Latino", SV: "Latino", NI: "Latino"
+        ES: "Castellano", US: "English", GB: "English", CA: "English", AU: "English", IE: "English", NZ: "English"
+        BR: "Português (BR)", PT: "Português", FR: "Français", IT: "Italiano", DE: "Deutsch", NL: "Nederlands", PL: "Polski", TR: "Türkçe", SE: "Svenska", NO: "Norsk", DK: "Dansk", FI: "Suomi"
+        JP: "Japonés", KR: "Coreano", CN: "Chino", TW: "Chino", HK: "Chino", RU: "Ruso", UA: "Ucraniano", IN: "Hindi", TH: "Tailandés", VN: "Vietnamita", ID: "Indonesio", SA: "Árabe", AE: "Árabe", EG: "Árabe", IL: "Hebreo", GR: "Griego", HU: "Magyar", CZ: "Čeština", RO: "Română"
+    }
+end function
+
+function Str_IsForeign(cp as integer) as boolean
+    if cp < 1424 then return false
+    if cp >= 7680 and cp <= 8191 then return false
+    if cp < 8192 then return true
+    if cp >= 11904 and cp <= 55215 then return true
+    if cp >= 63744 and cp <= 64255 then return true
+    if cp >= 65280 and cp <= 65519 then return true
+    if cp >= 131072 and cp <= 196607 then return true
+    return false
+end function
+
+function Str_Plain(text as string) as boolean
+    ba = CreateObject("roByteArray")
+    ba.FromAsciiString(text)
+    return ba.Count() = Len(text)
+end function
+
+function Str_HasForeign(text as string) as boolean
+    if Str_Plain(text) then return false
+    n = Len(text)
+    for i = 1 to n
+        cp = Asc(Mid(text, i, 1))
+        if cp >= 55296 and cp <= 56319 and i < n
+            low = Asc(Mid(text, i + 1, 1))
+            if low >= 56320 and low <= 57343 then cp = 65536 + (cp - 55296) * 1024 + (low - 56320)
+        end if
+        if Str_IsForeign(cp) then return true
+    end for
+    return false
+end function
+
+function Str_Glyphs(text as string) as string
+    if Str_Plain(text) then return text
+    keep = { "8211": true, "8212": true, "8216": true, "8217": true, "8220": true, "8221": true, "8226": true, "8230": true }
+    out = ""
+    dirty = false
+    flag = ""
+    langs = invalid
+    used = {}
+    lower = LCase(text)
+    n = Len(text)
+    i = 1
+    while i <= n
+        cp = Asc(Mid(text, i, 1))
+        if cp >= 55296 and cp <= 56319 and i < n
+            low = Asc(Mid(text, i + 1, 1))
+            if low >= 56320 and low <= 57343
+                cp = 65536 + (cp - 55296) * 1024 + (low - 56320)
+                i = i + 1
+            end if
+        end if
+        if cp >= 127462 and cp <= 127487
+            dirty = true
+            flag = flag + Chr(65 + cp - 127462)
+            if Len(flag) = 2
+                if langs = invalid then langs = Flag_Langs()
+                name = flag
+                if langs.DoesExist(flag) then name = langs[flag]
+                if not used.DoesExist(name) and Instr(1, lower, LCase(name)) = 0
+                    used[name] = true
+                    out = out + name
+                end if
+                flag = ""
+            end if
+        else
+            if flag <> "" then flag = ""
+            if (cp >= 8192 and not keep.DoesExist(cp.ToStr())) or Str_IsForeign(cp)
+                dirty = true
+            else
+                out = out + Chr(cp)
+            end if
+        end if
+        i = i + 1
+    end while
+    if not dirty then return text
+    re = CreateObject("roRegex", "[ \t]{2,}", "")
+    out = re.ReplaceAll(out, " ")
+    edge = CreateObject("roRegex", "^[\s:|/,\-]+|[\s:|/,\-(]+$", "")
+    return edge.ReplaceAll(out, "")
+end function
+
+function Str_CleanDeep(v as dynamic) as dynamic
+    if IsStr(v)
+        if Left(v, 4) = "http" or Left(v, 4) = "pkg:" then return v
+        return Str_Glyphs(v)
+    end if
+    t = type(v)
+    if t = "roArray"
+        for i = 0 to v.Count() - 1
+            v[i] = Str_CleanDeep(v[i])
+        end for
+    else if t = "roAssociativeArray"
+        skip = { id: true, url: true, poster: true, logo: true, background: true, thumb: true, photo: true, image: true, imdb_id: true, trailerLocal: true, behaviorHints: true, links: true, videoId: true, slug: true }
+        for each k in v
+            if not skip.DoesExist(k) then v[k] = Str_CleanDeep(v[k])
+        end for
+    end if
+    return v
 end function

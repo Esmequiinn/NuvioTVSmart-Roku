@@ -1,6 +1,6 @@
 function Content_Item(row as object, data as object) as object
     item = row.CreateChild("ContentNode")
-    item.title = Str_Of(data.title)
+    item.title = Str_Glyphs(Str_Of(data.title))
     item.HDPosterUrl = Str_Of(data.poster)
     item.description = Str_Of(data.description)
     progress = 0.0
@@ -20,9 +20,18 @@ function Content_Item(row as object, data as object) as object
         idx: row.getChildCount() - 1
         badge: Str_Of(data.badge)
         kicker: Str_Of(data.kicker)
-        subtitle: Str_Of(data.subtitle)
+        subtitle: Str_Glyphs(Str_Of(data.subtitle))
+        watched: Content_Watched(data)
+        portrait: Str_Of(data.portrait)
     })
     return item
+end function
+
+function Content_Watched(data as object) as boolean
+    kind = LCase(Str_Of(data.kind))
+    if kind <> "movie" and kind <> "series" and kind <> "tv" then return false
+    if Str_Of(data.badge) <> "" then return false
+    return St_IsWatched(Str_Of(data.metaId))
 end function
 
 function Cw_Status(elapsed as integer, dur as integer) as string
@@ -61,47 +70,52 @@ function Content_ContinueRow() as dynamic
     landscape = St_Pref("cwStyle") <> "poster"
     pattern = ""
     if not landscape then pattern = Poster_Pattern("continue_watching")
+    live = { tv: true, channel: true, channels: true, events: true, live: true }
     for each e in list
-        elapsed = ToInt(e.position, 0)
-        dur = ToInt(e.duration, 0)
-        progress = 0.0
-        if dur > 0 then progress = elapsed / dur
-        episode = Str_Of(e.episode)
-        parts = Cw_Episode(episode)
-        altIds = ""
-        if type(e.altIds) = "roArray" then altIds = e.altIds.Join("|")
-        image = Str_Of(e.poster)
-        fallbackImage = ""
-        if landscape
-            image = Str_Of(e.thumb)
-            if image = "" then image = Str_Of(e.background)
-            if image = "" and Left(e.metaId, 2) = "tt" then image = Img_Background(e.metaId)
-            if image = "" then image = Str_Of(e.poster)
-        else if pattern <> ""
-            custom = Poster_Custom(pattern, Str_Of(e.metaId), "", Str_Of(e.kind))
-            if custom <> ""
-                fallbackImage = image
-                image = custom
+        if not live.DoesExist(LCase(Str_Of(e.kind)))
+            elapsed = ToInt(e.position, 0)
+            dur = ToInt(e.duration, 0)
+            progress = 0.0
+            if dur > 0 then progress = elapsed / dur
+            episode = Str_Of(e.episode)
+            parts = Cw_Episode(episode)
+            altIds = ""
+            if type(e.altIds) = "roArray" then altIds = e.altIds.Join("|")
+            image = Str_Of(e.poster)
+            fallbackImage = ""
+            if landscape
+                image = Str_Of(e.thumb)
+                if image = "" then image = Str_Of(e.background)
+                if image = "" and Left(e.metaId, 2) = "tt" then image = Img_Background(e.metaId)
+                if image = "" then image = Str_Of(e.poster)
+            else if pattern <> ""
+                custom = Poster_Custom(pattern, Str_Of(e.metaId), "", Str_Of(e.kind))
+                if custom <> ""
+                    fallbackImage = image
+                    image = custom
+                end if
             end if
+            Content_Item(row, {
+                title: Str_Of(e.title)
+                poster: image
+                description: ""
+                kind: Str_Of(e.kind)
+                metaId: e.metaId
+                videoId: e.videoId
+                background: Str_Of(e.background)
+                metaLine: ""
+                episodeLabel: episode
+                progress: progress
+                altIds: altIds
+                fallback: fallbackImage
+                badge: Cw_Status(elapsed, dur)
+                kicker: parts.code
+                subtitle: parts.name
+                portrait: Str_Of(e.poster)
+            })
         end if
-        Content_Item(row, {
-            title: Str_Of(e.title)
-            poster: image
-            description: ""
-            kind: Str_Of(e.kind)
-            metaId: e.metaId
-            videoId: e.videoId
-            background: Str_Of(e.background)
-            metaLine: ""
-            episodeLabel: episode
-            progress: progress
-            altIds: altIds
-            fallback: fallbackImage
-            badge: Cw_Status(elapsed, dur)
-            kicker: parts.code
-            subtitle: parts.name
-        })
     end for
+    if row.getChildCount() = 0 then return invalid
     return row
 end function
 
@@ -220,12 +234,12 @@ function Catalog_ItemData(meta as object, fallbackKind as string, posterPattern 
     return {
         title: Str_Of(meta.name)
         poster: poster
-        description: Str_OneLine(meta.description)
+        description: Str_Glyphs(Str_OneLine(meta.description))
         kind: kind
         metaId: meta.id
         videoId: ""
         background: background
-        metaLine: parts.Join("  ·  ")
+        metaLine: Str_Glyphs(parts.Join("  ·  "))
         episodeLabel: ""
         progress: 0.0
         logo: Str_Of(meta.logo)

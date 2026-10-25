@@ -28,14 +28,33 @@ sub init()
     m.player = m.top.findNode("player")
     m.playerVideo = m.player.video
     m.loading = m.top.findNode("loading")
+    m.skeleton = m.top.findNode("skeleton")
+    m.spinner = m.top.findNode("spinner")
+    m.spinner.poster.uri = "pkg:/images/spinner.png"
+    m.spinner.poster.width = 96
+    m.spinner.poster.height = 96
+    m.skeleton.observeField("visible", "onSkeletonVisible")
     m.loadingText = m.top.findNode("loadingText")
     m.loadingHint = m.top.findNode("loadingHint")
     m.heroTimer = m.top.findNode("heroTimer")
     m.expanded = m.top.findNode("expanded")
     m.expandTimer = m.top.findNode("expandTimer")
     m.autoTimer = m.top.findNode("autoTimer")
+    m.subsWait = m.top.findNode("subsWait")
     m.streamsScreen = m.top.findNode("streamsScreen")
     m.trailerPlayer = m.top.findNode("trailerPlayer")
+    m.sheet = m.top.findNode("sheet")
+    m.auth = m.top.findNode("auth")
+    m.auth.observeField("event", "onAuthEvent")
+    m.partyJoin = m.top.findNode("partyJoin")
+    m.partyJoin.observeField("event", "onPartyJoinEvent")
+    m.partyPanel = m.top.findNode("partyPanel")
+    m.partyPanel.observeField("event", "onPartyPanelEvent")
+    m.trackAuth = m.top.findNode("trackAuth")
+    m.trackAuth.observeField("event", "onTrackAuthEvent")
+    m.toast = m.top.findNode("toast")
+    m.sheet.observeField("chosen", "onSheetChosen")
+    m.sheet.observeField("closed", "onSheetClosed")
     m.streamsOpen = false
     m.trailerOpen = false
     m.trailerTask = invalid
@@ -84,6 +103,7 @@ sub init()
     m.global.observeField("focusCard", "onFocusCard")
     m.expandTimer.observeField("fire", "onExpandTimer")
     m.autoTimer.observeField("fire", "onAutoTimer")
+    m.subsWait.observeField("fire", "onSubsWait")
     m.streamsScreen.observeField("event", "onStreamsEvent")
     m.trailerPlayer.observeField("event", "onTrailerEvent")
     for each rows in [m.homeRows, m.searchRows, m.libraryRows]
@@ -108,6 +128,7 @@ sub init()
     m.profiles.observeField("selected", "onProfileChosen")
     m.settings.observeField("event", "onSettingsEvent")
     m.settings.observeField("back", "onSettingsBack")
+    m.settings.observeField("leave", "onSettingsLeave")
     m.loginTimer.observeField("fire", "onLoginTimer")
     m.player.observeField("event", "onPlayerEvent")
     m.playerVideo.observeField("position", "onPlayerPosition")
@@ -117,7 +138,11 @@ sub init()
     startServer()
 
     applyTheme()
-    showProfiles()
+    if Auth_ShouldGate()
+        Auth_Open("onboarding")
+    else
+        showProfiles()
+    end if
     startQuietSync()
 end sub
 
@@ -185,7 +210,7 @@ sub applyTheme()
     }
     if m.ui.expandDelay < 1 then m.ui.expandDelay = 1
     profile = St_ActiveProfile()
-    m.nav.profileName = profile.name
+    m.nav.profileName = Str_Glyphs(Str_Of(profile.name))
     m.nav.profileColor = St_ProfileColor(St_ActiveProfileIndex())
     m.nav.profileAvatar = Str_Of(profile.avatar)
     if m.prefs.captions
@@ -221,8 +246,9 @@ sub onProfileChosen()
         m.stack.Clear()
         m.list.visible = false
         closeDetails(false)
+        m.homeRows.content = invalid
+        m.homeRows.visible = false
         showPage("home")
-        loadHome()
     else
         focusCurrent()
     end if
@@ -233,28 +259,36 @@ sub loadHome()
     m.homeLoaded = true
     m.needsReload = false
     m.emptyState.visible = false
-    m.homeRows.visible = false
-    m.hero.visible = false
-    m.loadingText.text = L("Cargando catálogos...")
     m.loadingHint.visible = false
-    m.loading.visible = true
+    hasRows = m.homeRows.content <> invalid and m.homeRows.content.getChildCount() > 0 and m.homeRows.visible
+    if not hasRows
+        m.homeRows.visible = false
+        m.hero.visible = false
+        m.skeleton.visible = m.page = "home"
+    end if
     if m.catalogTask <> invalid
         m.catalogTask.unobserveField("content")
+        m.catalogTask.unobserveField("early")
         m.catalogTask.control = "STOP"
     end if
     m.catalogTask = CreateObject("roSGNode", "CatalogTask")
+    m.catalogTask.observeField("early", "onCatalogsEarly")
     m.catalogTask.observeField("content", "onCatalogsLoaded")
     m.catalogTask.control = "RUN"
-    if m.page = "home" and m.area = "page" and not overlayOpen() then m.top.setFocus(true)
+    if m.page = "home" and m.area = "page" and not overlayOpen() and not hasRows then Focus_Scene()
 end sub
 
-sub onCatalogsLoaded(event as object)
-    task = event.getRoSGNode()
-    if m.catalogTask = invalid or not task.isSameNode(m.catalogTask) then return
-    m.manifests = task.manifests
-    m.catalogs = task.catalogs
-    if m.manifests = invalid then m.manifests = []
-    if m.catalogs = invalid then m.catalogs = []
+sub onSkeletonVisible()
+    anim = m.top.findNode("skeletonPulse")
+    if m.skeleton.visible then anim.control = "start" else anim.control = "stop"
+end sub
+
+sub Home_TakeTask(task as object)
+    manifests = task.manifests
+    catalogs = task.catalogs
+    if manifests = invalid or manifests.Count() = 0 then return
+    m.manifests = manifests
+    if catalogs <> invalid then m.catalogs = catalogs
     names = {}
     for each entry in m.manifests
         names[entry.base] = entry.name
@@ -264,24 +298,156 @@ sub onCatalogsLoaded(event as object)
         m.server.addonNames = names
         m.server.catalogs = m.catalogs
     end if
-    if not m.busy then m.loading.visible = false
+end sub
+
+sub onCatalogsEarly(event as object)
+    task = event.getRoSGNode()
+    if m.catalogTask = invalid or not task.isSameNode(m.catalogTask) then return
+    Home_TakeTask(task)
+    content = task.early
+    if content = invalid or content.getChildCount() = 0 then return
+    Home_Show(content)
+end sub
+
+sub onCatalogsLoaded(event as object)
+    task = event.getRoSGNode()
+    if m.catalogTask = invalid or not task.isSameNode(m.catalogTask) then return
+    Home_TakeTask(task)
+    if task.manifests = invalid or task.manifests.Count() = 0
+        m.manifests = []
+        m.catalogs = []
+    end if
     content = task.content
-    m.homeRows.content = content
-    applyRowSizes(m.homeRows)
+    m.skeleton.visible = false
     if content <> invalid and content.getChildCount() > 0
-        m.emptyState.visible = false
-        m.homeRows.visible = true
-        if m.page = "home"
-            m.hero.visible = true
-            showHeroFor(getRowItem(m.homeRows, [0, 0]))
-        end if
+        Home_Show(content)
+        Poster_Cache(m.homeRows.content)
     else
+        m.homeRows.content = content
         m.homeRows.visible = false
         m.hero.visible = false
         showEmptyState(task.addonCount, task.failed)
     end if
     if m.page = "library" then buildLibrary()
-    if m.area = "page" and not overlayOpen() then focusPage()
+end sub
+
+function Home_RowKey(row as object) as string
+    if row = invalid then return ""
+    if row.id = "cw" then return "cw"
+    if row.hasField("key") then return row.key
+    return row.title
+end function
+
+function Home_RowSig(row as object) as string
+    if row = invalid then return ""
+    n = row.getChildCount()
+    parts = [n.ToStr(), row.title]
+    for i = 0 to n - 1
+        if i > 5 then exit for
+        c = row.getChild(i)
+        parts.Push(c.HDPosterUrl)
+    end for
+    return parts.Join("|")
+end function
+
+sub Poster_Localize(root as object)
+    if root = invalid or m.posterMap = invalid then return
+    for i = 0 to root.getChildCount() - 1
+        row = root.getChild(i)
+        for j = 0 to row.getChildCount() - 1
+            item = row.getChild(j)
+            local = m.posterMap[item.HDPosterUrl]
+            if local <> invalid
+                if not item.hasField("remote") then item.addFields({ remote: item.HDPosterUrl }) else item.remote = item.HDPosterUrl
+                item.HDPosterUrl = local
+            end if
+        end for
+    end for
+end sub
+
+sub Poster_Cache(root as object)
+    if root = invalid then return
+    urls = []
+    for i = 0 to root.getChildCount() - 1
+        row = root.getChild(i)
+        for j = 0 to row.getChildCount() - 1
+            u = row.getChild(j).HDPosterUrl
+            if Left(u, 4) = "http" then urls.Push(u)
+        end for
+    end for
+    if urls.Count() = 0 then return
+    if m.posterTask <> invalid then m.posterTask.control = "stop"
+    m.posterTask = CreateObject("roSGNode", "PosterCacheTask")
+    m.posterTask.urls = urls
+    m.posterTask.observeField("result", "onPosterCache")
+    m.posterTask.control = "RUN"
+end sub
+
+sub onPosterCache(event as object)
+    task = event.getRoSGNode()
+    if m.posterTask = invalid or not task.isSameNode(m.posterTask) then return
+    m.posterTask = invalid
+    found = task.result
+    if type(found) <> "roAssociativeArray" then return
+    if m.posterMap = invalid then m.posterMap = {}
+    for each k in found
+        m.posterMap[k] = found[k]
+    end for
+    Poster_Localize(m.homeRows.content)
+end sub
+
+sub Home_Show(content as object)
+    Poster_Localize(content)
+    m.skeleton.visible = false
+    m.emptyState.visible = false
+    old = m.homeRows.content
+    engaged = old <> invalid and old.getChildCount() > 0 and m.homeRows.visible and m.homeRows.isInFocusChain()
+    if not engaged
+        m.homeRows.content = content
+        applyRowSizes(m.homeRows)
+        m.homeRows.visible = true
+        if m.page = "home"
+            m.hero.visible = true
+            showHeroFor(getRowItem(m.homeRows, [0, 0]))
+        end if
+        if m.area = "page" and not overlayOpen() then focusPage()
+        return
+    end if
+    oldKeys = []
+    for i = 0 to old.getChildCount() - 1
+        oldKeys.Push(Home_RowKey(old.getChild(i)))
+    end for
+    newRows = []
+    for i = 0 to content.getChildCount() - 1
+        newRows.Push(content.getChild(i))
+    end for
+    prefix = oldKeys.Count() <= newRows.Count()
+    if prefix
+        for i = 0 to oldKeys.Count() - 1
+            if oldKeys[i] <> Home_RowKey(newRows[i]) then prefix = false
+        end for
+    end if
+    focus = m.homeRows.rowItemFocused
+    focusKey = ""
+    if type(focus) = "roArray" and focus.Count() > 0 and focus[0] < oldKeys.Count() then focusKey = oldKeys[focus[0]]
+    if prefix
+        for i = oldKeys.Count() to newRows.Count() - 1
+            old.appendChild(newRows[i])
+        end for
+        for i = 0 to oldKeys.Count() - 1
+            if i <> focus[0] and Home_RowSig(old.getChild(i)) <> Home_RowSig(newRows[i]) then old.replaceChild(newRows[i], i)
+        end for
+        applyRowSizes(m.homeRows)
+        return
+    end if
+    m.homeRows.content = content
+    applyRowSizes(m.homeRows)
+    target = 0
+    for i = 0 to newRows.Count() - 1
+        if Home_RowKey(newRows[i]) = focusKey then target = i
+    end for
+    m.homeRows.jumpToRowItem = [target, 0]
+    m.homeRows.setFocus(true)
 end sub
 
 sub showEmptyState(addonCount as integer, failed as integer)
@@ -315,12 +481,22 @@ sub showEmptyState(addonCount as integer, failed as integer)
 end sub
 
 function overlayOpen() as boolean
-    return m.player.visible or m.trailerOpen or m.profiles.visible or m.streamsOpen or m.stack.Count() > 0 or m.detailsOpen or m.settingsOpen
+    return m.sheet.visible or m.auth.visible or m.trackAuth.visible or m.partyPanel.visible or m.partyJoin.visible or m.player.visible or m.trailerOpen or m.profiles.visible or m.streamsOpen or m.stack.Count() > 0 or m.detailsOpen or m.settingsOpen
 end function
 
 sub focusCurrent()
     if m.top.dialog <> invalid then return
-    if m.trailerOpen
+    if m.sheet.visible
+        m.sheet.setFocus(true)
+    else if m.auth.visible
+        m.auth.setFocus(true)
+    else if m.trackAuth.visible
+        m.trackAuth.setFocus(true)
+    else if m.partyPanel.visible
+        m.partyPanel.setFocus(true)
+    else if m.partyJoin.visible
+        m.partyJoin.setFocus(true)
+    else if m.trailerOpen
         m.trailerPlayer.setFocus(true)
     else if m.player.visible
         m.player.setFocus(true)
@@ -332,6 +508,8 @@ sub focusCurrent()
         m.list.setFocus(true)
     else if m.settingsOpen
         m.settings.setFocus(true)
+    else if m.detailsOpen and not m.details.visible and m.ctx <> invalid and Bool_Of(m.ctx.direct, false)
+        closeDetails(true)
     else if m.detailsOpen
         m.details.setFocus(true)
     else if m.area = "nav"
@@ -341,6 +519,10 @@ sub focusCurrent()
     end if
 end sub
 
+sub Toast_Show(text as string)
+    m.toast.text = text
+end sub
+
 sub focusNav()
     hideExpanded()
     m.area = "nav"
@@ -348,12 +530,24 @@ sub focusNav()
 end sub
 
 sub onNavLeave()
+    if m.settingsOpen
+        m.settings.setFocus(true)
+        return
+    end if
     m.area = "page"
     focusPage()
 end sub
 
+sub onSettingsLeave()
+    m.nav.setFocus(true)
+end sub
+
 sub onNavChosen()
     choice = m.nav.chosen
+    if m.settingsOpen and choice <> "settings"
+        m.settingsOpen = false
+        m.settings.visible = false
+    end if
     if choice = "profile"
         showProfiles()
     else if choice = "settings"
@@ -389,17 +583,35 @@ sub onRowSelected(event as object)
         openFolder(item)
         return
     end if
+    focus = rows.rowItemSelected
+    row = invalid
+    if type(focus) = "roArray" and rows.content <> invalid then row = rows.content.getChild(focus[0])
+    if row <> invalid and row.id = "cw"
+        Continue_Play(item, "play")
+        return
+    end if
     openDetails(item)
+end sub
+
+sub Continue_Play(item as object, action as string)
+    openDetails(item)
+    m.details.visible = false
+    m.ctx.direct = true
+    runDetailAction(action)
 end sub
 
 sub openFolder(item as object)
     if not item.hasField("folder") then return
+    Folder_Load(item.title, item.folder)
+end sub
+
+sub Folder_Load(title as string, folder as object)
     hideExpanded()
     showBusy(L("Cargando..."))
-    m.folderTitle = item.title
+    m.folderTitle = title
     task = CreateObject("roSGNode", "CatalogTask")
     task.baseManifests = m.manifests
-    task.folder = item.folder
+    task.folder = folder
     task.observeField("content", "onFolderLoaded")
     task.control = "RUN"
     m.folderTask = task
@@ -411,10 +623,16 @@ sub onFolderLoaded(event as object)
     m.folderTask = invalid
     hideBusy()
     root = task.content
+    fails = task.folderFails
+    detail = ""
+    if type(fails) = "roArray" and fails.Count() > 0 then detail = fails.Join(chr(10))
     if root = invalid or root.getChildCount() = 0
-        showMessage(m.folderTitle, L("Esta carpeta no tiene catálogos de tus addons instalados."))
+        text = L("Esta carpeta no tiene catálogos de tus addons instalados.")
+        if detail <> "" then text = L("No se pudo cargar:") + chr(10) + detail
+        showMessage(m.folderTitle, text)
         return
     end if
+    if detail <> "" then Toast_Show(L("No se pudo cargar:") + " " + fails.Join(", "))
     m.libraryRows.content = root
     applyRowSizes(m.libraryRows)
     m.area = "page"
@@ -426,7 +644,26 @@ sub showHeroFor(item as dynamic)
     if item.itemType = "folder"
         m.heroItem = item
         m.heroTimer.control = "stop"
-        m.hero.data = { title: item.title, logo: "", background: item.background, rating: "", metaLine: item.metaLine, description: "" }
+        hide = item.hasField("hideTitle") and item.hideTitle = true
+        title = item.title
+        line = item.metaLine
+        if hide
+            title = ""
+            line = ""
+        end if
+        logo = ""
+        if item.hasField("logo") then logo = item.logo
+        m.hero.data = { title: title, logo: logo, background: item.background, rating: "", metaLine: line, description: "" }
+        video = ""
+        if item.hasField("heroVideo") then video = item.heroVideo
+        hasGif = item.hasField("gif") and item.gif <> ""
+        if video <> "" and not hasGif and m.page = "home"
+            m.heroTrailerOn = true
+            m.hero.trailer = { url: video }
+        else if Bool_Of(m.heroTrailerOn, false)
+            m.heroTrailerOn = false
+            m.hero.trailer = {}
+        end if
         return
     end if
     if Bool_Of(m.heroTrailerOn, false)
@@ -527,11 +764,13 @@ sub showBusy(text as string)
     m.loadingText.text = text
     m.loadingHint.visible = true
     m.loading.visible = true
+    m.spinner.control = "start"
 end sub
 
 sub hideBusy()
     m.busy = false
     m.loading.visible = false
+    m.spinner.control = "stop"
 end sub
 
 sub cancelBusy()
@@ -585,7 +824,13 @@ sub onServerChanged()
         return
     end if
     if what = "nuvioLogin"
-        if not m.player.visible then startNuvioSync()
+        if m.auth.visible
+            Auth_Approved()
+            return
+        end if
+        Toast_Show(L("Sesión iniciada. Sincronizando con Nuvio..."))
+        m.syncToast = true
+        startQuietSync()
         return
     end if
     if what = "theme"
@@ -623,13 +868,8 @@ sub onKeyboardButton()
 end sub
 
 sub showMessage(title as string, text as string)
-    dlg = CreateObject("roSGNode", "Dialog")
-    dlg.title = title
-    dlg.message = text
-    dlg.buttons = ["OK"]
-    dlg.observeFieldScoped("buttonSelected", "onMessageButton")
-    dlg.observeFieldScoped("wasClosed", "onDialogClosed")
-    m.top.dialog = dlg
+    hideBusy()
+    Sheet_Open({ title: title, subtitle: text, items: [{ id: "ok", label: L("Aceptar") }] }, "message", invalid)
 end sub
 
 sub onMessageButton()
@@ -676,6 +916,11 @@ function onKeyEvent(key as string, press as boolean) as boolean
         if key = "back" then cancelBusy()
         return true
     end if
+    if key = "back" and m.profiles.visible and Bool_Of(m.homeLoaded, false)
+        m.profiles.visible = false
+        focusCurrent()
+        return true
+    end if
     if overlayOpen() then return false
     if m.area = "nav"
         if key = "back" and m.page <> "home"
@@ -683,10 +928,14 @@ function onKeyEvent(key as string, press as boolean) as boolean
             showPage("home")
             return true
         end if
+        if key = "options"
+            openSettings()
+            return true
+        end if
         return false
     end if
     if key = "options"
-        openSettings()
+        Options_Open()
         return true
     end if
     if m.page = "search" then return searchKey(key)
@@ -711,7 +960,7 @@ end function
 
 sub onFocusCard()
     hideExpanded()
-    if m.ui = invalid then return
+    if m.ui = invalid or m.page = "library" then return
     if not m.ui.expandOn and not m.ui.expandTrailer then return
     m.expandTimer.duration = m.ui.expandDelay
     m.expandTimer.control = "start"
@@ -740,7 +989,7 @@ sub onExpandTimer()
     if rows = invalid or not rows.isInFocusChain() then return
     item = card.itemContent
     if item = invalid then return
-    if item.itemType = "folder" then return
+    if item.itemType = "folder" or m.page = "library" then return
     focus = rows.rowItemFocused
     if type(focus) = "roArray" and focus.Count() > 0 and rows.content <> invalid
         row = rows.content.getChild(focus[0])
@@ -836,6 +1085,7 @@ sub startCardTrailer(item as object, meta as dynamic)
     end if
     if imdb = "" and meta = invalid then return
     task.imdb = imdb
+    task.kind = Str_Of(item.itemType)
     task.tag = item.metaId
     task.observeField("result", "onCardTrailer")
     task.control = "RUN"

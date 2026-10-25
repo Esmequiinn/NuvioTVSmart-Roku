@@ -332,11 +332,25 @@ function Nuvio_Sync() as object
         end if
         progress = Nuvio_PullProgress(p.remote)
         if progress <> invalid
+            pendingDel = St_ReadFile("progdel_" + p.id)
+            if type(pendingDel) = "roArray" and pendingDel.Count() > 0
+                skip = {}
+                for each id in pendingDel
+                    if IsStr(id) then skip[id] = true
+                end for
+                kept = []
+                for each e in progress
+                    if not skip.DoesExist(Str_Of(e.metaId)) then kept.Push(e)
+                end for
+                progress = kept
+            end if
+            progress = Nuvio_MergeProgress(p.id, progress)
             St_Set("progress_" + p.id, progress)
             counts.progress = counts.progress + progress.Count()
         end if
         Nuvio_PullSettings(p.id, p.remote, p.id = s.active)
         Nuvio_PullCollections(p.id, p.remote)
+        Nuvio_PullWatched(p.id, p.remote)
     end for
     now = CreateObject("roDateTime")
     now.ToLocalTime()
@@ -404,7 +418,13 @@ sub Nuvio_PullCollections(pid as string, index as integer)
                                             if catId = "" then catId = Str_Of(src.catalog_id)
                                             title = Str_Of(src.title)
                                             if title = "" then title = Str_Of(src.catalogName)
-                                            if (addonId <> "" or base <> "") and kind <> "" and catId <> "" then sources.Push({ base: base, addonId: addonId, type: kind, catalogId: catId, title: title, genre: Str_Of(src.genre) })
+                                            if (addonId <> "" or base <> "") and kind <> "" and catId <> "" then sources.Push({ provider: "addon", base: base, addonId: addonId, type: kind, catalogId: catId, title: title, genre: Str_Of(src.genre) })
+                                        else if provider = "tmdb" and Str_Of(src.tmdbSourceType) <> ""
+                                            sources.Push({ provider: "tmdb", tmdbSourceType: UCase(Str_Of(src.tmdbSourceType)), title: Str_Of(src.title), tmdbId: Str_Any(src.tmdbId), mediaType: UCase(Str_Of(src.mediaType)), sortBy: Str_Of(src.sortBy), filters: src.filters })
+                                        else if provider = "trakt" and Str_Any(src.traktListId) <> ""
+                                            sources.Push({ provider: "trakt", title: Str_Of(src.title), traktListId: Str_Any(src.traktListId), mediaType: UCase(Str_Of(src.mediaType)), sortBy: Str_Of(src.sortBy), sortHow: Str_Of(src.sortHow) })
+                                        else if provider = "mdblist" and Str_Any(src.listId) <> ""
+                                            sources.Push({ provider: "mdblist", title: Str_Of(src.title), listId: Str_Any(src.listId), mediaType: UCase(Str_Of(src.mediaType)) })
                                         end if
                                     end if
                                 end for
@@ -412,11 +432,13 @@ sub Nuvio_PullCollections(pid as string, index as integer)
                             shape = LCase(Str_Of(folder.tileShape))
                             if shape = "wide" then shape = "landscape"
                             if shape <> "landscape" and shape <> "poster" then shape = "square"
-                            folders.Push({ id: Str_Any(folder.id), title: folder.title, cover: Str_Of(folder.coverImageUrl), backdrop: Str_Of(folder.heroBackdropUrl), shape: shape, sources: sources })
+                            gif = ""
+                            if Bool_Of(folder.focusGifEnabled, true) then gif = Str_Of(folder.focusGifUrl)
+                            folders.Push({ id: Str_Any(folder.id), title: Str_Of(folder.title), cover: Img_Fix(Str_Of(folder.coverImageUrl)), gif: Img_Fix(gif), emoji: Str_Of(folder.coverEmoji), hideTitle: Bool_Of(folder.hideTitle, false), logo: Img_Fix(Str_Of(folder.titleLogoUrl)), backdrop: Img_Fix(Str_Of(folder.heroBackdropUrl)), video: Str_Of(folder.heroVideoUrl), shape: shape, sources: sources })
                         end if
                     end for
                 end if
-                out.Push({ id: Str_Any(col.id), title: col.title, pin: Bool_Of(col.pinToTop, false), folders: folders })
+                out.Push({ id: Str_Any(col.id), title: Str_Of(col.title), pin: Bool_Of(col.pinToTop, false), backdrop: Str_Of(col.backdropImageUrl), folders: folders })
             end if
         end for
     end if
@@ -525,12 +547,92 @@ function Nuvio_PullLibrary(index as integer) as dynamic
     return out
 end function
 
+function Nuvio_Ms(v as dynamic) as dynamic
+    if v = invalid then return 0&
+    if IsStr(v)
+        t = v.Trim()
+        if t = "" then return 0&
+        if CreateObject("roRegex", "^[0-9]+$", "").IsMatch(t)
+            n = ParseJson(t)
+            if n <> invalid then return 0& + n
+            return 0&
+        end if
+        dt = CreateObject("roDateTime")
+        dt.FromISO8601String(t)
+        return dt.AsSeconds() * 1000&
+    end if
+    return 0& + v
+end function
+
+function Nuvio_MergeProgress(pid as string, remote as object) as object
+    local = St_Get("progress_" + pid, invalid)
+    if type(local) <> "roArray" then local = []
+    dirty = Bool_Of(St_SyncDirty(pid).progress, false)
+    byId = {}
+    for each e in local
+        if type(e) = "roAssociativeArray" and IsStr(e.metaId) then byId[e.metaId] = e
+    end for
+    out = []
+    seen = {}
+    for each e in remote
+        mine = byId[e.metaId]
+        if mine <> invalid
+            for each k in ["title", "poster", "background", "thumb"]
+                if Str_Of(e[k]) = "" and Str_Of(mine[k]) <> "" then e[k] = mine[k]
+            end for
+            mineMs = Nuvio_Ms(mine.updatedMs)
+            if mineMs = 0 and mine.updated <> invalid then mineMs = ToInt(mine.updated, 0) * 1000&
+            if dirty and mineMs > Nuvio_Ms(e.updatedMs) then e = mine
+        end if
+        seen[e.metaId] = true
+        out.Push(e)
+    end for
+    if dirty
+        for each e in local
+            if type(e) = "roAssociativeArray" and IsStr(e.metaId) and not seen.DoesExist(e.metaId)
+                seen[e.metaId] = true
+                out.Push(e)
+            end if
+        end for
+    end if
+    sorted = []
+    while out.Count() > 0 and sorted.Count() < 20
+        best = 0
+        bestMs = -1&
+        for i = 0 to out.Count() - 1
+            ms = Nuvio_Ms(out[i].updatedMs)
+            if ms = 0 and out[i].updated <> invalid then ms = ToInt(out[i].updated, 0) * 1000&
+            if ms > bestMs
+                bestMs = ms
+                best = i
+            end if
+        end for
+        sorted.Push(out[best])
+        out.Delete(best)
+    end while
+    return sorted
+end function
+
 function Nuvio_PullProgress(index as integer) as dynamic
     rows = Nuvio_Rpc("sync_pull_watch_progress", { p_profile_id: index })
     if type(rows) <> "roArray" then return invalid
     out = []
+    latest = {}
     for each row in rows
-        if type(row) = "roAssociativeArray" and out.Count() < 12
+        if type(row) = "roAssociativeArray"
+            id = Str_Of(row.content_id)
+            ms = Nuvio_Ms(row.last_watched)
+            if id <> "" and (not latest.DoesExist(id) or ms > latest[id]) then latest[id] = ms
+        end if
+    end for
+    taken = {}
+    for each row in rows
+        newest = false
+        if type(row) = "roAssociativeArray" and not taken.DoesExist(Str_Of(row.content_id))
+            top = latest[Str_Of(row.content_id)]
+            newest = top = invalid or Nuvio_Ms(row.last_watched) >= top
+        end if
+        if newest
             id = Str_Of(row.content_id)
             kind = Str_Of(row.content_type)
             video = Str_Of(row.video_id)
@@ -548,7 +650,10 @@ function Nuvio_PullProgress(index as integer) as dynamic
                 label = L("T") + season.ToStr() + ":E" + episode.ToStr()
                 if video = id then video = id + ":" + season.ToStr() + ":" + episode.ToStr()
             end if
-            if id <> "" and secs > 0 and (dur = 0 or secs < dur * 0.95) then out.Push({ metaId: id, videoId: video, kind: kind, title: "", poster: "", background: "", episode: label, position: secs, duration: dur, season: season, ep: episode, updatedMs: row.last_watched })
+            if id <> "" and secs > 0 and (dur = 0 or secs < dur * 0.95)
+                taken[id] = true
+                out.Push({ metaId: id, videoId: video, kind: kind, title: Str_Of(row.name), poster: Str_Of(row.poster), background: Str_Of(row.background), episode: label, position: secs, duration: dur, season: season, ep: episode, updatedMs: Nuvio_Ms(row.last_watched) })
+            end if
         end if
     end for
     return out
@@ -625,7 +730,7 @@ sub Nuvio_PullSettings(pid as string, index as integer, primary as boolean)
     end if
     integ = St_Integrations()
     credentials = Nuvio_Rpc("sync_pull_provider_credentials", { p_profile_id: index })
-    if primary and type(credentials) = "roArray"
+    if (primary or Str_Of(integ.mdbKey) = "") and type(credentials) = "roArray"
         for each c in credentials
             if type(c) = "roAssociativeArray" and LCase(Str_Of(c.provider)) = "mdblist"
                 cj = c.credential_json
@@ -642,13 +747,13 @@ sub Nuvio_PullSettings(pid as string, index as integer, primary as boolean)
     Nuvio_PullCatalogs(prefs, index)
     if f = invalid
         St_Set("prefs_" + pid, prefs)
-        if primary then St_SaveIntegrations(integ)
+        St_SaveIntegrations(integ)
         return
     end if
 
     Nuvio_MapFeatures(prefs, f, integ, pid, primary, true)
     St_Set("prefs_" + pid, prefs)
-    if primary then St_SaveIntegrations(integ)
+    St_SaveIntegrations(integ)
 end sub
 
 sub Nuvio_MapFeatures(prefs as object, f as object, integ as object, pid as string, primary as boolean, apply as boolean)
@@ -742,7 +847,7 @@ sub Nuvio_MapFeatures(prefs as object, f as object, integ as object, pid as stri
     end if
 
     md = f.mdblist_settings
-    if primary and type(md) = "roAssociativeArray"
+    if (primary or Str_Of(integ.mdbKey) = "") and type(md) = "roAssociativeArray"
         key = Str_Of(md.mdblist_api_key).Trim()
         if key <> "" then integ["mdbKey"] = key
         if IsBool(md.mdblist_enabled) and integ.mdbKey <> "" then integ["mdbEnabled"] = md.mdblist_enabled
@@ -796,6 +901,7 @@ function Nuvio_Push() as object
     end if
     if Bool_Of(dirty.library, false) and Nuvio_PushLibrary(pid, index) then done.Push("library")
     if Bool_Of(dirty.progress, false) and Nuvio_PushProgress(index) then done.Push("progress")
+    if Bool_Of(dirty.watched, false) and Nuvio_PushWatched(pid, index) then done.Push("watched")
     if Bool_Of(dirty.settings, false) and Nuvio_PushSettings(pid, index) then done.Push("settings")
     if Bool_Of(dirty.catalogs, false) and Nuvio_PushCatalogs(pid, index) then done.Push("catalogs")
     St_ClearDirty(pid, done)
@@ -901,7 +1007,101 @@ function Nuvio_LibraryRow(row as object) as object
     return { content_id: row.content_id, content_type: kind, name: name, poster: row.poster, poster_shape: shape, background: row.background, description: Str_Of(row.description), release_info: Str_Of(row.release_info), imdb_rating: row.imdb_rating, genres: genres, addon_base_url: row.addon_base_url, added_at: added }
 end function
 
+function Nuvio_DeleteProgress(index as integer) as boolean
+    pid = St_ActiveProfile().id
+    pending = St_ReadFile("progdel_" + pid)
+    if type(pending) <> "roArray" or pending.Count() = 0 then return true
+    ids = {}
+    for each id in pending
+        if IsStr(id) then ids[id] = true
+    end for
+    remote = Nuvio_Rpc("sync_pull_watch_progress", { p_profile_id: index })
+    if type(remote) <> "roArray" then return false
+    keys = []
+    for each row in remote
+        if type(row) = "roAssociativeArray" and ids.DoesExist(Str_Of(row.content_id))
+            key = Str_Of(row.progress_key)
+            if key = "" then key = Str_Of(row.content_id)
+            keys.Push(key)
+        end if
+    end for
+    if keys.Count() > 0
+        r = Nuvio_Call("POST", "/rest/v1/rpc/sync_delete_watch_progress", { p_profile_id: index, p_keys: keys, p_origin_client_id: St_ClientId() })
+        if r.code < 200 or r.code >= 300 then return false
+    end if
+    St_WriteFile("progdel_" + pid, [])
+    return true
+end function
+
+function Nuvio_PushWatched(pid as string, index as integer) as boolean
+    ops = St_ReadFile("watchops_" + pid)
+    if type(ops) <> "roArray" or ops.Count() = 0 then return true
+    adds = []
+    dels = []
+    for each o in ops
+        if type(o) = "roAssociativeArray"
+            season = invalid
+            episode = invalid
+            if ToInt(o.season, -1) >= 0 and ToInt(o.episode, -1) > 0
+                season = ToInt(o.season, 0)
+                episode = ToInt(o.episode, 0)
+            end if
+            if o.op = "add"
+                kind = Str_Of(o.kind)
+                if kind = "" then kind = "movie"
+                adds.Push({ content_id: Str_Of(o.id), content_type: kind, title: Str_Of(o.title), season: season, episode: episode, watched_at: ToInt(o.at, 0) * 1000& })
+            else
+                key = { content_id: Str_Of(o.id) }
+                if season <> invalid
+                    key.season = season
+                    key.episode = episode
+                end if
+                dels.Push(key)
+            end if
+        end if
+    end for
+    if dels.Count() > 0
+        r = Nuvio_Call("POST", "/rest/v1/rpc/sync_delete_watched_items", { p_profile_id: index, p_keys: dels })
+        if r.code < 200 or r.code >= 300 then return false
+    end if
+    if adds.Count() > 0
+        r = Nuvio_Call("POST", "/rest/v1/rpc/sync_push_watched_items", { p_profile_id: index, p_items: adds })
+        if r.code < 200 or r.code >= 300 then return false
+    end if
+    St_WriteFile("watchops_" + pid, [])
+    return true
+end function
+
+sub Nuvio_PullWatched(pid as string, index as integer)
+    all = {}
+    page = 1
+    while page <= 6
+        rows = Nuvio_Rpc("sync_pull_watched_items", { p_profile_id: index, p_page: page, p_page_size: 900 })
+        if type(rows) <> "roArray" then return
+        for each row in rows
+            if type(row) = "roAssociativeArray" and Str_Of(row.content_id) <> ""
+                key = St_WatchedKey(row.content_id, row.season, row.episode)
+                all[key] = { k: Str_Of(row.content_type), t: "", at: 0 }
+            end if
+        end for
+        if rows.Count() < 900 then exit while
+        page = page + 1
+    end while
+    ops = St_ReadFile("watchops_" + pid)
+    if type(ops) = "roArray"
+        for each o in ops
+            if type(o) = "roAssociativeArray"
+                key = St_WatchedKey(Str_Of(o.id), o.season, o.episode)
+                if o.op = "add" then all[key] = { k: Str_Of(o.kind), t: "", at: 0 } else all.Delete(key)
+            end if
+        end for
+    end if
+    St_WriteFile("watched_" + pid, all)
+    m.watchedCache = invalid
+end sub
+
 function Nuvio_PushProgress(index as integer) as boolean
+    if not Nuvio_DeleteProgress(index) then return false
     rows = []
     for each e in St_Progress()
         id = Str_Of(e.metaId)
@@ -976,10 +1176,6 @@ function Nuvio_PushCatalogs(pid as string, index as integer) as boolean
     for each key in order
         if IsStr(key) and not used.DoesExist(key)
             item = byKey[key]
-            if item = invalid and Left(key, 4) <> "col:"
-                parts = key.Split("|")
-                if parts.Count() = 3 then item = { addon_id: parts[0], type: parts[1], catalog_id: parts[2], custom_title: "" }
-            end if
             if item <> invalid
                 used[key] = true
                 item.enabled = not hidden.DoesExist(key)
@@ -995,6 +1191,7 @@ function Nuvio_PushCatalogs(pid as string, index as integer) as boolean
             items.Push(item)
         end if
     end for
+    if remoteItems.Count() = 0 then return true
     data.items = items
     r = Nuvio_Call("POST", "/rest/v1/rpc/sync_push_home_catalog_settings", { p_profile_id: index, p_platform: "home_catalog_shared", p_settings_json: data })
     return r.code >= 200 and r.code < 300
@@ -1016,15 +1213,19 @@ function Nuvio_PushSettings(pid as string, index as integer) as boolean
     f = blob.features
     remote = {}
     Nuvio_MapFeatures(remote, f, St_Integrations(), pid, false, false)
+    touched = St_Touched(pid)
     changed = false
     for each k in Nuvio_PushKeys()
-        if local[k] <> invalid and not Nuvio_Same(local[k], remote[k])
+        if touched.DoesExist(k) and local[k] <> invalid and remote[k] <> invalid and not Nuvio_Same(local[k], remote[k])
             if Nuvio_WriteSetting(f, k, local) then changed = true
         end if
     end for
-    if not changed then return true
-    r = Nuvio_Call("POST", "/rest/v1/rpc/sync_push_profile_settings_blob", { p_profile_id: index, p_settings_json: blob, p_platform: "tv" })
-    return r.code >= 200 and r.code < 300
+    if changed
+        r = Nuvio_Call("POST", "/rest/v1/rpc/sync_push_profile_settings_blob", { p_profile_id: index, p_settings_json: blob, p_platform: "tv" })
+        if r.code < 200 or r.code >= 300 then return false
+    end if
+    St_Set("touched_" + pid, {})
+    return true
 end function
 
 function Nuvio_PushKeys() as object
