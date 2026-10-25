@@ -6,6 +6,10 @@ sub init()
     m.epTitle = m.top.findNode("epTitle")
     m.hint = m.top.findNode("hint")
     m.chipsGroup = m.top.findNode("chips")
+    m.chipClip = m.top.findNode("chipClip")
+    m.chipClip.clippingRect = [0, -10, 1130, 80]
+    m.resumeRow = m.top.findNode("resumeRow")
+    m.resumeDef = invalid
     m.grid = m.top.findNode("grid")
     m.status = m.top.findNode("status")
     m.footer = m.top.findNode("footer")
@@ -25,7 +29,7 @@ sub onInfo()
     info = m.top.info
     if info = invalid then return
     m.filter = ""
-    m.chipIndex = 0
+    m.chipIndex = 1
     m.zone = "grid"
     m.autoFocus = true
     m.bg.uri = Txt(info.background)
@@ -67,91 +71,108 @@ function streamList() as object
 end function
 
 sub buildChips()
-    defs = []
+    m.resumeRow.removeChildrenIndex(m.resumeRow.getChildCount(), 0)
+    m.resumeDef = invalid
     resume = Txt(m.top.resume)
     if resume <> ""
-        if m.top.fromStart
-            defs.Push({ id: "resume", label: L("Desde el inicio") })
-        else
-            defs.Push({ id: "resume", label: L("Continuar en ") + resume })
-        end if
+        text = L("Continuar en ") + resume
+        if m.top.fromStart then text = L("Desde el inicio")
+        m.resumeDef = makeChip(m.resumeRow, { id: "resume", label: text }, 0)
     end if
-    list = streamList()
-    defs.Push({ id: "all", label: L("Todos  ") + list.Count().ToStr() })
-    counts = {}
+    defs = [{ id: "refresh", label: "", icon: "pkg:/images/ic_replay.png" }, { id: "all", label: L("Todos") }]
     order = []
-    for each s in list
-        name = Txt(s.addon)
-        if name <> ""
-            if not counts.DoesExist(name)
-                counts[name] = 0
-                order.Push(name)
-            end if
-            counts[name] = counts[name] + 1
+    seen = {}
+    for each st in streamList()
+        name = Txt(st.addon)
+        if name <> "" and not seen.DoesExist(name)
+            seen[name] = true
+            order.Push(name)
         end if
     end for
-    if m.filter <> "" and not counts.DoesExist(m.filter) then m.filter = ""
+    if m.filter <> "" and not seen.DoesExist(m.filter) then m.filter = ""
     for each name in order
-        defs.Push({ id: "addon", value: name, label: name + "  " + counts[name].ToStr() })
+        defs.Push({ id: "addon", value: name, label: name })
     end for
     if m.chipIndex >= defs.Count() then m.chipIndex = defs.Count() - 1
     m.chipsGroup.removeChildrenIndex(m.chipsGroup.getChildCount(), 0)
     m.chips = []
     x = 0
     for each d in defs
-        g = m.chipsGroup.createChild("Group")
-        g.translation = [x, 0]
-        pill = g.createChild("Poster")
-        pill.uri = "pkg:/images/pill.9.png"
-        pill.height = 56
-        label = g.createChild("Label")
-        label.font = "font:SmallBoldSystemFont"
-        label.font.size = 26
-        label.text = d.label
-        label.height = 56
-        label.vertAlign = "center"
-        label.translation = [26, 0]
-        w = Int(label.boundingRect().width) + 52
-        pill.width = w
-        d.pill = pill
-        d.text = label
-        m.chips.Push(d)
-        x = x + w + 14
-        if x > 1110 then g.visible = false
+        c = makeChip(m.chipsGroup, d, x)
+        m.chips.Push(c)
+        x = x + c.width + 16
     end for
     paintChips()
 end sub
 
+function makeChip(parent as object, d as object, x as integer) as object
+    g = parent.createChild("Group")
+    g.translation = [x, 0]
+    pill = g.createChild("Poster")
+    pill.uri = "pkg:/images/pill64.9.png"
+    pill.height = 64
+    w = 0
+    if Txt(d.icon) <> ""
+        icon = g.createChild("Poster")
+        icon.uri = d.icon.Replace("/images/", "/images/s/").Replace(".png", "_34.png")
+        icon.width = 34
+        icon.height = 34
+        icon.translation = [21, 15]
+        d.icon = icon
+        w = 76
+    else
+        label = g.createChild("Label")
+        label.font = "font:SmallBoldSystemFont"
+        label.font.size = 28
+        label.text = d.label
+        label.height = 64
+        label.vertAlign = "center"
+        label.translation = [30, 0]
+        w = Int(label.boundingRect().width) + 60
+        if w < 90 then w = 90
+        d.text = label
+    end if
+    pill.width = w
+    d.pill = pill
+    d.group = g
+    d.width = w
+    d.x = x
+    return d
+end function
+
+sub paintChip(d as object, focused as boolean, selected as boolean)
+    if focused
+        bg = m.top.accent
+        fg = "0xFFFFFFFF"
+    else if selected
+        bg = "0xFFFFFFFF"
+        fg = "0x0C0C0FFF"
+    else
+        bg = "0x26262BE6"
+        fg = "0xF2F2F2FF"
+    end if
+    d.pill.blendColor = bg
+    if d.text <> invalid then d.text.color = fg
+    if type(d.icon) = "roSGNode" then d.icon.blendColor = fg
+end sub
+
 sub paintChips()
     if m.chips = invalid then return
-    inChips = m.zone = "chips" and m.top.isInFocusChain()
+    active = m.top.isInFocusChain()
+    if m.resumeDef <> invalid then paintChip(m.resumeDef, active and m.zone = "resume", false)
     for i = 0 to m.chips.Count() - 1
         d = m.chips[i]
         selected = (d.id = "all" and m.filter = "") or (d.id = "addon" and d.value = m.filter)
-        if inChips and i = m.chipIndex
-            d.pill.blendColor = "0xFFFFFFFF"
-            d.text.color = "0x0C0C0FFF"
-        else if selected
-            d.pill.blendColor = m.top.accent
-            d.text.color = "0xFFFFFFFF"
-        else
-            d.pill.blendColor = "0xFFFFFF22"
-            d.text.color = "0xE4E4ECFF"
-        end if
+        paintChip(d, active and m.zone = "chips" and i = m.chipIndex, selected)
     end for
-    first = 0
-    if inChips then first = m.chipIndex
-    x = 0
-    for i = 0 to m.chips.Count() - 1
-        g = m.chips[i].pill.getParent()
-        if i < first - 2
-            g.visible = false
-        else
-            g.translation = [x, 0]
-            g.visible = x + m.chips[i].pill.width <= 1110
-            x = x + m.chips[i].pill.width + 14
-        end if
-    end for
+    shift = 0
+    if m.chips.Count() > 0
+        idx = m.chipIndex
+        if idx < 0 then idx = 0
+        d = m.chips[idx]
+        if d.x + d.width > 1110 then shift = d.x + d.width - 1110
+    end if
+    m.chipsGroup.translation = [-shift, 0]
 end sub
 
 sub buildGrid()
@@ -231,15 +252,20 @@ sub onFocusChange()
     end if
     if m.zone = "grid" and m.shown.Count() > 0
         m.grid.setFocus(true)
-    else
+    else if m.zone = "grid"
         m.zone = "chips"
     end if
     paintChips()
 end sub
 
 sub onSelect()
-    if m.zone <> "grid" or not m.grid.hasFocus() then return
+    if not m.grid.isInFocusChain() then return
+    m.zone = "grid"
     index = m.grid.itemSelected
+    playIndex(index)
+end sub
+
+sub playIndex(index as integer)
     if index < 0 or index >= m.shown.Count() then return
     m.top.event = { type: "play", index: m.shown[index] }
 end sub
@@ -247,8 +273,8 @@ end sub
 sub activateChip()
     if m.chipIndex < 0 or m.chipIndex >= m.chips.Count() then return
     d = m.chips[m.chipIndex]
-    if d.id = "resume"
-        m.top.event = { type: "toggleStart" }
+    if d.id = "refresh"
+        m.top.event = { type: "refresh" }
         return
     end if
     if d.id = "all"
@@ -260,6 +286,22 @@ sub activateChip()
     paintChips()
 end sub
 
+sub focusGrid()
+    m.zone = "grid"
+    m.grid.drawFocusFeedback = true
+    m.grid.setFocus(true)
+    paintChips()
+end sub
+
+sub focusChips(zone as string)
+    m.zone = zone
+    m.autoFocus = false
+    m.grid.drawFocusFeedback = false
+    m.grid.setFocus(false)
+    m.top.setFocus(true)
+    paintChips()
+end sub
+
 function onKeyEvent(key as string, press as boolean) as boolean
     if not press then return false
     if key = "back"
@@ -267,28 +309,39 @@ function onKeyEvent(key as string, press as boolean) as boolean
         return true
     end if
     if m.zone = "grid"
-        if key = "up" and m.chips.Count() > 0
-            m.zone = "chips"
-            m.autoFocus = false
-            m.top.setFocus(true)
-            paintChips()
+        if key = "up"
+            focusChips("chips")
             return true
         end if
-        return key = "left" or key = "right" or key = "down" or key = "up"
+        if key = "OK"
+            playIndex(m.grid.itemFocused)
+            return true
+        end if
+        return key = "left" or key = "right" or key = "down"
     end if
     m.autoFocus = false
+    if m.zone = "resume"
+        if key = "down"
+            m.zone = "chips"
+            paintChips()
+        else if key = "OK"
+            m.top.event = { type: "toggleStart" }
+        end if
+        return true
+    end if
     if key = "left"
         if m.chipIndex > 0 then m.chipIndex = m.chipIndex - 1
         paintChips()
     else if key = "right"
         if m.chipIndex < m.chips.Count() - 1 then m.chipIndex = m.chipIndex + 1
         paintChips()
-    else if key = "down"
-        if m.shown.Count() > 0
-            m.zone = "grid"
-            m.grid.setFocus(true)
+    else if key = "up"
+        if m.resumeDef <> invalid
+            m.zone = "resume"
             paintChips()
         end if
+    else if key = "down"
+        if m.shown.Count() > 0 then focusGrid()
     else if key = "OK"
         activateChip()
     end if

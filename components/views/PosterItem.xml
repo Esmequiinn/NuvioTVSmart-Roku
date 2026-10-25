@@ -29,7 +29,11 @@
         </Group>
         <Rectangle id="track" visible="false" translation="[12,282]" width="176" height="6" color="0x0000004D" />
         <Rectangle id="bar" visible="false" translation="[12,282]" width="0" height="6" color="0x7C4DFFFF" />
-        <Poster id="ring" visible="false" translation="[-4,-4]" width="208" height="308" uri="pkg:/images/ring.9.png" blendColor="0xFFFFFFFF" />
+        <Group id="watched" visible="false">
+            <Poster id="watchedDot" width="34" height="34" uri="pkg:/images/c/d34.png" />
+            <Poster id="watchedIcon" translation="[5,5]" width="24" height="24" uri="pkg:/images/s/ic_check_s_24.png" blendColor="0x0D0D0DFF" />
+        </Group>
+        <Poster id="ring" visible="false" translation="[0,0]" width="200" height="300" uri="pkg:/images/iring.9.png" blendColor="0xFFFFFFFF" />
         </Group>
     </children>
 </component>

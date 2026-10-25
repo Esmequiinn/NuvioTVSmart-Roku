@@ -2,6 +2,17 @@ sub init()
     m.video = m.top.findNode("video")
     m.top.video = m.video
     m.buffering = m.top.findNode("buffering")
+    m.loadScreen = m.top.findNode("loadScreen")
+    m.loadBg = m.top.findNode("loadBg")
+    m.loadLogo = m.top.findNode("loadLogo")
+    m.loadTitle = m.top.findNode("loadTitle")
+    m.loadSpin = m.top.findNode("loadSpin")
+    m.loadSpin.poster.uri = "pkg:/images/c/spinner56.png"
+    m.loadSpin.poster.width = 56
+    m.loadSpin.poster.height = 56
+    m.loadTitle.font.size = 64
+    m.loadLogo.observeField("loadStatus", "onLoadLogo")
+    m.started = false
     m.pauseScreen = m.top.findNode("pauseScreen")
     m.pauseBg = m.top.findNode("pauseBg")
     m.pauseLogo = m.top.findNode("pauseLogo")
@@ -20,11 +31,8 @@ sub init()
     m.time = m.top.findNode("time")
     m.buttonsGroup = m.top.findNode("buttons")
     m.hint = m.top.findNode("hint")
+    m.partyLabel = m.top.findNode("partyLabel")
     m.panel = m.top.findNode("panel")
-    m.panelTitle = m.top.findNode("panelTitle")
-    m.panelList = m.top.findNode("panelList")
-    m.panelList.font.size = 30
-    m.panelList.focusedFont.size = 30
     m.title.font.size = 54
     m.pauseTitle.font.size = 64
     L_Texts(["buffering", "pauseLabel", "pauseHint"])
@@ -40,6 +48,12 @@ sub init()
     m.seekDir = 0
     m.seekLast = 0
     m.fallbackDur = 0
+    m.applied = -1
+    m.appliedClock = CreateObject("roTimespan")
+    m.userAudio = ""
+    m.audioFixes = 0
+    m.resumeAt = 0
+    m.resumeDone = true
 
     m.hideTimer = createTimer(5.0)
     m.hideTimer.observeField("fire", "onHideTimer")
@@ -53,12 +67,14 @@ sub init()
 
     m.video.observeField("state", "onState")
     m.video.observeField("availableAudioTracks", "applyAudioPreference")
+    m.video.observeField("currentAudioTrack", "onAudioChanged")
     m.video.observeField("availableSubtitleTracks", "applySubtitlePreference")
     m.audioApplied = false
     m.subsApplied = false
     m.video.observeField("focusedChild", "onVideoFocus")
     m.video.observeField("position", "onPosition")
-    m.panelList.observeField("itemSelected", "onPanelSelect")
+    m.panel.observeField("chosen", "onPanelChosen")
+    m.panel.observeField("closed", "onPanelClosed")
     m.top.observeField("focusedChild", "onTopFocus")
     m.logo.observeField("loadStatus", "onLogoStatus")
     m.pauseLogo.observeField("loadStatus", "onPauseLogoStatus")
@@ -77,13 +93,16 @@ sub onActive()
         m.panel.visible = false
         m.pauseScreen.visible = false
         m.seekTarget = -1
+        m.applied = -1
         m.clockTimer.control = "start"
+        m.panel.setFocus(false)
         m.top.setFocus(true)
     else
         m.hideTimer.control = "stop"
         m.pauseTimer.control = "stop"
         m.clockTimer.control = "stop"
         m.video.control = "stop"
+        hideLoadScreen()
     end if
 end sub
 
@@ -92,7 +111,7 @@ sub onVideoFocus()
 end sub
 
 sub onTopFocus()
-    if m.panel.visible and m.top.hasFocus() then m.panelList.setFocus(true)
+    if m.panel.visible and m.top.hasFocus() then m.panel.setFocus(true)
 end sub
 
 sub onInfo()
@@ -100,6 +119,11 @@ sub onInfo()
     if info = invalid then return
     m.audioApplied = false
     m.subsApplied = false
+    m.userAudio = ""
+    m.audioFixes = 0
+    m.applied = -1
+    m.resumeAt = ToInt(info.resumeAt, 0)
+    m.resumeDone = m.resumeAt <= 0
     m.fallbackDur = 0
     if not Bool_Of(info.isSeries, false) then m.fallbackDur = runtimeOf(Str_Of(info.metaLine))
     m.clock.visible = Bool_Of(info.clock, true)
@@ -110,14 +134,54 @@ sub onInfo()
     m.pauseMeta.text = Str_Of(info.metaLine)
     m.pauseDesc.text = Str_Of(info.description)
     m.pauseBg.uri = Str_Of(info.background)
+    m.loadBg.uri = Str_Of(info.background)
+    m.loadTitle.text = Str_Of(info.title)
+    m.loadTitle.visible = true
+    m.loadLogo.visible = false
+    m.loadLogo.uri = Str_Of(info.logo)
+    onLoadLogo()
+    m.started = false
+    m.loadScreen.visible = true
+    m.loadSpin.control = "start"
     logo = Str_Of(info.logo)
     m.logo.visible = false
     m.pauseLogo.visible = false
     m.title.visible = true
     m.pauseTitle.visible = true
+    setLogo(logo)
+    buildButtons(Bool_Of(info.isSeries, false))
+end sub
+
+sub onLoadLogo()
+    if m.loadLogo.loadStatus = "ready" and m.loadLogo.uri <> ""
+        m.loadLogo.visible = true
+        m.loadTitle.visible = false
+    end if
+end sub
+
+sub hideLoadScreen()
+    m.started = true
+    m.loadScreen.visible = false
+    m.loadSpin.control = "stop"
+end sub
+
+sub setLogo(logo as string)
     m.logo.uri = logo
     m.pauseLogo.uri = logo
-    buildButtons(Bool_Of(info.isSeries, false))
+    onLogoStatus()
+    onPauseLogoStatus()
+end sub
+
+sub onLogo()
+    logo = m.top.logo
+    if logo = "" or logo = m.logo.uri then return
+    if not m.started
+        m.loadLogo.uri = logo
+        onLoadLogo()
+    end if
+    m.logo.visible = false
+    m.pauseLogo.visible = false
+    setLogo(logo)
 end sub
 
 sub onLogoStatus()
@@ -146,17 +210,18 @@ sub buildButtons(isSeries as boolean)
         defs.Push({ id: "next", icon: "pkg:/images/ic_next.png", hint: L("Siguiente episodio") })
         defs.Push({ id: "episodes", icon: "pkg:/images/ic_episodes.png", hint: L("Episodios") })
     end if
+    if m.top.partyEnabled then defs.Push({ id: "party", icon: "pkg:/images/ic_party.png", hint: "Watch Party" })
     m.buttons = []
     x = 0
     for each d in defs
         g = m.buttonsGroup.createChild("Group")
         g.translation = [x, 0]
         bg = g.createChild("Poster")
-        bg.uri = "pkg:/images/circle.png"
+        bg.uri = "pkg:/images/c/d72.png"
         bg.width = 72
         bg.height = 72
         icon = g.createChild("Poster")
-        icon.uri = d.icon
+        icon.uri = d.icon.Replace("/images/", "/images/s/").Replace(".png", "_36.png")
         icon.width = 36
         icon.height = 36
         icon.translation = [18, 18]
@@ -173,10 +238,10 @@ sub paintButtons()
         b = m.buttons[i]
         if b.id = "play"
             if playing
-                b.icon.uri = "pkg:/images/ic_pause.png"
+                b.icon.uri = "pkg:/images/s/ic_pause_36.png"
                 b.hint = L("Pausa")
             else
-                b.icon.uri = "pkg:/images/ic_play.png"
+                b.icon.uri = "pkg:/images/s/ic_play_36.png"
                 b.hint = L("Continuar")
             end if
         end if
@@ -236,11 +301,20 @@ sub applyAudioPreference()
             for each t in tracks
                 if Lang_Matches(Str_Of(t.Language), wanted)
                     if Str_Of(t.Track) <> m.video.currentAudioTrack then m.video.audioTrack = Str_Of(t.Track)
+                    m.userAudio = Str_Of(t.Track)
                     return
                 end if
             end for
         end if
     end for
+end sub
+
+sub onAudioChanged()
+    if m.userAudio = "" or m.audioFixes >= 3 then return
+    current = m.video.currentAudioTrack
+    if current = "" or current = m.userAudio then return
+    m.audioFixes = m.audioFixes + 1
+    m.video.audioTrack = m.userAudio
 end sub
 
 function isForcedTrack(t as object) as boolean
@@ -270,6 +344,15 @@ sub applySubtitlePreference()
     tracks = m.video.availableSubtitleTracks
     if type(tracks) <> "roArray" or tracks.Count() = 0 then return
     m.subsApplied = true
+    pinned = Str_Of(info.subLang)
+    if Left(pinned, 4) = "url:"
+        for each t in tracks
+            if Str_Of(t.TrackName) = Mid(pinned, 5)
+                selectSubtitle(Str_Of(t.TrackName))
+                return
+            end if
+        end for
+    end if
     first = LCase(Str_Of(info.subLang))
     second = LCase(Str_Of(info.subLang2))
     if Bool_Of(info.forcedSubs, false)
@@ -323,7 +406,7 @@ sub updateClock()
     now = CreateObject("roDateTime")
     now.ToLocalTime()
     m.clock.text = Fmt_Clock(now)
-    remaining = Int(m.video.duration - m.video.position)
+    remaining = Int(m.video.duration - settledPosition())
     if m.video.duration > 0 and remaining > 0
         now.FromSeconds(now.AsSeconds() + remaining)
         m.ends.text = L("Termina a las ") + Fmt_Clock(now)
@@ -353,7 +436,7 @@ end function
 
 sub updateBar()
     duration = totalTime()
-    current = m.video.position
+    current = settledPosition()
     if m.seekTarget >= 0 then current = m.seekTarget
     if duration > 0
         ratio = current / duration
@@ -374,7 +457,16 @@ end sub
 
 sub onState()
     state = m.video.state
-    m.buffering.visible = state = "buffering"
+    m.buffering.visible = state = "buffering" and m.started
+    if state = "playing" or state = "paused" or state = "error" or state = "finished" then hideLoadScreen()
+    if state = "playing" and not m.resumeDone
+        m.resumeDone = true
+        if m.video.position < m.resumeAt - 8
+            m.video.seek = m.resumeAt
+            m.applied = m.resumeAt
+            m.appliedClock.Mark()
+        end if
+    end if
     if state = "playing"
         m.pauseScreen.visible = false
         m.pauseTimer.control = "stop"
@@ -382,7 +474,7 @@ sub onState()
     else if state = "paused"
         restartPauseTimer()
     else if state = "finished"
-        m.top.event = { type: "finished" }
+        m.top.event = { type: "finished", position: Int(m.video.position), duration: Int(m.video.duration) }
     else if state = "error"
         m.top.event = { type: "error", message: m.video.errorMsg }
     end if
@@ -392,8 +484,10 @@ end sub
 sub togglePlay()
     if m.video.state = "paused"
         m.video.control = "resume"
+        m.top.event = { type: "control", paused: false, position: settledPosition() }
     else if m.video.state = "playing" or m.video.state = "buffering"
         m.video.control = "pause"
+        m.top.event = { type: "control", paused: true, position: settledPosition() }
     end if
 end sub
 
@@ -413,8 +507,20 @@ function seekStep(direction as integer) as integer
     return stepSize * direction
 end function
 
+function settledPosition() as float
+    here = m.video.position
+    if m.applied >= 0
+        if Abs(here - m.applied) < 4 or m.appliedClock.TotalMilliseconds() > 20000
+            m.applied = -1
+        else
+            return m.applied
+        end if
+    end if
+    return here
+end function
+
 sub seekBy(delta as integer)
-    base = m.video.position
+    base = settledPosition()
     if m.seekTarget >= 0 then base = m.seekTarget
     target = base + delta
     if target < 0 then target = 0
@@ -428,8 +534,12 @@ end sub
 
 sub applySeek()
     if m.seekTarget >= 0
-        m.video.seek = m.seekTarget
+        target = m.seekTarget
+        m.video.seek = target
+        m.applied = target
+        m.appliedClock.Mark()
         m.seekTarget = -1
+        m.top.event = { type: "control", paused: m.video.state = "paused", position: target }
     end if
 end sub
 
@@ -446,85 +556,130 @@ sub activate(id as string)
         m.top.event = { type: "next" }
     else if id = "episodes"
         m.top.event = { type: "episodes" }
+    else if id = "party"
+        m.top.event = { type: "party" }
     end if
 end sub
 
-sub openPanel(kind as string, title as string, labels as object, values as object, focus as integer)
+sub openPanel(kind as string, title as string, items as object, values as object, focus as integer)
     m.panelKind = kind
     m.panelValues = values
-    m.panelTitle.text = title
-    content = CreateObject("roSGNode", "ContentNode")
-    for each text in labels
-        child = content.createChild("ContentNode")
-        child.title = text
-    end for
-    m.panelList.content = content
     if focus < 0 then focus = 0
-    m.panelList.jumpToItem = focus
+    width = 1000
+    if kind = "sources" then width = 1400
+    m.panel.config = { title: title, items: items, focus: focus, style: "cards", width: width }
     m.panel.visible = true
     m.hideTimer.control = "stop"
-    m.panelList.setFocus(true)
+    m.controls.visible = false
+    m.panel.setFocus(true)
 end sub
 
 sub closePanel()
     m.panel.visible = false
+    m.panel.setFocus(false)
     m.top.setFocus(true)
     showControls("buttons")
 end sub
 
+sub onPanelClosed()
+    if m.panel.visible then closePanel()
+end sub
+
+sub onPanelChosen()
+    choosePanel(ToInt(m.panel.chosen, -1))
+end sub
+
+function audioLabel(t as object, number as integer) as string
+    lang = Str_Of(t.Language)
+    label = ""
+    if lang <> "" then label = Lang_Name(lang)
+    if label = "" or label = L("Desconocido") then label = L("Pista ") + number.ToStr()
+    details = []
+    for each part in [Str_Of(t.Name), Str_Of(t.Format), Str_Of(t.Description)]
+        clean = part.Trim()
+        if clean <> "" and LCase(clean) <> LCase(lang) and LCase(clean) <> LCase(label)
+            dup = false
+            for each d in details
+                if LCase(d) = LCase(clean) then dup = true
+            end for
+            if not dup then details.Push(clean)
+        end if
+    end for
+    if details.Count() > 0 then label = label + " (" + details.Join(", ") + ")"
+    return label
+end function
+
 sub openSubs()
-    labels = [L("Desactivados")]
+    items = [{ id: "0", label: L("Desactivados"), checked: m.video.globalCaptionMode <> "On" }]
     values = [""]
     focus = 0
+    known = {}
     tracks = m.video.availableSubtitleTracks
     if type(tracks) = "roArray"
         for each t in tracks
             name = Str_Of(t.Description)
             if name = "" then name = Lang_Name(Str_Of(t.Language))
-            labels.Push(name)
+            if isForcedTrack(t) and Instr(1, LCase(name), "forz") = 0 and Instr(1, LCase(name), "forced") = 0 then name = name + " (" + L("Forzados") + ")"
+            active = m.video.globalCaptionMode = "On" and Str_Of(t.TrackName) = m.video.subtitleTrack
+            items.Push({ id: values.Count().ToStr(), label: name, checked: active })
             values.Push(Str_Of(t.TrackName))
-            if m.video.globalCaptionMode = "On" and Str_Of(t.TrackName) = m.video.subtitleTrack then focus = labels.Count() - 1
+            known[Str_Of(t.TrackName)] = true
+            if active then focus = items.Count() - 1
         end for
     end if
-    if labels.Count() = 1 then labels[0] = L("Desactivados (no hay subtítulos)")
-    openPanel("subs", L("Subtítulos"), labels, values, focus)
+    extra = m.top.extraSubs
+    if type(extra) = "roArray"
+        for each entry in extra
+            if type(entry) = "roAssociativeArray" and not known.DoesExist(Str_Of(entry.url))
+                items.Push({ id: values.Count().ToStr(), label: Str_Of(entry.label) })
+                values.Push("reload:" + Str_Of(entry.url))
+            end if
+        end for
+    end if
+    if items.Count() = 1 then items[0].label = L("Desactivados (no hay subtítulos)")
+    openPanel("subs", L("Subtítulos"), items, values, focus)
 end sub
 
 sub openAudio()
-    labels = []
+    items = []
     values = []
     focus = 0
     tracks = m.video.availableAudioTracks
     if type(tracks) = "roArray"
+        number = 0
         for each t in tracks
-            name = Str_Of(t.Name)
-            lang = Lang_Name(Str_Of(t.Language))
-            label = lang
-            if name <> "" then label = lang + "  ·  " + name
-            labels.Push(label)
+            number = number + 1
+            active = Str_Of(t.Track) = m.video.currentAudioTrack
+            items.Push({ id: values.Count().ToStr(), label: audioLabel(t, number), checked: active })
             values.Push(Str_Of(t.Track))
-            if Str_Of(t.Track) = m.video.currentAudioTrack then focus = labels.Count() - 1
+            if active then focus = items.Count() - 1
         end for
     end if
-    if labels.Count() = 0
-        labels.Push(L("Esta fuente tiene un solo audio"))
+    if items.Count() = 0
+        items.Push({ id: "0", label: L("Esta fuente tiene un solo audio"), checked: true })
         values.Push("")
     end if
-    openPanel("audio", "Audio", labels, values, focus)
+    if m.top.altAudio and items.Count() <= 1
+        items.Push({ id: values.Count().ToStr(), label: L("Cargar todos los audios del enlace original") })
+        values.Push("alt:")
+    end if
+    openPanel("audio", L("Pistas de audio"), items, values, focus)
 end sub
 
 sub openSources()
     labels = m.top.sources
     if labels = invalid then labels = []
+    items = []
     values = []
     for i = 0 to labels.Count() - 1
+        items.Push({ id: i.ToStr(), label: labels[i], checked: i = m.top.sourceIndex })
         values.Push(i.ToStr())
     end for
-    openPanel("sources", L("Fuentes"), labels, values, m.top.sourceIndex)
-end sub
-
-sub onPanelSelect()
-    choosePanel(m.panelList.itemSelected)
+    if items.Count() = 0
+        items.Push({ id: "0", label: L("Buscando enlaces..."), checked: false })
+        values.Push("")
+    end if
+    openPanel("sources", L("Fuentes"), items, values, m.top.sourceIndex)
 end sub
 
 sub choosePanel(index as integer)
@@ -534,17 +689,31 @@ sub choosePanel(index as integer)
     if m.panelKind = "subs"
         if value = ""
             m.video.globalCaptionMode = "Off"
+        else if Left(value, 7) = "reload:"
+            m.panel.visible = false
+            m.panel.setFocus(false)
+            m.top.setFocus(true)
+            m.top.event = { type: "subsReload", url: Mid(value, 8), position: Int(settledPosition()) }
+            return
         else
             m.video.subtitleTrack = value
             m.video.globalCaptionMode = "On"
         end if
     else if m.panelKind = "audio"
-        if value <> "" then m.video.audioTrack = value
+        if value = "alt:"
+            m.top.event = { type: "altAudio", position: Int(settledPosition()) }
+        else if value <> ""
+            m.userAudio = value
+            m.audioFixes = 0
+            m.audioApplied = true
+            m.video.audioTrack = value
+        end if
     else if m.panelKind = "sources"
-        if index <> m.top.sourceIndex
+        if value <> "" and index <> m.top.sourceIndex
             m.panel.visible = false
+            m.panel.setFocus(false)
             m.top.setFocus(true)
-            m.top.event = { type: "source", index: index, position: Int(m.video.position) }
+            m.top.event = { type: "source", index: index, position: Int(settledPosition()) }
             return
         end if
     end if
@@ -553,24 +722,7 @@ end sub
 
 function onKeyEvent(key as string, press as boolean) as boolean
     if not press then return false
-    if m.panel.visible
-        if key = "back" or key = "left"
-            closePanel()
-            return true
-        end if
-        count = m.panelValues.Count()
-        current = m.panelList.itemFocused
-        if current < 0 then current = 0
-        m.panelList.setFocus(true)
-        if key = "up" and current > 0
-            m.panelList.jumpToItem = current - 1
-        else if key = "down" and current < count - 1
-            m.panelList.jumpToItem = current + 1
-        else if key = "OK"
-            choosePanel(current)
-        end if
-        return true
-    end if
+    if m.panel.visible then return true
     if m.pauseScreen.visible
         m.pauseScreen.visible = false
         if key = "OK" or key = "play"
@@ -646,3 +798,8 @@ function onKeyEvent(key as string, press as boolean) as boolean
     end if
     return true
 end function
+
+sub onPartyText()
+    m.partyLabel.text = m.top.partyText
+    m.partyLabel.visible = m.top.partyText <> ""
+end sub

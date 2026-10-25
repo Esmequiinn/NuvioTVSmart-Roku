@@ -8,6 +8,11 @@
         <field id="accent" type="string" value="0x7C4DFFFF" />
         <field id="active" type="boolean" onChange="onActive" />
         <field id="event" type="assocarray" alwaysNotify="true" />
+        <field id="partyEnabled" type="boolean" value="false" />
+        <field id="partyText" type="string" onChange="onPartyText" />
+        <field id="logo" type="string" onChange="onLogo" />
+        <field id="extraSubs" type="array" />
+        <field id="altAudio" type="boolean" value="false" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
@@ -16,6 +21,14 @@
     <children>
         <Rectangle width="1920" height="1080" color="0x000000FF" />
         <Video id="video" width="1920" height="1080" enableUI="false" enableTrickPlay="false" focusable="false" />
+        <Group id="loadScreen" visible="false">
+            <Rectangle width="1920" height="1080" color="0x0B0B0FFF" />
+            <Poster id="loadBg" width="1920" height="1080" loadWidth="1280" loadHeight="720" loadDisplayMode="scaleToZoom" opacity="0.4" />
+            <Poster width="1920" height="1080" uri="pkg:/images/player_bottom.png" loadDisplayMode="scaleToFill" opacity="0.6" />
+            <Poster id="loadLogo" translation="[560,330]" width="800" height="260" loadDisplayMode="scaleToFit" />
+            <Label id="loadTitle" translation="[160,380]" width="1600" height="160" horizAlign="center" vertAlign="center" wrap="true" maxLines="2" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+            <BusySpinner id="loadSpin" translation="[932,660]" spinInterval="0.9" />
+        </Group>
         <Label id="buffering" visible="false" translation="[0,500]" width="1920" horizAlign="center" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" text="Cargando..." />
         <Group id="pauseScreen" visible="false">
             <Rectangle width="1920" height="1080" color="0x000000FF" opacity="0.55" />
@@ -31,6 +44,7 @@
         <Group id="controls" visible="false">
             <Poster width="1920" height="220" uri="pkg:/images/player_top.png" loadDisplayMode="scaleToFill" />
             <Label id="clock" translation="[1100,56]" width="700" horizAlign="right" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="partyLabel" visible="false" translation="[120,64]" width="900" font="font:SmallBoldSystemFont" color="0xFFFFFFFF" />
             <Label id="ends" translation="[1100,100]" width="700" horizAlign="right" font="font:SmallestSystemFont" color="0xC4C4CEFF" />
             <Poster translation="[0,520]" width="1920" height="560" uri="pkg:/images/player_bottom.png" loadDisplayMode="scaleToFill" />
             <Poster id="logo" translation="[120,700]" width="460" height="120" loadDisplayMode="scaleToFit" />
@@ -38,15 +52,11 @@
             <Label id="meta" translation="[120,836]" width="1400" font="font:SmallSystemFont" color="0xC4C4CEFF" />
             <Rectangle id="track" translation="[120,890]" width="1680" height="6" color="0xFFFFFF44" />
             <Rectangle id="fill" translation="[120,890]" width="0" height="6" color="0x7C4DFFFF" />
-            <Poster id="knob" translation="[110,883]" width="20" height="20" uri="pkg:/images/circle.png" visible="false" />
+            <Poster id="knob" translation="[110,883]" width="20" height="20" uri="pkg:/images/c/d20.png" visible="false" />
             <Label id="time" translation="[1300,916]" width="500" horizAlign="right" font="font:SmallSystemFont" color="0xFFFFFFFF" />
             <Group id="buttons" translation="[120,920]" />
             <Label id="hint" translation="[120,1010]" width="900" font="font:SmallestSystemFont" color="0xC4C4CEFF" />
         </Group>
-        <Group id="panel" visible="false">
-            <Rectangle translation="[1280,0]" width="640" height="1080" color="0x111116F5" />
-            <Label id="panelTitle" translation="[1340,80]" width="540" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
-            <LabelList id="panelList" translation="[1340,160]" itemSize="[540,64]" itemSpacing="[0,6]" numRows="12" vertFocusAnimationStyle="floatingFocus" color="0xD6D6E0FF" focusedColor="0x0C0C0FFF" focusBitmapBlendColor="0xFFFFFFFF" />
-        </Group>
+        <ActionSheet id="panel" visible="false" />
     </children>
 </component>

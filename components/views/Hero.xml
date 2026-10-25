@@ -18,7 +18,7 @@
         <Poster id="fadeLeft" translation="[560,0]" width="760" height="765" uri="pkg:/images/grad_left.png" loadDisplayMode="scaleToFill" />
         <Poster id="fadeBottom" translation="[0,420]" width="1920" height="346" uri="pkg:/images/grad_bottom.png" loadDisplayMode="scaleToFill" />
         <Rectangle id="floor" translation="[0,764]" width="1920" height="316" color="0x0C0C0FFF" />
-        <Poster id="logo" translation="[160,120]" width="620" height="180" loadDisplayMode="scaleToFit" />
+        <Poster id="logo" translation="[160,120]" width="620" height="180" loadWidth="1240" loadHeight="360" loadDisplayMode="scaleToFit" />
         <Label id="title" translation="[160,150]" width="1000" height="150" wrap="true" maxLines="2" vertAlign="bottom" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
         <LayoutGroup id="metaRow" translation="[160,330]" layoutDirection="horiz" itemSpacings="[14]" vertAlignment="center">
             <Poster id="imdb" width="84" height="38" uri="pkg:/images/imdb.png" />

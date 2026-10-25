@@ -14,7 +14,7 @@ sub build()
     if list = invalid then list = []
     entries = []
     for each p in list
-        entries.Push({ id: p.id, name: p.name, color: p.color, avatar: Str_Of(p.avatar) })
+        entries.Push({ id: p.id, name: Str_Glyphs(Str_Of(p.name)), color: p.color, avatar: Str_Of(p.avatar) })
     end for
     if entries.Count() < 8 then entries.Push({ id: "__add", name: L("Agregar"), color: "3A3A46" })
     size = 220
@@ -25,13 +25,13 @@ sub build()
         g = m.row.createChild("Group")
         g.translation = [x, 0]
         ring = g.createChild("Poster")
-        ring.uri = "pkg:/images/circle_ring.png"
+        ring.uri = "pkg:/images/c/r244.png"
         ring.width = size + 24
         ring.height = size + 24
         ring.translation = [-12, -12]
         ring.visible = false
         circle = g.createChild("Poster")
-        circle.uri = "pkg:/images/circle.png"
+        circle.uri = "pkg:/images/c/d220.png"
         circle.width = size
         circle.height = size
         circle.blendColor = "0x" + e.color + "FF"
@@ -50,7 +50,7 @@ sub build()
         end if
         if Str_Of(e.avatar) <> ""
             mask = g.createChild("MaskGroup")
-            mask.maskUri = "pkg:/images/circle.png"
+            mask.maskUri = "pkg:/images/c/d220.png"
             mask.maskSize = [size, size]
             pic = mask.createChild("Poster")
             pic.width = size

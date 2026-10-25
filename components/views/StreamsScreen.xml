@@ -23,8 +23,11 @@
         <Label id="code" translation="[110,380]" width="540" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
         <Label id="epTitle" translation="[110,430]" width="540" wrap="true" maxLines="2" font="font:MediumSystemFont" color="0xC9C9D4FF" />
         <Label id="hint" translation="[110,950]" width="540" wrap="true" maxLines="3" font="font:SmallestSystemFont" color="0x8E8E9CFF" />
-        <Group id="chips" translation="[700,64]" />
-        <MarkupGrid id="grid" translation="[700,140]" itemComponentName="StreamCard" numColumns="1" numRows="4" itemSize="[1110,236]" itemSpacing="[0,18]" vertFocusAnimationStyle="floatingFocus" drawFocusFeedback="false" />
+        <Group id="resumeRow" translation="[700,52]" />
+        <Group id="chipClip" translation="[700,140]">
+            <Group id="chips" />
+        </Group>
+        <MarkupGrid id="grid" translation="[700,236]" itemComponentName="StreamCard" numColumns="1" numRows="3" itemSize="[1110,236]" itemSpacing="[0,22]" vertFocusAnimationStyle="floatingFocus" drawFocusFeedback="true" drawFocusFeedbackOnTop="false" focusBitmapUri="pkg:/images/c/stream_focus.png" focusBitmapBlendColor="0xFFFFFF2E" />
         <Label id="status" translation="[700,460]" width="1110" horizAlign="center" wrap="true" maxLines="4" font="font:MediumSystemFont" color="0x9A9AAAFF" />
         <Label id="footer" translation="[110,1000]" width="540" font="font:SmallestSystemFont" color="0x8E8E9CFF" />
     </children>

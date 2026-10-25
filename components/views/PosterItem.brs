@@ -13,6 +13,8 @@ sub init()
     m.track = m.top.findNode("track")
     m.bar = m.top.findNode("bar")
     m.ring = m.top.findNode("ring")
+    m.watched = m.top.findNode("watched")
+    m.watchedDot = m.top.findNode("watchedDot")
     m.seenRow = false
     m.body = m.top.findNode("body")
     paintRing()
@@ -77,15 +79,38 @@ sub onContent()
     item = m.top.itemContent
     if item = invalid then return
     if m.global.hasField("expandShift") then applyShift()
+    if item.hasField("watched") and (m.watchItem = invalid or not item.isSameNode(m.watchItem))
+        if m.watchItem <> invalid then m.watchItem.unobserveFieldScoped("watched")
+        m.watchItem = item
+        item.observeFieldScoped("watched", "onWatched")
+    end if
+    onWatched()
     m.name.text = item.title
     m.art.uri = item.HDPosterUrl
-    if m.landscape
+    isFolder = fieldOf(item, "itemType") = "folder"
+    if isFolder
+        hide = item.hasField("hideTitle") and item.hideTitle = true
+        m.cw.visible = false
+        m.shade.visible = not hide
+        m.name.visible = not hide
+        m.name.maxLines = 1
+        m.name.vertAlign = "bottom"
+        m.name.color = "0xFFFFFFFF"
+        m.name.translation = [12, m.top.height - 62]
+        m.name.height = 50
+        m.frame.visible = m.art.loadStatus <> "ready"
+    else if m.landscape
         m.name.visible = false
         m.shade.visible = true
         m.cw.visible = true
         layoutCard(item)
     else
         m.name.visible = true
+        m.name.maxLines = 5
+        m.name.vertAlign = "center"
+        m.name.color = "0xC9C9D6FF"
+        m.name.translation = [14, 14]
+        m.name.height = m.top.height - 28
         m.shade.visible = false
         m.cw.visible = false
     end if
@@ -161,12 +186,14 @@ sub onSize()
     m.frame.height = h
     if m.landscape
         m.mask.maskUri = "pkg:/images/mask_landscape.png"
+    else if w = h
+        m.mask.maskUri = "pkg:/images/mask_square.png"
     else
         m.mask.maskUri = "pkg:/images/mask_poster.png"
     end if
     m.mask.maskSize = [w, h]
-    m.ring.width = w + 8
-    m.ring.height = h + 8
+    m.ring.width = w
+    m.ring.height = h
     m.art.width = w
     m.art.height = h
     m.art.loadWidth = w
@@ -195,7 +222,66 @@ sub onSize()
 end sub
 
 sub paintRing()
-    if m.global.hasField("accent") then m.ring.blendColor = m.global.accent
+    if m.global.hasField("accent")
+        m.ring.blendColor = m.global.accent
+        m.watchedDot.blendColor = m.global.accent
+    end if
+end sub
+
+sub Gif_Update(focused as boolean)
+    item = m.top.itemContent
+    url = ""
+    if focused and item <> invalid then url = fieldOf(item, "gif")
+    if url <> ""
+        low = LCase(url)
+        if Instr(1, low, ".gif") = 0 and Instr(1, low, ".webp") = 0 and Instr(1, low, ".mp4") = 0 then url = ""
+    end if
+    if url = ""
+        if m.gif <> invalid
+            m.gif.control = "pause"
+            m.mask.removeChild(m.gif)
+            m.gif = invalid
+        end if
+        return
+    end if
+    if m.gif <> invalid and m.gif.uri = url then return
+    if m.gif = invalid
+        m.gif = CreateObject("roSGNode", "AnimatedImage")
+        if m.gif = invalid then return
+        m.gif.visible = false
+        m.gif.observeField("state", "onGifState")
+        m.mask.appendChild(m.gif)
+    end if
+    w = Int(m.top.width)
+    h = Int(m.top.height)
+    m.gif.width = w
+    m.gif.height = h
+    m.gif.loadWidth = w
+    m.gif.loadHeight = h
+    m.gif.loadDisplayMode = "scaleToZoom"
+    low = LCase(url)
+    if Instr(1, low, ".mp4") > 0
+        m.gif.mimeType = "video/mp4"
+        m.gif.uri = url
+    else
+        m.gif.mimeType = "video/webp"
+        m.gif.uri = "https://wsrv.nl/?url=" + url.EncodeUriComponent() + "&n=-1&output=webp&w=" + w.ToStr() + "&h=" + h.ToStr() + "&fit=cover"
+    end if
+    m.gif.control = "loop"
+end sub
+
+sub onGifState()
+    if m.gif = invalid then return
+    st = m.gif.state
+    m.gif.visible = st <> "downloading" and st <> "init" and st <> "error" and st <> ""
+end sub
+
+sub onWatched()
+    item = m.top.itemContent
+    show = false
+    if item <> invalid and item.hasField("watched") then show = item.watched = true
+    m.watched.visible = show and not m.landscape
+    m.watched.translation = [m.top.width - 44, 10]
 end sub
 
 sub onItemFocus()
@@ -204,6 +290,7 @@ sub onItemFocus()
     if not m.seenRow and (m.top.rowHasFocus or m.top.rowListHasFocus) then m.seenRow = true
     if not m.seenRow then m.ring.visible = item
     focused = m.ring.visible
+    Gif_Update(focused)
     if focused = m.reported then return
     m.reported = focused
     if focused and not m.landscape and m.global.hasField("focusCard") then m.global.focusCard = m.top

@@ -21,12 +21,12 @@ sub init()
         initial = invalid
         if d.id = "profile"
             icon = g.createChild("Poster")
-            icon.uri = "pkg:/images/circle.png"
+            icon.uri = "pkg:/images/c/d60.png"
             icon.width = 60
             icon.height = 60
             icon.translation = [8, 8]
             mask = g.createChild("MaskGroup")
-            mask.maskUri = "pkg:/images/circle.png"
+            mask.maskUri = "pkg:/images/c/d60.png"
             mask.maskSize = [60, 60]
             mask.translation = [8, 8]
             m.avatar = mask.createChild("Poster")
@@ -46,7 +46,7 @@ sub init()
             initial.color = "0xFFFFFFFF"
         else
             icon = g.createChild("Poster")
-            icon.uri = d.icon
+            icon.uri = d.icon.Replace("/images/", "/images/s/").Replace(".png", "_40.png")
             icon.width = 40
             icon.height = 40
             icon.translation = [18, 18]

@@ -5,7 +5,6 @@ sub init()
     m.addonLogo = m.top.findNode("addonLogo")
     m.addonName = m.top.findNode("addonName")
     m.badges = m.top.findNode("badges")
-    m.ring = m.top.findNode("ring")
     m.name.font.size = 30
     m.desc.font.size = 24
     m.addonName.font.size = 22
@@ -92,7 +91,7 @@ sub addChip(text as string, color as string, textColor as string)
     g = m.badges.createChild("Group")
     g.translation = [m.cursor, 0]
     pill = g.createChild("Poster")
-    pill.uri = "pkg:/images/pill.9.png"
+    pill.uri = "pkg:/images/pill34.9.png"
     pill.height = 34
     if color <> "" then pill.blendColor = color else pill.blendColor = "0xFFFFFF26"
     label = g.createChild("Label")
@@ -129,14 +128,8 @@ sub onBadgeLoaded(event as object)
 end sub
 
 sub onFocus()
-    focused = m.top.itemHasFocus or m.top.focusPercent > 0.5
-    if m.global.hasField("accent") then m.ring.blendColor = m.global.accent
-    m.ring.visible = m.top.itemHasFocus
-    if focused
-        m.bg.blendColor = "0xFFFFFF2E"
-        m.addonName.color = "0xD4D4DCFF"
-    else
-        m.bg.blendColor = "0xFFFFFF12"
-        m.addonName.color = "0x9A9AAAFF"
-    end if
+    m.bg.blendColor = "0xFFFFFF10"
+    m.name.color = "0xFFFFFFFF"
+    m.desc.color = "0xD2D2DAFF"
+    m.addonName.color = "0xA4A4B2FF"
 end sub
