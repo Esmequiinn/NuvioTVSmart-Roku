@@ -75,12 +75,12 @@ So far the channel has only been tested on a real Roku by me, so some features h
 | MDBList integration | ⚠️ Not tested yet |
 | Trakt | ⚠️ Not tested yet |
 | Simkl | ⚠️ Not tested yet |
-| Nuvio account sign-in and sync | ✅ Sign-in works, ⚠️ sync not tested yet |
+| Nuvio account sign-in and sync | ✅ Working |
 | Sources with addon formatter text | ✅ Working but with no emojis |
 | Badges (quality, HDR, codec, audio, size and Fusion) | ✅ Working |
 | Continue Watching in landscape | ✅ Working |
 | Collections import | ✅ Working |
-| Nuvio collections | ⚠️ Not tested yet |
+| Nuvio collections | ✅ Working |
 | Sync from the Roku to your Nuvio account | ✅ Working  |
 | Profile pictures and theme color from Nuvio | ✅ Working |
 | Landscape and square catalogs | ✅ Working |
@@ -89,9 +89,9 @@ So far the channel has only been tested on a real Roku by me, so some features h
 | Preferred and secondary audio and subtitle languages | ✅ Working |
 | Custom poster URL patterns | ⚠️ Not tested yet |
 | English interface | ✅ Working |
-| Portuguese interface | ⚠️ Not tested yet |
-| Watch Party | ⚠️ Not tested yet |
-| `*` options menu and removing Continue Watching items | ⚠️ Not tested yet |
+| Portuguese interface | ✅ Working |
+| Watch Party | ✅ Working |
+| `*` options menu and removing Continue Watching items | ✅ Working |
 | Collections with TMDB and Trakt sources | ⚠️ Not tested yet |
 
 ### Known limitations
