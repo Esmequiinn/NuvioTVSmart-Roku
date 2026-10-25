@@ -14,7 +14,7 @@
 
 </div>
 
-This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
+This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.0.3**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
 
 > **This is not an official Nuvio app** and it is not affiliated with or endorsed by the Nuvio team. It does not host, store or distribute any content. Everything you see comes from the addons you install.
 
@@ -31,8 +31,12 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - Profiles, with shared or per-profile addons
 - My List and Continue Watching
 - Phone setup page: add addons, import collections, manage catalogs and settings from your phone's browser
+- Nuvio-style sign-in screen the first time you open the channel, or continue without an account and add addons from your phone or the TV
 - Nuvio account sign-in (QR or email) with two-way sync of profiles, addons, library, progress, settings and home catalogs
-- Nuvio collections, profile pictures and theme color from your account
+- Nuvio collections (addon, TMDB and Trakt sources), profile pictures and theme color from your account
+- Watch Party with your Nuvio account
+- Nuvio TV options with the `*` button: go to details, play manually, start from the beginning or remove from Continue Watching, and add to library or mark as watched on any poster
+- Details page like Nuvio: episodes with descriptions and preview images in your metadata language, ratings, cast and crew
 - TMDB metadata in your language and MDBList ratings
 - Trakt and Simkl scrobbling, just link your account
 - Works with debrid services through your addons (for example AIOStreams)
@@ -42,7 +46,8 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - Trailers from IMDb and YouTube, on the details page, the home hero or the expanded card
 - Focused poster that expands into a landscape card
 - Landscape and square catalogs
-- English and Spanish interface
+- Spanish, English and Portuguese interface
+- Fast home: the last home screen opens right away while catalogs refresh in the background
 
 ## Status
 
@@ -84,15 +89,22 @@ So far the channel has only been tested on a real Roku by me, so some features h
 | Preferred and secondary audio and subtitle languages | ✅ Working |
 | Custom poster URL patterns | ⚠️ Not tested yet |
 | English interface | ✅ Working |
+| Portuguese interface | ⚠️ Not tested yet |
+| Watch Party | ⚠️ Not tested yet |
+| `*` options menu and removing Continue Watching items | ⚠️ Not tested yet |
+| Collections with TMDB and Trakt sources | ⚠️ Not tested yet |
 
 ### Known limitations
 
 - Roku can only play direct links. Torrent, magnet and external links are skipped.
 - Playable formats depend on your Roku model (MP4, MKV, HLS and DASH are the usual ones).
+- Roku can't decode TrueHD or DTS-HD audio, which most REMUX files use. Those audio tracks don't show up in the player. The channel prefers other sources for auto-play.
+- 4K (HEVC above 1080p) only plays when your Roku and your TV are in 4K mode.
+- Animated GIFs in collections only move on Roku models that support animated images. Older models show the cover image.
 - Profiles created on the Roku and collection edits are not sent to your Nuvio account. Collections can only be viewed.
-- Folders inside Nuvio collections that use TMDB or Trakt sources are not shown yet, only addon catalogs.
 - Roku can't show emojis. Flag emojis in source descriptions are shown as the language name and other emojis are removed.
-- Watch Party is not available.
+- Watch Party checks the room every 2.5 seconds and sends play, pause and seek changes right away, so playback can be 1 or 2 seconds apart from other people.
+- Nuvio plugins are not available, because they need JavaScript and Roku can't run it.
 
 ## Install
 
@@ -146,7 +158,7 @@ zip -r NuvioTV-Roku.zip manifest source components images web locale LICENSE
 
 ### Translations
 
-Interface text is written in Spanish in the code and translated through `locale/en.json`. Pull requests that add or improve translations are welcome.
+Interface text is written in Spanish in the code and translated through `locale/en.json` and `locale/pt.json`. Pull requests that add or improve translations are welcome.
 
 ## Contributing
 
