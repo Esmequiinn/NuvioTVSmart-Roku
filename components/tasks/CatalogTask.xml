@@ -4,16 +4,19 @@
         <field id="folder" type="assocarray" />
         <field id="baseManifests" type="array" />
         <field id="content" type="node" />
+        <field id="early" type="node" />
         <field id="catalogs" type="array" />
         <field id="manifests" type="array" />
         <field id="addonCount" type="integer" />
         <field id="failed" type="integer" />
+        <field id="folderFails" type="array" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
     <script type="text/brightscript" uri="pkg:/components/Util.brs" />
     <script type="text/brightscript" uri="pkg:/components/Store.brs" />
     <script type="text/brightscript" uri="pkg:/components/Http.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Names.brs" />
     <script type="text/brightscript" uri="pkg:/components/Addon.brs" />
     <script type="text/brightscript" uri="pkg:/components/Content.brs" />
     <script type="text/brightscript" uri="pkg:/components/tasks/CatalogTask.brs" />

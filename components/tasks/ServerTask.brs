@@ -5,6 +5,7 @@ end sub
 sub serve()
     page = "pkg:/web/index.html"
     if m.global.uiLang = "en" then page = "pkg:/web/index-en.html"
+    if m.global.uiLang = "pt" then page = "pkg:/web/index-pt.html"
     m.html = ReadAsciiFile(page)
     port = CreateObject("roMessagePort")
     addr = CreateObject("roSocketAddress")
@@ -72,7 +73,7 @@ sub serve()
         now = clock.TotalMilliseconds()
         for each key in clients.Keys()
             client = clients[key]
-            if (client.answered and now > client.closeAt) or now - client.born > 15000
+            if (client.answered and now > client.closeAt) or now - client.born > 120000
                 clients[key].sock.Close()
                 clients.Delete(key)
             end if
@@ -120,9 +121,19 @@ sub Srv_Route(sock as object, req as object)
     else if req.method = "GET" and req.path = "/api/state"
         Srv_Send(sock, "200 OK", jsonType, FormatJson(Srv_State()))
     else if req.method = "POST" and req.path = "/api/action"
-        result = Srv_Apply(ParseJson(req.body))
+        body = ParseJson(req.body)
+        rid = ""
+        if type(body) = "roAssociativeArray" then rid = Str_Of(body.rid)
+        if rid <> "" and rid = Str_Of(m.lastRid) and m.lastReply <> invalid
+            Srv_Send(sock, "200 OK", jsonType, m.lastReply)
+            return
+        end if
+        result = Srv_Apply(body)
         result.state = Srv_State()
-        Srv_Send(sock, "200 OK", jsonType, FormatJson(result))
+        reply = FormatJson(result)
+        m.lastRid = rid
+        m.lastReply = reply
+        Srv_Send(sock, "200 OK", jsonType, reply)
         if result.reload then m.top.changed = result.what
     else if req.method = "GET" and req.path = "/favicon.ico"
         Srv_Send(sock, "204 No Content", "text/plain", "")

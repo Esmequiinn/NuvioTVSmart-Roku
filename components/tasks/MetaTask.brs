@@ -32,13 +32,19 @@ sub execute()
     if integ.mdbEnabled and integ.mdbKey <> "" and merged.imdb <> ""
         merged.ratings = Mdb_Ratings(integ, kind, merged.imdb)
     end if
+    if IsStr(merged.name) and Str_HasForeign(merged.name)
+        one = [{ id: id, kind: kind, title: merged.name, original: merged.name }]
+        if Str_Of(merged.imdb) <> "" then one[0].id = merged.imdb
+        Names_Translate(one)
+        merged.name = one[0].title
+    end if
+    merged = Str_CleanDeep(merged)
     m.top.meta = merged
 end sub
 
 function Tmdb_Enrich(merged as object, integ as object, kind as string, id as string) as boolean
     key = Key_Tmdb(integ)
-    lang = Str_Of(St_Pref("tmdbLanguage"))
-    if lang = "" then lang = "es-MX"
+    lang = Tmdb_Lang()
     lang2 = LCase(Left(lang, 2))
     media = "movie"
     if LCase(kind) <> "movie" then media = "tv"
@@ -60,7 +66,7 @@ function Tmdb_Enrich(merged as object, integ as object, kind as string, id as st
         end if
     end if
     if tmdbId = "" then return false
-    url = "https://api.themoviedb.org/3/" + media + "/" + tmdbId + "?api_key=" + key + "&language=" + lang + "&append_to_response=images,external_ids,videos&include_image_language=" + lang2 + ",en,null&include_video_language=" + lang2 + ",en"
+    url = "https://api.themoviedb.org/3/" + media + "/" + tmdbId + "?api_key=" + key + "&language=" + lang + "&append_to_response=images,external_ids,videos,credits&include_image_language=" + lang2 + ",en,null&include_video_language=" + lang2 + ",en"
     d = Http_FetchJson(url, 12000)
     if type(d) <> "roAssociativeArray" then return false
     title = Str_Of(d.title)
@@ -88,6 +94,7 @@ function Tmdb_Enrich(merged as object, integ as object, kind as string, id as st
     if runtime > 0 then merged.runtime = runtime.ToStr() + L(" min")
     if merged.imdb = "" and type(d.external_ids) = "roAssociativeArray" then merged.imdb = Str_Of(d.external_ids.imdb_id)
     merged.originalLanguage = Str_Of(d.original_language)
+    Tmdb_Credits(merged, d, media)
     merged.tmdbId = tmdbId
     if type(d.videos) = "roAssociativeArray" and type(d.videos.results) = "roArray"
         local = []
@@ -130,6 +137,35 @@ function Tmdb_Logo(images as dynamic, lang2 as string) as string
     return "https://image.tmdb.org/t/p/w500" + Left(best, Len(best) - 4) + ".png"
 end function
 
+sub Tmdb_Credits(merged as object, d as object, media as string)
+    credits = d.credits
+    if type(credits) <> "roAssociativeArray" then return
+    cast = []
+    if type(credits.cast) = "roArray"
+        for each c in credits.cast
+            if cast.Count() >= 16 then exit for
+            if type(c) = "roAssociativeArray" and Str_Of(c.name) <> ""
+                photo = ""
+                if Str_Of(c.profile_path) <> "" then photo = "https://image.tmdb.org/t/p/w185" + c.profile_path
+                cast.Push({ id: Str_Any(c.id), name: Str_Of(c.name), role: Str_Of(c.character), photo: photo })
+            end if
+        end for
+    end if
+    if cast.Count() > 0 then merged.cast = cast
+    people = []
+    if media = "tv" and type(d.created_by) = "roArray"
+        for each c in d.created_by
+            if type(c) = "roAssociativeArray" and people.Count() < 3 then people.Push(Str_Of(c.name))
+        end for
+        if people.Count() > 0 then merged.creators = people
+    else if type(credits.crew) = "roArray"
+        for each c in credits.crew
+            if type(c) = "roAssociativeArray" and Str_Of(c.job) = "Director" and people.Count() < 3 then people.Push(Str_Of(c.name))
+        end for
+        if people.Count() > 0 then merged.directors = people
+    end if
+end sub
+
 sub Tmdb_Episodes(merged as object, key as string, lang as string, tmdbId as string, show as object)
     numbers = []
     if type(show.seasons) = "roArray"
@@ -157,9 +193,9 @@ sub Tmdb_Episodes(merged as object, key as string, lang as string, tmdbId as str
                     en = ToInt(e.episode_number, 0)
                     still = ""
                     if Str_Of(e.still_path) <> "" then still = "https://image.tmdb.org/t/p/w780" + e.still_path
-                    info = { name: Str_Of(e.name), overview: Str_Of(e.overview), thumbnail: still, released: Str_Of(e.air_date) }
+                    info = { name: Str_Of(e.name), overview: Str_Of(e.overview), thumbnail: still, released: Str_Of(e.air_date), runtime: ToInt(e.runtime, 0) }
                     byKey["s" + sn.ToStr() + "e" + en.ToStr()] = info
-                    if imdb <> "" then built.Push({ id: imdb + ":" + sn.ToStr() + ":" + en.ToStr(), season: sn, episode: en, name: info.name, title: "", overview: info.overview, description: "", released: info.released, thumbnail: still })
+                    if imdb <> "" then built.Push({ id: imdb + ":" + sn.ToStr() + ":" + en.ToStr(), season: sn, episode: en, name: info.name, title: "", overview: info.overview, description: "", released: info.released, thumbnail: still, runtime: info.runtime })
                 end if
             end for
         end if
@@ -172,6 +208,8 @@ sub Tmdb_Episodes(merged as object, key as string, lang as string, tmdbId as str
                 if info.name <> "" then v.name = info.name
                 if info.overview <> "" then v.overview = info.overview
                 if info.thumbnail <> "" then v.thumbnail = info.thumbnail
+                if info.runtime > 0 then v.runtime = info.runtime
+                if Str_Of(v.released) = "" then v.released = info.released
             end if
         end for
     else if built.Count() > 0
@@ -219,6 +257,20 @@ sub Meta_Merge(target as object, meta as object)
             if IsStr(g) and genres.Count() < 3 then genres.Push(g)
         end for
         target.genres = genres
+    end if
+    if target.cast = invalid and type(meta.cast) = "roArray" and meta.cast.Count() > 0
+        cast = []
+        for each c in meta.cast
+            if IsStr(c) and cast.Count() < 16 then cast.Push({ name: c, role: "", photo: "" })
+        end for
+        if cast.Count() > 0 then target.cast = cast
+    end if
+    if target.directors = invalid and type(meta.director) = "roArray" and meta.director.Count() > 0
+        people = []
+        for each c in meta.director
+            if IsStr(c) and people.Count() < 3 then people.Push(c)
+        end for
+        if people.Count() > 0 then target.directors = people
     end if
     if target.videos = invalid and type(meta.videos) = "roArray" and meta.videos.Count() > 0
         videos = []
