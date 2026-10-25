@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0b0f">
+<title>Nuvio TV &#183; Roku</title>
+<style>
+:root{--bg:#0b0b0f;--panel:#15151c;--line:#262631;--text:#f2f2f7;--muted:#9a9aab;--accent:#7c5cff;--danger:#ff4d5e;--radius:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 96px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.brand{font-weight:800;font-size:22px;letter-spacing:.5px}
+.brand span{color:var(--accent)}
+.sub{color:var(--muted);font-size:13px;margin-top:2px}
+select,input,textarea{width:100%;background:#0f0f15;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit}
+textarea{min-height:90px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+header select{width:auto;max-width:48%;padding:9px 10px}
+nav{display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;scrollbar-width:none}
+nav button{flex:0 0 auto;background:var(--panel);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font:inherit;font-weight:600}
+nav button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+section{display:none}
+section.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.search{padding:12px}
+.card h2{font-size:16px;margin:0 0 10px}
+.hint{color:var(--muted);font-size:13px;margin:0 0 12px}
+.row{display:flex;gap:8px;align-items:center}
+.row>input{flex:1}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:12px 16px;font:inherit;font-weight:700;white-space:nowrap}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.btn.small{padding:8px 11px;font-size:14px}
+.btn.danger{background:transparent;border:1px solid #4a2028;color:var(--danger)}
+.btn:disabled{opacity:.5}
+.mt{margin-top:10px}
+ul{list-style:none;margin:0;padding:0}
+li.item{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+li.item:first-child{border-top:0}
+.grow{flex:1;min-width:0}
+.name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tools{display:flex;gap:6px;flex-shrink:0}
+.icon{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:16px;display:grid;place-items:center;padding:0}
+.icon.danger{color:var(--danger);border-color:#4a2028}
+.off .name{color:var(--muted);text-decoration:line-through}
+.switch{position:relative;width:48px;height:28px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch span{position:absolute;inset:0;background:#2a2a36;border-radius:99px;transition:.2s}
+.switch span:before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.switch input:checked+span{background:var(--accent)}
+.switch input:checked+span:before{transform:translateX(20px)}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.swatch{width:42px;height:42px;border-radius:50%;border:3px solid transparent;padding:0}
+.swatch.on{border-color:#fff}
+.badge{font-size:12px;color:var(--accent);font-weight:700;margin-left:6px}
+.warn{color:var(--danger);white-space:normal}
+.empty{color:var(--muted);text-align:center;padding:14px 0}
+#toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,120px);background:#1f1f29;border:1px solid var(--line);color:var(--text);padding:12px 16px;border-radius:12px;max-width:calc(100% - 32px);transition:.25s;font-size:14px;z-index:9}
+#toast.show{transform:translate(-50%,0)}
+#toast.err{border-color:var(--danger)}
+.foot{color:var(--muted);font-size:12px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <div class="brand">NUVIO <span>TV</span></div>
+      <div class="sub">Configura&#231;&#227;o do Roku &#183; fork n&#227;o oficial</div>
+    </div>
+    <select id="profile" aria-label="Perfil"></select>
+  </header>
+
+  <div class="card search">
+    <div class="row">
+      <input id="query" type="search" enterkeyhint="search" autocomplete="off" placeholder="Busque um filme ou s&#233;rie na TV">
+      <button class="btn" id="searchBtn">Buscar</button>
+    </div>
+  </div>
+
+  <nav id="tabs">
+    <button data-tab="addons" class="on">Addons</button>
+    <button data-tab="catalogs">Cat&#225;logos</button>
+    <button data-tab="profiles">Perfis</button>
+    <button data-tab="settings">Ajustes</button>
+    <button data-tab="account">Conta</button>
+  </nav>
+
+  <section id="addons" class="on">
+    <div class="card">
+      <h2>Adicionar addon</h2>
+      <p class="hint">Cole o endere&#231;o do addon. Pode terminar em /manifest.json ou n&#227;o.</p>
+      <div class="row">
+        <input id="addonUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://meu-addon.com/manifest.json">
+        <button class="btn" id="addAddon">Adicionar</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Seus addons <span class="meta" id="scope"></span></h2>
+      <ul id="addonList"></ul>
+    </div>
+    <div class="card">
+      <h2>Importar cole&#231;&#227;o</h2>
+      <p class="hint">Endere&#231;o de um arquivo .json com uma lista de addons, ou cole o conte&#250;do do .json diretamente.</p>
+      <textarea id="collection" placeholder="https://.../collection.json"></textarea>
+      <button class="btn mt" id="importBtn">Importar</button>
+    </div>
+  </section>
+
+  <section id="catalogs">
+    <div class="card">
+      <h2>Fileiras do in&#237;cio</h2>
+      <p class="hint">Ative ou desative cada cat&#225;logo e mude a ordem. Se voc&#234; acabou de adicionar um addon, espere alguns segundos para o Roku carreg&#225;-lo.</p>
+      <ul id="catalogList"></ul>
+      <button class="btn ghost small mt" id="refreshCats">Atualizar lista</button>
+    </div>
+  </section>
+
+  <section id="profiles">
+    <div class="card">
+      <h2>Perfis</h2>
+      <ul id="profileList"></ul>
+      <div class="row mt">
+        <input id="profileName" maxlength="24" placeholder="Nome do novo perfil">
+        <button class="btn" id="addProfile">Criar</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div class="grow">
+          <div class="name">Compartilhar addons entre perfis</div>
+          <div class="meta" style="white-space:normal">Se desativar, cada perfil ter&#225; sua pr&#243;pria lista de addons.</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="shared"><span></span></label>
+      </div>
+    </div>
+  </section>
+
+  <section id="settings">
+    <div class="card">
+      <h2>Cor de destaque</h2>
+      <div class="swatches" id="swatches"></div>
+    </div>
+    <div class="card">
+      <h2>T&#237;tulos por fileira</h2>
+      <select id="rowSize"></select>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div class="grow"><div class="name">Continuar assistindo</div><div class="meta" id="historyInfo"></div></div>
+        <label class="switch"><input type="checkbox" id="cw"><span></span></label>
+      </div>
+      <div class="row mt">
+        <div class="grow"><div class="name">Legendas</div><div class="meta">Usar as legendas inclu&#237;das no v&#237;deo.</div></div>
+        <label class="switch"><input type="checkbox" id="captions"><span></span></label>
+      </div>
+      <button class="btn danger small mt" id="clearHistory">Limpar hist&#243;rico</button>
+    </div>
+    <div class="card">
+      <h2>Reprodu&#231;&#227;o autom&#225;tica</h2>
+      <p class="hint">Escolhe a fonte sozinho quando voc&#234; d&#225; play. O regex &#233; comparado com o addon, nome, t&#237;tulo, descri&#231;&#227;o e URL de cada fonte (igual ao Nuvio TV).</p>
+      <select id="autoplayMode">
+        <option value="manual">Manual (escolher fonte)</option>
+        <option value="first">Primeira fonte</option>
+        <option value="regex">Correspond&#234;ncia regex</option>
+      </select>
+      <select id="regexPreset" class="mt"><option value="">Predefini&#231;&#245;es de regex...</option></select>
+      <div class="row mt"><input id="autoplayRegex" autocomplete="off" spellcheck="false" placeholder="Exemplo: 4K|2160p|Remux"><button class="btn" id="regexSave">Salvar</button></div>
+    </div>
+    <div class="card">
+      <h2>P&#244;ster personalizado</h2>
+      <p class="hint">Padr&#227;o de URL de um servi&#231;o de p&#244;steres. Marcadores: {id}, {imdb_id}, {tmdb_id}, {tvdb_id}, {kitsu_id}, {type}, {id_type}, {typed_id}. Adicione ? para torn&#225;-lo opcional: {imdb_id?}.</p>
+      <div class="row"><input id="customPoster" autocomplete="off" spellcheck="false" placeholder="https://example.com/poster?id={id}&amp;type={type}"><button class="btn" id="posterSave">Salvar</button></div>
+      <button class="btn ghost small mt" id="posterClear">Remover</button>
+    </div>
+    <div class="card">
+      <h2>Badges Fusion</h2>
+      <p class="hint" id="badgeInfo"></p>
+      <div class="row"><input id="badgeSource" autocomplete="off" spellcheck="false" placeholder="URL do JSON de badges ou cole o JSON"><button class="btn" id="badgeImport">Importar</button></div>
+      <button class="btn ghost small mt" id="badgeClear">Remover badges</button>
+    </div>
+    <div class="card">
+      <h2>Cat&#225;logos</h2>
+      <button class="btn ghost" id="reload">Recarregar cat&#225;logos no Roku</button>
+    </div>
+  </section>
+
+  <section id="account">
+    <div class="card">
+      <h2>Conta do Nuvio</h2>
+      <p class="hint" id="nuvioStatus"></p>
+      <div id="nuvioLoginBox" class="mt">
+        <input id="nuvioEmail" class="mt" type="email" autocomplete="username" placeholder="E-mail">
+        <input id="nuvioPass" class="mt" type="password" autocomplete="current-password" placeholder="Senha">
+        <button class="btn mt" id="nuvioLoginBtn">Entrar</button>
+        <button class="btn ghost mt" id="nuvioLogoutBtn">Sair</button>
+      </div>
+      <p class="hint mt">Voc&#234; tamb&#233;m pode entrar com QR pelo Roku: Ajustes &gt; Conta &gt; Entrar com QR.</p>
+    </div>
+    <div class="card">
+      <h2>Servidor pr&#243;prio (opcional)</h2>
+      <p class="hint">O canal usa o servidor oficial do Nuvio. S&#243; mude isto se voc&#234; tiver um servidor pr&#243;prio do Nuvio (self-host).</p>
+      <input id="nuvioUrl" class="mt" autocomplete="off" placeholder="https://seu-servidor.com">
+      <input id="nuvioKey" class="mt" autocomplete="off" placeholder="Publishable key (opcional)">
+      <button class="btn mt" id="nuvioServerBtn">Usar este servidor</button>
+      <button class="btn ghost mt" id="nuvioOfficialBtn">Voltar ao servidor oficial</button>
+    </div>
+    <div class="card">
+      <h2>TMDB</h2>
+      <p class="hint">Metadados, logos e epis&#243;dios no seu idioma. Opcional: se o canal j&#225; inclui uma chave voc&#234; n&#227;o precisa colar a sua. Tamb&#233;m pode usar sua pr&#243;pria chave gratuita de themoviedb.org.</p>
+      <div class="row"><input id="tmdbKey" autocomplete="off" placeholder="Chave de API (v3)"><button class="btn" data-integ="tmdbKey">Salvar</button></div>
+    </div>
+    <div class="card">
+      <h2>MDBList</h2>
+      <p class="hint">Notas do IMDb, Rotten Tomatoes, Metacritic, Letterboxd e mais. Chave gratuita em mdblist.com.</p>
+      <div class="row"><input id="mdbKey" autocomplete="off" placeholder="Chave de API"><button class="btn" data-integ="mdbKey">Salvar</button></div>
+    </div>
+    <div class="card">
+      <h2>Trakt e Simkl</h2>
+      <p class="hint">N&#227;o precisa criar apps nem colar chaves. Conecte sua conta pelo Roku em Ajustes > Acompanhamento e escaneie o c&#243;digo.</p>
+    </div>
+  </section>
+
+  <div class="foot">Nuvio TV para Roku &#183; Fork n&#227;o oficial do Nuvio</div>
+</main>
+<div id="toast"></div>
+<script>
+const $ = s => document.querySelector(s);
+let state = null;
+let toastTimer = 0;
+
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+}
+
+function ascii(obj) {
+  return JSON.stringify(obj).replace(/[\u007f-\uffff]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
+}
+
+function toast(text, isError) {
+  const el = $('#toast');
+  el.textContent = text;
+  el.className = 'show' + (isError ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 3200);
+}
+
+async function request(url, options, tries) {
+  let last;
+  for (let i = 0; i < (tries || 1); i++) {
+    try {
+      const res = await fetch(url, Object.assign({cache: 'no-store'}, options));
+      return await res.json();
+    } catch (e) {
+      last = e;
+      await new Promise(r => setTimeout(r, 800 * (i + 1)));
+    }
+  }
+  throw last;
+}
+
+async function load(quiet) {
+  try {
+    state = await request('/api/state', {}, 3);
+    render();
+  } catch (e) {
+    if (!quiet) toast('N\u00e3o foi poss\u00edvel falar com o Roku. Verifique se o app est\u00e1 aberto.', true);
+  }
+}
+
+async function act(body, okText) {
+  try {
+    body.rid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    const data = await request('/api/action', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: ascii(body)}, 3);
+    if (data.state) { state = data.state; render(); }
+    if (!data.ok) { toast(data.error || 'Algo deu errado.', true); return false; }
+    const text = data.message || okText;
+    if (text) toast(text);
+    if (data.reload && !['theme', 'search', 'nuvioLogin'].includes(data.what)) { setTimeout(() => load(true), 4000); setTimeout(() => load(true), 9000); }
+    return true;
+  } catch (e) {
+    toast('N\u00e3o foi poss\u00edvel falar com o Roku. Verifique se o app est\u00e1 aberto.', true);
+    return false;
+  }
+}
+
+function render() {
+  if (!state) return;
+  const color = (state.colors.find(c => c.hex === state.prefs.accent) || {hex: '7C5CFF'}).hex;
+  document.documentElement.style.setProperty('--accent', '#' + color);
+
+  $('#profile').innerHTML = state.profiles.map(p => `<option value="${esc(p.id)}"${p.id === state.active ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
+
+  const activeName = (state.profiles.find(p => p.id === state.active) || {}).name || '';
+  $('#scope').textContent = state.shared ? '\u00b7 compartilhados' : '\u00b7 s\u00f3 ' + activeName;
+
+  $('#addonList').innerHTML = state.addons.length ? state.addons.map((a, i) => `
+    <li class="item">
+      <div class="grow">
+        <div class="name">${esc(a.name || hostOf(a.url))}</div>
+        <div class="meta">${esc(a.url)}</div>
+      </div>
+      <div class="tools">
+        <button class="icon" data-move-addon="${i}" data-delta="-1" ${i === 0 ? 'disabled' : ''} aria-label="Mover para cima">&#8593;</button>
+        <button class="icon" data-move-addon="${i}" data-delta="1" ${i === state.addons.length - 1 ? 'disabled' : ''} aria-label="Mover para baixo">&#8595;</button>
+        <button class="icon danger" data-remove-addon="${i}" aria-label="Remover">&#10005;</button>
+      </div>
+    </li>`).join('') : '<li class="empty">Ainda n\u00e3o h\u00e1 addons.</li>';
+
+  $('#catalogList').innerHTML = state.catalogs.length ? state.catalogs.map((c, i) => `
+    <li class="item${c.hidden ? ' off' : ''}">
+      <label class="switch"><input type="checkbox" data-cat="${esc(c.key)}" ${c.hidden ? '' : 'checked'}><span></span></label>
+      <div class="grow">
+        <div class="name">${esc(c.name)} \u00b7 ${esc(c.kind)}</div>
+        <div class="meta">${esc(c.addon)}${c.status === 'ok' ? ' \u00b7 ' + c.count + ' t\u00edtulos' : ''}</div>
+        ${c.status && c.status !== 'ok' ? `<div class="meta warn">${esc(c.status)}</div>` : ''}
+      </div>
+      <div class="tools">
+        <button class="icon" data-move-cat="${esc(c.key)}" data-delta="-1" ${i === 0 ? 'disabled' : ''} aria-label="Mover para cima">&#8593;</button>
+        <button class="icon" data-move-cat="${esc(c.key)}" data-delta="1" ${i === state.catalogs.length - 1 ? 'disabled' : ''} aria-label="Mover para baixo">&#8595;</button>
+      </div>
+    </li>`).join('') : '<li class="empty">Ainda n\u00e3o h\u00e1 cat\u00e1logos carregados.</li>';
+
+  $('#profileList').innerHTML = state.profiles.map(p => `
+    <li class="item">
+      <div class="grow"><div class="name">${esc(p.name)}${p.id === state.active ? '<span class="badge">EM USO</span>' : ''}</div></div>
+      <div class="tools">
+        ${p.id === state.active ? '' : `<button class="btn ghost small" data-use="${esc(p.id)}">Usar</button>`}
+        <button class="icon" data-rename="${esc(p.id)}" aria-label="Renomear">&#9998;</button>
+        <button class="icon danger" data-delete="${esc(p.id)}" ${state.profiles.length < 2 ? 'disabled' : ''} aria-label="Remover">&#10005;</button>
+      </div>
+    </li>`).join('');
+
+  $('#shared').checked = !!state.shared;
+  $('#swatches').innerHTML = state.colors.map(c => `<button class="swatch${c.hex === state.prefs.accent ? ' on' : ''}" style="background:#${c.hex}" data-color="${c.hex}" aria-label="${esc(c.name)}"></button>`).join('');
+  $('#rowSize').innerHTML = state.rowSizes.map(n => `<option value="${n}"${n === state.prefs.rowSize ? ' selected' : ''}>${n} t\u00edtulos</option>`).join('');
+  $('#cw').checked = !!state.prefs.continueWatching;
+  $('#captions').checked = !!state.prefs.captions;
+  const ig = state.integrations || {};
+  ['tmdbKey', 'mdbKey'].forEach(k => { $('#' + k).placeholder = ig[k] ? 'Guardada: ' + ig[k] : $('#' + k).getAttribute('data-ph') || $('#' + k).placeholder; });
+  const server = ig.nuvioOfficial ? 'o servidor oficial do Nuvio' : 'o servidor ' + hostOf(ig.nuvioUrl || '');
+  $('#nuvioStatus').textContent = ig.nuvioLogged ? 'Sess\u00e3o iniciada' + (ig.nuvioEmail ? ' como ' + ig.nuvioEmail : '') + ' em ' + server + '.' : 'Entre com sua conta do Nuvio (' + server + ').';
+  $('#nuvioLogoutBtn').style.display = ig.nuvioLogged ? '' : 'none';
+  $('#nuvioLoginBtn').style.display = ig.nuvioLogged ? 'none' : '';
+  $('#nuvioEmail').style.display = ig.nuvioLogged ? 'none' : '';
+  $('#nuvioPass').style.display = ig.nuvioLogged ? 'none' : '';
+  $('#nuvioOfficialBtn').style.display = ig.nuvioOfficial ? 'none' : '';
+  const pr = state.prefs || {};
+  $('#autoplayMode').value = pr.autoplayMode || 'manual';
+  if (document.activeElement !== $('#autoplayRegex')) $('#autoplayRegex').value = pr.autoplayRegex || '';
+  if (document.activeElement !== $('#customPoster')) $('#customPoster').value = pr.customPoster || '';
+  $('#regexPreset').innerHTML = '<option value="">Predefini\u00e7\u00f5es de regex...</option>' + (state.presets || []).map(p => `<option value="${esc(p.p)}"${p.p === pr.autoplayRegex ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
+  $('#badgeInfo').textContent = pr.badges ? pr.badges + ' badges ativos neste perfil.' : 'Importe uma URL de badges estilo Fusion (JSON). Os badges salvos na sua conta do Nuvio chegam sozinhos ao sincronizar.';
+  $('#historyInfo').textContent = state.history ? state.history + (state.history === 1 ? ' t\u00edtulo em andamento' : ' t\u00edtulos em andamento') : 'Nenhum t\u00edtulo em andamento';
+}
+
+function hostOf(url) {
+  try { return new URL(url).host; } catch (e) { return url; }
+}
+
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === b.dataset.tab));
+  if (b.dataset.tab === 'catalogs') load(true);
+});
+
+$('#searchBtn').addEventListener('click', async () => {
+  const query = $('#query').value.trim();
+  if (!query) return toast('Digite o que voc\u00ea quer buscar.', true);
+  act({action: 'search', query});
+});
+$('#query').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#searchBtn').click(); } });
+
+$('#addAddon').addEventListener('click', async () => {
+  const url = $('#addonUrl').value.trim();
+  if (!url) return toast('Cole o endere\u00e7o do addon.', true);
+  if (await act({action: 'addAddon', url})) $('#addonUrl').value = '';
+});
+$('#addonUrl').addEventListener('keydown', e => { if (e.key === 'Enter') $('#addAddon').click(); });
+
+$('#importBtn').addEventListener('click', async () => {
+  const source = $('#collection').value.trim();
+  if (!source) return toast('Cole o endere\u00e7o ou o conte\u00fado da cole\u00e7\u00e3o.', true);
+  $('#importBtn').disabled = true;
+  if (await act({action: 'importCollection', source})) $('#collection').value = '';
+  $('#importBtn').disabled = false;
+});
+
+$('#addonList').addEventListener('click', e => {
+  const move = e.target.closest('[data-move-addon]');
+  if (move) return act({action: 'moveAddon', index: +move.dataset.moveAddon, delta: +move.dataset.delta});
+  const del = e.target.closest('[data-remove-addon]');
+  if (del && confirm('Remover este addon?')) act({action: 'removeAddon', index: +del.dataset.removeAddon});
+});
+
+$('#catalogList').addEventListener('change', e => {
+  const box = e.target.closest('[data-cat]');
+  if (box) act({action: 'setCatalogHidden', key: box.dataset.cat, hidden: !box.checked});
+});
+$('#catalogList').addEventListener('click', e => {
+  const move = e.target.closest('[data-move-cat]');
+  if (move) act({action: 'moveCatalog', key: move.dataset.moveCat, delta: +move.dataset.delta});
+});
+$('#refreshCats').addEventListener('click', () => load());
+
+$('#profile').addEventListener('change', e => act({action: 'useProfile', id: e.target.value}));
+$('#addProfile').addEventListener('click', async () => {
+  const name = $('#profileName').value.trim();
+  if (!name) return toast('Digite um nome.', true);
+  if (await act({action: 'addProfile', name})) $('#profileName').value = '';
+});
+$('#profileList').addEventListener('click', e => {
+  const use = e.target.closest('[data-use]');
+  if (use) return act({action: 'useProfile', id: use.dataset.use});
+  const ren = e.target.closest('[data-rename]');
+  if (ren) {
+    const current = state.profiles.find(p => p.id === ren.dataset.rename);
+    const name = prompt('Novo nome', current ? current.name : '');
+    if (name && name.trim()) act({action: 'renameProfile', id: ren.dataset.rename, name: name.trim()}, 'Nome atualizado.');
+    return;
+  }
+  const del = e.target.closest('[data-delete]');
+  if (del && confirm('Excluir este perfil e seu hist\u00f3rico?')) act({action: 'deleteProfile', id: del.dataset.delete});
+});
+$('#shared').addEventListener('change', e => act({action: 'setShared', value: e.target.checked}, e.target.checked ? 'Addons compartilhados.' : 'Addons separados por perfil.'));
+
+$('#swatches').addEventListener('click', e => {
+  const b = e.target.closest('[data-color]');
+  if (b) act({action: 'setAccent', hex: b.dataset.color}, 'Cor atualizada.');
+});
+$('#rowSize').addEventListener('change', e => act({action: 'setRowSize', value: +e.target.value}, 'Salvo.'));
+$('#cw').addEventListener('change', e => act({action: 'setContinueWatching', value: e.target.checked}, 'Salvo.'));
+$('#captions').addEventListener('change', e => act({action: 'setCaptions', value: e.target.checked}, 'Salvo.'));
+$('#clearHistory').addEventListener('click', () => { if (confirm('Limpar o hist\u00f3rico de Continuar assistindo deste perfil?')) act({action: 'clearHistory'}); });
+document.querySelectorAll('[data-integ]').forEach(b => b.addEventListener('click', async () => {
+  const name = b.dataset.integ;
+  const value = $('#' + name).value.trim();
+  if (await act({action: 'setIntegration', name, value})) $('#' + name).value = '';
+}));
+$('#nuvioServerBtn').addEventListener('click', () => {
+  const url = $('#nuvioUrl').value.trim();
+  if (!url) return toast('Digite o endere\u00e7o do servidor.', true);
+  act({action: 'nuvioServer', url, key: $('#nuvioKey').value.trim()});
+});
+$('#nuvioOfficialBtn').addEventListener('click', () => act({action: 'nuvioOfficial'}));
+$('#autoplayMode').addEventListener('change', e => act({action: 'setPref', name: 'autoplayMode', value: e.target.value}));
+$('#regexPreset').addEventListener('change', e => { if (e.target.value) { $('#autoplayRegex').value = e.target.value; act({action: 'setPref', name: 'autoplayRegex', value: e.target.value}); } });
+$('#regexSave').addEventListener('click', () => act({action: 'setPref', name: 'autoplayRegex', value: $('#autoplayRegex').value.trim()}));
+$('#posterSave').addEventListener('click', () => act({action: 'setPref', name: 'customPoster', value: $('#customPoster').value.trim()}));
+$('#posterClear').addEventListener('click', () => { $('#customPoster').value = ''; act({action: 'setPref', name: 'customPoster', value: ''}); });
+$('#badgeImport').addEventListener('click', async () => {
+  const source = $('#badgeSource').value.trim();
+  if (!source) return toast('Cole a URL ou o JSON dos badges.', true);
+  if (await act({action: 'importBadges', source})) $('#badgeSource').value = '';
+});
+$('#badgeClear').addEventListener('click', () => act({action: 'clearBadges'}));
+$('#nuvioLoginBtn').addEventListener('click', async () => {
+  const email = $('#nuvioEmail').value.trim();
+  const password = $('#nuvioPass').value;
+  if (!email || !password) return toast('Digite seu e-mail e senha.', true);
+  if (await act({action: 'nuvioLogin', email, password})) $('#nuvioPass').value = '';
+});
+$('#nuvioLogoutBtn').addEventListener('click', () => act({action: 'nuvioLogout'}, 'Sess\u00e3o encerrada.'));
+
+$('#reload').addEventListener('click', () => act({action: 'reload'}));
+
+load();
+</script>
+</body>
+</html>

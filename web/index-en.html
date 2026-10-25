@@ -215,11 +215,11 @@ li.item:first-child{border-top:0}
     <div class="card">
       <h2>MDBList</h2>
       <p class="hint">Ratings from IMDb, Rotten Tomatoes, Metacritic, Letterboxd and more. Free key at mdblist.com.</p>
-      <div class="row"><input id="mdbKey" autocomplete="off" placeholder="API key"><bu    <div class="card">
+      <div class="row"><input id="mdbKey" autocomplete="off" placeholder="API key"><button class="btn" data-integ="mdbKey">Save</button></div>
+    </div>
+    <div class="card">
       <h2>Trakt and Simkl</h2>
       <p class="hint">No apps or keys needed. Connect your account from the Roku in Settings > Tracking and scan the code.</p>
-    </div>
-ass="btn" data-integ="simklClientId">Save</button></div>
     </div>
   </section>
 
@@ -272,7 +272,8 @@ async function load(quiet) {
 
 async function act(body, okText) {
   try {
-    const data = await request('/api/action', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: ascii(body)});
+    body.rid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    const data = await request('/api/action', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: ascii(body)}, 3);
     if (data.state) { state = data.state; render(); }
     if (!data.ok) { toast(data.error || 'Something went wrong.', true); return false; }
     const text = data.message || okText;
