@@ -28,6 +28,7 @@ The channel is in beta. Versions start at 0.0.1: 0.0.1 was published as 2.2.0 an
 - Titles in Chinese, Japanese, Korean and other scripts the Roku can't draw are shown with their TMDB name in your metadata language, or in English.
 - On Xtream live channels that play through HLS with a single audio track, the audio menu offers to load all audio tracks from the original `.ts` link. If the Roku can't open it, it goes back to the version that works.
 - The interface language is chosen from a list, and the notice to reopen the channel is shown in the language you picked.
+-  Watch Party. The Roku now sends its state to the room right away and only leaves when the room really ends.
 
 ### Changed
 - Home opens right away with the last loaded rows and refreshes them in the background, and catalogs are loaded in parallel. The "addons loaded" messages are gone.
@@ -45,7 +46,6 @@ The channel is in beta. Versions start at 0.0.1: 0.0.1 was published as 2.2.0 an
 - Home posters are saved on the Roku after they load, so they don't load again when you scroll back.
 
 ### Fixed
-- Watch Party ended when you paused, and other devices didn't follow the Roku. The Roku now sends its state to the room right away and only leaves when the room really ends.
 - Resuming from Continue Watching started from the beginning on some sources.
 - Seeking far ahead jumped back to the old position.
 - Some sources closed the player without an error, and Continue Watching progress could disappear because of it. The channel now retries the link in other formats before showing an error.
@@ -75,7 +75,6 @@ The channel is in beta. Versions start at 0.0.1: 0.0.1 was published as 2.2.0 an
 - Collection folders with list ids stored as decimal numbers didn't load.
 - Collection logos and images linked from GitHub pages (`github.com/.../blob/...?raw=true`) didn't show.
 - TMDB collection sources with a maximum rating of 0 returned no titles.
-- The About section still said version 2.2.0.
 - Trakt lists in collections now retry with your Trakt account and with both movies and shows when the first request comes back empty.
 
 
