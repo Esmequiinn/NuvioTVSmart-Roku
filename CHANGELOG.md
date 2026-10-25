@@ -19,7 +19,6 @@ The channel is in beta. Versions start at 0.0.1: 0.0.1 was published as 2.2.0 an
 - **Prefer Roku-compatible sources** in Settings → Playback: auto-play leaves REMUX files with TrueHD or DTS-HD audio, and 4K when your TV is not in 4K mode, for last.
 - The player lists every audio track the Roku reports, even repeated languages, with the track name and format.
 - Addon subtitles that arrive after playback starts can be picked from the subtitles menu.
-- Version shown on the Roku as 0.0.3 beta.
 - Select an actor on the details page to see their movies and series (needs TMDB).
 - Press `*` on the Play button of the details page to choose the source manually.
 - Loading screen like Nuvio while a source opens: the title's backdrop with its logo in the middle.
