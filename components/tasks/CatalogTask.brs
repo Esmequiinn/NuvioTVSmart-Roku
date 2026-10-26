@@ -28,7 +28,7 @@ sub execute()
     for each base in addons
         manifestUrls.Push(base + "/manifest.json")
     end for
-    raw = Http_FetchHook(manifestUrls, 15000, 0, 8, invalid).data
+    raw = Http_FetchHook(manifestUrls, 10000, 0, 8, invalid).data
 
     manifests = []
     failed = 0
@@ -108,15 +108,25 @@ sub execute()
     m.rowData = []
     m.shownPrefix = 0
     m.progressive = cache = invalid
+    m.skip = {}
+    m.namesLater = []
+    m.clock = CreateObject("roTimespan")
+    m.lastShown = 0
     m.pattern = Poster_Pattern("home")
     for i = 0 to visible.Count() - 1
         m.rowData.Push(invalid)
     end for
     hook = Home_OnResult
-    fetched = Http_FetchHook(urls, 30000, prefs.rowSize, 10, hook)
+    fetched = Http_FetchHook(urls, 20000, prefs.rowSize, 10, hook)
     for i = 0 to visible.Count() - 1
         if m.rowData[i] = invalid then Home_OnResult(i, fetched.data, fetched.diag)
     end for
+    if m.namesLater.Count() > 0
+        Names_Translate(m.namesLater, true)
+        for each f in m.namesLater
+            f.ref.title = f.title
+        end for
+    end if
 
     Progress_Enrich(manifests)
     saved = {}
@@ -162,7 +172,7 @@ function Home_SlimCatalogs(list as dynamic) as dynamic
     return out
 end function
 
-sub Names_Items(list as object)
+sub Names_Items(list as object, net = true as boolean)
     foreign = []
     for each it in list
         if Str_HasForeign(it.title)
@@ -172,13 +182,19 @@ sub Names_Items(list as object)
         end if
     end for
     if foreign.Count() = 0 then return
-    Names_Translate(foreign)
+    Names_Translate(foreign, net)
+    cache = Names_Cache()
     for each f in foreign
         f.ref.title = f.title
+        if not net and not cache.DoesExist(f.id) then m.namesLater.Push(f)
     end for
 end sub
 
 sub Home_OnResult(index as integer, data as object, diag as object)
+    if index < 0
+        Home_Stall()
+        return
+    end if
     if m.rowData[index] <> invalid then return
     c = m.visible[index]
     status = diag[index]
@@ -194,25 +210,49 @@ sub Home_OnResult(index as integer, data as object, diag as object)
             if type(meta) = "roAssociativeArray" and IsStr(meta.id) then row.items.Push(Catalog_ItemData(meta, c.kind, rowPattern))
         end for
         if row.items.Count() > 0 then status = "ok"
-        Names_Items(row.items)
+        Names_Items(row.items, false)
     end if
     c.status = status
     c.count = row.items.Count()
     m.rowData[index] = row
     data[index] = invalid
+    Home_Early(false)
+end sub
+
+sub Home_Stall()
+    if not m.progressive then return
+    if m.clock.TotalMilliseconds() < 4000 then return
+    if m.clock.TotalMilliseconds() - m.lastShown < 2500 then return
+    Home_Early(true)
+end sub
+
+sub Home_Early(stalled as boolean)
     if not m.progressive then return
     prefix = m.shownPrefix
-    while prefix < m.rowData.Count() and m.rowData[prefix] <> invalid
+    while prefix < m.rowData.Count() and (m.rowData[prefix] <> invalid or m.skip.DoesExist(prefix.ToStr()))
         prefix = prefix + 1
     end while
+    if stalled and prefix < m.rowData.Count()
+        ready = 0
+        for i = prefix to m.rowData.Count() - 1
+            if m.rowData[i] <> invalid then ready = ready + 1
+        end for
+        if ready = 0 then return
+        while prefix < m.rowData.Count()
+            if m.rowData[prefix] = invalid then m.skip[prefix.ToStr()] = true
+            prefix = prefix + 1
+        end while
+    end if
     if prefix = m.shownPrefix then return
     rows = []
     for i = 0 to prefix - 1
         r = m.rowData[i]
-        if r.items.Count() > 0 then rows.Push(r)
+        if r <> invalid and r.items.Count() > 0 then rows.Push(r)
     end for
-    if rows.Count() < 2 and prefix < m.rowData.Count() then return
+    if not stalled and rows.Count() < 2 and prefix < m.rowData.Count() and m.clock.TotalMilliseconds() < 4000 then return
+    if rows.Count() = 0 then return
     m.shownPrefix = prefix
+    m.lastShown = m.clock.TotalMilliseconds()
     m.top.early = Home_Build(rows, m.prefs, false)
 end sub
 
@@ -290,7 +330,7 @@ sub Progress_Enrich(manifests as object)
         end if
     end for
     if urls.Count() = 0 then return
-    results = Http_FetchJsonAll(urls, 12000)
+    results = Http_FetchJsonAll(urls, 8000)
     changed = false
     for j = 0 to jobs.Count() - 1
         data = results[j]

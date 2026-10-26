@@ -12,7 +12,7 @@ sub execute()
         end if
     end for
     if Left(id, 2) = "tt" then urls.Push(Addon_ResourceUrl("https://v3-cinemeta.strem.io", "meta", kind, id))
-    results = Http_FetchJsonAll(urls, 15000)
+    results = Http_FetchJsonAll(urls, 10000)
     merged = { id: id, kind: kind }
     for each data in results
         if type(data) = "roAssociativeArray" and type(data.meta) = "roAssociativeArray"

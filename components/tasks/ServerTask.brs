@@ -3,8 +3,8 @@ sub init()
 end sub
 
 sub serve()
-    page = "pkg:/web/index.html"
-    if m.global.uiLang = "en" then page = "pkg:/web/index-en.html"
+    page = "pkg:/web/index-en.html"
+    if m.global.uiLang = "es" then page = "pkg:/web/index.html"
     if m.global.uiLang = "pt" then page = "pkg:/web/index-pt.html"
     m.html = ReadAsciiFile(page)
     port = CreateObject("roMessagePort")
