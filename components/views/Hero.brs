@@ -49,6 +49,7 @@ sub render()
     if d = invalid then return
     m.title.text = textOf(d.title)
     logo = textOf(d.logo)
+    if d.logoPending = true then logo = ""
     if logo <> m.lastLogo
         m.lastLogo = logo
         m.logo.visible = false

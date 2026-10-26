@@ -4,6 +4,7 @@
         <field id="profiles" type="array" onChange="build" />
         <field id="selected" type="string" alwaysNotify="true" />
     </interface>
+    <script type="text/brightscript" uri="pkg:/components/Mask.brs" />
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
     <script type="text/brightscript" uri="pkg:/components/Util.brs" />

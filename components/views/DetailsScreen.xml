@@ -10,7 +10,9 @@
         <field id="back" type="boolean" alwaysNotify="true" />
         <field id="trailer" type="assocarray" onChange="onTrailer" />
         <field id="trailerPlaying" type="boolean" />
+        <field id="extra" type="assocarray" onChange="onExtra" />
     </interface>
+    <script type="text/brightscript" uri="pkg:/components/Mask.brs" />
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
     <script type="text/brightscript" uri="pkg:/components/Util.brs" />
@@ -18,9 +20,12 @@
     <children>
         <Rectangle width="1920" height="1080" color="0x0C0C0FFF" />
         <Video id="trailerVideo" width="1920" height="1080" enableUI="false" focusable="false" visible="false" />
-        <Hero id="hero" fullscreen="true" />
-        <LayoutGroup id="buttonRow" translation="[160,720]" layoutDirection="horiz" itemSpacings="[20]" />
-        <Label id="statusLabel" translation="[160,830]" width="1200" font="font:SmallSystemFont" color="0xA9A9B8FF" />
+        <Group id="page">
+            <Hero id="hero" fullscreen="true" />
+            <LayoutGroup id="buttonRow" translation="[160,720]" layoutDirection="horiz" itemSpacings="[20]" />
+            <Label id="statusLabel" translation="[160,820]" width="1200" font="font:SmallSystemFont" color="0xA9A9B8FF" />
+            <Group id="lower" translation="[0,900]" />
+        </Group>
         <Label id="trailerHint" visible="false" translation="[160,1000]" width="1600" font="font:SmallestSystemFont" color="0xD6D6E0FF" text="Tráiler en reproducción  ·  Presiona cualquier botón para volver" />
         <Timer id="trailerTimer" repeat="false" />
     </children>

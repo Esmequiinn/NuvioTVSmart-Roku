@@ -27,7 +27,7 @@ sub init()
             icon.translation = [8, 8]
             mask = g.createChild("MaskGroup")
             mask.maskUri = "pkg:/images/c/d60.png"
-            mask.maskSize = [60, 60]
+            Mask_Apply(mask, 60, 60)
             mask.translation = [8, 8]
             m.avatar = mask.createChild("Poster")
             m.avatar.width = 60
@@ -110,6 +110,7 @@ sub paint()
             color = m.top.profileColor
             if color <> "" then n.icon.blendColor = "0x" + color + "FF"
             avatar = m.top.profileAvatar
+            avatar = Mask_Circle(avatar, 120)
             if m.avatar.uri <> avatar then m.avatar.uri = avatar
             ready = avatar <> "" and m.avatar.loadStatus = "ready"
             m.avatar.visible = ready

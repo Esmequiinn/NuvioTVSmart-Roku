@@ -2,6 +2,7 @@ sub init()
     m.frame = m.top.findNode("frame")
     m.name = m.top.findNode("name")
     m.mask = m.top.findNode("mask")
+    m.capsHolder = m.top.findNode("capsHolder")
     m.art = m.top.findNode("art")
     m.shade = m.top.findNode("shade")
     m.cw = m.top.findNode("cw")
@@ -191,7 +192,8 @@ sub onSize()
     else
         m.mask.maskUri = "pkg:/images/mask_poster.png"
     end if
-    m.mask.maskSize = [w, h]
+    Mask_Apply(m.mask, w, h)
+    Mask_Caps(m.capsHolder, w, h, 22, "0x0C0C0FFF")
     m.ring.width = w
     m.ring.height = h
     m.art.width = w

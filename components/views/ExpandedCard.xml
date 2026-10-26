@@ -8,20 +8,27 @@
         <field id="h" type="float" onChange="layout" />
         <field id="open" type="boolean" onChange="onOpen" />
     </interface>
+    <script type="text/brightscript" uri="pkg:/components/Mask.brs" />
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
     <script type="text/brightscript" uri="pkg:/components/Util.brs" />
     <script type="text/brightscript" uri="pkg:/components/views/ExpandedCard.brs" />
     <children>
-        <Poster id="ring" uri="pkg:/images/ring.9.png" blendColor="0xFFFFFFFF" />
         <MaskGroup id="mask" maskUri="pkg:/images/mask_expanded.png" maskSize="[532,300]">
             <Rectangle id="base" color="0x1E1E26FF" />
             <Poster id="art" loadWidth="1280" loadHeight="720" loadDisplayMode="scaleToZoom" />
+            <Poster id="shade" uri="pkg:/images/exp_shade.png" loadDisplayMode="scaleToFill" />
         </MaskGroup>
         <Video id="video" enableUI="false" focusable="false" visible="false" />
-        <Poster id="shade" uri="pkg:/images/exp_shade.png" loadDisplayMode="scaleToFill" />
         <Poster id="logo" loadDisplayMode="scaleToFit" visible="false" />
+        <Group id="caps" visible="false">
+            <Poster id="capTl" width="22" height="22" uri="pkg:/images/cap_tl.png" />
+            <Poster id="capTr" width="22" height="22" uri="pkg:/images/cap_tr.png" />
+            <Poster id="capBl" width="22" height="22" uri="pkg:/images/cap_bl.png" />
+            <Poster id="capBr" width="22" height="22" uri="pkg:/images/cap_br.png" />
+        </Group>
         <Label id="title" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+        <Poster id="ring" uri="pkg:/images/iring.9.png" blendColor="0xFFFFFFFF" />
         <Group id="tween" opacity="0" />
         <Animation id="grow" duration="0.24" easeFunction="outQuad">
             <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="tween.opacity" />

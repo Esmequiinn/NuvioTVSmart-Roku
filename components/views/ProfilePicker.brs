@@ -51,14 +51,14 @@ sub build()
         if Str_Of(e.avatar) <> ""
             mask = g.createChild("MaskGroup")
             mask.maskUri = "pkg:/images/c/d220.png"
-            mask.maskSize = [size, size]
+            Mask_Apply(mask, size, size)
             pic = mask.createChild("Poster")
             pic.width = size
             pic.height = size
             pic.loadWidth = size
             pic.loadHeight = size
             pic.loadDisplayMode = "scaleToZoom"
-            pic.uri = e.avatar
+            pic.uri = Mask_Circle(e.avatar, size)
         end if
         name = g.createChild("Label")
         name.translation = [-40, size + 34]

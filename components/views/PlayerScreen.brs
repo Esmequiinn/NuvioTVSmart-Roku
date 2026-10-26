@@ -78,6 +78,7 @@ sub init()
     m.top.observeField("focusedChild", "onTopFocus")
     m.logo.observeField("loadStatus", "onLogoStatus")
     m.pauseLogo.observeField("loadStatus", "onPauseLogoStatus")
+    Ex_Init()
 end sub
 
 function createTimer(seconds as float) as object
@@ -103,6 +104,8 @@ sub onActive()
         m.clockTimer.control = "stop"
         m.video.control = "stop"
         hideLoadScreen()
+        m.exTimer.control = "stop"
+        Ex_Reset()
     end if
 end sub
 
@@ -150,6 +153,7 @@ sub onInfo()
     m.pauseTitle.visible = true
     setLogo(logo)
     buildButtons(Bool_Of(info.isSeries, false))
+    Ex_OnInfo()
 end sub
 
 sub onLoadLogo()
@@ -265,10 +269,12 @@ sub showControls(zone as string)
     updateBar()
     paintButtons()
     restartHide()
+    Ex_OnControls(true)
 end sub
 
 sub hideControls()
     m.controls.visible = false
+    Ex_OnControls(false)
     m.hideTimer.control = "stop"
     if m.video.state = "paused" then restartPauseTimer()
 end sub
@@ -333,17 +339,20 @@ function currentAudioLang() as string
 end function
 
 sub selectSubtitle(track as string)
-    m.video.subtitleTrack = track
-    m.video.globalCaptionMode = "On"
+    Ex_SubSelect(track)
 end sub
 
 sub applySubtitlePreference()
     if m.subsApplied then return
     info = m.top.info
     if info = invalid then return
-    tracks = m.video.availableSubtitleTracks
-    if type(tracks) <> "roArray" or tracks.Count() = 0 then return
+    all = m.video.availableSubtitleTracks
+    if type(all) <> "roArray" or all.Count() = 0 then return
     m.subsApplied = true
+    tracks = []
+    for each t in all
+        if Ex_SubAllowed(t) then tracks.Push(t)
+    end for
     pinned = Str_Of(info.subLang)
     if Left(pinned, 4) = "url:"
         for each t in tracks
@@ -367,7 +376,7 @@ sub applySubtitlePreference()
         end if
     end if
     if first = "" or first = "off" or first = "none"
-        m.video.globalCaptionMode = "Off"
+        Ex_SubSelect("")
         return
     end if
     original = Str_Of(info.originalLang)
@@ -390,7 +399,7 @@ sub applySubtitlePreference()
             end if
         end if
     end for
-    m.video.globalCaptionMode = "Off"
+    Ex_SubSelect("")
 end sub
 
 sub onPauseTimer()
@@ -451,11 +460,12 @@ sub updateBar()
     end if
 end sub
 
-sub onPosition()
+sub onPosition_Run()
     if m.controls.visible then updateBar()
+    Ex_Tick(m.video.position)
 end sub
 
-sub onState()
+sub onState_Run()
     state = m.video.state
     m.buffering.visible = state = "buffering" and m.started
     if state = "playing" or state = "paused" or state = "error" or state = "finished" then hideLoadScreen()
@@ -474,11 +484,16 @@ sub onState()
     else if state = "paused"
         restartPauseTimer()
     else if state = "finished"
-        m.top.event = { type: "finished", position: Int(m.video.position), duration: Int(m.video.duration) }
+        if m.postShown and m.postBox.visible
+            m.top.postActive = true
+        else
+            m.top.event = { type: "finished", position: Int(m.video.position), duration: Int(m.video.duration) }
+        end if
     else if state = "error"
         m.top.event = { type: "error", message: m.video.errorMsg }
     end if
     if m.controls.visible then paintButtons()
+    Ex_OnState(state)
 end sub
 
 sub togglePlay()
@@ -610,28 +625,30 @@ function audioLabel(t as object, number as integer) as string
 end function
 
 sub openSubs()
-    items = [{ id: "0", label: L("Desactivados"), checked: m.video.globalCaptionMode <> "On" }]
+    items = [{ id: "0", label: L("Desactivados"), checked: m.video.globalCaptionMode <> "On" and Ex_SubActive() = "" }]
     values = [""]
     focus = 0
     known = {}
     tracks = m.video.availableSubtitleTracks
     if type(tracks) = "roArray"
         for each t in tracks
-            name = Str_Of(t.Description)
-            if name = "" then name = Lang_Name(Str_Of(t.Language))
-            if isForcedTrack(t) and Instr(1, LCase(name), "forz") = 0 and Instr(1, LCase(name), "forced") = 0 then name = name + " (" + L("Forzados") + ")"
-            active = m.video.globalCaptionMode = "On" and Str_Of(t.TrackName) = m.video.subtitleTrack
-            items.Push({ id: values.Count().ToStr(), label: name, checked: active })
-            values.Push(Str_Of(t.TrackName))
-            known[Str_Of(t.TrackName)] = true
-            if active then focus = items.Count() - 1
+            if Ex_SubAllowed(t)
+                name = Str_Of(t.Description)
+                if name = "" then name = Lang_Name(Str_Of(t.Language))
+                if isForcedTrack(t) and Instr(1, LCase(name), "forz") = 0 and Instr(1, LCase(name), "forced") = 0 then name = name + " (" + L("Forzados") + ")"
+                active = (m.video.globalCaptionMode = "On" and Str_Of(t.TrackName) = m.video.subtitleTrack) or (Ex_SubActive() <> "" and Str_Of(t.TrackName) = Ex_SubActive())
+                items.Push({ id: values.Count().ToStr(), label: name, checked: active })
+                values.Push(Str_Of(t.TrackName))
+                known[Str_Of(t.TrackName)] = true
+                if active then focus = items.Count() - 1
+            end if
         end for
     end if
     extra = m.top.extraSubs
     if type(extra) = "roArray"
         for each entry in extra
-            if type(entry) = "roAssociativeArray" and not known.DoesExist(Str_Of(entry.url))
-                items.Push({ id: values.Count().ToStr(), label: Str_Of(entry.label) })
+            if type(entry) = "roAssociativeArray" and not known.DoesExist(Str_Of(entry.url)) and Ex_SubAllowed({ Description: Str_Of(entry.label), Language: Str_Of(entry.lang) })
+                items.Push({ id: values.Count().ToStr(), label: Str_Of(entry.label), checked: Ex_SubActive() = Str_Of(entry.url) })
                 values.Push("reload:" + Str_Of(entry.url))
             end if
         end for
@@ -688,7 +705,9 @@ sub choosePanel(index as integer)
     value = m.panelValues[index]
     if m.panelKind = "subs"
         if value = ""
-            m.video.globalCaptionMode = "Off"
+            Ex_SubSelect("")
+        else if Left(value, 7) = "reload:" and Ex_UseCustom(Mid(value, 8))
+            Ex_SubSelect(Mid(value, 8))
         else if Left(value, 7) = "reload:"
             m.panel.visible = false
             m.panel.setFocus(false)
@@ -696,8 +715,7 @@ sub choosePanel(index as integer)
             m.top.event = { type: "subsReload", url: Mid(value, 8), position: Int(settledPosition()) }
             return
         else
-            m.video.subtitleTrack = value
-            m.video.globalCaptionMode = "On"
+            Ex_SubSelect(value)
         end if
     else if m.panelKind = "audio"
         if value = "alt:"
@@ -723,6 +741,7 @@ end sub
 function onKeyEvent(key as string, press as boolean) as boolean
     if not press then return false
     if m.panel.visible then return true
+    if Ex_OverlayKey(key) then return true
     if m.pauseScreen.visible
         m.pauseScreen.visible = false
         if key = "OK" or key = "play"
@@ -802,4 +821,20 @@ end function
 sub onPartyText()
     m.partyLabel.text = m.top.partyText
     m.partyLabel.visible = m.top.partyText <> ""
+end sub
+
+sub onState()
+    try
+        onState_Run()
+    catch e
+        Ex_Crash(e)
+    end try
+end sub
+
+sub onPosition()
+    try
+        onPosition_Run()
+    catch e
+        Ex_Crash(e)
+    end try
 end sub

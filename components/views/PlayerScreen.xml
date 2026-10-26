@@ -13,11 +13,19 @@
         <field id="logo" type="string" onChange="onLogo" />
         <field id="extraSubs" type="array" />
         <field id="altAudio" type="boolean" value="false" />
+        <field id="segments" type="array" onChange="Ex_OnSegments" />
+        <field id="parental" type="array" onChange="Ex_OnParental" />
+        <field id="recs" type="array" />
+        <field id="nextInfo" type="assocarray" />
+        <field id="stillWatching" type="boolean" alwaysNotify="true" onChange="Ex_OnStill" />
+        <field id="postActive" type="boolean" value="false" />
     </interface>
+    <script type="text/brightscript" uri="pkg:/components/Mask.brs" />
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
     <script type="text/brightscript" uri="pkg:/components/Util.brs" />
     <script type="text/brightscript" uri="pkg:/components/views/PlayerScreen.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/PlayerExtras.brs" />
     <children>
         <Rectangle width="1920" height="1080" color="0x000000FF" />
         <Video id="video" width="1920" height="1080" enableUI="false" enableTrickPlay="false" focusable="false" />
@@ -28,6 +36,11 @@
             <Poster id="loadLogo" translation="[560,330]" width="800" height="260" loadDisplayMode="scaleToFit" />
             <Label id="loadTitle" translation="[160,380]" width="1600" height="160" horizAlign="center" vertAlign="center" wrap="true" maxLines="2" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
             <BusySpinner id="loadSpin" translation="[932,660]" spinInterval="0.9" />
+        </Group>
+        <Group id="subLayer" visible="false">
+            <Poster id="subBg" uri="pkg:/images/card.9.png" blendColor="0x000000A0" />
+            <Label id="subShadow" width="1600" horizAlign="center" vertAlign="bottom" wrap="true" maxLines="4" color="0x000000FF" />
+            <Label id="subText" width="1600" horizAlign="center" vertAlign="bottom" wrap="true" maxLines="4" color="0xFFFFFFFF" />
         </Group>
         <Label id="buffering" visible="false" translation="[0,500]" width="1920" horizAlign="center" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" text="Cargando..." />
         <Group id="pauseScreen" visible="false">
@@ -56,6 +69,50 @@
             <Label id="time" translation="[1300,916]" width="500" horizAlign="right" font="font:SmallSystemFont" color="0xFFFFFFFF" />
             <Group id="buttons" translation="[120,920]" />
             <Label id="hint" translation="[120,1010]" width="900" font="font:SmallestSystemFont" color="0xC4C4CEFF" />
+        </Group>
+        <Group id="parentalBox" visible="false" translation="[120,110]">
+            <Rectangle id="parentalBar" width="4" height="10" color="0x7C4DFFFF" />
+            <Group id="parentalRows" translation="[20,0]" />
+        </Group>
+        <Group id="skipBtn" visible="false">
+            <Group id="skipBg" />
+            <Poster id="skipIcon" translation="[24,16]" width="32" height="32" uri="pkg:/images/s/ic_next_32.png" />
+            <Label id="skipLabel" translation="[68,0]" height="64" vertAlign="center" font="font:SmallBoldSystemFont" color="0xFFFFFFFF" />
+        </Group>
+        <Group id="nextCard" visible="false" translation="[1180,640]">
+            <Poster id="nextBg" width="620" height="300" uri="pkg:/images/card.9.png" blendColor="0x161616EB" />
+            <MaskGroup id="nextMask" translation="[24,24]" maskUri="pkg:/images/mask_landscape.png" maskSize="[256,144]">
+                <Rectangle width="256" height="144" color="0x262626FF" />
+                <Poster id="nextThumb" width="256" height="144" loadWidth="256" loadHeight="144" loadDisplayMode="scaleToZoom" />
+            </MaskGroup>
+            <Label id="nextKicker" translation="[300,26]" width="296" font="font:SmallestSystemFont" color="0xB4B4C0FF" />
+            <Label id="nextCode" translation="[300,62]" width="296" font="font:SmallBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="nextTitle" translation="[300,100]" width="296" height="70" wrap="true" maxLines="2" font="font:SmallestSystemFont" color="0xD4D4DCFF" />
+            <Group id="nextPlayBg" translation="[24,196]" />
+            <Poster id="nextPlayIcon" translation="[48,212]" width="32" height="32" uri="pkg:/images/s/ic_play_32.png" blendColor="0x0C0C0FFF" />
+            <Label id="nextPlayLabel" translation="[90,196]" width="150" height="64" vertAlign="center" font="font:SmallBoldSystemFont" color="0x0C0C0FFF" />
+            <Label id="nextCount" translation="[264,196]" width="340" height="64" vertAlign="center" font="font:SmallestSystemFont" color="0xC4C4CEFF" />
+        </Group>
+        <Group id="statsBox" visible="false" translation="[1340,160]">
+            <Poster id="statsBg" uri="pkg:/images/card.9.png" blendColor="0x000000B8" />
+            <Label id="statsText" translation="[24,18]" font="font:SmallestSystemFont" color="0xE8E8EEFF" />
+        </Group>
+        <Group id="postBox" visible="false">
+            <Poster translation="[0,420]" width="1920" height="660" uri="pkg:/images/player_bottom.png" loadDisplayMode="scaleToFill" />
+            <Label id="postHeading" translation="[120,600]" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+            <Group id="postRow" translation="[120,660]" />
+            <Label id="postHint" translation="[120,1000]" font="font:SmallestSystemFont" color="0xB4B4C0FF" />
+        </Group>
+        <Group id="stillBox" visible="false">
+            <Rectangle width="1920" height="1080" color="0x000000FF" />
+            <Poster id="stillBg" width="1920" height="1080" loadWidth="1280" loadHeight="720" loadDisplayMode="scaleToZoom" opacity="0.45" />
+            <Poster width="1920" height="1080" uri="pkg:/images/player_bottom.png" loadDisplayMode="scaleToFill" />
+            <Poster id="stillLogo" translation="[120,380]" width="620" height="150" loadDisplayMode="scaleToFit" />
+            <Label id="stillShow" translation="[120,420]" width="1300" height="110" vertAlign="bottom" wrap="true" maxLines="2" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="stillHeading" translation="[120,560]" width="1400" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="stillSub" translation="[120,650]" width="1400" font="font:MediumSystemFont" color="0xD4D4DCFF" />
+            <Group id="stillButtons" translation="[120,740]" />
+            <Label id="stillCount" translation="[120,850]" font="font:SmallSystemFont" color="0xB4B4C0FF" />
         </Group>
         <ActionSheet id="panel" visible="false" />
     </children>

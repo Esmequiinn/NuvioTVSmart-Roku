@@ -37,12 +37,13 @@ sub render()
     else
         m.ring.visible = false
     end if
-    m.mask.maskSize = [size, size]
+    Mask_Apply(m.mask, size, size)
     m.pic.width = size
     m.pic.height = size
     m.pic.loadWidth = size * 2
     m.pic.loadHeight = size * 2
-    if m.pic.uri <> m.top.avatar then m.pic.uri = m.top.avatar
+    want = Mask_Circle(m.top.avatar, size * 2)
+    if m.pic.uri <> want then m.pic.uri = want
     onPic()
 end sub
 

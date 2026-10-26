@@ -1,5 +1,13 @@
 sub init()
     m.ring = m.top.findNode("ring")
+    m.caps = m.top.findNode("caps")
+    m.capTl = m.top.findNode("capTl")
+    m.capTr = m.top.findNode("capTr")
+    m.capBl = m.top.findNode("capBl")
+    m.capBr = m.top.findNode("capBr")
+    for each c in [m.capTl, m.capTr, m.capBl, m.capBr]
+        c.blendColor = "0x0B0B0FFF"
+    end for
     m.mask = m.top.findNode("mask")
     m.base = m.top.findNode("base")
     m.art = m.top.findNode("art")
@@ -33,6 +41,7 @@ sub onData()
     m.title.visible = false
     m.logo.uri = Str_Of(d.logo)
     m.video.visible = false
+    m.caps.visible = Mask_NeedCaps()
     m.video.control = "stop"
     if m.global.hasField("accent") then m.ring.blendColor = m.global.accent
     m.top.w = m.fromW
@@ -54,10 +63,14 @@ sub layout()
     w = m.top.w
     h = m.top.h
     if w <= 0 or h <= 0 then return
-    m.ring.translation = [-4, -4]
-    m.ring.width = w + 8
-    m.ring.height = h + 8
-    m.mask.maskSize = [w, h]
+    m.ring.translation = [0, 0]
+    m.ring.width = w
+    m.ring.height = h
+    m.capTl.translation = [0, 0]
+    m.capTr.translation = [w - 22, 0]
+    m.capBl.translation = [0, h - 22]
+    m.capBr.translation = [w - 22, h - 22]
+    Mask_Apply(m.mask, w, h)
     for each n in [m.base, m.art, m.video]
         n.width = w
         n.height = h
@@ -110,6 +123,7 @@ sub onOpen()
         m.grow.control = "stop"
         m.video.control = "stop"
         m.video.visible = false
+        m.caps.visible = false
         m.top.visible = false
     end if
 end sub
@@ -129,4 +143,5 @@ sub onVideoState()
     else if state = "finished" or state = "error"
         m.video.visible = false
     end if
+    m.caps.visible = m.video.visible or Mask_NeedCaps()
 end sub

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="Avatar" extends="Group">
+    <interface>
+        <field id="size" type="integer" value="96" onChange="render" />
+        <field id="name" type="string" onChange="render" />
+        <field id="color" type="string" onChange="render" />
+        <field id="avatar" type="string" onChange="render" />
+        <field id="ringColor" type="string" onChange="render" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Mask.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/Avatar.brs" />
+    <children>
+        <Poster id="ring" visible="false" uri="pkg:/images/dot.png" />
+        <Poster id="disc" uri="pkg:/images/dot.png" />
+        <Label id="initial" horizAlign="center" vertAlign="center" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+        <MaskGroup id="mask" maskUri="pkg:/images/circle.png">
+            <Poster id="pic" loadDisplayMode="scaleToZoom" />
+        </MaskGroup>
+    </children>
+</component>

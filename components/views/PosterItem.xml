@@ -9,6 +9,7 @@
         <field id="rowHasFocus" type="boolean" onChange="onItemFocus" />
         <field id="rowListHasFocus" type="boolean" onChange="onItemFocus" />
     </interface>
+    <script type="text/brightscript" uri="pkg:/components/Mask.brs" />
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
     <script type="text/brightscript" uri="pkg:/components/views/PosterItem.brs" />
@@ -20,6 +21,7 @@
             <Poster id="art" width="200" height="300" loadWidth="200" loadHeight="300" loadDisplayMode="scaleToZoom" />
             <Poster id="shade" visible="false" uri="pkg:/images/cw_shade.png" loadDisplayMode="scaleToFill" />
         </MaskGroup>
+        <Group id="capsHolder" />
         <Group id="cw" visible="false">
             <Poster id="badgeBg" uri="pkg:/images/badge.9.png" blendColor="0x131313E0" />
             <Label id="badge" horizAlign="center" vertAlign="center" font="font:SmallestSystemFont" color="0xFFFFFFF0" />

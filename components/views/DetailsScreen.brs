@@ -188,14 +188,14 @@ sub onExtra()
             if Str_Of(c.photo) <> ""
                 mask = g.createChild("MaskGroup")
                 mask.maskUri = "pkg:/images/c/d150.png"
-                mask.maskSize = [150, 150]
+                Mask_Apply(mask, 150, 150)
                 pic = mask.createChild("Poster")
                 pic.width = 150
                 pic.height = 150
                 pic.loadWidth = 185
                 pic.loadHeight = 278
                 pic.loadDisplayMode = "scaleToZoom"
-                pic.uri = c.photo
+                pic.uri = Mask_Circle(c.photo, 150)
             end if
             nm = g.createChild("Label")
             nm.font = "font:SmallBoldSystemFont"
@@ -242,7 +242,7 @@ sub buildEpisodes()
         frame.blendColor = "0x1E1E22FF"
         mask = g.createChild("MaskGroup")
         mask.maskUri = "pkg:/images/mask_landscape.png"
-        mask.maskSize = [448, 252]
+        Mask_Apply(mask, 448, 252)
         pic = mask.createChild("Poster")
         pic.width = 448
         pic.height = 252
@@ -250,6 +250,7 @@ sub buildEpisodes()
         pic.loadHeight = 252
         pic.loadDisplayMode = "scaleToZoom"
         pic.uri = Str_Of(e.thumb)
+        Mask_Caps(g, 448, 252, 22, "0x0C0C0FFF")
         ring = g.createChild("Poster")
         ring.uri = "pkg:/images/iring.9.png"
         ring.width = 448
