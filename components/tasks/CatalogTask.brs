@@ -28,7 +28,7 @@ sub execute()
     for each base in addons
         manifestUrls.Push(base + "/manifest.json")
     end for
-    raw = Http_FetchHook(manifestUrls, 10000, 0, 8, invalid).data
+    raw = Http_FetchHook(manifestUrls, 15000, 0, 8, invalid).data
 
     manifests = []
     failed = 0
@@ -117,7 +117,7 @@ sub execute()
         m.rowData.Push(invalid)
     end for
     hook = Home_OnResult
-    fetched = Http_FetchHook(urls, 20000, prefs.rowSize, 10, hook)
+    fetched = Http_FetchHook(urls, 30000, prefs.rowSize, 10, hook)
     for i = 0 to visible.Count() - 1
         if m.rowData[i] = invalid then Home_OnResult(i, fetched.data, fetched.diag)
     end for
@@ -330,7 +330,7 @@ sub Progress_Enrich(manifests as object)
         end if
     end for
     if urls.Count() = 0 then return
-    results = Http_FetchJsonAll(urls, 8000)
+    results = Http_FetchJsonAll(urls, 12000)
     changed = false
     for j = 0 to jobs.Count() - 1
         data = results[j]
