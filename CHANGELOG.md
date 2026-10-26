@@ -43,6 +43,7 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 - Playing a source again after leaving it no longer fails with "the connection dropped". If the link can't resume where you left off, the channel tries again with another method, and if that fails too it starts from the beginning instead of showing an error.
 
 - The channel no longer freezes when you go back to the home screen after opening Settings.
+- IPTV and other links without a file extension play again. Since 0.0.3 the channel gave the Roku a list of formats to try, and the Roku rejected it, so the screen stayed black until "the connection dropped". The Roku now detects the format by itself first, like in 0.0.2.
 
 ### Changed
 - The README explains which codecs some Roku models can't play.
