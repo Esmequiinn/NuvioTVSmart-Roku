@@ -13,7 +13,6 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 ### Cambiado
 - El inicio aparece antes, sobre todo la primera vez o después de reinstalar el canal. Si un catálogo tarda, los demás aparecen a los pocos segundos en lugar de esperarlo, y el lento se agrega cuando llega.
 - Los títulos en otros alfabetos (como japonés o chino) se traducen después de que aparecen las filas, así que ya no detienen todo el inicio.
-- El canal espera menos a los addons que no responden: 10 segundos para los manifiestos y los detalles, y 20 segundos para los catálogos (antes hasta 30).
 - Con un idioma que no sea español ni portugués, la página del celular se abre en inglés.
 
 ### Corregido

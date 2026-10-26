@@ -13,7 +13,6 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 ### Changed
 - The home screen shows up sooner, especially the first time or after reinstalling the channel. If one catalog is slow, the rest appear after a few seconds instead of waiting for it, and the slow one is added when it arrives.
 - Titles in other alphabets (like Japanese or Chinese) are translated after the rows appear, so they no longer hold up the whole home screen.
-- The channel waits less for addons that don't answer: 10 seconds for addon manifests and details, and 20 seconds for catalogs (it was up to 30).
 - With a language other than Spanish or Portuguese, the phone setup page opens in English.
 
 ### Fixed
