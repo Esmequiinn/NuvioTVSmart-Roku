@@ -20,7 +20,7 @@ Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMe
 
 > **Esta no es una app oficial de Nuvio** y no está afiliada ni respaldada por el equipo de Nuvio. No aloja, guarda ni distribuye ningún contenido. Todo lo que ves viene de los addons que instalas.
 
-> **Aquí se usó IA a lo loco, así que lo que pienses de eso guárdatelo, yo solo quería tener Nuvio en mi Roku de porquería.**
+> **Aquí se usó IA, así que lo que pienses sobre eso guárdatelo, yo solo quería tener Nuvio en mi Roku.**
 
 ---
 
