@@ -16,7 +16,7 @@
  " episodios": " episodes",
  " fuentes": " sources",
  " instalados  \u00b7  ": " installed  \u00b7  ",
- " min": " min left",
+ " min": " min",
  " persona": " person",
  " personas": " people",
  " reglas importadas.": " rules imported.",
@@ -730,5 +730,8 @@
  "Espacio libre: ": "Free space: ",
  "claves": "keys",
  "\u00daltima revisi\u00f3n en tu cuenta: ": "Last check in your account: ",
- "La reproducci\u00f3n autom\u00e1tica nunca elige fuentes que tu Roku no puede reproducir (HEVC o 4K seg\u00fan tu modelo) y deja al final los REMUX con audio TrueHD o DTS-HD.": "Auto-play never picks sources your Roku can't play (HEVC or 4K, depending on your model) and leaves REMUX files with TrueHD or DTS-HD audio for last."
+ "La reproducci\u00f3n autom\u00e1tica nunca elige fuentes que tu Roku no puede reproducir (HEVC o 4K seg\u00fan tu modelo) y deja al final los REMUX con audio TrueHD o DTS-HD.": "Auto-play never picks sources your Roku can't play (HEVC or 4K, depending on your model) and leaves REMUX files with TrueHD or DTS-HD audio for last.",
+ "Actualizaci\u00f3n disponible": "Update available",
+ "Novedades": "What's new",
+ "Escanea el c\u00f3digo para descargar la nueva versi\u00f3n": "Scan the code to download the new version"
 }
