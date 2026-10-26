@@ -2,6 +2,8 @@
 
 All notable changes to Nuvio TV for Roku are listed here. This changelog only covers the Roku channel.
 
+**English** · [Español](CHANGELOG.es.md)
+
 ## [0.0.4] - 2026-10-25
 
 ### Added
@@ -36,7 +38,7 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 - Home rows update in place when catalogs finish loading, instead of disappearing and loading again.
 - The channel icon and splash screen have the right size on HD Rokus.
 - A key you type on the TV is no longer replaced by your Nuvio account sync.
-- On Rokus that can't play HEVC (x265), auto-play leaves those sources for last, and the error says why the link didn't play.
+- Auto-play checks what your Roku can play and never picks sources it can't (HEVC / x265 on models without HEVC, 4K when the Roku or TV isn't in 4K), even when they match your regex. If none of the sources can play, it shows the list. When one of those fails, the error says why. You can turn this off in **Settings → Playback → Prefer Roku-compatible sources**.
 - **Settings → About** shows the Roku model, video mode, whether it plays HEVC and the free storage space.
 - Trakt lists in collections failed with "Trakt (403)" because the list number wasn't sent. TMDB collections, companies, networks and people saved with a numeric ID also loaded the wrong titles. Both now work, and Trakt lists in a folder load at the same time instead of one by one.
 - The channel saved home posters in the background while you browsed, which slowed down everything else (collections, cast photos) and sometimes made posters stop loading. It now waits until the home screen is ready, downloads less at once and stops as soon as you open something.
@@ -48,6 +50,7 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 ### Changed
 - The README explains which codecs some Roku models can't play.
 - The README explains how to keep the Roku in 4K with **Settings → Display type → Auto detect**.
+- The README and this changelog are also available in Spanish.
 
 ### Known issues
 - The MDBList key from your Nuvio account still doesn't reach the Roku for some accounts. **Settings → Integrations** shows what the channel found in your account, to help find the cause.

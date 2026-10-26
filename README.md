@@ -1,5 +1,7 @@
 # Nuvio TV for Roku
 
+**English** · [Español](README.es.md)
+
 <div align="center">
 
   <img src="assets/brand/app_logo_wordmark.png" alt="Nuvio" width="300" />
@@ -14,7 +16,7 @@
 
 </div>
 
-This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.0.3**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
+This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.0.4**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
 
 > **This is not an official Nuvio app** and it is not affiliated with or endorsed by the Nuvio team. It does not host, store or distribute any content. Everything you see comes from the addons you install.
 
@@ -113,7 +115,7 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 
 - Roku can only play direct links. Torrent, magnet and external links are skipped.
 - Playable formats depend on your Roku model (MP4, MKV, HLS and DASH are the usual ones).
-- Some Roku models, like the Roku Express, can't decode some video codecs, such as HEVC (x265), 10-bit or HDR. On those Rokus, auto-play leaves those sources for last, and if you pick one it may fail with "the connection dropped" or a codec error. **Settings → About** in the channel shows your Roku model and whether it can play HEVC.
+- Some Roku models, like the Roku Express, can't decode some video codecs, such as HEVC (x265), 10-bit or HDR. The channel checks what your Roku can play, and auto-play never picks those sources, even if they match your regex. If you pick one yourself it may fail with "the connection dropped" or a codec error. **Settings → About** in the channel shows your Roku model and whether it can play HEVC.
 - On 720p TVs the Roku scales the interface down, so focus frames and buttons look less sharp than on 1080p or 4K TVs.
 - Roku can't decode TrueHD or DTS-HD audio, which most REMUX files use. Those audio tracks don't show up in the player. The channel prefers other sources for auto-play.
 - 4K (HEVC above 1080p) only plays when your Roku and your TV are in 4K mode. Channels can't change the display mode, so set it on your Roku in **Settings → Display type → Auto detect** (in Spanish: **Ajustes → Tipo de pantalla → Detectar automáticamente**). If your TV supports 4K, the Roku will stay in 4K.
