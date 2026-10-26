@@ -215,11 +215,11 @@ li.item:first-child{border-top:0}
     <div class="card">
       <h2>MDBList</h2>
       <p class="hint">Calificaciones de IMDb, Rotten Tomatoes, Metacritic, Letterboxd y m&#225;s. Clave gratis en mdblist.com.</p>
-      <div class="row"><input id="mdbKey" autocomplete="off" placeholder="Clave de API"><button cl    <div class="card">
+      <div class="row"><input id="mdbKey" autocomplete="off" placeholder="Clave de API"><button class="btn" data-integ="mdbKey">Guardar</button></div>
+    </div>
+    <div class="card">
       <h2>Trakt y Simkl</h2>
       <p class="hint">Ya no necesitas crear apps ni pegar claves. Conecta tu cuenta desde el Roku en Ajustes > Seguimiento y escanea el c&#243;digo.</p>
-    </div>
-n" data-integ="simklClientId">Guardar</button></div>
     </div>
   </section>
 
@@ -272,7 +272,8 @@ async function load(quiet) {
 
 async function act(body, okText) {
   try {
-    const data = await request('/api/action', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: ascii(body)});
+    body.rid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    const data = await request('/api/action', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: ascii(body)}, 3);
     if (data.state) { state = data.state; render(); }
     if (!data.ok) { toast(data.error || 'Algo sali\u00f3 mal.', true); return false; }
     const text = data.message || okText;
