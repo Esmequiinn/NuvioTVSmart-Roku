@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="UpdatePrompt" extends="Group">
+    <interface>
+        <field id="info" type="assocarray" onChange="onInfo" />
+        <field id="event" type="assocarray" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/UpdatePrompt.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x000000FF" opacity="0.78" />
+        <Group translation="[410,60]">
+            <Poster width="1100" height="960" uri="pkg:/images/sheet.9.png" blendColor="0x1A1A1AFF" />
+            <Poster width="1100" height="960" uri="pkg:/images/sheet_ring.9.png" blendColor="0x333333FF" />
+            <Label id="title" translation="[60,48]" width="980" horizAlign="center" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="version" translation="[60,112]" width="980" horizAlign="center" font="font:SmallSystemFont" color="0xB3B3B3FF" />
+            <Label id="notesLabel" translation="[60,172]" width="980" font="font:SmallBoldSystemFont" color="0xFFFFFFFF" />
+            <ScrollableText id="notes" translation="[60,216]" width="980" height="370" font="font:SmallSystemFont" color="0xD9D9D9FF" />
+            <Poster id="qrBack" translation="[460,608]" width="180" height="180" uri="pkg:/images/card.9.png" blendColor="0xFFFFFFFF" />
+            <Poster id="qr" translation="[470,618]" width="160" height="160" loadWidth="420" loadHeight="420" loadDisplayMode="scaleToFit" />
+            <Label id="scan" translation="[60,800]" width="980" horizAlign="center" font="font:SmallestSystemFont" color="0x9A9AAAFF" />
+            <Group translation="[430,850]">
+                <Poster width="240" height="76" uri="pkg:/images/pill.9.png" blendColor="0xFFFFFFFF" />
+                <Label id="ok" width="240" height="76" horizAlign="center" vertAlign="center" font="font:MediumSystemFont" color="0x0D0D0DFF" />
+            </Group>
+        </Group>
+    </children>
+</component>
