@@ -1,4 +1,6 @@
 sub openDetails(item as object)
+    Poster_Stop()
+    m.autoCount = 0
     hideExpanded()
     m.ctx = {
         kind: item.itemType
@@ -191,7 +193,9 @@ sub renderDetailButtons()
     entry = resumeEntry()
     playLabel = L("Reproducir")
     if entry <> invalid
-        if Str_Of(entry.episode) <> ""
+        if Bool_Of(entry.nextUp, false)
+            playLabel = L("Reproducir  ") + Str_Of(entry.episode)
+        else if Str_Of(entry.episode) <> ""
             playLabel = L("Continuar  ") + Str_Of(entry.episode)
         else
             playLabel = L("Continuar desde ") + Fmt_Time(ToInt(entry.position, 0))
@@ -203,7 +207,7 @@ sub renderDetailButtons()
     if Len(playLabel) > 48 then playLabel = Left(playLabel, 46) + "..."
     buttons.Push({ id: "play", icon: "pkg:/images/ic_play.png", label: playLabel })
     if m.ctx.trailer <> invalid and Bool_Of(St_Pref("trailerButton"), true) then buttons.Push({ id: "trailer", icon: "pkg:/images/ic_trailer.png", label: L("Tráiler") })
-    if entry <> invalid then buttons.Push({ id: "restart", icon: "pkg:/images/ic_next.png", label: L("Desde el inicio") })
+    if entry <> invalid and not Bool_Of(entry.nextUp, false) then buttons.Push({ id: "restart", icon: "pkg:/images/ic_next.png", label: L("Desde el inicio") })
     if St_InLibrary(m.ctx.metaId)
         buttons.Push({ id: "library", icon: "pkg:/images/ic_check.png", label: L("En Mi lista") })
     else
@@ -276,7 +280,7 @@ sub Cast_Open(index as integer)
         return
     end if
     closeDetails(false)
-    Folder_Load(name, { title: name, sources: [{ provider: "tmdb", tmdbSourceType: "PERSON", tmdbId: Str_Of(person.id), personName: name, title: L("Películas y series") }] })
+    Folder_Load(name, { title: name, sources: [{ provider: "tmdb", tmdbSourceType: "PERSON", tmdbId: Str_Any(person.id), personName: name, title: L("Películas y series") }] })
 end sub
 
 sub openEpisodes()
@@ -376,7 +380,9 @@ end sub
 
 function nextEpisode() as dynamic
     found = false
+    if type(m.ctx.seasons) <> "roArray" then return invalid
     for each season in m.ctx.seasons
+        if type(season.episodes) <> "roArray" then return invalid
         for each v in season.episodes
             if found then return { season: season, video: v }
             if v.id = m.ctx.videoId then found = true
@@ -386,6 +392,7 @@ function nextEpisode() as dynamic
 end function
 
 sub setVideo(primary as string, ids as object)
+    m.ctx.nextUpSaved = false
     all = [primary]
     for each id in ids
         all.Push(id)
@@ -491,13 +498,23 @@ sub fetchStreams()
     m.ctx.skipped = 0
     m.ctx.auto = autoplayOptions()
     m.autoTimer.control = "stop"
-    m.streamTask = CreateObject("roSGNode", "StreamTask")
-    m.streamTask.manifests = m.manifests
-    m.streamTask.kind = m.ctx.kind
-    m.streamTask.videoIds = ids
-    m.streamTask.observeField("batch", "onStreamBatch")
-    m.streamTask.observeField("streams", "onStreamsLoaded")
-    m.streamTask.control = "RUN"
+    pre = m.prefetch
+    m.prefetch = invalid
+    if pre <> invalid and pre.videoId = m.ctx.videoId and pre.task <> invalid
+        m.streamTask = pre.task
+        m.streamTask.observeField("batch", "onStreamBatch")
+        m.streamTask.observeField("streams", "onStreamsLoaded")
+        m.ctx.preDone = pre.task.streams <> invalid
+    else
+        m.ctx.preDone = false
+        m.streamTask = CreateObject("roSGNode", "StreamTask")
+        m.streamTask.manifests = m.manifests
+        m.streamTask.kind = m.ctx.kind
+        m.streamTask.videoIds = ids
+        m.streamTask.observeField("batch", "onStreamBatch")
+        m.streamTask.observeField("streams", "onStreamsLoaded")
+        m.streamTask.control = "RUN"
+    end if
     m.subtitleTask = CreateObject("roSGNode", "SubtitleTask")
     m.subtitleTask.manifests = m.manifests
     m.subtitleTask.kind = m.ctx.kind
@@ -513,6 +530,15 @@ sub fetchStreams()
         m.ctx.streams = [cached]
         playStream(0, 0)
         return
+    end if
+    if Bool_Of(m.ctx.preDone, false)
+        m.ctx.preDone = false
+        Streams_Done(m.streamTask)
+        if m.ctx.decided then return
+        if not m.ctx.auto.active
+            openStreams()
+            return
+        end if
     end if
     if m.ctx.auto.active
         showBusy(L("Buscando enlaces..."))
@@ -547,6 +573,7 @@ function autoplayOptions() as object
         scope: Str_Of(St_Pref("autoplayScope"))
         addons: St_Pref("autoplayAddons")
         binge: binge
+        noFallback: binge <> "" and m.ctx.nextAuto and not Bool_Of(St_Pref("bingeFallback"), true)
         timeout: timeout
         active: mode <> "manual" or binge <> ""
     }
@@ -651,7 +678,10 @@ sub onAutoTimer()
 end sub
 
 sub onStreamsLoaded(event as object)
-    task = event.getRoSGNode()
+    Streams_Done(event.getRoSGNode())
+end sub
+
+sub Streams_Done(task as object)
     if m.streamTask = invalid or not task.isSameNode(m.streamTask) then return
     m.streamTask = invalid
     m.ctx.loading = false
@@ -777,6 +807,7 @@ sub playStream(index as integer, startAt as integer)
     m.ctx.attempts = Stream_Attempts(s.url)
     m.ctx.attempt = 0
     m.ctx.retriedDrop = false
+    m.ctx.resumeMode = ""
     resume = startAt
     if resume = 0 and not m.ctx.fromStart then resume = St_ResumeFor(m.ctx.videoId)
     m.ctx.startAt = resume
@@ -801,6 +832,7 @@ sub onSubsWait()
 end sub
 
 sub showPlayer(index as integer)
+    Poster_Stop()
     metaLine = m.ctx.metaLine
     title = m.ctx.title
     description = m.ctx.description
@@ -826,7 +858,21 @@ sub showPlayer(index as integer)
         pauseOverlay: Bool_Of(St_Pref("pauseOverlay"), true)
         clock: Bool_Of(St_Pref("clock"), true)
         resumeAt: ToInt(m.ctx.startAt, 0)
+        skip: Bool_Of(St_Pref("skipIntro"), true)
+        autoSkip: Extras_AutoSkip()
+        nextMode: Str_Of(St_Pref("nextMode"))
+        nextPct: ToInt(St_Pref("nextPct"), 99)
+        nextMin: ToInt(St_Pref("nextMin"), 2)
+        autoNext: Bool_Of(St_Pref("autoNext"), true)
+        postPlay: Bool_Of(St_Pref("postPlay"), true)
+        postPct: ToInt(St_Pref("postPct"), 96)
+        stats: Bool_Of(St_Pref("playerStats"), false)
+        stripSdh: Bool_Of(St_Pref("stripSdh"), false)
+        onlyPreferred: Bool_Of(St_Pref("onlyPrefSubs"), false)
+        customSubs: Bool_Of(St_Pref("customSubs"), true)
+        subStyle: { size: Str_Of(St_Pref("subSize")), color: Str_Of(St_Pref("subColor")), bg: Str_Of(St_Pref("subBg")), bold: Bool_Of(St_Pref("subBold"), false), edge: Str_Of(St_Pref("subEdge")), offset: ToInt(St_Pref("subOffset"), 0) }
     }
+    Extras_Start()
     m.player.sources = sourceLabels()
     m.player.sourceIndex = index
     video = m.playerVideo
@@ -867,7 +913,7 @@ sub launchAttempt()
     if tracks.Count() > 0 then content.SubtitleTracks = tracks
     m.ctx.loadedSubs = tracks.Count()
     resume = ToInt(m.ctx.startAt, 0)
-    if resume > 0 then content.PlayStart = resume
+    if resume > 0 and Str_Of(m.ctx.resumeMode) = "" then content.PlayStart = resume
     video = m.playerVideo
     video.control = "stop"
     video.EnableCookies()
@@ -913,6 +959,24 @@ function Alt_Restore(position as integer) as boolean
     return true
 end function
 
+function Resume_Retry(position as integer) as boolean
+    startAt = ToInt(m.ctx.startAt, 0)
+    if startAt <= 0 or position - startAt >= 15 then return false
+    mode = Str_Of(m.ctx.resumeMode)
+    if mode = ""
+        m.ctx.resumeMode = "seek"
+    else if mode = "seek"
+        m.ctx.resumeMode = "zero"
+        m.ctx.startAt = 0
+        Toast_Show(L("Este enlace no permitió continuar desde donde ibas, así que empezó desde el principio."))
+    else
+        return false
+    end if
+    refreshResume()
+    launchAttempt()
+    return true
+end function
+
 function nextAttempt(position as integer) as boolean
     attempts = m.ctx.attempts
     if type(attempts) <> "roArray" then return false
@@ -951,6 +1015,10 @@ function playbackFailureText(message as string) as string
         re = CreateObject("roRegex", "2160|\b4k\b|\buhd\b", "i")
         if re.IsMatch(Stream_SearchText(s)) then text = L("Este enlace es 4K y tu Roku o tu TV no está en modo 4K. Elige una fuente 1080p o menor.")
     end if
+    if s <> invalid and not Device_CanHevc()
+        re2 = CreateObject("roRegex", "\b(x265|hevc|h\.?265|10bit|10-bit|hdr|hdr10)\b", "i")
+        if re2.IsMatch(Stream_SearchText(s)) then text = L("Este enlace es HEVC (x265) y tu Roku no puede reproducir ese formato. Elige una fuente x264 o H.264.")
+    end if
     return text
 end function
 
@@ -966,11 +1034,22 @@ sub rememberStream()
 end sub
 
 sub onPlayerEvent()
+    try
+        Player_Event()
+    catch e
+        print "PLAYBACK ERROR "; Err_Text(e)
+        showMessage(L("Error del reproductor"), Err_Text(e))
+    end try
+end sub
+
+sub Player_Event()
     ev = m.player.event
     if ev = invalid then return
     kind = Str_Of(ev.type)
     if kind = "close"
         closePlayer(true)
+    else if kind = "crash"
+        showMessage(L("Error del reproductor"), Str_Of(ev.message))
     else if kind = "control"
         Party_Publish(Bool_Of(ev.paused, false), 0.0 + ev.position)
     else if kind = "party"
@@ -978,13 +1057,48 @@ sub onPlayerEvent()
     else if kind = "source"
         saveProgress()
         playStream(ToInt(ev.index, 0), ToInt(ev.position, 0))
+    else if kind = "nextAuto"
+        Next_Auto()
+    else if kind = "nextNow"
+        m.autoCount = 0
+        nxt = nextEpisode()
+        if nxt <> invalid
+            saveProgress()
+            playNext(nxt)
+        end if
+    else if kind = "prefetchNext"
+        Next_Prefetch()
+    else if kind = "stillYes"
+        m.autoCount = 0
+        nxt = nextEpisode()
+        if nxt <> invalid
+            saveProgress()
+            playNext(nxt)
+        else
+            closePlayer(true)
+        end if
+    else if kind = "stillNo"
+        m.autoCount = 0
+        closePlayer(true)
+    else if kind = "recPick"
+        closePlayer(true)
+        if m.streamsOpen then closeStreams(false)
+        item = CreateObject("roSGNode", "ContentNode")
+        item.title = Str_Of(ev.name)
+        item.HDPosterUrl = Str_Of(ev.poster)
+        item.addFields({ itemType: Str_Of(ev.kind), metaId: Str_Of(ev.id), videoId: "", background: Str_Of(ev.background), metaLine: "", episodeLabel: "", progress: 0.0, logo: "", rating: "", fallback: "", portrait: Str_Of(ev.poster) })
+        if m.detailsOpen then closeDetails(false)
+        openDetails(item)
     else if kind = "altAudio"
         Alt_Audio(ToInt(ev.position, 0))
     else if kind = "subsReload"
         reloadWithSubtitle(Str_Of(ev.url), ToInt(ev.position, 0))
     else if kind = "finished" and not playbackEnded(ToInt(ev.position, 0), ToInt(ev.duration, 0))
         position = ToInt(ev.position, 0)
-        if position > 30 and not Bool_Of(m.ctx.retriedDrop, false)
+        if position < 10 and Bool_Of(m.ctx.reusedPlay, false)
+            fallbackFromReuse()
+        else if Resume_Retry(position)
+        else if position > 30 and not Bool_Of(m.ctx.retriedDrop, false)
             m.ctx.retriedDrop = true
             m.ctx.startAt = position
             refreshResume()
@@ -999,11 +1113,12 @@ sub onPlayerEvent()
         end if
     else if kind = "finished"
         St_RemoveProgress(m.ctx.metaId)
+        NextUp_Save()
         scrobble("stop")
         m.scrobbleState = ""
         nxt = nextEpisode()
         if nxt <> invalid and Bool_Of(St_Pref("autoNext"), true)
-            playNext(nxt)
+            Next_Auto()
         else
             closePlayer(false)
         end if
@@ -1017,6 +1132,7 @@ sub onPlayerEvent()
             showMessage(L("No se pudo reproducir"), playbackFailureText(Str_Of(ev.message)))
         end if
     else if kind = "next"
+        m.autoCount = 0
         nxt = nextEpisode()
         if nxt = invalid
             showMessage(L("Fin de la serie"), L("Este es el último episodio disponible."))
@@ -1033,6 +1149,118 @@ sub onPlayerEvent()
             openEpisodes()
         end if
     end if
+end sub
+
+function Extras_AutoSkip() as object
+    out = []
+    for each pair in [["autoSkipIntro", "intro"], ["autoSkipRecap", "recap"], ["autoSkipOutro", "outro"], ["autoSkipCredits", "credits"]]
+        if Bool_Of(St_Pref(pair[0]), false) then out.Push(pair[1])
+    end for
+    return out
+end function
+
+sub Extras_Start()
+    key = Str_Of(m.ctx.videoId)
+    if key = Str_Of(m.extrasFor) and m.extrasData <> invalid
+        m.player.nextInfo = m.extrasData.nextEp
+        m.player.segments = m.extrasData.segments
+        m.player.recs = m.extrasData.recs
+        return
+    end if
+    m.extrasFor = key
+    m.player.segments = []
+    m.player.parental = []
+    m.player.recs = []
+    nxt = nextEpisode()
+    info = {}
+    if nxt <> invalid
+        v = nxt.video
+        code = L("T") + ToInt(v.season, 0).ToStr() + " E" + ToInt(v.episode, 0).ToStr()
+        info = { code: code, title: episodeTitle(v), thumb: Str_Of(v.thumbnail) }
+    end if
+    m.player.nextInfo = info
+    m.extrasData = { nextEp: info, segments: [], recs: [] }
+    imdb = Str_Of(m.ctx.imdb)
+    id = Str_Of(m.ctx.metaId)
+    params = { tag: key, imdb: imdb, movie: not isSeries(), season: ToInt(m.ctx.epSeason, -1), episode: ToInt(m.ctx.epEpisode, -1) }
+    if Left(id, 4) = "mal:" then params.mal = id.Split(":")[1]
+    if Left(id, 6) = "kitsu:" then params.kitsu = id.Split(":")[1]
+    if Left(key, 6) = "kitsu:" and params.episode < 0
+        parts = key.Split(":")
+        if parts.Count() >= 3 then params.episode = parts[parts.Count() - 1].ToInt()
+    end if
+    if Bool_Of(St_Pref("skipIntro"), true) or Extras_AutoSkip().Count() > 0 then Extras_Run("skip", params)
+    if Bool_Of(St_Pref("parentalGuide"), true) and Left(imdb, 2) = "tt" then Extras_Run("parental", { tag: key, imdb: imdb })
+    if Bool_Of(St_Pref("postPlay"), true) and nxt = invalid
+        tmdb = ""
+        if Left(id, 5) = "tmdb:" then tmdb = id.Split(":")[1]
+        Extras_Run("recs", { tag: key, imdb: imdb, tmdb: tmdb, series: isSeries() })
+    end if
+end sub
+
+sub Extras_Run(mode as string, params as object)
+    task = CreateObject("roSGNode", "PlayerDataTask")
+    task.mode = mode
+    task.params = params
+    task.observeField("result", "onExtrasResult")
+    task.control = "RUN"
+    if m.extrasTasks = invalid then m.extrasTasks = []
+    m.extrasTasks.Push(task)
+end sub
+
+sub onExtrasResult(event as object)
+    task = event.getRoSGNode()
+    r = task.result
+    if m.extrasTasks <> invalid
+        kept = []
+        for each t in m.extrasTasks
+            if not t.isSameNode(task) then kept.Push(t)
+        end for
+        m.extrasTasks = kept
+    end if
+    if r = invalid or Str_Of(r.tag) <> Str_Of(m.extrasFor) or not m.player.visible then return
+    if r.mode = "skip" and type(r.segments) = "roArray"
+        m.player.segments = r.segments
+        m.extrasData.segments = r.segments
+    end if
+    if r.mode = "parental" and type(r.items) = "roArray" then m.player.parental = r.items
+    if r.mode = "recs" and type(r.items) = "roArray"
+        m.player.recs = r.items
+        m.extrasData.recs = r.items
+    end if
+end sub
+
+sub Next_Auto()
+    nxt = nextEpisode()
+    if nxt = invalid
+        closePlayer(false)
+        return
+    end if
+    m.autoCount = ToInt(m.autoCount, 0) + 1
+    limit = ToInt(St_Pref("stillCount"), 3)
+    if Bool_Of(St_Pref("stillWatching"), true) and m.autoCount >= limit
+        m.player.stillWatching = true
+        return
+    end if
+    saveProgress()
+    playNext(nxt)
+end sub
+
+sub Next_Prefetch()
+    if not Bool_Of(St_Pref("preloadNext"), false) then return
+    nxt = nextEpisode()
+    if nxt = invalid then return
+    v = nxt.video
+    ids = [v.id]
+    s = ToInt(v.season, -1)
+    e = ToInt(v.episode, -1)
+    if m.ctx.imdb <> "" and s >= 0 and e >= 0 then ids.Push(m.ctx.imdb + ":" + s.ToStr() + ":" + e.ToStr())
+    task = CreateObject("roSGNode", "StreamTask")
+    task.manifests = m.manifests
+    task.kind = m.ctx.kind
+    task.videoIds = Addon_UniqueIds(ids)
+    task.control = "RUN"
+    m.prefetch = { videoId: v.id, task: task }
 end sub
 
 sub playNext(nxt as object)
@@ -1094,6 +1322,7 @@ sub saveProgress()
     if kind = "tv" or kind = "channel" or kind = "channels" or kind = "events" or kind = "live" then return
     if total > 0 and current > total * 0.95
         St_RemoveProgress(m.ctx.metaId)
+        NextUp_Save()
         return
     end if
     St_SaveProgress({
@@ -1108,6 +1337,42 @@ sub saveProgress()
         altIds: m.ctx.videoIds
         position: current
         duration: total
+    })
+end sub
+
+sub NextUp_Save()
+    if Bool_Of(m.ctx.nextUpSaved, false) or not isSeries() then return
+    if not m.prefs.continueWatching then return
+    m.ctx.nextUpSaved = true
+    nxt = nextEpisode()
+    if nxt = invalid then return
+    v = nxt.video
+    released = Str_Of(v.released)
+    if released <> ""
+        now = CreateObject("roDateTime")
+        if Left(released, 10) > Left(now.ToISOString(), 10) then return
+    end if
+    s = ToInt(v.season, -1)
+    e = ToInt(v.episode, -1)
+    ids = [Str_Of(v.id)]
+    if m.ctx.imdb <> "" and s >= 0 and e >= 0 then ids.Push(m.ctx.imdb + ":" + s.ToStr() + ":" + e.ToStr())
+    thumb = Str_Of(v.thumbnail)
+    if thumb = "" then thumb = Str_Of(m.ctx.background)
+    St_SaveProgress({
+        metaId: m.ctx.metaId
+        videoId: Str_Of(v.id)
+        kind: m.ctx.kind
+        title: m.ctx.title
+        poster: m.ctx.poster
+        background: m.ctx.background
+        episode: episodeLabelFor(nxt.season, v) + "  " + episodeTitle(v)
+        thumb: thumb
+        altIds: ids
+        position: 0
+        duration: 0
+        nextUp: true
+        season: s
+        ep: e
     })
 end sub
 

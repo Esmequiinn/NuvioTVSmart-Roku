@@ -1,4 +1,5 @@
 sub init()
+    St_Migrate()
     m.top.backgroundColor = "0x0C0C0FFF"
     m.top.backgroundUri = ""
     m.hero = m.top.findNode("hero")
@@ -94,7 +95,8 @@ sub init()
 
     m.global.addFields({ accent: "0x7C4DFFFF" })
     m.global.addField("focusCard", "node", true)
-    m.global.addFields({ expandShift: 0.0, expandIndex: -1, syncDirty: 0 })
+    m.global.addFields({ expandShift: 0.0, expandIndex: -1, syncDirty: 0, corners: "auto" })
+    Mask_Global()
     m.global.observeField("syncDirty", "onSyncDirty")
     m.pushTimer = m.top.createChild("Timer")
     m.pushTimer.duration = 8
@@ -248,7 +250,10 @@ sub onProfileChosen()
         closeDetails(false)
         m.homeRows.content = invalid
         m.homeRows.visible = false
+        m.area = "page"
         showPage("home")
+        if not m.homeRows.isInFocusChain() and not overlayOpen() then Focus_Scene()
+        startQuietSync()
     else
         focusCurrent()
     end if
@@ -275,7 +280,15 @@ sub loadHome()
     m.catalogTask.observeField("early", "onCatalogsEarly")
     m.catalogTask.observeField("content", "onCatalogsLoaded")
     m.catalogTask.control = "RUN"
-    if m.page = "home" and m.area = "page" and not overlayOpen() and not hasRows then Focus_Scene()
+    if m.page = "home" and m.area = "page" and not overlayOpen()
+        if hasRows
+            m.hero.visible = true
+            showHeroFor(getRowItem(m.homeRows, m.homeRows.rowItemFocused))
+            focusPage()
+        else
+            Focus_Scene()
+        end if
+    end if
 end sub
 
 sub onSkeletonVisible()
@@ -345,7 +358,7 @@ function Home_RowSig(row as object) as string
     for i = 0 to n - 1
         if i > 5 then exit for
         c = row.getChild(i)
-        parts.Push(c.HDPosterUrl)
+        if c.hasField("remote") then parts.Push(c.remote) else parts.Push(c.HDPosterUrl)
     end for
     return parts.Join("|")
 end function
@@ -371,16 +384,24 @@ sub Poster_Cache(root as object)
     for i = 0 to root.getChildCount() - 1
         row = root.getChild(i)
         for j = 0 to row.getChildCount() - 1
+            if j >= 12 then exit for
             u = row.getChild(j).HDPosterUrl
             if Left(u, 4) = "http" then urls.Push(u)
         end for
     end for
     if urls.Count() = 0 then return
-    if m.posterTask <> invalid then m.posterTask.control = "stop"
+    Poster_Stop()
     m.posterTask = CreateObject("roSGNode", "PosterCacheTask")
     m.posterTask.urls = urls
     m.posterTask.observeField("result", "onPosterCache")
     m.posterTask.control = "RUN"
+end sub
+
+sub Poster_Stop()
+    if m.posterTask = invalid then return
+    m.posterTask.unobserveField("result")
+    m.posterTask.cancel = true
+    m.posterTask = invalid
 end sub
 
 sub onPosterCache(event as object)
@@ -393,7 +414,6 @@ sub onPosterCache(event as object)
     for each k in found
         m.posterMap[k] = found[k]
     end for
-    Poster_Localize(m.homeRows.content)
 end sub
 
 sub Home_Show(content as object)
@@ -401,7 +421,8 @@ sub Home_Show(content as object)
     m.skeleton.visible = false
     m.emptyState.visible = false
     old = m.homeRows.content
-    engaged = old <> invalid and old.getChildCount() > 0 and m.homeRows.visible and m.homeRows.isInFocusChain()
+    focused = m.homeRows.isInFocusChain()
+    engaged = old <> invalid and old.getChildCount() > 0 and m.homeRows.visible
     if not engaged
         m.homeRows.content = content
         applyRowSizes(m.homeRows)
@@ -434,10 +455,13 @@ sub Home_Show(content as object)
         for i = oldKeys.Count() to newRows.Count() - 1
             old.appendChild(newRows[i])
         end for
+        focusRow = -1
+        if type(focus) = "roArray" and focus.Count() > 0 and focused then focusRow = focus[0]
         for i = 0 to oldKeys.Count() - 1
-            if i <> focus[0] and Home_RowSig(old.getChild(i)) <> Home_RowSig(newRows[i]) then old.replaceChild(newRows[i], i)
+            if i <> focusRow and Home_RowSig(old.getChild(i)) <> Home_RowSig(newRows[i]) then old.replaceChild(newRows[i], i)
         end for
         applyRowSizes(m.homeRows)
+        Home_Refocus()
         return
     end if
     m.homeRows.content = content
@@ -447,7 +471,14 @@ sub Home_Show(content as object)
         if Home_RowKey(newRows[i]) = focusKey then target = i
     end for
     m.homeRows.jumpToRowItem = [target, 0]
-    m.homeRows.setFocus(true)
+    if focused then m.homeRows.setFocus(true)
+    Home_Refocus()
+end sub
+
+sub Home_Refocus()
+    if m.page <> "home" or m.area <> "page" or overlayOpen() or m.settingsOpen then return
+    if m.homeRows.isInFocusChain() then return
+    focusPage()
 end sub
 
 sub showEmptyState(addonCount as integer, failed as integer)
@@ -673,7 +704,19 @@ sub showHeroFor(item as dynamic)
         end if
     end if
     m.heroItem = item
-    m.hero.data = heroData(item, m.metaCache[item.metaId])
+    cached = m.metaCache[item.metaId]
+    d = heroData(item, cached)
+    if cached = invalid
+        if m.logoCache = invalid then m.logoCache = {}
+        quick = m.logoCache[item.metaId]
+        if quick <> invalid and quick <> ""
+            d.logo = quick
+        else if quick = invalid
+            d.logoPending = true
+            Logo_Start(item)
+        end if
+    end if
+    m.hero.data = d
     m.heroTimer.control = "stop"
     if m.metaCache[item.metaId] = invalid then m.heroTimer.control = "start"
 end sub
@@ -696,6 +739,7 @@ function heroData(item as object, meta as dynamic) as object
         line = Meta_Line(item.itemType, meta)
         if item.videoId = "" and Len(line) > Len(metaLine) then metaLine = line
     end if
+    if m.logoCache <> invalid and Str_Of(m.logoCache[item.metaId]) <> "" then logo = m.logoCache[item.metaId]
     if item.videoId <> "" and item.episodeLabel <> "" then metaLine = item.metaLine
     if item.hasField("badge") and item.badge <> "" then metaLine = Cw_HeroLine(item, meta)
     return { title: title, logo: logo, background: background, rating: rating, metaLine: metaLine, description: description }
@@ -729,9 +773,12 @@ end function
 
 sub onHeroTimer()
     item = m.heroItem
-    if item = invalid or m.manifests.Count() = 0 then return
-    if item.itemType = "folder" then return
+    if item = invalid or item.itemType = "folder" then return
     if m.metaCache[item.metaId] <> invalid then return
+    if m.manifests.Count() = 0
+        m.hero.data = heroData(item, invalid)
+        return
+    end if
     m.heroTask = CreateObject("roSGNode", "MetaTask")
     m.heroTask.manifests = m.manifests
     m.heroTask.kind = item.itemType
@@ -743,7 +790,10 @@ end sub
 sub onHeroMeta(event as object)
     task = event.getRoSGNode()
     meta = task.meta
-    if meta = invalid then return
+    if meta = invalid
+        if m.heroItem <> invalid and m.heroItem.metaId = task.metaId then m.hero.data = heroData(m.heroItem, invalid)
+        return
+    end if
     cacheMeta(task.metaId, meta)
     if m.heroItem <> invalid and m.heroItem.metaId = task.metaId
         m.hero.data = heroData(m.heroItem, meta)
@@ -860,10 +910,10 @@ sub onKeyboardButton()
     dlg = m.top.dialog
     if dlg = invalid then return
     choice = dlg.buttonSelected
-    text = dlg.text.Trim()
+    text = Kb_Text(dlg)
     dlg.close = true
     if choice <> 0 then return
-    if text = "" and m.kbKind <> "regex" and m.kbKind <> "customPoster" then return
+    if text = "" and m.kbKind <> "regex" and m.kbKind <> "customPoster" and m.kbKind <> "integKey" then return
     handleKeyboard(m.kbKind, text, m.kbData)
 end sub
 
@@ -960,7 +1010,7 @@ end function
 
 sub onFocusCard()
     hideExpanded()
-    if m.ui = invalid or m.page = "library" then return
+    if m.ui = invalid or m.page = "library" or m.page = "search" then return
     if not m.ui.expandOn and not m.ui.expandTrailer then return
     m.expandTimer.duration = m.ui.expandDelay
     m.expandTimer.control = "start"
@@ -989,7 +1039,7 @@ sub onExpandTimer()
     if rows = invalid or not rows.isInFocusChain() then return
     item = card.itemContent
     if item = invalid then return
-    if item.itemType = "folder" or m.page = "library" then return
+    if item.itemType = "folder" or m.page = "library" or m.page = "search" then return
     focus = rows.rowItemFocused
     if type(focus) = "roArray" and focus.Count() > 0 and rows.content <> invalid
         row = rows.content.getChild(focus[0])
@@ -1109,4 +1159,39 @@ sub onCardTrailer(event as object)
     if not m.expanded.open then return
     m.expanded.muted = m.ui.expandMuted
     m.expanded.trailer = r
+end sub
+
+function Kb_Text(dlg as object) as string
+    text = ""
+    if dlg.hasField("text") then text = Str_Of(dlg.text)
+    kb = invalid
+    if dlg.hasField("keyboard") then kb = dlg.keyboard
+    if text = "" and kb <> invalid
+        if kb.hasField("text") then text = Str_Of(kb.text)
+        if text = "" and kb.hasField("textEditBox") and kb.textEditBox <> invalid then text = Str_Of(kb.textEditBox.text)
+    end if
+    return text.Trim()
+end function
+
+sub Logo_Start(item as object)
+    if m.logoTask <> invalid then m.logoTask.unobserveField("logo")
+    m.logoTask = CreateObject("roSGNode", "LogoTask")
+    m.logoTask.kind = item.itemType
+    m.logoTask.metaId = item.metaId
+    m.logoTask.observeField("logo", "onLogoFound")
+    m.logoTask.control = "RUN"
+end sub
+
+sub onLogoFound(event as object)
+    task = event.getRoSGNode()
+    id = task.metaId
+    logo = task.logo
+    if m.logoCache = invalid then m.logoCache = {}
+    if m.logoCache.Count() > 300 then m.logoCache = {}
+    m.logoCache[id] = logo
+    item = m.heroItem
+    if item = invalid or item.metaId <> id or m.metaCache[id] <> invalid then return
+    d = heroData(item, invalid)
+    if logo <> "" then d.logo = logo
+    m.hero.data = d
 end sub

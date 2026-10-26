@@ -1,11 +1,17 @@
-function Http_Transfer(url as string, port as object) as object
+function Http_Transfer(url as string, port as object, ua = "" as string) as object
     t = CreateObject("roUrlTransfer")
     t.SetUrl(url)
     t.SetPort(port)
     t.EnableEncodings(true)
     t.RetainBodyOnError(true)
     t.AddHeader("Accept", "application/json")
-    t.AddHeader("User-Agent", "Mozilla/5.0 (Roku) NuvioTV/1.0")
+    if ua <> ""
+        t.AddHeader("User-Agent", ua)
+    else if Instr(1, url, "api.trakt.tv") > 0
+        t.AddHeader("User-Agent", "NuvioTV-Roku/" + App_Version())
+    else
+        t.AddHeader("User-Agent", "Mozilla/5.0 (Roku) NuvioTV/1.0")
+    end if
     if LCase(Left(url, 6)) = "https:"
         t.SetCertificatesFile("common:/certs/ca-bundle.crt")
         t.InitClientCertificates()
@@ -22,19 +28,35 @@ function Http_FetchJson(url as string, timeoutMs as integer) as dynamic
 end function
 
 function Http_Fetch(urls as object, timeoutMs as integer, metaLimit as integer) as object
+    return Http_FetchHook(urls, timeoutMs, metaLimit, 6, invalid)
+end function
+
+function Http_FetchHook(urls as object, timeoutMs as integer, metaLimit as integer, concurrency as integer, hook as dynamic) as object
     data = []
     diag = []
+    codes = []
     for i = 0 to urls.Count() - 1
         data.Push(invalid)
         diag.Push(L("Sin respuesta"))
+        codes.Push(0)
     end for
     port = CreateObject("roMessagePort")
     active = {}
     nextIndex = 0
     clock = CreateObject("roTimespan")
     while true
-        while active.Count() < 4 and nextIndex < urls.Count()
-            t = Http_Transfer(urls[nextIndex], port)
+        while active.Count() < concurrency and nextIndex < urls.Count()
+            job = urls[nextIndex]
+            if type(job) = "roAssociativeArray"
+                t = Http_Transfer(job.url, port)
+                if type(job.headers) = "roAssociativeArray"
+                    for each k in job.headers
+                        t.AddHeader(k, job.headers[k])
+                    end for
+                end if
+            else
+                t = Http_Transfer(job, port)
+            end if
             if t.AsyncGetToString()
                 active[t.GetIdentity().ToStr()] = { transfer: t, index: nextIndex, started: clock.TotalMilliseconds() }
             else
@@ -50,6 +72,7 @@ function Http_Fetch(urls as object, timeoutMs as integer, metaLimit as integer) 
             if job <> invalid
                 active.Delete(key)
                 code = msg.GetResponseCode()
+                codes[job.index] = code
                 if code = 200
                     body = msg.GetString()
                     parsed = invalid
@@ -66,6 +89,7 @@ function Http_Fetch(urls as object, timeoutMs as integer, metaLimit as integer) 
                 else
                     diag[job.index] = L("Error HTTP ") + code.ToStr()
                 end if
+                if hook <> invalid then hook(job.index, data, diag)
             end if
         end if
         now = clock.TotalMilliseconds()
@@ -73,11 +97,13 @@ function Http_Fetch(urls as object, timeoutMs as integer, metaLimit as integer) 
             if now - active[key].started > timeoutMs
                 active[key].transfer.AsyncCancel()
                 diag[active[key].index] = L("Tardó demasiado en responder")
+                index = active[key].index
                 active.Delete(key)
+                if hook <> invalid then hook(index, data, diag)
             end if
         end for
     end while
-    return { data: data, diag: diag }
+    return { data: data, diag: diag, codes: codes }
 end function
 
 function Http_TrimMetas(parsed as dynamic, limit as integer) as dynamic
@@ -99,10 +125,12 @@ end function
 
 function Http_Request(method as string, url as string, headers as object, body as dynamic, timeoutMs as integer) as object
     port = CreateObject("roMessagePort")
-    t = Http_Transfer(url, port)
+    ua = ""
+    if headers.DoesExist("User-Agent") then ua = Str_Of(headers["User-Agent"])
+    t = Http_Transfer(url, port, ua)
     t.SetRequest(method)
     for each k in headers
-        t.AddHeader(k, headers[k])
+        if k <> "User-Agent" then t.AddHeader(k, headers[k])
     end for
     payload = ""
     if body <> invalid

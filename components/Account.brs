@@ -587,6 +587,12 @@ function Nuvio_MergeProgress(pid as string, remote as object) as object
         seen[e.metaId] = true
         out.Push(e)
     end for
+    for each e in local
+        if type(e) = "roAssociativeArray" and IsStr(e.metaId) and Bool_Of(e.nextUp, false) and not seen.DoesExist(e.metaId)
+            seen[e.metaId] = true
+            out.Push(e)
+        end if
+    end for
     if dirty
         for each e in local
             if type(e) = "roAssociativeArray" and IsStr(e.metaId) and not seen.DoesExist(e.metaId)
@@ -726,34 +732,57 @@ sub Nuvio_PullSettings(pid as string, index as integer, primary as boolean)
     if type(row) = "roAssociativeArray"
         blob = row.settings_json
         if IsStr(blob) then blob = ParseJson(blob)
-        if type(blob) = "roAssociativeArray" and type(blob.features) = "roAssociativeArray" then f = blob.features
+        if type(blob) = "roAssociativeArray" and type(blob.features) = "roAssociativeArray" then f = Nuvio_Decode(blob.features)
     end if
     integ = St_Integrations()
-    credentials = Nuvio_Rpc("sync_pull_provider_credentials", { p_profile_id: index })
-    if (primary or Str_Of(integ.mdbKey) = "") and type(credentials) = "roArray"
-        for each c in credentials
-            if type(c) = "roAssociativeArray" and LCase(Str_Of(c.provider)) = "mdblist"
-                cj = c.credential_json
-                if IsStr(cj) then cj = ParseJson(cj)
-                if type(cj) = "roAssociativeArray" and Str_Of(cj.api_key).Trim() <> ""
-                    integ["mdbKey"] = cj.api_key.Trim()
-                    integ["mdbEnabled"] = true
-                end if
+    before = FormatJson(integ)
+    found = invalid
+    if primary
+        found = Nuvio_MdbCredential(index)
+        integ["mdbDiag"] = Str_Of(m.credDiag)
+        if m.credTmdb <> invalid
+            if m.credTmdb <> ""
+                integ["tmdbKey"] = m.credTmdb
+                integ["tmdbEnabled"] = true
+                integ["tmdbFrom"] = "account"
+            else if Str_Of(integ.tmdbFrom) = "account"
+                integ["tmdbKey"] = ""
+                integ["tmdbFrom"] = ""
             end if
-        end for
+        end if
+    end if
+    if found <> invalid
+        if found <> ""
+            integ["mdbKey"] = found
+            integ["mdbEnabled"] = true
+            integ["mdbFrom"] = "account"
+        else if Str_Of(integ.mdbFrom) = "account"
+            integ["mdbKey"] = ""
+            integ["mdbEnabled"] = false
+            integ["mdbFrom"] = ""
+        end if
     end if
     prefs = St_Get("prefs_" + pid, invalid)
     if type(prefs) <> "roAssociativeArray" then prefs = {}
     Nuvio_PullCatalogs(prefs, index)
     if f = invalid
         St_Set("prefs_" + pid, prefs)
-        St_SaveIntegrations(integ)
+        Nuvio_SaveIntegChanges(ParseJson(before), integ)
         return
     end if
 
     Nuvio_MapFeatures(prefs, f, integ, pid, primary, true)
     St_Set("prefs_" + pid, prefs)
-    St_SaveIntegrations(integ)
+    Nuvio_SaveIntegChanges(ParseJson(before), integ)
+end sub
+
+sub Nuvio_SaveIntegChanges(before as dynamic, after as object)
+    if type(before) <> "roAssociativeArray" then before = {}
+    fresh = St_Integrations()
+    for each k in after
+        if FormatJson([after[k]]) <> FormatJson([before[k]]) then fresh[k] = after[k]
+    end for
+    St_SaveIntegrations(fresh)
 end sub
 
 sub Nuvio_MapFeatures(prefs as object, f as object, integ as object, pid as string, primary as boolean, apply as boolean)
@@ -802,6 +831,31 @@ sub Nuvio_MapFeatures(prefs as object, f as object, integ as object, pid as stri
             end for
             prefs["autoplayAddons"] = names
         end if
+        Nuvio_SetBool(prefs, "skipIntro", pl.skip_intro_enabled)
+        if type(pl.auto_skip_segment_types) = "roArray"
+            types = {}
+            for each t in pl.auto_skip_segment_types
+                if IsStr(t) then types[LCase(t)] = true
+            end for
+            prefs["autoSkipIntro"] = types.DoesExist("intro")
+            prefs["autoSkipRecap"] = types.DoesExist("recap")
+            prefs["autoSkipOutro"] = types.DoesExist("outro")
+            prefs["autoSkipCredits"] = types.DoesExist("movie-credits")
+        end if
+        Nuvio_SetBool(prefs, "preloadNext", pl.preload_next_episode_sources)
+        Nuvio_SetBool(prefs, "bingeFallback", pl.stream_auto_play_next_episode_fallback_enabled)
+        Nuvio_SetBool(prefs, "stillWatching", pl.still_watching_enabled)
+        if pl.still_watching_episode_threshold <> invalid then prefs["stillCount"] = ToInt(pl.still_watching_episode_threshold, 3)
+        tmode = UCase(Str_Of(pl.next_episode_threshold_mode))
+        if tmode = "PERCENTAGE" then prefs["nextMode"] = "pct"
+        if tmode = "MINUTES_BEFORE_END" then prefs["nextMode"] = "min"
+        if pl.next_episode_threshold_percent_v2 <> invalid then prefs["nextPct"] = ToInt(pl.next_episode_threshold_percent_v2, 99)
+        if pl.next_episode_threshold_minutes_before_end_v2 <> invalid then prefs["nextMin"] = ToInt(pl.next_episode_threshold_minutes_before_end_v2, 2)
+        Nuvio_SetBool(prefs, "postPlay", pl.post_play_recommendations_enabled)
+        if pl.post_play_movie_threshold_percent <> invalid then prefs["postPct"] = ToInt(pl.post_play_movie_threshold_percent, 96)
+        Nuvio_SetBool(prefs, "parentalGuide", pl.parental_guide_enabled)
+        Nuvio_SetBool(prefs, "stripSdh", pl.subtitle_strip_sdh)
+        Nuvio_SetBool(prefs, "onlyPrefSubs", pl.subtitle_show_only_preferred_languages)
         if pl.stream_auto_play_timeout_seconds <> invalid
             t = ToInt(pl.stream_auto_play_timeout_seconds, 3)
             if t > 600 then t = -1
@@ -830,6 +884,10 @@ sub Nuvio_MapFeatures(prefs as object, f as object, integ as object, pid as stri
         Nuvio_SetBool(prefs, "trailerButton", ly.detail_page_trailer_button_enabled)
     end if
 
+    Nuvio_SetBool(prefs, "showAddonName", Nuvio_Get(f, "layout_settings", "catalog_addon_name_enabled"))
+    Nuvio_SetBool(prefs, "showTypeSuffix", Nuvio_Get(f, "layout_settings", "catalog_type_suffix_enabled"))
+    if type(pl) = "roAssociativeArray" then Nuvio_MapSubStyle(prefs, pl)
+
     tr = f.trailer_settings
     if type(tr) = "roAssociativeArray"
         Nuvio_SetBool(prefs, "trailerAutoplay", tr.trailer_enabled)
@@ -847,10 +905,13 @@ sub Nuvio_MapFeatures(prefs as object, f as object, integ as object, pid as stri
     end if
 
     md = f.mdblist_settings
-    if (primary or Str_Of(integ.mdbKey) = "") and type(md) = "roAssociativeArray"
+    if primary and type(md) = "roAssociativeArray"
         key = Str_Of(md.mdblist_api_key).Trim()
-        if key <> "" then integ["mdbKey"] = key
-        if IsBool(md.mdblist_enabled) and integ.mdbKey <> "" then integ["mdbEnabled"] = md.mdblist_enabled
+        if key <> ""
+            integ["mdbKey"] = key
+            integ["mdbFrom"] = "account"
+        end if
+        if IsBool(md.mdblist_enabled) and key <> "" then integ["mdbEnabled"] = md.mdblist_enabled
         flags = { imdb: "mdblist_show_imdb", tomatoes: "mdblist_show_tomatoes", audience: "mdblist_show_audience", metacritic: "mdblist_show_metacritic", letterboxd: "mdblist_show_letterboxd", tmdb: "mdblist_show_tmdb", trakt: "mdblist_show_trakt" }
         for each k in flags
             if IsBool(md[flags[k]]) then integ.mdbShow[k] = md[flags[k]]
@@ -1105,6 +1166,7 @@ function Nuvio_PushProgress(index as integer) as boolean
     rows = []
     for each e in St_Progress()
         id = Str_Of(e.metaId)
+        if Bool_Of(e.nextUp, false) then id = ""
         if id <> ""
             season = ToInt(e.season, -1)
             episode = ToInt(e.ep, -1)
@@ -1210,7 +1272,9 @@ function Nuvio_PushSettings(pid as string, index as integer) as boolean
     blob = row.settings_json
     if IsStr(blob) then blob = ParseJson(blob)
     if type(blob) <> "roAssociativeArray" or type(blob.features) <> "roAssociativeArray" then return false
-    f = blob.features
+    raw = blob.features
+    f = Nuvio_Decode(raw)
+    orig = Nuvio_Decode(raw)
     remote = {}
     Nuvio_MapFeatures(remote, f, St_Integrations(), pid, false, false)
     touched = St_Touched(pid)
@@ -1220,6 +1284,7 @@ function Nuvio_PushSettings(pid as string, index as integer) as boolean
             if Nuvio_WriteSetting(f, k, local) then changed = true
         end if
     end for
+    if changed then Nuvio_Encode(raw, f, orig)
     if changed
         r = Nuvio_Call("POST", "/rest/v1/rpc/sync_push_profile_settings_blob", { p_profile_id: index, p_settings_json: blob, p_platform: "tv" })
         if r.code < 200 or r.code >= 300 then return false
@@ -1229,7 +1294,7 @@ function Nuvio_PushSettings(pid as string, index as integer) as boolean
 end function
 
 function Nuvio_PushKeys() as object
-    return ["audioLang", "audioLang2", "subLang", "subLang2", "forcedSubs", "pauseOverlay", "clock", "autoNext", "bingeNext", "bingeReuse", "reuseLink", "reuseHours", "autoplayMode", "autoplayRegex", "autoplayTimeout", "cwStyle", "customPoster", "posterScreens", "expandPoster", "expandDelay", "expandTrailer", "expandMuted", "trailerTarget", "trailerButton", "trailerAutoplay", "trailerDelay", "tmdbLanguage", "sizeBadges", "addonLogo", "badgePlace", "accent"]
+    return ["audioLang", "audioLang2", "subLang", "subLang2", "forcedSubs", "pauseOverlay", "clock", "autoNext", "bingeNext", "bingeReuse", "reuseLink", "reuseHours", "autoplayMode", "autoplayRegex", "autoplayTimeout", "cwStyle", "customPoster", "posterScreens", "expandPoster", "expandDelay", "expandTrailer", "expandMuted", "trailerTarget", "trailerButton", "trailerAutoplay", "trailerDelay", "tmdbLanguage", "sizeBadges", "addonLogo", "badgePlace", "accent", "skipIntro", "autoSkipIntro", "autoSkipRecap", "autoSkipOutro", "autoSkipCredits", "preloadNext", "bingeFallback", "stillWatching", "stillCount", "nextMode", "nextPct", "nextMin", "postPlay", "postPct", "parentalGuide", "stripSdh", "onlyPrefSubs"]
 end function
 
 function Nuvio_Same(a as dynamic, b as dynamic) as boolean
@@ -1291,6 +1356,39 @@ function Nuvio_WriteSetting(f as object, k as string, p as object) as boolean
         Nuvio_Feature(f, "player_settings").stream_reuse_last_link_enabled = Bool_Of(v, false)
     else if k = "reuseHours"
         Nuvio_Feature(f, "player_settings").stream_reuse_last_link_cache_hours = ToInt(v, 24)
+    else if k = "skipIntro"
+        Nuvio_Feature(f, "player_settings").skip_intro_enabled = Bool_Of(v, true)
+    else if k = "autoSkipIntro" or k = "autoSkipRecap" or k = "autoSkipOutro" or k = "autoSkipCredits"
+        types = []
+        if Bool_Of(p["autoSkipIntro"], false) then types.Push("intro")
+        if Bool_Of(p["autoSkipRecap"], false) then types.Push("recap")
+        if Bool_Of(p["autoSkipOutro"], false) then types.Push("outro")
+        if Bool_Of(p["autoSkipCredits"], false) then types.Push("movie-credits")
+        Nuvio_Feature(f, "player_settings").auto_skip_segment_types = types
+    else if k = "preloadNext"
+        Nuvio_Feature(f, "player_settings").preload_next_episode_sources = Bool_Of(v, false)
+    else if k = "bingeFallback"
+        Nuvio_Feature(f, "player_settings").stream_auto_play_next_episode_fallback_enabled = Bool_Of(v, true)
+    else if k = "stillWatching"
+        Nuvio_Feature(f, "player_settings").still_watching_enabled = Bool_Of(v, true)
+    else if k = "stillCount"
+        Nuvio_Feature(f, "player_settings").still_watching_episode_threshold = ToInt(v, 3)
+    else if k = "nextMode"
+        if Str_Of(v) = "min" then Nuvio_Feature(f, "player_settings").next_episode_threshold_mode = "MINUTES_BEFORE_END" else Nuvio_Feature(f, "player_settings").next_episode_threshold_mode = "PERCENTAGE"
+    else if k = "nextPct"
+        Nuvio_Feature(f, "player_settings").next_episode_threshold_percent_v2 = 0.0 + ToInt(v, 99)
+    else if k = "nextMin"
+        Nuvio_Feature(f, "player_settings").next_episode_threshold_minutes_before_end_v2 = 0.0 + ToInt(v, 2)
+    else if k = "postPlay"
+        Nuvio_Feature(f, "player_settings").post_play_recommendations_enabled = Bool_Of(v, true)
+    else if k = "postPct"
+        Nuvio_Feature(f, "player_settings").post_play_movie_threshold_percent = ToInt(v, 96)
+    else if k = "parentalGuide"
+        Nuvio_Feature(f, "player_settings").parental_guide_enabled = Bool_Of(v, true)
+    else if k = "stripSdh"
+        Nuvio_Feature(f, "player_settings").subtitle_strip_sdh = Bool_Of(v, false)
+    else if k = "onlyPrefSubs"
+        Nuvio_Feature(f, "player_settings").subtitle_show_only_preferred_languages = Bool_Of(v, false)
     else if k = "autoplayMode"
         modes = { manual: "MANUAL", first: "FIRST_STREAM", regex: "REGEX_MATCH" }
         if not modes.DoesExist(Str_Of(v)) then return false
@@ -1342,4 +1440,180 @@ function Nuvio_WriteSetting(f as object, k as string, p as object) as boolean
         return false
     end if
     return true
+end function
+
+function Nuvio_Get(f as object, feature as string, key as string) as dynamic
+    if type(f[feature]) <> "roAssociativeArray" then return invalid
+    return f[feature][key]
+end function
+
+function Nuvio_IsEncoded(v as dynamic) as boolean
+    return type(v) = "roAssociativeArray" and IsStr(v["type"]) and v.DoesExist("value")
+end function
+
+function Nuvio_Decode(features as dynamic) as object
+    out = {}
+    if type(features) <> "roAssociativeArray" then return out
+    for each name in features
+        feat = features[name]
+        if type(feat) = "roAssociativeArray"
+            d = {}
+            for each k in feat
+                v = feat[k]
+                if Nuvio_IsEncoded(v) then d[k] = v["value"] else d[k] = v
+            end for
+            out[name] = d
+        else
+            out[name] = feat
+        end if
+    end for
+    return out
+end function
+
+function Nuvio_Json(v as dynamic) as string
+    return FormatJson([v])
+end function
+
+function Nuvio_TypeOf(v as dynamic) as string
+    if IsBool(v) then return "boolean"
+    if IsStr(v) then return "string"
+    if type(v) = "roArray" then return "string_set"
+    if GetInterface(v, "ifInt") <> invalid then return "int"
+    if GetInterface(v, "ifLongInt") <> invalid then return "long"
+    if GetInterface(v, "ifDouble") <> invalid then return "double"
+    return "float"
+end function
+
+sub Nuvio_Encode(raw as object, d as object, orig as object)
+    encoded = false
+    for each name in raw
+        feat = raw[name]
+        if type(feat) = "roAssociativeArray"
+            for each k in feat
+                if Nuvio_IsEncoded(feat[k])
+                    encoded = true
+                    exit for
+                end if
+            end for
+        end if
+        if encoded then exit for
+    end for
+    for each name in d
+        feat = d[name]
+        if type(feat) = "roAssociativeArray"
+            if type(raw[name]) <> "roAssociativeArray" then raw[name] = {}
+            target = raw[name]
+            before = orig[name]
+            if type(before) <> "roAssociativeArray" then before = {}
+            for each k in feat
+                nv = feat[k]
+                if Nuvio_Json(nv) <> Nuvio_Json(before[k])
+                    if nv = invalid
+                        target.Delete(k)
+                    else if encoded
+                        kind = Nuvio_TypeOf(nv)
+                        if Nuvio_IsEncoded(target[k]) then kind = target[k]["type"]
+                        target[k] = { "type": kind, "value": nv }
+                    else
+                        target[k] = nv
+                    end if
+                end if
+            end for
+        end if
+    end for
+end sub
+
+function Nuvio_ColorParts(v as dynamic) as dynamic
+    if v = invalid or IsBool(v) or IsStr(v) then return invalid
+    k16 = CDbl(65536)
+    k24 = k16 * CDbl(256)
+    c = CDbl(v)
+    if c < 0 then c = c + k16 * k16
+    a = Int(c / k24)
+    rest = c - a * k24
+    r = Int(rest / k16)
+    g = Int((rest - r * k16) / 256)
+    b = Int(rest - r * k16 - g * 256)
+    return { a: a, r: r, g: g, b: b }
+end function
+
+sub Nuvio_MapSubStyle(prefs as object, pl as object)
+    size = pl.subtitle_size
+    if size <> invalid and not IsBool(size) and not IsStr(size)
+        n = ToInt(size, 100)
+        if n < 90
+            prefs["subSize"] = "small"
+        else if n < 115
+            prefs["subSize"] = "normal"
+        else if n < 145
+            prefs["subSize"] = "large"
+        else
+            prefs["subSize"] = "xlarge"
+        end if
+    end if
+    Nuvio_SetBool(prefs, "subBold", pl.subtitle_bold)
+    if IsBool(pl.subtitle_outline_enabled)
+        if pl.subtitle_outline_enabled then prefs["subEdge"] = "shadow" else prefs["subEdge"] = "none"
+    end if
+    bg = Nuvio_ColorParts(pl.subtitle_background_color)
+    if bg <> invalid
+        if bg.a < 16
+            prefs["subBg"] = "none"
+        else if bg.a < 200
+            prefs["subBg"] = "soft"
+        else
+            prefs["subBg"] = "solid"
+        end if
+    end if
+    tc = Nuvio_ColorParts(pl.subtitle_text_color)
+    if tc <> invalid
+        names = [["white", 255, 255, 255], ["yellow", 255, 235, 59], ["cyan", 0, 229, 255], ["green", 118, 255, 3], ["gray", 158, 158, 158]]
+        best = "white"
+        bestD = 999999
+        for each c in names
+            dist = (tc.r - c[1]) * (tc.r - c[1]) + (tc.g - c[2]) * (tc.g - c[2]) + (tc.b - c[3]) * (tc.b - c[3])
+            if dist < bestD
+                bestD = dist
+                best = c[0]
+            end if
+        end for
+        prefs["subColor"] = best
+    end if
+end sub
+
+function Nuvio_MdbCredential(index as integer) as dynamic
+    r = Nuvio_Call("POST", "/rest/v1/rpc/sync_pull_provider_credentials", { p_profile_id: index })
+    credentials = invalid
+    if r.code >= 200 and r.code < 300 then credentials = r.json
+    names = []
+    if type(credentials) = "roArray"
+        for each c in credentials
+            if type(c) = "roAssociativeArray" then names.Push(Str_Of(c.provider))
+        end for
+    end if
+    diag = L("Perfil ") + index.ToStr() + "  ·  HTTP " + r.code.ToStr() + "  ·  " + names.Count().ToStr() + " " + L("claves")
+    if names.Count() > 0 then diag = diag + " (" + names.Join(", ") + ")"
+    m.credDiag = diag
+    m.credTmdb = invalid
+    if type(credentials) <> "roArray" then return invalid
+    m.credTmdb = ""
+    for each c in credentials
+        if type(c) = "roAssociativeArray" and LCase(Str_Of(c.provider)) = "tmdb"
+            cj = c.credential_json
+            if IsStr(cj) then cj = ParseJson(cj)
+            if type(cj) = "roAssociativeArray" then m.credTmdb = Str_Of(cj.api_key).Trim()
+        end if
+    end for
+    for each c in credentials
+        if type(c) = "roAssociativeArray" and LCase(Str_Of(c.provider)) = "mdblist"
+            cj = c.credential_json
+            if IsStr(cj) then cj = ParseJson(cj)
+            if type(cj) = "roAssociativeArray"
+                key = Str_Of(cj.api_key).Trim()
+                if key = "" then key = Str_Of(cj.apiKey).Trim()
+                if key <> "" then return key
+            end if
+        end if
+    end for
+    return ""
 end function

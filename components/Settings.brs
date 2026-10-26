@@ -35,7 +35,7 @@ function Set_SubLangs() as object
 end function
 
 function Set_Toggles() as object
-    return { forcedSubs: true, openSubs: true, autoNext: true, pauseOverlay: true, clock: true, reuseLink: true, bingeNext: true, bingeReuse: true, sizeBadges: true, addonLogo: true, fusionBadges: true, expandPoster: true, expandTrailer: true, expandMuted: true, trailerButton: true, trailerAutoplay: true, rokuSafe: true }
+    return { forcedSubs: true, openSubs: true, autoNext: true, pauseOverlay: true, clock: true, reuseLink: true, bingeNext: true, bingeReuse: true, sizeBadges: true, addonLogo: true, fusionBadges: true, expandPoster: true, expandTrailer: true, expandMuted: true, trailerButton: true, trailerAutoplay: true, rokuSafe: true, skipIntro: true, autoSkipIntro: true, autoSkipRecap: true, autoSkipOutro: true, autoSkipCredits: true, preloadNext: true, bingeFallback: true, stillWatching: true, postPlay: true, parentalGuide: true, stripSdh: true, onlyPrefSubs: true, customSubs: true, subBold: true, playerStats: true }
 end function
 
 function Set_Seconds(v as integer) as string
@@ -218,7 +218,7 @@ function Settings_Model() as object
     if Config_TmdbKey() <> "" then tmdbKey = L("Incluida")
     if integ.tmdbKey <> "" then tmdbKey = L("Configurada")
     integration.rows.Push(Set_Toggle("tmdbEnabled", L("Usar TMDB"), L("Títulos, sinopsis, logos, fondos y episodios en tu idioma."), integ.tmdbEnabled))
-    integration.rows.Push(Set_Row("tmdbKey", L("Clave de TMDB"), L("Se pega desde el celular. Es gratis en themoviedb.org."), tmdbKey))
+    integration.rows.Push(Set_Row("tmdbKey", L("Clave de TMDB"), L("Escríbela aquí o pégala desde el celular. Es gratis en themoviedb.org."), tmdbKey))
     langName = Set_TmdbName(Str_Of(Set_Pref(prefs, defaults, "tmdbLanguage")))
     integration.rows.Push(Set_Row("tmdbLanguage", L("Idioma de la metadata"), L("Para este perfil."), langName))
     integration.rows.Push(Set_Toggle("tmdbArtwork", L("Imágenes de TMDB"), L("Usa logos y fondos de TMDB."), integ.tmdbArtwork))
@@ -226,7 +226,9 @@ function Settings_Model() as object
     mdbKey = L("Falta")
     if integ.mdbKey <> "" then mdbKey = L("Configurada")
     integration.rows.Push(Set_Toggle("mdbEnabled", L("Calificaciones de MDBList"), L("Muestra calificaciones de varias fuentes en la portada y la ficha."), integ.mdbEnabled))
-    integration.rows.Push(Set_Row("mdbKey", L("Clave de MDBList"), L("Se pega desde el celular. Es gratis en mdblist.com."), mdbKey))
+    mdbDesc = L("Escríbela aquí o pégala desde el celular. Es gratis en mdblist.com.")
+    if Str_Of(integ.mdbDiag) <> "" then mdbDesc = mdbDesc + chr(10) + L("Última revisión en tu cuenta: ") + integ.mdbDiag
+    integration.rows.Push(Set_Row("mdbKey", L("Clave de MDBList"), mdbDesc, mdbKey))
     names = { imdb: "IMDb", tomatoes: "Rotten Tomatoes", audience: L("Audiencia (RT)"), metacritic: "Metacritic", letterboxd: "Letterboxd", tmdb: "TMDB", trakt: "Trakt" }
     for each k in ["imdb", "tomatoes", "audience", "metacritic", "letterboxd", "tmdb", "trakt"]
         integration.rows.Push(Set_Toggle("mdb:" + k, L("Mostrar ") + names[k], "", Bool_Of(integ.mdbShow[k], false)))
@@ -234,10 +236,34 @@ function Settings_Model() as object
 
     playback = { id: "playback", label: L("Reproducción"), subtitle: L("Reproductor, subtítulos y auto-reproducción"), rows: [] }
     playback.rows.Push(Set_Header(L("General")))
-    playback.rows.Push(Set_Toggle("autoNext", L("Siguiente episodio automático"), L("Al terminar un episodio empieza el siguiente."), Bool_Of(Set_Pref(prefs, defaults, "autoNext"), true)))
     playback.rows.Push(Set_Toggle("pauseOverlay", L("Pantalla de pausa"), L("Aparece después de unos segundos en pausa."), Bool_Of(Set_Pref(prefs, defaults, "pauseOverlay"), true)))
     playback.rows.Push(Set_Toggle("clock", L("Reloj en el reproductor"), "", Bool_Of(Set_Pref(prefs, defaults, "clock"), true)))
     playback.rows.Push(Set_Toggle("rokuSafe", L("Priorizar fuentes compatibles con Roku"), L("La reproducción automática deja al final los REMUX con audio TrueHD o DTS-HD y el 4K si tu TV no está en 4K."), Bool_Of(Set_Pref(prefs, defaults, "rokuSafe"), true)))
+    playback.rows.Push(Set_Toggle("parentalGuide", L("Avisos de contenido"), L("Al empezar muestra si tiene violencia, desnudez, lenguaje soez, drogas o terror."), Bool_Of(Set_Pref(prefs, defaults, "parentalGuide"), true)))
+    playback.rows.Push(Set_Header(L("Saltar segmentos")))
+    playback.rows.Push(Set_Toggle("skipIntro", L("Botón para saltar"), L("Usa introdb.app y AniSkip para encontrar intros, resúmenes y créditos."), Bool_Of(Set_Pref(prefs, defaults, "skipIntro"), true)))
+    playback.rows.Push(Set_Toggle("autoSkipIntro", L("Saltar intros automáticamente"), L("También las aperturas de anime."), Bool_Of(Set_Pref(prefs, defaults, "autoSkipIntro"), false)))
+    playback.rows.Push(Set_Toggle("autoSkipRecap", L("Saltar resúmenes automáticamente"), "", Bool_Of(Set_Pref(prefs, defaults, "autoSkipRecap"), false)))
+    playback.rows.Push(Set_Toggle("autoSkipOutro", L("Saltar créditos de episodios automáticamente"), L("También los finales de anime."), Bool_Of(Set_Pref(prefs, defaults, "autoSkipOutro"), false)))
+    playback.rows.Push(Set_Toggle("autoSkipCredits", L("Saltar créditos de películas automáticamente"), L("Conserva las escenas post-créditos."), Bool_Of(Set_Pref(prefs, defaults, "autoSkipCredits"), false)))
+    playback.rows.Push(Set_Header(L("Siguiente episodio")))
+    playback.rows.Push(Set_Toggle("autoNext", L("Siguiente episodio automático"), L("Cuando aparece el aviso, empieza el siguiente episodio después de unos segundos."), Bool_Of(Set_Pref(prefs, defaults, "autoNext"), true)))
+    nextMode = Str_Of(Set_Pref(prefs, defaults, "nextMode"))
+    modeText = L("Porcentaje")
+    if nextMode = "min" then modeText = L("Minutos antes del final")
+    playback.rows.Push(Set_Row("nextMode", L("Cuándo avisar"), L("Si se conocen los créditos del episodio, el aviso sale al empezar los créditos."), modeText))
+    if nextMode = "min"
+        playback.rows.Push(Set_Row("nextMin", L("Minutos antes del final"), "", ToInt(Set_Pref(prefs, defaults, "nextMin"), 2).ToStr() + " min"))
+    else
+        playback.rows.Push(Set_Row("nextPct", L("Porcentaje del episodio"), "", ToInt(Set_Pref(prefs, defaults, "nextPct"), 99).ToStr() + " %"))
+    end if
+    playback.rows.Push(Set_Toggle("preloadNext", L("Buscar fuentes antes"), L("Busca las fuentes del siguiente episodio un minuto antes del aviso."), Bool_Of(Set_Pref(prefs, defaults, "preloadNext"), false)))
+    playback.rows.Push(Set_Toggle("bingeFallback", L("Si no está la misma fuente, usar otra"), L("Si el siguiente episodio no tiene la misma fuente, elige la primera disponible. Si lo apagas, te muestra la lista."), Bool_Of(Set_Pref(prefs, defaults, "bingeFallback"), true)))
+    playback.rows.Push(Set_Toggle("stillWatching", L("¿Sigues viendo?"), L("Pregunta después de varios episodios seguidos sin tocar el control."), Bool_Of(Set_Pref(prefs, defaults, "stillWatching"), true)))
+    playback.rows.Push(Set_Row("stillCount", L("Episodios antes de preguntar"), "", ToInt(Set_Pref(prefs, defaults, "stillCount"), 3).ToStr()))
+    playback.rows.Push(Set_Header(L("Al terminar")))
+    playback.rows.Push(Set_Toggle("postPlay", L("Recomendaciones al terminar"), L("Cerca del final de una película o del último episodio muestra títulos parecidos. Necesita TMDB."), Bool_Of(Set_Pref(prefs, defaults, "postPlay"), true)))
+    playback.rows.Push(Set_Row("postPct", L("Cuándo mostrarlas"), L("Si se conocen los créditos de la película, salen al empezar los créditos."), ToInt(Set_Pref(prefs, defaults, "postPct"), 96).ToStr() + " %"))
     playback.rows.Push(Set_Header("Audio"))
     playback.rows.Push(Set_Row("audioLang", L("Idioma de audio preferido"), L("Se elige solo si la fuente tiene varias pistas. Original necesita TMDB."), Set_LangName(Str_Of(Set_Pref(prefs, defaults, "audioLang")))))
     playback.rows.Push(Set_Row("audioLang2", L("Idioma de audio secundario"), L("Se usa si la fuente no tiene el preferido."), Set_LangName(Str_Of(Set_Pref(prefs, defaults, "audioLang2")))))
@@ -246,6 +272,20 @@ function Settings_Model() as object
     playback.rows.Push(Set_Row("subLang2", L("Subtítulos secundarios"), L("Se usan si no hay subtítulos en el idioma preferido."), Set_LangName(Str_Of(Set_Pref(prefs, defaults, "subLang2")))))
     playback.rows.Push(Set_Toggle("forcedSubs", L("Subtítulos forzados"), L("Si el audio está en el idioma de unos subtítulos forzados, los activa."), Bool_Of(Set_Pref(prefs, defaults, "forcedSubs"), false)))
     playback.rows.Push(Set_Toggle("openSubs", L("Subtítulos de OpenSubtitles"), L("Busca subtítulos aunque no tengas un addon de subtítulos."), Bool_Of(Set_Pref(prefs, defaults, "openSubs"), true)))
+    playback.rows.Push(Set_Toggle("stripSdh", L("Quitar subtítulos SDH"), L("Oculta los subtítulos para sordos (SDH o CC)."), Bool_Of(Set_Pref(prefs, defaults, "stripSdh"), false)))
+    playback.rows.Push(Set_Toggle("onlyPrefSubs", L("Solo idiomas preferidos"), L("En la lista de subtítulos solo aparecen tus idiomas preferido y secundario."), Bool_Of(Set_Pref(prefs, defaults, "onlyPrefSubs"), false)))
+    playback.rows.Push(Set_Header(L("Estilo de subtítulos")))
+    playback.rows.Push(Set_Toggle("customSubs", L("Usar este estilo"), L("Se aplica a los subtítulos de addons. Los que vienen dentro del video usan el estilo del Roku: Ajustes → Accesibilidad → Estilo de subtítulos."), Bool_Of(Set_Pref(prefs, defaults, "customSubs"), true)))
+    sizeNames = { small: L("Pequeño"), normal: L("Normal"), large: L("Grande"), xlarge: L("Muy grande") }
+    colorNames = { white: L("Blanco"), yellow: L("Amarillo"), cyan: L("Cian"), green: L("Verde"), gray: L("Gris") }
+    bgNames = { none: L("Sin fondo"), soft: L("Semitransparente"), solid: L("Negro") }
+    edgeNames = { shadow: L("Sombra"), none: L("Ninguno") }
+    playback.rows.Push(Set_Row("subSize", L("Tamaño"), "", Str_Of(sizeNames[Str_Of(Set_Pref(prefs, defaults, "subSize"))])))
+    playback.rows.Push(Set_Row("subColor", L("Color del texto"), "", Str_Of(colorNames[Str_Of(Set_Pref(prefs, defaults, "subColor"))])))
+    playback.rows.Push(Set_Row("subBg", L("Fondo"), "", Str_Of(bgNames[Str_Of(Set_Pref(prefs, defaults, "subBg"))])))
+    playback.rows.Push(Set_Row("subEdge", L("Borde"), "", Str_Of(edgeNames[Str_Of(Set_Pref(prefs, defaults, "subEdge"))])))
+    playback.rows.Push(Set_Toggle("subBold", L("Negritas"), "", Bool_Of(Set_Pref(prefs, defaults, "subBold"), false)))
+    playback.rows.Push(Set_Row("subOffset", L("Altura"), L("Sube los subtítulos desde la parte de abajo."), ToInt(Set_Pref(prefs, defaults, "subOffset"), 0).ToStr()))
 
     sources = playback
     sources.rows.Push(Set_Header(L("Reproducción automática")))
@@ -305,6 +345,11 @@ function Settings_Model() as object
     tracking.rows.Push(Set_Toggle("scrobble", L("Registrar lo que veo"), L("Envía inicio, pausa y fin de cada título."), integ.scrobble))
 
     advanced = { id: "advanced", label: L("Avanzado"), subtitle: L("Rendimiento, navegación, caché y diagnósticos"), rows: [] }
+    cornerNames = { auto: L("Automático"), full: L("Normal"), hd: L("Pantalla HD"), off: L("Tapar esquinas") }
+    corner = Str_Of(St_Settings()["corners"])
+    if not cornerNames.DoesExist(corner) then corner = "auto"
+    advanced.rows.Push(Set_Row("corners", L("Esquinas redondeadas"), L("Si los pósters o las fotos se ven redondeados solo de un lado, prueba otra opción y vuelve a abrir el canal."), cornerNames[corner]))
+    advanced.rows.Push(Set_Toggle("playerStats", L("Datos técnicos en el reproductor"), L("Muestra resolución, códec, audio y bitrate mientras ves algo."), Bool_Of(Set_Pref(prefs, defaults, "playerStats"), false)))
     advanced.rows.Push(Set_Row("clearHistory", L("Borrar historial de Seguir viendo"), L("Solo de este perfil."), ""))
     advanced.rows.Push(Set_Row("phone", L("Configurar desde el celular"), "", url))
 
@@ -414,6 +459,13 @@ sub onSettingsEvent()
         St_SetShared(not St_Settings().shared)
         m.needsReload = true
         refreshSettings()
+    else if row = "corners"
+        st = St_Settings()
+        st["corners"] = Set_Cycle(["auto", "full", "hd", "off"], Str_Of(st["corners"]))
+        St_SaveSettings(st)
+        Mask_Global()
+        m.needsReload = true
+        refreshSettings()
     else if row = "uiLang"
         current = Str_Of(St_Settings()["uiLang"])
         if current = "" then current = "auto"
@@ -472,8 +524,10 @@ sub onSettingsEvent()
         St_SaveIntegrations(integ)
         m.metaCache = {}
         refreshSettings()
-    else if row = "tmdbKey" or row = "mdbKey"
-        openMenu("phone", {})
+    else if row = "tmdbKey"
+        showKeyboard("integKey", L("Clave de TMDB"), Str_Of(integ.tmdbKey), { name: "tmdbKey" })
+    else if row = "mdbKey"
+        showKeyboard("integKey", L("Clave de MDBList"), Str_Of(integ.mdbKey), { name: "mdbKey" })
     else if row = "tmdbLanguage"
         Set_OpenLangPicker("tmdbLanguage", L("Idioma de la metadata"), [])
     else if row = "tmdbArtwork"
@@ -519,6 +573,36 @@ sub onSettingsEvent()
         refreshSettings()
     else if row = "autoplayTimeout"
         St_SetPref("autoplayTimeout", Set_Cycle([0, 1, 2, 3, 5, 7, 10, 15, 20, 30, -1], ToInt(St_Pref("autoplayTimeout"), 3)))
+        refreshSettings()
+    else if row = "nextMode"
+        if Str_Of(St_Pref("nextMode")) = "min" then St_SetPref("nextMode", "pct") else St_SetPref("nextMode", "min")
+        refreshSettings()
+    else if row = "nextPct"
+        St_SetPref("nextPct", Set_Cycle([90, 95, 97, 98, 99], ToInt(St_Pref("nextPct"), 99)))
+        refreshSettings()
+    else if row = "nextMin"
+        St_SetPref("nextMin", Set_Cycle([1, 2, 3, 5, 10], ToInt(St_Pref("nextMin"), 2)))
+        refreshSettings()
+    else if row = "stillCount"
+        St_SetPref("stillCount", Set_Cycle([2, 3, 4, 5, 6, 8], ToInt(St_Pref("stillCount"), 3)))
+        refreshSettings()
+    else if row = "postPct"
+        St_SetPref("postPct", Set_Cycle([90, 93, 96, 98], ToInt(St_Pref("postPct"), 96)))
+        refreshSettings()
+    else if row = "subSize"
+        St_SetPref("subSize", Set_Cycle(["small", "normal", "large", "xlarge"], Str_Of(St_Pref("subSize"))))
+        refreshSettings()
+    else if row = "subColor"
+        St_SetPref("subColor", Set_Cycle(["white", "yellow", "cyan", "green", "gray"], Str_Of(St_Pref("subColor"))))
+        refreshSettings()
+    else if row = "subBg"
+        St_SetPref("subBg", Set_Cycle(["none", "soft", "solid"], Str_Of(St_Pref("subBg"))))
+        refreshSettings()
+    else if row = "subEdge"
+        St_SetPref("subEdge", Set_Cycle(["shadow", "none"], Str_Of(St_Pref("subEdge"))))
+        refreshSettings()
+    else if row = "subOffset"
+        St_SetPref("subOffset", Set_Cycle([0, 1, 2, 3, 4, 5, 6, 8, 10], ToInt(St_Pref("subOffset"), 0)))
         refreshSettings()
     else if row = "reuseHours"
         St_SetPref("reuseHours", Set_Cycle([1, 3, 6, 12, 24, 48, 72, 168], ToInt(St_Pref("reuseHours"), 24)))

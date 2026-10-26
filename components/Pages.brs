@@ -1,4 +1,5 @@
 sub showPage(name as string)
+    if name <> "home" then Poster_Stop()
     hideExpanded()
     m.page = name
     if name = "folder" then m.nav.active = "home" else m.nav.active = name

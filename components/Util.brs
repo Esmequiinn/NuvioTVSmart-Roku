@@ -116,6 +116,7 @@ function Stream_Attempts(url as string) as object
         list.Push({ url: url, fmt: auto })
     else if isTs
         list.Push({ url: url, fmt: auto })
+        list.Push({ url: url, fmt: "ts" })
         list.Push({ url: url, fmt: "hls" })
     else
         list.Push({ url: url, fmt: auto })
@@ -152,6 +153,23 @@ function Device_Can4K() as boolean
     r = info.CanDecodeVideo({ Codec: "hevc" })
     if type(r) = "roAssociativeArray" and r.result = false then return false
     return true
+end function
+
+function Device_CanHevc() as boolean
+    r = CreateObject("roDeviceInfo").CanDecodeVideo({ Codec: "hevc" })
+    if type(r) = "roAssociativeArray" and r.result = false then return false
+    return true
+end function
+
+function Device_Summary() as string
+    info = CreateObject("roDeviceInfo")
+    res = info.GetUIResolution()
+    ui = ""
+    if type(res) = "roAssociativeArray" then ui = Str_Of(res.name)
+    hevc = L("No")
+    if Device_CanHevc() then hevc = L("Sí")
+    free = CreateObject("roRegistry").GetSpaceAvailable()
+    return L("Espacio libre: ") + free.ToStr() + " bytes  ·  Roku " + Str_Of(info.GetModelDisplayName()) + " (" + Str_Of(info.GetModel()) + ")  ·  " + Str_Of(info.GetVideoMode()) + "  ·  UI " + ui + "  ·  HEVC: " + hevc
 end function
 
 function Net_Ip() as string

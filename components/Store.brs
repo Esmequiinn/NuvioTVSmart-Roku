@@ -2,8 +2,30 @@ function St_Section() as object
     return CreateObject("roRegistrySection", "nuviotv")
 end function
 
+function St_Big(key as string) as boolean
+    for each prefix in ["library_", "progress_", "libops_"]
+        if Left(key, Len(prefix)) = prefix then return true
+    end for
+    return false
+end function
+
 function St_Get(key as string, fallback as dynamic) as dynamic
     sec = St_Section()
+    if not St_Big(key)
+        copy = St_ReadFile("reg_" + key)
+        if copy <> invalid then return copy
+    end if
+    if St_Big(key)
+        data = St_ReadFile("reg_" + key)
+        if data <> invalid then return data
+        if not sec.Exists(key) then return fallback
+        legacy = ParseJson(sec.Read(key))
+        if legacy = invalid then return fallback
+        St_WriteFile("reg_" + key, legacy)
+        sec.Delete(key)
+        sec.Flush()
+        return legacy
+    end if
     if not sec.Exists(key) then return fallback
     raw = sec.Read(key)
     if raw = "" then return fallback
@@ -14,11 +36,31 @@ end function
 
 sub St_Set(key as string, value as dynamic)
     sec = St_Section()
+    if St_Big(key)
+        St_WriteFile("reg_" + key, value)
+        if sec.Exists(key)
+            sec.Delete(key)
+            sec.Flush()
+        end if
+        return
+    end if
+    St_WriteFile("reg_" + key, value)
     sec.Write(key, FormatJson(value))
     sec.Flush()
 end sub
 
+sub St_Migrate()
+    sec = St_Section()
+    for each key in sec.GetKeyList()
+        if St_Big(key) then St_Get(key, invalid)
+    end for
+end sub
+
 sub St_Remove(key as string)
+    fs = CreateObject("roFileSystem")
+    for each path in St_FilePaths("reg_" + key)
+        if fs.Exists(path) then fs.Delete(path)
+    end for
     sec = St_Section()
     if sec.Exists(key)
         sec.Delete(key)
@@ -237,8 +279,21 @@ end function
 sub St_SavePrefs(p as object)
     St_Set(St_PrefsKey(), p)
     St_MarkDirty("settings")
-    St_MarkDirty("catalogs")
 end sub
+
+sub St_Touch(name as string)
+    pid = St_ActiveProfile().id
+    t = St_Get("touched_" + pid, invalid)
+    if type(t) <> "roAssociativeArray" then t = {}
+    t[name] = true
+    St_Set("touched_" + pid, t)
+end sub
+
+function St_Touched(pid as string) as object
+    t = St_Get("touched_" + pid, invalid)
+    if type(t) <> "roAssociativeArray" then t = {}
+    return t
+end function
 
 sub St_MarkDirty(kind as string)
     pid = St_ActiveProfile().id
@@ -298,6 +353,7 @@ function St_SetAccent(hex as string) as boolean
         if c.hex = UCase(hex)
             p = St_Prefs()
             p.accent = c.hex
+            St_Touch("accent")
             St_SavePrefs(p)
             return true
         end if
@@ -363,6 +419,7 @@ sub St_SetCatalogHidden(catalogs as object, key as string, hidden as boolean)
         p.hidden.Delete(key)
     end if
     St_SavePrefs(p)
+    St_MarkDirty("catalogs")
     for each c in catalogs
         if c.key = key then c.hidden = hidden
     end for
@@ -388,6 +445,7 @@ function St_MoveCatalog(catalogs as object, key as string, delta as integer) as 
     p = St_Prefs()
     p.order = keys
     St_SavePrefs(p)
+    St_MarkDirty("catalogs")
     return true
 end function
 
@@ -415,6 +473,16 @@ sub St_SaveProgress(entry as object)
         if e.metaId <> entry.metaId and out.Count() < 12 then out.Push(e)
     end for
     St_Set(St_ProgressKey(), out)
+    if Bool_Of(entry.nextUp, false) then return
+    pid = St_ActiveProfile().id
+    pending = St_ReadFile("progdel_" + pid)
+    if type(pending) = "roArray" and pending.Count() > 0
+        kept = []
+        for each id in pending
+            if id <> entry.metaId then kept.Push(id)
+        end for
+        if kept.Count() <> pending.Count() then St_WriteFile("progdel_" + pid, kept)
+    end if
     St_MarkDirty("progress")
 end sub
 
@@ -435,7 +503,81 @@ sub St_RemoveProgress(metaId as string)
             out.Push(e)
         end if
     end for
-    if found then St_Set(St_ProgressKey(), out)
+    if not found then return
+    St_Set(St_ProgressKey(), out)
+    pid = St_ActiveProfile().id
+    pending = St_ReadFile("progdel_" + pid)
+    if type(pending) <> "roArray" then pending = []
+    pending.Push(metaId)
+    while pending.Count() > 50
+        pending.Shift()
+    end while
+    St_WriteFile("progdel_" + pid, pending)
+    St_MarkDirty("progress")
+end sub
+
+function St_ProgressSyncKey(e as object) as string
+    id = Str_Of(e.metaId)
+    season = ToInt(e.season, -1)
+    episode = ToInt(e.ep, -1)
+    parts = Str_Of(e.videoId).Split(":")
+    if (season < 0 or episode < 0) and parts.Count() >= 3
+        season = parts[parts.Count() - 2].ToInt()
+        episode = parts[parts.Count() - 1].ToInt()
+    end if
+    if season >= 0 and episode > 0 then return id + "_s" + season.ToStr() + "e" + episode.ToStr()
+    return id
+end function
+
+function St_WatchedKey(id as string, season as dynamic, episode as dynamic) as string
+    s = ToInt(season, -1)
+    e = ToInt(episode, -1)
+    if s >= 0 and e > 0 then return id + ":" + s.ToStr() + ":" + e.ToStr()
+    return id
+end function
+
+function St_Watched() as object
+    if m.watchedCache <> invalid and m.watchedPid = St_ActiveProfile().id then return m.watchedCache
+    data = St_ReadFile("watched_" + St_ActiveProfile().id)
+    if type(data) <> "roAssociativeArray" then data = {}
+    m.watchedCache = data
+    m.watchedPid = St_ActiveProfile().id
+    return data
+end function
+
+sub St_SaveWatched(data as object)
+    m.watchedCache = data
+    m.watchedPid = St_ActiveProfile().id
+    St_WriteFile("watched_" + St_ActiveProfile().id, data)
+end sub
+
+function St_IsWatched(id as string) as boolean
+    if id = "" then return false
+    return St_Watched().DoesExist(id)
+end function
+
+sub St_SetWatched(items as object, watched as boolean)
+    data = St_Watched()
+    pid = St_ActiveProfile().id
+    ops = St_ReadFile("watchops_" + pid)
+    if type(ops) <> "roArray" then ops = []
+    now = St_Now()
+    for each it in items
+        key = St_WatchedKey(Str_Of(it.id), it.season, it.episode)
+        if watched
+            data[key] = { k: Str_Of(it.kind), t: Left(Str_Of(it.title), 60), at: now }
+            ops.Push({ op: "add", id: Str_Of(it.id), kind: Str_Of(it.kind), title: Left(Str_Of(it.title), 80), season: it.season, episode: it.episode, at: now })
+        else
+            data.Delete(key)
+            ops.Push({ op: "del", id: Str_Of(it.id), season: it.season, episode: it.episode })
+        end if
+    end for
+    while ops.Count() > 400
+        ops.Shift()
+    end while
+    St_SaveWatched(data)
+    St_WriteFile("watchops_" + pid, ops)
+    St_MarkDirty("watched")
 end sub
 
 sub St_ClearProgress()
@@ -485,6 +627,19 @@ function St_InLibrary(id as string) as boolean
     return false
 end function
 
+sub St_FixLibraryPoster(id as string, poster as string)
+    if poster = "" then return
+    list = St_Library()
+    changed = false
+    for each e in list
+        if e.id = id and Str_Of(e.poster) <> poster
+            e.poster = poster
+            changed = true
+        end if
+    end for
+    if changed then St_Set(St_LibraryKey(), list)
+end sub
+
 function St_ToggleLibrary(entry as object) as boolean
     list = St_Library()
     out = []
@@ -505,6 +660,16 @@ function St_ToggleLibrary(entry as object) as boolean
     St_Set(St_LibraryKey(), out)
     if found then St_LibraryOp("remove", entry) else St_LibraryOp("add", entry)
     return not found
+end function
+
+function Tmdb_Lang() as string
+    raw = Str_Of(St_Pref("tmdbLanguage")).Trim().Replace("_", "-")
+    if raw = "" then return "es-MX"
+    parts = raw.Split("-")
+    out = LCase(parts[0])
+    if parts.Count() = 2 then out = out + "-" + UCase(parts[1])
+    if out = "es-419" then out = "es-MX"
+    return out
 end function
 
 function Key_Tmdb(integ as object) as string
@@ -609,6 +774,31 @@ function St_PlayerDefaults() as object
         addonLogo: true
         badgePlace: "bottom"
         fusionBadges: true
+        skipIntro: true
+        autoSkipIntro: false
+        autoSkipRecap: false
+        autoSkipOutro: false
+        autoSkipCredits: false
+        nextMode: "pct"
+        nextPct: 99
+        nextMin: 2
+        preloadNext: false
+        bingeFallback: true
+        stillWatching: true
+        stillCount: 3
+        postPlay: true
+        postPct: 96
+        parentalGuide: true
+        stripSdh: false
+        onlyPrefSubs: false
+        customSubs: true
+        subSize: "normal"
+        subColor: "white"
+        subBg: "none"
+        subEdge: "shadow"
+        subBold: false
+        subOffset: 0
+        playerStats: false
     }
 end function
 
@@ -712,6 +902,7 @@ end function
 sub St_SetPref(name as string, value as dynamic)
     p = St_Prefs()
     p[name] = value
+    St_Touch(name)
     St_SavePrefs(p)
 end sub
 
@@ -721,4 +912,10 @@ sub St_SetProfileColor(pid as string, hex as string)
     if idx < 0 then return
     profiles[idx].color = hex
     St_Set("profiles", profiles)
+end sub
+
+sub Mask_Global()
+    mode = Str_Of(St_Settings()["corners"])
+    if mode = "" then mode = "auto"
+    m.global.corners = mode
 end sub
