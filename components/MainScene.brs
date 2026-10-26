@@ -53,6 +53,8 @@ sub init()
     m.partyPanel.observeField("event", "onPartyPanelEvent")
     m.trackAuth = m.top.findNode("trackAuth")
     m.trackAuth.observeField("event", "onTrackAuthEvent")
+    m.updatePrompt = m.top.findNode("updatePrompt")
+    m.updatePrompt.observeField("event", "onUpdateEvent")
     m.toast = m.top.findNode("toast")
     m.sheet.observeField("chosen", "onSheetChosen")
     m.sheet.observeField("closed", "onSheetClosed")
@@ -146,6 +148,7 @@ sub init()
         showProfiles()
     end if
     startQuietSync()
+    Update_Start()
 end sub
 
 sub onSyncDirty()
@@ -512,13 +515,15 @@ sub showEmptyState(addonCount as integer, failed as integer)
 end sub
 
 function overlayOpen() as boolean
-    return m.sheet.visible or m.auth.visible or m.trackAuth.visible or m.partyPanel.visible or m.partyJoin.visible or m.player.visible or m.trailerOpen or m.profiles.visible or m.streamsOpen or m.stack.Count() > 0 or m.detailsOpen or m.settingsOpen
+    return m.sheet.visible or m.updatePrompt.visible or m.auth.visible or m.trackAuth.visible or m.partyPanel.visible or m.partyJoin.visible or m.player.visible or m.trailerOpen or m.profiles.visible or m.streamsOpen or m.stack.Count() > 0 or m.detailsOpen or m.settingsOpen
 end function
 
 sub focusCurrent()
     if m.top.dialog <> invalid then return
     if m.sheet.visible
         m.sheet.setFocus(true)
+    else if m.updatePrompt.visible
+        m.updatePrompt.setFocus(true)
     else if m.auth.visible
         m.auth.setFocus(true)
     else if m.trackAuth.visible
@@ -1194,4 +1199,41 @@ sub onLogoFound(event as object)
     d = heroData(item, invalid)
     if logo <> "" then d.logo = logo
     m.hero.data = d
+end sub
+
+sub Update_Start()
+    m.updateTask = CreateObject("roSGNode", "UpdateTask")
+    m.updateTask.lang = Str_Of(m.global.uiLang)
+    m.updateTask.seen = Str_Of(St_Get("updateSeen", ""))
+    m.updateTask.observeField("result", "onUpdateResult")
+    m.updateTask.control = "RUN"
+end sub
+
+sub onUpdateResult()
+    r = m.updateTask.result
+    m.updateTask = invalid
+    if type(r) <> "roAssociativeArray" or Str_Of(r.version) = "" then return
+    m.updateInfo = r
+    m.updateTimer = CreateObject("roSGNode", "Timer")
+    m.updateTimer.duration = 2
+    m.updateTimer.repeat = true
+    m.updateTimer.observeField("fire", "onUpdateTimer")
+    m.updateTimer.control = "start"
+    onUpdateTimer()
+end sub
+
+sub onUpdateTimer()
+    if m.updateInfo = invalid or m.updatePrompt.visible then return
+    if overlayOpen() or m.top.dialog <> invalid or m.page <> "home" then return
+    m.updateTimer.control = "stop"
+    m.updatePrompt.info = m.updateInfo
+    m.updatePrompt.visible = true
+    m.updatePrompt.setFocus(true)
+end sub
+
+sub onUpdateEvent()
+    if m.updateInfo <> invalid then St_Set("updateSeen", Str_Of(m.updateInfo.tag))
+    m.updateInfo = invalid
+    m.updatePrompt.visible = false
+    focusCurrent()
 end sub

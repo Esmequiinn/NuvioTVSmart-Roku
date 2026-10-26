@@ -65,33 +65,38 @@ function Http_FetchHook(urls as object, timeoutMs as integer, metaLimit as integ
             nextIndex = nextIndex + 1
         end while
         if active.Count() = 0 then exit while
-        msg = wait(500, port)
-        if type(msg) = "roUrlEvent" and msg.GetInt() = 1
-            key = msg.GetSourceIdentity().ToStr()
-            job = active[key]
-            if job <> invalid
-                active.Delete(key)
-                code = msg.GetResponseCode()
-                codes[job.index] = code
-                if code = 200
-                    body = msg.GetString()
-                    parsed = invalid
-                    if body <> "" then parsed = ParseJson(body)
-                    if parsed = invalid
-                        diag[job.index] = L("Respuesta no es JSON válido")
+        msg = wait(250, port)
+        while msg <> invalid
+            if type(msg) = "roUrlEvent" and msg.GetInt() = 1
+                key = msg.GetSourceIdentity().ToStr()
+                job = active[key]
+                if job <> invalid
+                    active.Delete(key)
+                    code = msg.GetResponseCode()
+                    codes[job.index] = code
+                    if code = 200
+                        body = msg.GetString()
+                        parsed = invalid
+                        if body <> "" then parsed = ParseJson(body)
+                        body = invalid
+                        if parsed = invalid
+                            diag[job.index] = L("Respuesta no es JSON válido")
+                        else
+                            if metaLimit > 0 then parsed = Http_TrimMetas(parsed, metaLimit)
+                            data[job.index] = parsed
+                            diag[job.index] = "ok"
+                        end if
+                    else if code < 0
+                        diag[job.index] = L("Error de red: ") + msg.GetFailureReason()
                     else
-                        if metaLimit > 0 then parsed = Http_TrimMetas(parsed, metaLimit)
-                        data[job.index] = parsed
-                        diag[job.index] = "ok"
+                        diag[job.index] = L("Error HTTP ") + code.ToStr()
                     end if
-                else if code < 0
-                    diag[job.index] = L("Error de red: ") + msg.GetFailureReason()
-                else
-                    diag[job.index] = L("Error HTTP ") + code.ToStr()
+                    if hook <> invalid then hook(job.index, data, diag)
                 end if
-                if hook <> invalid then hook(job.index, data, diag)
             end if
-        end if
+            msg = port.GetMessage()
+        end while
+        if hook <> invalid then hook(-1, data, diag)
         now = clock.TotalMilliseconds()
         for each key in active.Keys()
             if now - active[key].started > timeoutMs

@@ -121,6 +121,7 @@
         <TrailerPlayer id="trailerPlayer" visible="false" />
         <PartyJoin id="partyJoin" visible="false" />
         <PartyPanel id="partyPanel" visible="false" />
+        <UpdatePrompt id="updatePrompt" visible="false" />
         <ActionSheet id="sheet" visible="false" />
         <Toast id="toast" />
         <Group id="loading" visible="false">

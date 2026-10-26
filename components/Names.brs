@@ -43,7 +43,7 @@ function Names_Pick(data as dynamic) as string
     return name
 end function
 
-sub Names_Translate(items as object)
+sub Names_Translate(items as object, net = true as boolean)
     if items.Count() = 0 then return
     key = Key_Tmdb(St_Integrations())
     cache = Names_Cache()
@@ -51,7 +51,7 @@ sub Names_Translate(items as object)
     for each it in items
         if cache.DoesExist(it.id)
             if cache[it.id] <> "" then it.title = cache[it.id]
-        else if key <> "" and todo.Count() < 40
+        else if net and key <> "" and todo.Count() < 40
             todo.Push(it)
         end if
     end for
@@ -69,7 +69,7 @@ sub Names_Translate(items as object)
                 end if
             end for
             if urls.Count() > 0
-                res = Http_Fetch(urls, 12000, 0)
+                res = Http_Fetch(urls, 8000, 0)
                 for i = 0 to pending.Count() - 1
                     name = Names_Pick(res.data[i])
                     if name <> "" and not Str_HasForeign(name)

@@ -164,7 +164,7 @@ function Settings_Model() as object
 
     appearance = { id: "appearance", label: L("Apariencia"), subtitle: L("Elige tu tema de color e idioma"), rows: [] }
     appearance.rows.Push(Set_Row("accent", L("Color de acento"), L("Se usa en el foco, barras de progreso y botones."), St_ColorName(prefs.accent)))
-    langs = { auto: L("Automático"), es: "Español", en: "English", pt: "Português" }
+    langs = Ui_LangNames()
     uiLang = Str_Of(St_Settings()["uiLang"])
     if not langs.DoesExist(uiLang) then uiLang = "auto"
     appearance.rows.Push(Set_Row("uiLang", L("Idioma de la interfaz"), L("El idioma del canal. Automático usa el idioma de tu Roku."), langs[uiLang]))
@@ -471,8 +471,8 @@ sub onSettingsEvent()
         if current = "" then current = "auto"
         items = []
         focus = 0
-        names = { auto: L("Automático"), es: "Español", en: "English", pt: "Português" }
-        codes = ["auto", "es", "en", "pt"]
+        names = Ui_LangNames()
+        codes = Ui_LangCodes()
         for i = 0 to codes.Count() - 1
             if codes[i] = current then focus = i
             items.Push({ id: codes[i], label: names[codes[i]], checked: codes[i] = current })
@@ -882,13 +882,7 @@ sub UiLang_Apply(choice as string)
     s["uiLang"] = choice
     St_SaveSettings(s)
     refreshSettings()
-    target = choice
-    if target = "auto"
-        locale = LCase(CreateObject("roDeviceInfo").GetCurrentLocale())
-        target = "en"
-        if Left(locale, 2) = "es" then target = "es"
-        if Left(locale, 2) = "pt" then target = "pt"
-    end if
+    target = Ui_LangResolve(choice)
     table = {}
     if target <> "es"
         parsed = ParseJson(ReadAsciiFile("pkg:/locale/" + target + ".json"))
