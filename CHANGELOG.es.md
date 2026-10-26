@@ -4,6 +4,22 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.0.5] - 2026-10-25
+
+### Agregado
+- Interfaz en francés, alemán, italiano, neerlandés, polaco, turco, rumano, checo y húngaro. Elígela en **Ajustes → Apariencia → Idioma de la interfaz**, o déjala en Automático para usar el idioma de tu Roku. Los textos usan las traducciones de Nuvio TV cuando el texto es el mismo.
+- Aviso de nueva versión, como en Nuvio para Smart TV. Cuando sale un release nuevo en GitHub, el canal muestra una vez las novedades, con un código QR pequeño para descargarlo. Las novedades salen en español o en inglés según tu Roku, y en los demás idiomas con traducción automática.
+
+### Cambiado
+- El inicio aparece antes, sobre todo la primera vez o después de reinstalar el canal. Si un catálogo tarda, los demás aparecen a los pocos segundos en lugar de esperarlo, y el lento se agrega cuando llega.
+- Los títulos en otros alfabetos (como japonés o chino) se traducen después de que aparecen las filas, así que ya no detienen todo el inicio.
+- El canal espera menos a los addons que no responden: 10 segundos para los manifiestos y los detalles, y 20 segundos para los catálogos (antes hasta 30).
+- Con un idioma que no sea español ni portugués, la página del celular se abre en inglés.
+
+### Corregido
+- Los catálogos que respondían mientras el canal estaba ocupado podían marcarse como "tardó demasiado en responder" y quedar vacíos.
+- La duración de la película en los detalles decía "min left" en inglés.
+
 ## [0.0.4] - 2026-10-25
 
 ### Agregado

@@ -16,7 +16,7 @@
 
 </div>
 
-Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.0.4**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
+Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.0.5**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
 
 > **Esta no es una app oficial de Nuvio** y no está afiliada ni respaldada por el equipo de Nuvio. No aloja, guarda ni distribuye ningún contenido. Todo lo que ves viene de los addons que instalas.
 
@@ -54,8 +54,9 @@ Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMe
 - Tráilers de IMDb y YouTube, en la página de detalles, la portada del inicio o la tarjeta expandida
 - Póster enfocado que se expande a una tarjeta horizontal
 - Catálogos horizontales y cuadrados
-- Interfaz en español, inglés y portugués
+- Interfaz en español, inglés, portugués, francés, alemán, italiano, neerlandés, polaco, turco, rumano, checo y húngaro
 - Inicio rápido: el último inicio se abre al instante mientras los catálogos se actualizan en segundo plano
+- Aviso de nueva versión con las novedades y un código QR para descargarla
 
 ## Estado
 
@@ -98,6 +99,8 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Patrones de URL para pósters personalizados | ⚠️ Sin probar |
 | Interfaz en inglés | ✅ Funciona |
 | Interfaz en portugués | ✅ Funciona |
+| Interfaz en francés, alemán, italiano, neerlandés, polaco, turco, rumano, checo y húngaro | ⚠️ Sin probar |
+| Aviso de nueva versión | ⚠️ Sin probar |
 | Watch Party | ✅ Funciona |
 | Menú de opciones con `*` y quitar títulos de Seguir viendo | ✅ Funciona |
 | Colecciones con fuentes de TMDB y Trakt | ⚠️ Sin probar |
@@ -177,7 +180,7 @@ zip -r NuvioTV-Roku.zip manifest source components images web locale LICENSE
 
 ### Traducciones
 
-Los textos de la interfaz están escritos en español en el código y se traducen con `locale/en.json` y `locale/pt.json`. Los pull requests que agreguen o mejoren traducciones son bienvenidos.
+Los textos de la interfaz están escritos en español en el código y se traducen con los archivos de `locale/` (`en.json`, `pt.json`, `fr.json`, `de.json`, `it.json`, `nl.json`, `pl.json`, `tr.json`, `ro.json`, `cs.json` y `hu.json`). Los idiomas nuevos usan las traducciones de Nuvio TV cuando el texto es el mismo, y el resto se tradujo para este canal, así que algunas frases pueden sonar raras. Los idiomas con otros alfabetos (como ruso, griego, árabe, chino o japonés) no se incluyeron porque puede que la fuente del sistema del Roku no los muestre. Los pull requests que agreguen o mejoren traducciones son bienvenidos.
 
 ## Contribuir
 

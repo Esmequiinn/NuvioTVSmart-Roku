@@ -4,6 +4,22 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.0.5] - 2026-10-25
+
+### Added
+- Interface in French, German, Italian, Dutch, Polish, Turkish, Romanian, Czech and Hungarian. Choose it in **Settings → Appearance → Interface language**, or leave it on Automatic to use your Roku's language. The texts reuse the Nuvio TV translations wherever the wording is the same.
+- New version notice, like Nuvio on Smart TVs. When a new release is out on GitHub, the channel shows what's new once, with a small QR code to download it. The notes appear in Spanish or English depending on your Roku, and other languages get an automatic translation.
+
+### Changed
+- The home screen shows up sooner, especially the first time or after reinstalling the channel. If one catalog is slow, the rest appear after a few seconds instead of waiting for it, and the slow one is added when it arrives.
+- Titles in other alphabets (like Japanese or Chinese) are translated after the rows appear, so they no longer hold up the whole home screen.
+- The channel waits less for addons that don't answer: 10 seconds for addon manifests and details, and 20 seconds for catalogs (it was up to 30).
+- With a language other than Spanish or Portuguese, the phone setup page opens in English.
+
+### Fixed
+- Catalogs that answered while the channel was busy could be marked as "took too long" and stay empty.
+- The movie length on the details page said "min left" in English.
+
 ## [0.0.4] - 2026-10-25
 
 ### Added

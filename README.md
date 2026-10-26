@@ -16,7 +16,7 @@
 
 </div>
 
-This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.0.4**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
+This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.0.5**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
 
 > **This is not an official Nuvio app** and it is not affiliated with or endorsed by the Nuvio team. It does not host, store or distribute any content. Everything you see comes from the addons you install.
 
@@ -54,8 +54,9 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - Trailers from IMDb and YouTube, on the details page, the home hero or the expanded card
 - Focused poster that expands into a landscape card
 - Landscape and square catalogs
-- Spanish, English and Portuguese interface
+- Interface in Spanish, English, Portuguese, French, German, Italian, Dutch, Polish, Turkish, Romanian, Czech and Hungarian
 - Fast home: the last home screen opens right away while catalogs refresh in the background
+- New version notice with what's new and a QR code to download it
 
 ## Status
 
@@ -98,6 +99,8 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Custom poster URL patterns | ⚠️ Not tested yet |
 | English interface | ✅ Working |
 | Portuguese interface | ✅ Working |
+| French, German, Italian, Dutch, Polish, Turkish, Romanian, Czech and Hungarian interface | ⚠️ Not tested yet |
+| New version notice | ⚠️ Not tested yet |
 | Watch Party | ✅ Working |
 | `*` options menu and removing Continue Watching items | ✅ Working |
 | Collections with TMDB and Trakt sources | ⚠️ Not tested yet |
@@ -177,7 +180,7 @@ zip -r NuvioTV-Roku.zip manifest source components images web locale LICENSE
 
 ### Translations
 
-Interface text is written in Spanish in the code and translated through `locale/en.json` and `locale/pt.json`. Pull requests that add or improve translations are welcome.
+Interface text is written in Spanish in the code and translated through the files in `locale/` (`en.json`, `pt.json`, `fr.json`, `de.json`, `it.json`, `nl.json`, `pl.json`, `tr.json`, `ro.json`, `cs.json` and `hu.json`). The new languages reuse the Nuvio TV translations where the text is the same, and the rest was translated for this channel, so some phrases may sound off. Languages with other alphabets (like Russian, Greek, Arabic, Chinese or Japanese) aren't included because the Roku system font may not show them. Pull requests that add or improve translations are welcome.
 
 ## Contributing
 
