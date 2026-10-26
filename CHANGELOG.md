@@ -2,12 +2,10 @@
 
 All notable changes to Nuvio TV for Roku are listed here. This changelog only covers the Roku channel.
 
-The channel is in beta. Versions start at 0.0.1: 0.0.1 was published as 2.2.0 and 0.0.2 as 2.2.1.
-
 ## [0.0.4] - 2026-10-25
 
 ### Added
-- Skip intro, recap and credits, like Nuvio. A **Skip** button appears during those parts, and each one can also be skipped automatically (**Settings → Playback → Skip segments**). Uses introdb.app, and AniSkip for anime.
+- Skip intro, recap and credits. A **Skip** button appears during those parts, and each one can also be skipped automatically (**Settings → Playback → Skip segments**). Uses introdb.app, and AniSkip for anime.
 - Next episode card near the end of an episode, with a countdown when auto-play is on. It appears when the credits start if they are known, or at the percentage or minutes before the end that you choose.
 - Preload the next episode's sources before the card appears.
 - Option to use the first available source when the next episode doesn't have the same source group, or to show the list instead.
@@ -23,7 +21,6 @@ The channel is in beta. Versions start at 0.0.1: 0.0.1 was published as 2.2.0 an
 ### Fixed
 - Settings from your Nuvio TV account now really come to the Roku (trailer on idle, custom poster, regex, secondary audio language, reuse last link and the rest). Nuvio stores each value with its type, and the Roku was ignoring them. Changes made on the Roku are also sent back in the format Nuvio TV reads. Subtitle style, addon name and type suffix on catalogs are also synced now.
 - Posters, episodes, cast photos and profile pictures rounded on one side only on HD Rokus. If it still happens, **Settings → Advanced → Rounded corners** has other options.
-- The **Play** button on the next episode card and the **Yes**/**No** buttons on **Are you still watching?** are sharp and the text is centered.
 - The channel no longer freezes when you switch to another profile.
 - Search no longer turns the focused poster into a wide card after a few seconds.
 - If something fails inside the player, the channel shows the error instead of closing.
@@ -34,7 +31,7 @@ The channel is in beta. Versions start at 0.0.1: 0.0.1 was published as 2.2.0 an
 - The MDBList key comes from the Nuvio profile you're using. Before, the sync went through all your profiles and the last one, without a key, erased it. The channel also syncs again when you switch profiles. A key you typed on the TV or the phone page stays.
 - Your TMDB key also comes from the Nuvio profile you're using, like the MDBList key. **Settings → Integrations** shows what the channel found in your account the last time it checked.
 - Keys typed on the TV keyboard are read correctly on newer Roku OS versions, and every setting is also saved in the channel's files in case the Roku storage is full.
-- Trailers prefer your TMDB region (Latin American Spanish for es-MX) and try a second way to open YouTube trailers before falling back to English.
+- Trailers prefer your TMDB region and try a second way to open YouTube trailers before falling back to English.
 - The Roku keeps only small settings in its own storage, which has a 16 KB limit. Your library and Continue Watching filled it up, so new changes (like an MDBList key typed on the TV) weren't being saved. They now live in the channel's files.
 - Home rows update in place when catalogs finish loading, instead of disappearing and loading again.
 - The channel icon and splash screen have the right size on HD Rokus.
