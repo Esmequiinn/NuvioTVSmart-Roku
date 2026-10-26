@@ -5,7 +5,7 @@ sub Main(args as dynamic)
 
     lang = UiLanguage()
     table = {}
-    if lang = "en" or lang = "pt"
+    if lang <> "es"
         parsed = ParseJson(ReadAsciiFile("pkg:/locale/" + lang + ".json"))
         if type(parsed) = "roAssociativeArray" then table = parsed
     end if
@@ -46,9 +46,14 @@ function UiLanguage() as string
             if value <> invalid and GetInterface(value, "ifString") <> invalid then choice = value
         end if
     end if
-    if choice = "es" or choice = "en" or choice = "pt" then return choice
-    locale = LCase(CreateObject("roDeviceInfo").GetCurrentLocale())
-    if Left(locale, 2) = "es" then return "es"
-    if Left(locale, 2) = "pt" then return "pt"
-    return "en"
+    codes = ["es", "en", "pt", "fr", "de", "it", "nl", "pl", "tr", "ro", "cs", "hu"]
+    locale = LCase(Left(CreateObject("roDeviceInfo").GetCurrentLocale(), 2))
+    found = "en"
+    for each c in codes
+        if c = locale then found = c
+    end for
+    for each c in codes
+        if c = choice then found = c
+    end for
+    return found
 end function
