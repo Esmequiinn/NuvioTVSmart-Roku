@@ -57,7 +57,7 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 
 ## Status
 
-So far the channel has only been tested on a real Roku by me, so some features haven't been tried yet. If you test any of the **Not tested yet** items, please open an issue and tell us how it went.
+Some features haven't been tried yet. If you test any of the **Not tested yet** items, please open an issue and tell us how it went.
 
 | Feature | Status |
 | --- | --- |
@@ -77,16 +77,16 @@ So far the channel has only been tested on a real Roku by me, so some features h
 | Switching audio and subtitle tracks | ✅ Working |
 | Trailers | ✅ Working |
 | Expanding focused poster | ✅ Working |
-| TMDB integration | ⚠️ Not tested yet |
+| TMDB integration | ✅ Working |
 | MDBList integration | ⚠️ Not tested yet |
 | Trakt | ⚠️ Not tested yet |
 | Simkl | ⚠️ Not tested yet |
-| Nuvio account sign-in and sync | ✅ Sign-in works, ⚠️ sync not tested yet |
+| Nuvio account sign-in and sync | ✅ Working |
 | Sources with addon formatter text | ✅ Working but with no emojis |
 | Badges (quality, HDR, codec, audio, size and Fusion) | ✅ Working |
 | Continue Watching in landscape | ✅ Working |
 | Collections import | ✅ Working |
-| Nuvio collections | ⚠️ Not tested yet |
+| Nuvio collections | ✅ Working |
 | Sync from the Roku to your Nuvio account | ✅ Working  |
 | Profile pictures and theme color from Nuvio | ✅ Working |
 | Landscape and square catalogs | ✅ Working |
@@ -95,15 +95,15 @@ So far the channel has only been tested on a real Roku by me, so some features h
 | Preferred and secondary audio and subtitle languages | ✅ Working |
 | Custom poster URL patterns | ⚠️ Not tested yet |
 | English interface | ✅ Working |
-| Portuguese interface | ⚠️ Not tested yet |
-| Watch Party | ⚠️ Not tested yet |
-| `*` options menu and removing Continue Watching items | ⚠️ Not tested yet |
+| Portuguese interface | ✅ Working |
+| Watch Party | ✅ Working |
+| `*` options menu and removing Continue Watching items | ✅ Working |
 | Collections with TMDB and Trakt sources | ⚠️ Not tested yet |
 | Next episode card | ✅ Working |
 | Are you still watching? | ✅ Working |
 | Recommendations at the end of a movie | ✅ Working |
 | Content warnings | ✅ Working |
-| Skip intro, recap and credits | ⚠️ Not tested yet |
+| Skip intro, recap and credits | ✅ Working |
 | Subtitle style and SDH filtering | ⚠️ Not tested yet |
 | Playback stats | ⚠️ Not tested yet |
 | Next up in Continue Watching | ⚠️ Not tested yet |
@@ -113,7 +113,7 @@ So far the channel has only been tested on a real Roku by me, so some features h
 
 - Roku can only play direct links. Torrent, magnet and external links are skipped.
 - Playable formats depend on your Roku model (MP4, MKV, HLS and DASH are the usual ones).
-- Some Roku models, like the Roku Express, can't decode some video codecs, such as HEVC (x265), 10-bit or HDR. On those Rokus, auto-play leaves those sources for last, and if you pick one it may fail with "the connection dropped" or a codec error. Choose an x264 / H.264 source instead. **Settings → About** in the channel shows your Roku model and whether it can play HEVC.
+- Some Roku models, like the Roku Express, can't decode some video codecs, such as HEVC (x265), 10-bit or HDR. On those Rokus, auto-play leaves those sources for last, and if you pick one it may fail with "the connection dropped" or a codec error. **Settings → About** in the channel shows your Roku model and whether it can play HEVC.
 - On 720p TVs the Roku scales the interface down, so focus frames and buttons look less sharp than on 1080p or 4K TVs.
 - Roku can't decode TrueHD or DTS-HD audio, which most REMUX files use. Those audio tracks don't show up in the player. The channel prefers other sources for auto-play.
 - 4K (HEVC above 1080p) only plays when your Roku and your TV are in 4K mode. Channels can't change the display mode, so set it on your Roku in **Settings → Display type → Auto detect** (in Spanish: **Ajustes → Tipo de pantalla → Detectar automáticamente**). If your TV supports 4K, the Roku will stay in 4K.
