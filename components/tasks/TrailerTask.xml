@@ -6,11 +6,13 @@
         <field id="localYt" type="array" />
         <field id="urls" type="array" />
         <field id="tag" type="string" />
+        <field id="kind" type="string" />
         <field id="result" type="assocarray" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
     <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Store.brs" />
     <script type="text/brightscript" uri="pkg:/components/Http.brs" />
     <script type="text/brightscript" uri="pkg:/components/tasks/TrailerTask.brs" />
 </component>
