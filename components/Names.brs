@@ -69,7 +69,7 @@ sub Names_Translate(items as object, net = true as boolean)
                 end if
             end for
             if urls.Count() > 0
-                res = Http_Fetch(urls, 8000, 0)
+                res = Http_Fetch(urls, 12000, 0)
                 for i = 0 to pending.Count() - 1
                     name = Names_Pick(res.data[i])
                     if name <> "" and not Str_HasForeign(name)
