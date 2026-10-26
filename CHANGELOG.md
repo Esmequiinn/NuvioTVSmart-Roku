@@ -4,6 +4,56 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 The channel is in beta. Versions start at 0.0.1: 0.0.1 was published as 2.2.0 and 0.0.2 as 2.2.1.
 
+## [0.0.4] - 2026-10-25
+
+### Added
+- Skip intro, recap and credits, like Nuvio. A **Skip** button appears during those parts, and each one can also be skipped automatically (**Settings → Playback → Skip segments**). Uses introdb.app, and AniSkip for anime.
+- Next episode card near the end of an episode, with a countdown when auto-play is on. It appears when the credits start if they are known, or at the percentage or minutes before the end that you choose.
+- Preload the next episode's sources before the card appears.
+- Option to use the first available source when the next episode doesn't have the same source group, or to show the list instead.
+- **Are you still watching?** on the full screen after several episodes in a row, with Yes and No.
+- Recommendations near the end of a movie or the last episode (needs TMDB). Select one to open its details.
+- Content warnings (nudity, violence, profanity, drugs and frightening scenes) for a few seconds when a title starts.
+- Hide SDH subtitles and show only your preferred subtitle languages.
+- Subtitle style for addon subtitles: size, color, background, edge, bold and height. Subtitles inside the video keep the Roku style from **Settings → Accessibility → Captions style**.
+- Playback stats overlay with resolution, codec, audio and bitrate (**Settings → Advanced**).
+- All these settings sync with your Nuvio account.
+- **Next up** in Continue Watching: when you finish an episode, the next one appears in the row so you can keep going.
+
+### Fixed
+- Settings from your Nuvio TV account now really come to the Roku (trailer on idle, custom poster, regex, secondary audio language, reuse last link and the rest). Nuvio stores each value with its type, and the Roku was ignoring them. Changes made on the Roku are also sent back in the format Nuvio TV reads. Subtitle style, addon name and type suffix on catalogs are also synced now.
+- Posters, episodes, cast photos and profile pictures rounded on one side only on HD Rokus. If it still happens, **Settings → Advanced → Rounded corners** has other options.
+- The **Play** button on the next episode card and the **Yes**/**No** buttons on **Are you still watching?** are sharp and the text is centered.
+- The channel no longer freezes when you switch to another profile.
+- Search no longer turns the focused poster into a wide card after a few seconds.
+- If something fails inside the player, the channel shows the error instead of closing.
+- You can type your TMDB and MDBList keys on the TV in **Settings → Integrations**, and saving keys from the phone page no longer fails with "Couldn't connect to the Roku".
+- One more way to open .ts links on Rokus that couldn't play them.
+- Posters and the wide focused card no longer show square corners outside the focus frame on HD Rokus.
+- The title logo at the top of the home screen loads faster and only once, in your language. The channel asks TMDB only for the logo first, without waiting for the rest of the details, and remembers logos it already found.
+- The MDBList key comes from the Nuvio profile you're using. Before, the sync went through all your profiles and the last one, without a key, erased it. The channel also syncs again when you switch profiles. A key you typed on the TV or the phone page stays.
+- Your TMDB key also comes from the Nuvio profile you're using, like the MDBList key. **Settings → Integrations** shows what the channel found in your account the last time it checked.
+- Keys typed on the TV keyboard are read correctly on newer Roku OS versions, and every setting is also saved in the channel's files in case the Roku storage is full.
+- Trailers prefer your TMDB region (Latin American Spanish for es-MX) and try a second way to open YouTube trailers before falling back to English.
+- The Roku keeps only small settings in its own storage, which has a 16 KB limit. Your library and Continue Watching filled it up, so new changes (like an MDBList key typed on the TV) weren't being saved. They now live in the channel's files.
+- Home rows update in place when catalogs finish loading, instead of disappearing and loading again.
+- The channel icon and splash screen have the right size on HD Rokus.
+- A key you type on the TV is no longer replaced by your Nuvio account sync.
+- On Rokus that can't play HEVC (x265), auto-play leaves those sources for last, and the error says why the link didn't play.
+- **Settings → About** shows the Roku model, video mode, whether it plays HEVC and the free storage space.
+- Trakt lists in collections failed with "Trakt (403)" because the list number wasn't sent. TMDB collections, companies, networks and people saved with a numeric ID also loaded the wrong titles. Both now work, and Trakt lists in a folder load at the same time instead of one by one.
+- The channel saved home posters in the background while you browsed, which slowed down everything else (collections, cast photos) and sometimes made posters stop loading. It now waits until the home screen is ready, downloads less at once and stops as soon as you open something.
+- Playing a source again after leaving it no longer fails with "the connection dropped". If the link can't resume where you left off, the channel tries again with another method, and if that fails too it starts from the beginning instead of showing an error.
+
+- The channel no longer freezes when you go back to the home screen after opening Settings.
+
+### Changed
+- The README explains which codecs some Roku models can't play.
+- The README explains how to keep the Roku in 4K with **Settings → Display type → Auto detect**.
+
+### Known issues
+- The MDBList key from your Nuvio account still doesn't reach the Roku for some accounts. **Settings → Integrations** shows what the channel found in your account, to help find the cause.
+
 ## [0.0.3] - 2026-10-24
 
 ### Added
@@ -19,6 +69,7 @@ The channel is in beta. Versions start at 0.0.1: 0.0.1 was published as 2.2.0 an
 - **Prefer Roku-compatible sources** in Settings → Playback: auto-play leaves REMUX files with TrueHD or DTS-HD audio, and 4K when your TV is not in 4K mode, for last.
 - The player lists every audio track the Roku reports, even repeated languages, with the track name and format.
 - Addon subtitles that arrive after playback starts can be picked from the subtitles menu.
+- Version shown on the Roku as 0.0.3 beta.
 - Select an actor on the details page to see their movies and series (needs TMDB).
 - Press `*` on the Play button of the details page to choose the source manually.
 - Loading screen like Nuvio while a source opens: the title's backdrop with its logo in the middle.
@@ -28,7 +79,6 @@ The channel is in beta. Versions start at 0.0.1: 0.0.1 was published as 2.2.0 an
 - Titles in Chinese, Japanese, Korean and other scripts the Roku can't draw are shown with their TMDB name in your metadata language, or in English.
 - On Xtream live channels that play through HLS with a single audio track, the audio menu offers to load all audio tracks from the original `.ts` link. If the Roku can't open it, it goes back to the version that works.
 - The interface language is chosen from a list, and the notice to reopen the channel is shown in the language you picked.
--  Watch Party. The Roku now sends its state to the room right away and only leaves when the room really ends.
 
 ### Changed
 - Home opens right away with the last loaded rows and refreshes them in the background, and catalogs are loaded in parallel. The "addons loaded" messages are gone.
@@ -46,6 +96,7 @@ The channel is in beta. Versions start at 0.0.1: 0.0.1 was published as 2.2.0 an
 - Home posters are saved on the Roku after they load, so they don't load again when you scroll back.
 
 ### Fixed
+- Watch Party ended when you paused, and other devices didn't follow the Roku. The Roku now sends its state to the room right away and only leaves when the room really ends.
 - Resuming from Continue Watching started from the beginning on some sources.
 - Seeking far ahead jumped back to the old position.
 - Some sources closed the player without an error, and Continue Watching progress could disappear because of it. The channel now retries the link in other formats before showing an error.
@@ -75,6 +126,7 @@ The channel is in beta. Versions start at 0.0.1: 0.0.1 was published as 2.2.0 an
 - Collection folders with list ids stored as decimal numbers didn't load.
 - Collection logos and images linked from GitHub pages (`github.com/.../blob/...?raw=true`) didn't show.
 - TMDB collection sources with a maximum rating of 0 returned no titles.
+- The About section still said version 2.2.0.
 - Trakt lists in collections now retry with your Trakt account and with both movies and shows when the first request comes back empty.
 
 
