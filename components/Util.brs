@@ -104,22 +104,21 @@ function Stream_Attempts(url as string) as object
     q = Instr(1, u, "?")
     path = u
     if q > 0 then path = Left(u, q - 1)
-    auto = "hls, mp4, mkv, mp3, avi, m4v, ts, mpeg-4, flv, vob, ogg, ogv, webm, mov, wmv, asf, amv, mpg, mp2, mpeg, mpe, mpv, mpeg2"
     list = []
     isTs = Right(path, 3) = ".ts"
-    if isTs and Instr(1, path, "/live/") > 0
-        cut = Len(path) - 3
-        list.Push({ url: Left(url, cut) + ".m3u8" + Mid(url, Len(path) + 1), fmt: "hls" })
-    end if
     if fmt <> ""
         list.Push({ url: url, fmt: fmt })
-        list.Push({ url: url, fmt: auto })
+        list.Push({ url: url, fmt: "" })
     else if isTs
-        list.Push({ url: url, fmt: auto })
+        if Instr(1, path, "/live/") > 0
+            cut = Len(path) - 3
+            list.Push({ url: Left(url, cut) + ".m3u8" + Mid(url, Len(path) + 1), fmt: "hls" })
+        end if
+        list.Push({ url: url, fmt: "" })
         list.Push({ url: url, fmt: "ts" })
         list.Push({ url: url, fmt: "hls" })
     else
-        list.Push({ url: url, fmt: auto })
+        list.Push({ url: url, fmt: "" })
         list.Push({ url: url, fmt: "hls" })
         list.Push({ url: url, fmt: "mkv" })
     end if

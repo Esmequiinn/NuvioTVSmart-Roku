@@ -14,6 +14,9 @@
     <script type="text/brightscript" uri="pkg:/components/Pages.brs" />
     <script type="text/brightscript" uri="pkg:/components/Playback.brs" />
     <script type="text/brightscript" uri="pkg:/components/Menus.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Party.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Sheet.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Auth.brs" />
     <script type="text/brightscript" uri="pkg:/components/Settings.brs" />
     <children>
         <Rectangle width="1920" height="1080" color="0x0C0C0FFF" />
@@ -36,6 +39,25 @@
                 vertFocusAnimationStyle="fixedFocus"
                 drawFocusFeedback="false"
                 focusBitmapBlendColor="0xFFFFFFFF" />
+            <Group id="skeleton" visible="false">
+                <Poster translation="[160,250]" width="520" height="110" uri="pkg:/images/card.9.png" blendColor="0x1C1C20FF" />
+                <Poster translation="[160,384]" width="380" height="30" uri="pkg:/images/card.9.png" blendColor="0x1C1C20FF" />
+                <Poster translation="[160,430]" width="760" height="26" uri="pkg:/images/card.9.png" blendColor="0x18181CFF" />
+                <Poster translation="[160,470]" width="640" height="26" uri="pkg:/images/card.9.png" blendColor="0x18181CFF" />
+                <Poster translation="[160,592]" width="300" height="34" uri="pkg:/images/card.9.png" blendColor="0x1C1C20FF" />
+                <Poster translation="[160,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[386,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[612,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[838,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[1064,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[1290,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[1516,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[1742,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[160,1000]" width="260" height="34" uri="pkg:/images/card.9.png" blendColor="0x1C1C20FF" />
+            </Group>
+            <Animation id="skeletonPulse" duration="1.2" repeat="true" easeFunction="inOutQuad">
+                <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[1.0, 0.45, 1.0]" fieldToInterp="skeleton.opacity" />
+            </Animation>
             <Group id="emptyState" visible="false">
                 <Label id="emptyTitle" translation="[160,200]" width="1100" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
                 <Label id="emptyBody" translation="[160,290]" width="1100" wrap="true" maxLines="12" font="font:MediumSystemFont" color="0xC9C9D6FF" />
@@ -87,23 +109,31 @@
             <Label id="libraryEmpty" visible="false" translation="[160,620]" width="1500" wrap="true" font="font:MediumSystemFont" color="0x9A9AAAFF" text="Tu biblioteca está vacía. Abre cualquier título y elige Mi lista para guardarlo aquí." />
         </Group>
         <ExpandedCard id="expanded" />
+        <SettingsScreen id="settings" visible="false" />
         <NavRail id="nav" />
         <DetailsScreen id="details" visible="false" />
-        <SettingsScreen id="settings" visible="false" />
         <ListScreen id="list" visible="false" />
         <StreamsScreen id="streamsScreen" visible="false" />
         <ProfilePicker id="profiles" visible="false" />
+        <AuthScreen id="auth" visible="false" />
+        <TrackAuth id="trackAuth" visible="false" />
         <PlayerScreen id="player" visible="false" />
         <TrailerPlayer id="trailerPlayer" visible="false" />
+        <PartyJoin id="partyJoin" visible="false" />
+        <PartyPanel id="partyPanel" visible="false" />
+        <ActionSheet id="sheet" visible="false" />
+        <Toast id="toast" />
         <Group id="loading" visible="false">
-            <Rectangle width="1920" height="1080" color="0x000000FF" opacity="0.72" />
-            <Label id="loadingText" translation="[0,500]" width="1920" horizAlign="center" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
-            <Label id="loadingHint" translation="[0,570]" width="1920" horizAlign="center" font="font:SmallestSystemFont" color="0x9A9AAAFF" text="Atrás para cancelar" />
+            <Rectangle width="1920" height="1080" color="0x000000FF" opacity="0.7" />
+            <BusySpinner id="spinner" translation="[912,410]" spinInterval="0.9" />
+            <Label id="loadingText" translation="[0,540]" width="1920" horizAlign="center" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="loadingHint" translation="[0,600]" width="1920" horizAlign="center" font="font:SmallestSystemFont" color="0xA6A6AEFF" text="Atrás para cancelar" />
         </Group>
         <Timer id="heroTimer" duration="0.45" repeat="false" />
         <Timer id="searchTimer" duration="1.0" repeat="false" />
         <Timer id="loginTimer" duration="5" repeat="false" />
         <Timer id="expandTimer" duration="3" repeat="false" />
         <Timer id="autoTimer" duration="3" repeat="false" />
+        <Timer id="subsWait" duration="4" repeat="false" />
     </children>
 </component>
