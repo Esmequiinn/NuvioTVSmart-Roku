@@ -429,7 +429,7 @@ sub Folder_Execute()
                     infos.Push({ title: title, kind: src["type"], provider: "addon" })
                 end if
             else if provider = "tmdb" and tmdbKey <> ""
-                if UCase(Str_Of(src.tmdbSourceType)) = "PERSON" and Str_Of(src.tmdbId) = "" and Str_Of(src.personName) <> ""
+                if UCase(Str_Of(src.tmdbSourceType)) = "PERSON" and Str_Any(src.tmdbId) = "" and Str_Of(src.personName) <> ""
                     found = Http_Request("GET", "https://api.themoviedb.org/3/search/person?api_key=" + tmdbKey + "&language=" + lang + "&query=" + Str_Of(src.personName).EncodeUriComponent(), {}, invalid, 10000).json
                     if type(found) = "roAssociativeArray" and type(found.results) = "roArray" and found.results.Count() > 0 then src.tmdbId = Str_Any(found.results[0].id)
                 end if
@@ -439,8 +439,13 @@ sub Folder_Execute()
                     infos.Push(job)
                 end if
             else if provider = "trakt"
-                infos.Push({ title: Str_Of(src.title), provider: "trakt", src: src })
-                urls.Push("")
+                req = Folder_TraktRequest(src, "")
+                if req = invalid
+                    Folder_Fail("Trakt", 0)
+                else
+                    infos.Push({ title: Str_Of(src.title), provider: "trakt", src: src })
+                    urls.Push(req)
+                end if
             else if provider = "mdblist" and Str_Of(integ.mdbKey) <> ""
                 infos.Push({ title: Str_Of(src.title), provider: "mdblist", src: src })
                 urls.Push("")
@@ -452,19 +457,22 @@ sub Folder_Execute()
         direct = []
         index = []
         for i = 0 to urls.Count() - 1
-            if urls[i] <> ""
+            if type(urls[i]) = "roAssociativeArray" or urls[i] <> ""
                 direct.Push(urls[i])
                 index.Push(i)
             end if
         end for
         results = []
+        codes = []
         for i = 0 to urls.Count() - 1
             results.Push(invalid)
+            codes.Push(0)
         end for
         if direct.Count() > 0
-            fetched = Http_Fetch(direct, 45000, 0)
+            fetched = Http_FetchHook(direct, 30000, 0, 8, invalid)
             for j = 0 to index.Count() - 1
                 results[index[j]] = fetched.data[j]
+                codes[index[j]] = fetched.codes[j]
             end for
         end if
         for i = 0 to infos.Count() - 1
@@ -477,7 +485,7 @@ sub Folder_Execute()
                 metas = Folder_TmdbMetas(results[i], info)
                 if type(results[i]) <> "roAssociativeArray" then Folder_Fail("TMDB", 0)
             else if info.provider = "trakt"
-                metas = Folder_TraktMetas(info.src)
+                metas = Folder_TraktMetas(info.src, results[i], codes[i])
             else if info.provider = "mdblist"
                 metas = Folder_MdbMetas(info.src, integ.mdbKey)
             end if
@@ -523,7 +531,7 @@ end sub
 function Folder_TmdbUrl(src as object, key as string, lang as string) as dynamic
     api = "https://api.themoviedb.org/3"
     kind = UCase(Str_Of(src.tmdbSourceType))
-    id = Str_Of(src.tmdbId)
+    id = Str_Any(src.tmdbId)
     media = "movie"
     if UCase(Str_Of(src.mediaType)) = "TV" or kind = "NETWORK" then media = "tv"
     title = Str_Of(src.title)
@@ -649,36 +657,70 @@ function Folder_ByVotes(list as object) as object
     return out
 end function
 
-function Folder_TraktMetas(src as object) as object
-    out = []
-    client = Config_TraktClientId()
-    if client = ""
-        Folder_Fail("Trakt", 0)
-        return out
-    end if
-    media = "movie"
+function Folder_TraktMedia(src as object) as string
     mt = UCase(Str_Of(src.mediaType))
-    if mt = "TV" or mt = "SHOW" or mt = "SERIES" then media = "show"
+    if mt = "TV" or mt = "SHOW" or mt = "SERIES" then return "show"
+    return "movie"
+end function
+
+function Folder_TraktRequest(src as object, media as string) as dynamic
+    client = Config_TraktClientId()
+    listId = Str_Any(src.traktListId)
+    if client = "" or listId = "" then return invalid
+    if media = "" then media = Folder_TraktMedia(src)
     sortBy = Str_Of(src.sortBy)
     if sortBy = "" then sortBy = "rank"
     sortHow = Str_Of(src.sortHow)
     if sortHow = "" then sortHow = "asc"
-    listId = Str_Of(src.traktListId)
     headers = { "Content-Type": "application/json", "trakt-api-version": "2", "trakt-api-key": client }
-    base = "https://api.trakt.tv/lists/" + listId + "/items/"
-    tail = "?extended=full,images&page=1&limit=60&sort_by=" + sortBy + "&sort_how=" + sortHow
-    r = Http_Request("GET", base + media + tail, headers, invalid, 20000)
-    if (r.code = 401 or r.code = 403 or r.code = 404) and St_Integrations().traktToken <> ""
-        headers["Authorization"] = "Bearer " + St_Integrations().traktToken
-        r = Http_Request("GET", base + media + tail, headers, invalid, 20000)
+    url = "https://api.trakt.tv/lists/" + listId.EncodeUriComponent() + "/items/" + media + "?extended=full,images&page=1&limit=60&sort_by=" + sortBy + "&sort_how=" + sortHow
+    return { url: url, headers: headers }
+end function
+
+function Folder_TraktGet(req as object, auth as boolean) as object
+    headers = {}
+    for each k in req.headers
+        headers[k] = req.headers[k]
+    end for
+    if auth then headers["Authorization"] = "Bearer " + St_Integrations().traktToken
+    return Http_Request("GET", req.url, headers, invalid, 20000)
+end function
+
+function Folder_TraktMetas(src as object, first as dynamic, firstCode as integer) as object
+    out = []
+    media = Folder_TraktMedia(src)
+    req = Folder_TraktRequest(src, media)
+    if req = invalid
+        Folder_Fail("Trakt", 0)
+        return out
     end if
-    if type(r.json) <> "roArray" or r.json.Count() = 0
-        if r.code >= 200 and r.code < 300
-            r = Http_Request("GET", base + "movie,show" + tail, headers, invalid, 20000)
-        end if
+    r = { code: firstCode, json: first }
+    token = St_Integrations().traktToken <> ""
+    if r.code = 0 or r.code = 429 or r.code >= 500
+        r = Folder_TraktGet(req, false)
+    end if
+    if r.code = 403
+        alt = { url: req.url, headers: {} }
+        for each k in req.headers
+            alt.headers[k] = req.headers[k]
+        end for
+        alt.headers["User-Agent"] = "okhttp/4.12.0"
+        r2 = Folder_TraktGet(alt, false)
+        if r2.code >= 200 and r2.code < 300 then r = r2
+    end if
+    if (r.code = 401 or r.code = 403 or r.code = 404) and token
+        r2 = Folder_TraktGet(req, true)
+        if r2.code >= 200 and r2.code < 300 or r.code = 0 then r = r2
+    end if
+    if (type(r.json) <> "roArray" or r.json.Count() = 0) and r.code >= 200 and r.code < 300
+        r = Folder_TraktGet(Folder_TraktRequest(src, "movie,show"), token)
     end if
     if type(r.json) <> "roArray"
-        Folder_Fail("Trakt", r.code)
+        if r.code = 404
+            Folder_Fail(L("Trakt: lista privada o eliminada"), r.code)
+        else
+            Folder_Fail("Trakt", r.code)
+        end if
         return out
     end if
     for each entry in r.json
@@ -739,7 +781,7 @@ end function
 
 function Folder_MdbMetas(src as object, key as string) as object
     out = []
-    r = Http_Request("GET", "https://api.mdblist.com/lists/" + Str_Of(src.listId) + "/items?apikey=" + key + "&limit=40", {}, invalid, 20000)
+    r = Http_Request("GET", "https://api.mdblist.com/lists/" + Str_Any(src.listId) + "/items?apikey=" + key + "&limit=40", {}, invalid, 20000)
     data = r.json
     lists = []
     if type(data) = "roArray" then lists.Push(data)

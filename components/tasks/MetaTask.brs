@@ -99,11 +99,21 @@ function Tmdb_Enrich(merged as object, integ as object, kind as string, id as st
     if type(d.videos) = "roAssociativeArray" and type(d.videos.results) = "roArray"
         local = []
         other = []
+        region = UCase(Mid(lang, 4, 2))
+        for each pass in [1, 2]
+            for each kindWanted in ["Trailer", "Teaser"]
+                for each v in d.videos.results
+                    if type(v) = "roAssociativeArray" and LCase(Str_Of(v.site)) = "youtube" and Str_Of(v.type) = kindWanted and Str_Of(v.key) <> "" and LCase(Str_Of(v.iso_639_1)) = lang2 and lang2 <> "en"
+                        sameRegion = region <> "" and UCase(Str_Of(v.iso_3166_1)) = region
+                        if ((pass = 1 and sameRegion) or (pass = 2 and not sameRegion)) and local.Count() < 3 then local.Push(v.key)
+                    end if
+                end for
+            end for
+        end for
         for each kindWanted in ["Trailer", "Teaser"]
             for each v in d.videos.results
                 if type(v) = "roAssociativeArray" and LCase(Str_Of(v.site)) = "youtube" and Str_Of(v.type) = kindWanted and Str_Of(v.key) <> ""
                     if LCase(Str_Of(v.iso_639_1)) = lang2 and lang2 <> "en"
-                        if local.Count() < 2 then local.Push(v.key)
                     else if other.Count() < 2
                         other.Push(v.key)
                     end if

@@ -5,6 +5,7 @@ end sub
 sub execute()
     result = invalid
     local = Trailer_List(m.top.localYt)
+    if local.Count() = 0 and m.top.imdb <> "" then local = Trailer_TmdbLocal(m.top.imdb, m.top.kind)
     for each id in local
         if result = invalid then result = Trailer_YouTube(id)
     end for
@@ -22,6 +23,42 @@ sub execute()
     if result = invalid then result = { url: "" }
     m.top.result = result
 end sub
+
+function Trailer_TmdbLocal(imdb as string, kind as string) as object
+    out = []
+    key = Key_Tmdb(St_Integrations())
+    if key = "" then return out
+    lang = Tmdb_Lang()
+    short = LCase(Left(lang, 2))
+    if short = "en" then return out
+    r = Http_Request("GET", "https://api.themoviedb.org/3/find/" + imdb.Split(":")[0] + "?api_key=" + key + "&external_source=imdb_id", {}, invalid, 8000)
+    d = r.json
+    if type(d) <> "roAssociativeArray" then return out
+    media = ""
+    id = ""
+    k = LCase(kind)
+    order = ["movie_results", "tv_results"]
+    if k = "series" or k = "tv" then order = ["tv_results", "movie_results"]
+    for each field in order
+        if id = "" and type(d[field]) = "roArray" and d[field].Count() > 0
+            id = Str_Any(d[field][0].id)
+            media = "movie"
+            if field = "tv_results" then media = "tv"
+        end if
+    end for
+    if id = "" then return out
+    v = Http_Request("GET", "https://api.themoviedb.org/3/" + media + "/" + id + "/videos?api_key=" + key + "&language=" + lang, {}, invalid, 8000)
+    list = v.json
+    if type(list) <> "roAssociativeArray" or type(list.results) <> "roArray" then return out
+    for each wanted in ["Trailer", "Teaser"]
+        for each x in list.results
+            if type(x) = "roAssociativeArray" and LCase(Str_Of(x.site)) = "youtube" and Str_Of(x.type) = wanted and Str_Of(x.key) <> "" and LCase(Str_Of(x.iso_639_1)) = short
+                if out.Count() < 2 then out.Push(x.key)
+            end if
+        end for
+    end for
+    return out
+end function
 
 function Trailer_List(v as dynamic) as object
     out = []
@@ -69,6 +106,34 @@ end function
 function Trailer_YouTube(raw as string) as dynamic
     id = Trailer_YtId(raw)
     if id = "" then return invalid
+    result = Trailer_YtIos(id)
+    if result = invalid then result = Trailer_YtVr(id)
+    return result
+end function
+
+function Trailer_YtVr(id as string) as dynamic
+    agent = "com.google.android.apps.youtube.vr.oculus/1.65.10 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip"
+    headers = { "User-Agent": agent, "X-Youtube-Client-Name": "28", "X-Youtube-Client-Version": "1.65.10", Origin: "https://www.youtube.com" }
+    client = { clientName: "ANDROID_VR", clientVersion: "1.65.10", deviceMake: "Oculus", deviceModel: "Quest 3", androidSdkVersion: 32, osName: "Android", osVersion: "12L", hl: "es", gl: "MX" }
+    body = { context: { client: client }, videoId: id, contentCheckOk: true, racyCheckOk: true }
+    r = Http_Request("POST", "https://www.youtube.com/youtubei/v1/player?prettyPrint=false", headers, body, 12000)
+    d = r.json
+    if type(d) <> "roAssociativeArray" or type(d.streamingData) <> "roAssociativeArray" then return invalid
+    hls = Str_Of(d.streamingData.hlsManifestUrl)
+    if hls <> "" then return { url: hls, format: "hls", headers: ["User-Agent: " + agent], source: "youtube" }
+    best = invalid
+    if type(d.streamingData.formats) = "roArray"
+        for each f in d.streamingData.formats
+            if type(f) = "roAssociativeArray" and Str_Of(f.url) <> "" and Instr(1, Str_Of(f.mimeType), "video/mp4") > 0
+                if best = invalid or ToInt(f.height, 0) > ToInt(best.height, 0) then best = f
+            end if
+        end for
+    end if
+    if best = invalid then return invalid
+    return { url: best.url, format: "mp4", headers: ["User-Agent: " + agent], source: "youtube" }
+end function
+
+function Trailer_YtIos(id as string) as dynamic
     agent = "com.google.ios.youtube/20.10.1 (iPhone16,2; U; CPU iOS 17_4 like Mac OS X)"
     headers = { "User-Agent": agent, "X-Youtube-Client-Name": "5", "X-Youtube-Client-Version": "20.10.1", Origin: "https://www.youtube.com" }
     client = { clientName: "IOS", clientVersion: "20.10.1", deviceMake: "Apple", deviceModel: "iPhone16,2", osName: "iPhone", osVersion: "17.4.0.21E219", hl: "es", gl: "MX" }

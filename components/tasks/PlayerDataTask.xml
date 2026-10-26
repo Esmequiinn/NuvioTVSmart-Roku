@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="PlayerDataTask" extends="Task">
+    <interface>
+        <field id="mode" type="string" />
+        <field id="params" type="assocarray" />
+        <field id="result" type="assocarray" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Store.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Http.brs" />
+    <script type="text/brightscript" uri="pkg:/components/tasks/PlayerDataTask.brs" />
+</component>

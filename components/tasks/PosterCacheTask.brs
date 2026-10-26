@@ -3,6 +3,11 @@ sub init()
 end sub
 
 sub execute()
+    pause = CreateObject("roTimespan")
+    while pause.TotalMilliseconds() < 4000
+        if m.top.cancel then return
+        sleep(250)
+    end while
     fs = CreateObject("roFileSystem")
     dir = "cachefs:/p/"
     if not fs.Exists(dir)
@@ -36,7 +41,15 @@ sub execute()
     index = 0
     clock = CreateObject("roTimespan")
     while index < queue.Count() or active.Count() > 0
-        while index < queue.Count() and active.Count() < 8
+        if m.top.cancel
+            for each key in active
+                active[key].xfer.AsyncCancel()
+                fs.Delete(active[key].path + ".part")
+            end for
+            m.top.result = map
+            return
+        end if
+        while index < queue.Count() and active.Count() < 3
             job = queue[index]
             index = index + 1
             xfer = CreateObject("roUrlTransfer")

@@ -119,7 +119,7 @@ sub Srv_Route(sock as object, req as object)
     if req.method = "GET" and (req.path = "/" or req.path = "/index.html")
         Srv_Send(sock, "200 OK", "text/html; charset=utf-8", m.html)
     else if req.method = "GET" and req.path = "/api/state"
-        Srv_Send(sock, "200 OK", jsonType, FormatJson(Srv_State()))
+        Srv_Send(sock, "200 OK", jsonType, Srv_Json(Srv_State()))
     else if req.method = "POST" and req.path = "/api/action"
         body = ParseJson(req.body)
         rid = ""
@@ -130,7 +130,7 @@ sub Srv_Route(sock as object, req as object)
         end if
         result = Srv_Apply(body)
         result.state = Srv_State()
-        reply = FormatJson(result)
+        reply = Srv_Json(result)
         m.lastRid = rid
         m.lastReply = reply
         Srv_Send(sock, "200 OK", jsonType, reply)
@@ -278,7 +278,10 @@ function Srv_Apply(body as dynamic) as object
         integ = St_Integrations()
         integ[name] = value
         if name = "tmdbKey" then integ.tmdbEnabled = value <> ""
-        if name = "mdbKey" then integ.mdbEnabled = value <> ""
+        if name = "mdbKey"
+            integ.mdbEnabled = value <> ""
+            integ.mdbFrom = "tv"
+        end if
         St_SaveIntegrations(integ)
         res.message = L("Guardado.")
         res.what = "theme"
@@ -394,4 +397,42 @@ function Srv_Mask(value as string) as string
     if value = "" then return ""
     if Len(value) <= 6 then return "••••"
     return Left(value, 3) + "••••" + Right(value, 3)
+end function
+
+function Srv_Json(v as object) as string
+    out = FormatJson(Srv_Clean(v, 0))
+    if out = invalid or out = "" then out = FormatJson({ ok: false, error: L("Error en el Roku: ") + "json" })
+    return out
+end function
+
+function Srv_Clean(v as dynamic, depth as integer) as dynamic
+    if v = invalid then return invalid
+    if depth > 12 then return invalid
+    t = type(v)
+    if t = "roAssociativeArray"
+        out = {}
+        for each k in v
+            c = Srv_Clean(v[k], depth + 1)
+            if c <> invalid or v[k] = invalid then out[k] = c
+        end for
+        return out
+    end if
+    if t = "roArray" or t = "roList"
+        out = []
+        for each item in v
+            c = Srv_Clean(item, depth + 1)
+            if c <> invalid then out.Push(c)
+        end for
+        return out
+    end if
+    if IsStr(v)
+        text = "" + v
+        clean = CreateObject("roRegex", "[\x00-\x08\x0B\x0C\x0E-\x1F]", "")
+        return clean.ReplaceAll(text, "")
+    end if
+    if IsBool(v) then return v
+    if GetInterface(v, "ifInt") <> invalid then return v
+    if GetInterface(v, "ifLongInt") <> invalid then return CDbl(v)
+    if GetInterface(v, "ifFloat") <> invalid or GetInterface(v, "ifDouble") <> invalid then return v
+    return invalid
 end function
