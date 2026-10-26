@@ -16,7 +16,7 @@
         <Label id="title" translation="[112,84]" width="1700" height="72" vertAlign="center" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
         <Label id="subtitle" translation="[112,166]" width="1700" wrap="true" maxLines="3" font="font:SmallSystemFont" color="0xA9A9B8FF" />
         <Poster id="poster" visible="false" translation="[80,300]" width="420" height="600" loadDisplayMode="scaleToFit" />
-        <LabelList id="list" translation="[112,300]" itemSize="[1700,66]" itemSpacing="[0,8]" numRows="8" vertFocusAnimationStyle="floatingFocus" color="0xD6D6E0FF" focusedColor="0x0C0C0FFF" focusBitmapUri="pkg:/images/pill.9.png" focusBitmapBlendColor="0xFFFFFFFF" />
+        <LabelList id="list" translation="[112,300]" itemSize="[1700,66]" itemSpacing="[0,8]" numRows="8" vertFocusAnimationStyle="floatingFocus" color="0xD6D6E0FF" focusedColor="0x0C0C0FFF" focusBitmapUri="pkg:/images/pill66.9.png" focusBitmapBlendColor="0xFFFFFFFF" />
         <Rectangle id="divider" translation="[112,906]" width="1700" height="2" color="0x2A2A36FF" />
         <Label id="detail" translation="[112,926]" width="1700" height="130" wrap="true" maxLines="4" font="font:SmallestSystemFont" color="0xA9A9B8FF" />
     </children>

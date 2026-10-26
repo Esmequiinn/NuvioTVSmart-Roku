@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="PartyJoin" extends="Group">
+    <interface>
+        <field id="profile" type="assocarray" onChange="onProfile" />
+        <field id="status" type="string" onChange="onStatus" />
+        <field id="busy" type="boolean" onChange="paint" />
+        <field id="reset" type="boolean" alwaysNotify="true" onChange="onReset" />
+        <field id="event" type="assocarray" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/PartyJoin.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x0D0D0DFF" />
+        <Label id="title" translation="[96,70]" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" text="Watch Party" />
+        <Label id="subtitle" translation="[96,150]" font="font:MediumSystemFont" color="0xB3B3B3FF" />
+        <Group id="seats" translation="[96,340]" />
+        <Label id="joinTitle" translation="[96,494]" width="840" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+        <Label id="joinDesc" translation="[96,566]" width="840" font="font:MediumSystemFont" color="0xB3B3B3FF" />
+        <Group id="slots" translation="[96,660]" />
+        <Label id="status" translation="[96,790]" width="840" wrap="true" maxLines="2" font="font:SmallSystemFont" color="0xE0839CFF" />
+        <Label id="note1" translation="[96,862]" width="860" wrap="true" maxLines="2" font="font:SmallestSystemFont" color="0x9E9E9EFF" />
+        <Label id="note2" translation="[96,940]" width="860" wrap="true" maxLines="2" font="font:SmallestSystemFont" color="0x9E9E9EFF" />
+        <Group id="keys" translation="[1020,400]" />
+    </children>
+</component>

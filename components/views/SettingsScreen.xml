@@ -5,21 +5,29 @@
         <field id="accent" type="string" value="0x7C4DFFFF" onChange="paint" />
         <field id="event" type="assocarray" alwaysNotify="true" />
         <field id="back" type="boolean" alwaysNotify="true" />
+        <field id="leave" type="boolean" alwaysNotify="true" />
         <field id="reset" type="boolean" alwaysNotify="true" onChange="onReset" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
     <script type="text/brightscript" uri="pkg:/components/views/SettingsScreen.brs" />
     <children>
-        <Rectangle width="1920" height="1080" color="0x0C0C0FFF" />
-        <Rectangle width="540" height="1080" color="0x131318FF" />
-        <Poster translation="[64,58]" width="56" height="56" uri="pkg:/images/ic_settings.png" />
-        <Label id="navTitle" translation="[136,58]" height="56" vertAlign="center" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" text="Ajustes" />
-        <Group id="nav" translation="[40,170]" />
-        <Label id="sectionTitle" translation="[620,58]" width="1200" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
-        <Label id="sectionSubtitle" translation="[620,128]" width="1200" font="font:SmallSystemFont" color="0x9A9AAAFF" />
-        <Group id="rows" translation="[620,200]" />
-        <Label id="moreUp" visible="false" translation="[1720,176]" font="font:SmallestSystemFont" color="0x8E8E9CFF" text="···" />
-        <Label id="moreDown" visible="false" translation="[1720,1040]" font="font:SmallestSystemFont" color="0x8E8E9CFF" text="···" />
+        <Rectangle width="1920" height="1080" color="0x0D0D0DFF" />
+        <Group translation="[145,48]">
+            <Poster width="1710" height="984" uri="pkg:/images/panel.9.png" blendColor="0x1A1A1AFF" />
+            <Poster width="1710" height="984" uri="pkg:/images/panel_ring.9.png" blendColor="0x262626FF" />
+        </Group>
+        <Group id="nav" translation="[185,88]" />
+        <Poster id="navUp" visible="false" translation="[385,52]" width="40" height="40" uri="pkg:/images/chev_up.png" blendColor="0x9E9E9EFF" />
+        <Poster id="navDown" visible="false" translation="[385,988]" width="40" height="40" uri="pkg:/images/chev_down.png" blendColor="0x9E9E9EFF" />
+        <Label id="sectionTitle" translation="[653,82]" width="1160" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+        <Label id="sectionSubtitle" translation="[653,150]" width="1160" font="font:SmallSystemFont" color="0xB3B3B3FF" />
+        <Group translation="[653,221]">
+            <Poster width="1160" height="769" uri="pkg:/images/sheet.9.png" blendColor="0x222222FF" />
+            <Poster width="1160" height="769" uri="pkg:/images/sheet_ring.9.png" blendColor="0x2E2E2EFF" />
+        </Group>
+        <Group id="rows" translation="[677,245]" />
+        <Poster id="moreUp" visible="false" translation="[1213,222]" width="40" height="40" uri="pkg:/images/chev_up.png" blendColor="0x9E9E9EFF" />
+        <Poster id="moreDown" visible="false" translation="[1213,950]" width="40" height="40" uri="pkg:/images/chev_down.png" blendColor="0x9E9E9EFF" />
     </children>
 </component>

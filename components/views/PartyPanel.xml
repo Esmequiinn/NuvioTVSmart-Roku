@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="PartyPanel" extends="Group">
+    <interface>
+        <field id="state" type="assocarray" onChange="render" />
+        <field id="accent" type="string" value="0x7C4DFFFF" />
+        <field id="event" type="assocarray" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/PartyPanel.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x000000FF" opacity="0.45" />
+        <Poster translation="[880,0]" width="1100" height="1080" uri="pkg:/images/sheet.9.png" blendColor="0x1A1A1AFF" />
+        <Label id="title" translation="[928,52]" font="font:LargeSystemFont" color="0xFFFFFFFF" />
+        <Group id="close" translation="[1652,40]">
+            <Poster id="closeBg" width="220" height="76" uri="pkg:/images/pill.9.png" />
+            <Label id="closeText" width="220" height="76" horizAlign="center" vertAlign="center" font="font:MediumSystemFont" />
+        </Group>
+        <Group id="clip" translation="[880,150]" clippingRect="[0,0,1040,900]">
+            <Group id="body" translation="[48,0]" />
+        </Group>
+    </children>
+</component>

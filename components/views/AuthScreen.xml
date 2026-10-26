@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="AuthScreen" extends="Group">
+    <interface>
+        <field id="mode" type="string" value="onboarding" onChange="render" />
+        <field id="qr" type="string" onChange="onQr" />
+        <field id="code" type="string" onChange="onCode" />
+        <field id="status" type="string" onChange="onStatus" />
+        <field id="hint" type="string" onChange="onHint" />
+        <field id="event" type="assocarray" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/AuthScreen.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x0D0D0DFF" />
+        <Poster id="logo" translation="[240,330]" width="420" height="133" uri="pkg:/images/wordmark.png" />
+        <Label id="leftTitle" translation="[60,500]" width="780" horizAlign="center" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+        <Label id="leftDesc" translation="[90,590]" width="720" horizAlign="center" wrap="true" maxLines="3" font="font:MediumSystemFont" color="0xB3B3B3FF" />
+        <Label id="leftHint" translation="[90,740]" width="720" horizAlign="center" wrap="true" maxLines="4" font="font:SmallSystemFont" color="0x808080FF" />
+        <Group translation="[942,114]">
+            <Poster width="876" height="852" uri="pkg:/images/panel.9.png" blendColor="0x121212FF" />
+            <Poster width="876" height="852" uri="pkg:/images/panel_ring.9.png" blendColor="0x262626FF" />
+            <Label id="cardTitle" translation="[0,48]" width="876" horizAlign="center" font="font:LargeSystemFont" color="0xFFFFFFFF" />
+            <Label id="cardSub" translation="[50,118]" width="776" horizAlign="center" wrap="true" maxLines="2" font="font:SmallSystemFont" color="0xB3B3B3FF" />
+            <Poster id="qrBack" translation="[258,196]" width="360" height="360" uri="pkg:/images/card.9.png" blendColor="0xFFFFFFFF" />
+            <Poster id="qrImage" translation="[276,214]" width="324" height="324" loadWidth="420" loadHeight="420" loadDisplayMode="scaleToFit" />
+            <BusySpinner id="qrSpin" translation="[390,328]" visible="false" />
+            <Label id="codeText" translation="[0,572]" width="876" horizAlign="center" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+            <Poster id="statusBg" translation="[36,626]" width="804" height="64" uri="pkg:/images/pill64.9.png" blendColor="0x1F1F1FFF" />
+            <Label id="statusText" translation="[36,626]" width="804" height="64" horizAlign="center" vertAlign="center" font="font:SmallSystemFont" color="0xB3B3B3FF" />
+            <Label id="terms" translation="[0,708]" width="876" horizAlign="center" font="font:SmallestSystemFont" color="0x9E9E9EFF" />
+            <Group id="buttons" translation="[0,750]" />
+        </Group>
+    </children>
+</component>

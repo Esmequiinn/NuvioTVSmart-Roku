@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="ActionSheet" extends="Group">
+    <interface>
+        <field id="config" type="assocarray" onChange="render" />
+        <field id="chosen" type="string" alwaysNotify="true" />
+        <field id="closed" type="boolean" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/views/ActionSheet.brs" />
+    <children>
+        <Rectangle id="scrim" width="1920" height="1080" color="0x000000FF" opacity="0.66" />
+        <Group id="panel">
+            <Poster id="bg" uri="pkg:/images/sheet.9.png" blendColor="0x1C1C1EFF" />
+            <Poster id="border" uri="pkg:/images/sheet_ring.9.png" blendColor="0x2E2E33FF" />
+            <Label id="title" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" wrap="false" />
+            <Label id="subtitle" font="font:SmallSystemFont" color="0xA6A6AEFF" wrap="true" maxLines="2" />
+            <Group id="clip">
+                <Group id="rows" />
+            </Group>
+        </Group>
+    </children>
+</component>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="Toast" extends="Group">
+    <interface>
+        <field id="text" type="string" alwaysNotify="true" onChange="onText" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/views/Toast.brs" />
+    <children>
+        <Group id="box" opacity="0">
+            <Poster id="bg" uri="pkg:/images/pill72.9.png" blendColor="0x262629F2" />
+            <Label id="label" font="font:MediumSystemFont" color="0xFFFFFFFF" vertAlign="center" />
+        </Group>
+        <Animation id="show" duration="0.2" easeFunction="linear">
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="box.opacity" />
+        </Animation>
+        <Animation id="hide" duration="0.35" easeFunction="linear">
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[1.0, 0.0]" fieldToInterp="box.opacity" />
+        </Animation>
+        <Timer id="timer" duration="2.6" repeat="false" />
+    </children>
+</component>

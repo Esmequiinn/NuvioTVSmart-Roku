@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="TrackAuth" extends="Group">
+    <interface>
+        <field id="info" type="assocarray" onChange="onInfo" />
+        <field id="status" type="string" onChange="onStatus" />
+        <field id="event" type="assocarray" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/TrackAuth.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x000000FF" opacity="0.72" />
+        <Group translation="[460,90]">
+            <Poster width="1000" height="900" uri="pkg:/images/sheet.9.png" blendColor="0x1A1A1AFF" />
+            <Poster width="1000" height="900" uri="pkg:/images/sheet_ring.9.png" blendColor="0x333333FF" />
+            <Poster id="logo" translation="[0,56]" loadDisplayMode="scaleToFit" />
+            <Label id="instruction" translation="[60,160]" width="880" horizAlign="center" wrap="true" maxLines="2" font="font:SmallSystemFont" color="0xB3B3B3FF" />
+            <Poster id="qrBack" translation="[350,240]" width="300" height="300" uri="pkg:/images/card.9.png" blendColor="0xFFFFFFFF" />
+            <Poster id="qr" translation="[366,256]" width="268" height="268" loadWidth="420" loadHeight="420" loadDisplayMode="scaleToFit" />
+            <BusySpinner id="spin" translation="[452,342]" visible="false" />
+            <Label id="code" translation="[0,566]" width="1000" horizAlign="center" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="url" translation="[0,640]" width="1000" horizAlign="center" font="font:SmallestSystemFont" color="0x808080FF" />
+            <Label id="expires" translation="[0,676]" width="1000" horizAlign="center" font="font:SmallestSystemFont" color="0xB3B3B3FF" />
+            <Label id="statusText" translation="[0,722]" width="1000" horizAlign="center" font="font:SmallestSystemFont" color="0xB3B3B3FF" />
+            <Group id="button" translation="[380,784]">
+                <Poster width="240" height="76" uri="pkg:/images/pill.9.png" blendColor="0xFFFFFFFF" />
+                <Label id="buttonText" width="240" height="76" horizAlign="center" vertAlign="center" font="font:MediumSystemFont" color="0x0D0D0DFF" />
+            </Group>
+        </Group>
+        <Timer id="tick" duration="1" repeat="true" />
+    </children>
+</component>
