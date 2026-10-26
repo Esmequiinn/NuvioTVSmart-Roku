@@ -238,7 +238,7 @@ function Settings_Model() as object
     playback.rows.Push(Set_Header(L("General")))
     playback.rows.Push(Set_Toggle("pauseOverlay", L("Pantalla de pausa"), L("Aparece después de unos segundos en pausa."), Bool_Of(Set_Pref(prefs, defaults, "pauseOverlay"), true)))
     playback.rows.Push(Set_Toggle("clock", L("Reloj en el reproductor"), "", Bool_Of(Set_Pref(prefs, defaults, "clock"), true)))
-    playback.rows.Push(Set_Toggle("rokuSafe", L("Priorizar fuentes compatibles con Roku"), L("La reproducción automática deja al final los REMUX con audio TrueHD o DTS-HD y el 4K si tu TV no está en 4K."), Bool_Of(Set_Pref(prefs, defaults, "rokuSafe"), true)))
+    playback.rows.Push(Set_Toggle("rokuSafe", L("Priorizar fuentes compatibles con Roku"), L("La reproducción automática nunca elige fuentes que tu Roku no puede reproducir (HEVC o 4K según tu modelo) y deja al final los REMUX con audio TrueHD o DTS-HD."), Bool_Of(Set_Pref(prefs, defaults, "rokuSafe"), true)))
     playback.rows.Push(Set_Toggle("parentalGuide", L("Avisos de contenido"), L("Al empezar muestra si tiene violencia, desnudez, lenguaje soez, drogas o terror."), Bool_Of(Set_Pref(prefs, defaults, "parentalGuide"), true)))
     playback.rows.Push(Set_Header(L("Saltar segmentos")))
     playback.rows.Push(Set_Toggle("skipIntro", L("Botón para saltar"), L("Usa introdb.app y AniSkip para encontrar intros, resúmenes y créditos."), Bool_Of(Set_Pref(prefs, defaults, "skipIntro"), true)))

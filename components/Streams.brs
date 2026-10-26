@@ -266,21 +266,27 @@ function Stream_SearchText(s as object) as string
     return [Str_Of(s.addon), Str_OneLine(s.name), Str_OneLine(s.desc), Str_Of(s.filename), Str_Of(s.url)].Join(" ")
 end function
 
+function Stream_Unplayable(s as object) as boolean
+    if m.devCaps = invalid
+        m.devCaps = { k4: Device_Can4K(), hevc: Device_CanHevc() }
+        m.devCaps.uhd = CreateObject("roRegex", "2160p|\b4k\b|\buhd\b", "i")
+        m.devCaps.hevcRe = CreateObject("roRegex", "\b(x265|hevc|h\.?265|10bit|10-bit|hdr|hdr10|dv|dolby\s*vision)\b", "i")
+    end if
+    text = Stream_SearchText(s)
+    if not m.devCaps.k4 and m.devCaps.uhd.IsMatch(text) then return true
+    if not m.devCaps.hevc and m.devCaps.hevcRe.IsMatch(text) then return true
+    return false
+end function
+
 function Autoplay_Prefer(streams as object, candidates as object) as object
     if not Bool_Of(St_Pref("rokuSafe"), true) then return candidates
-    can4k = Device_Can4K()
-    hevcOk = Device_CanHevc()
     audio = CreateObject("roRegex", "\b(remux|truehd|true-hd|dts-hd|dts-ma|dtshd|dts-x|dtsx)\b", "i")
-    uhd = CreateObject("roRegex", "2160p|\b4k\b|\buhd\b", "i")
-    hevc = CreateObject("roRegex", "\b(x265|hevc|h\.?265|10bit|10-bit|hdr|hdr10|dv|dolby\s*vision)\b", "i")
     good = []
     risky = []
     for each i in candidates
-        text = Stream_SearchText(streams[i])
-        bad = audio.IsMatch(text)
-        if not can4k and uhd.IsMatch(text) then bad = true
-        if not hevcOk and hevc.IsMatch(text) then bad = true
-        if bad then risky.Push(i) else good.Push(i)
+        if not Stream_Unplayable(streams[i])
+            if audio.IsMatch(Stream_SearchText(streams[i])) then risky.Push(i) else good.Push(i)
+        end if
     end for
     for each i in risky
         good.Push(i)
@@ -296,10 +302,11 @@ function Autoplay_Pick(streams as object, opts as object) as integer
             if LCase(Str_Of(streams[i].filename)) = file then return i
         end for
     end if
+    safe = Bool_Of(St_Pref("rokuSafe"), true)
     binge = Str_Of(opts.binge)
     if binge <> ""
         for i = 0 to streams.Count() - 1
-            if streams[i].binge = binge then return i
+            if streams[i].binge = binge and not (safe and Stream_Unplayable(streams[i])) then return i
         end for
         if opts.noFallback = true then return -1
     end if
