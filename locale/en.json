@@ -729,5 +729,6 @@
  "Este enlace es HEVC (x265) y tu Roku no puede reproducir ese formato. Elige una fuente x264 o H.264.": "This link is HEVC (x265) and your Roku can't play that format. Pick an x264 or H.264 source.",
  "Espacio libre: ": "Free space: ",
  "claves": "keys",
- "\u00daltima revisi\u00f3n en tu cuenta: ": "Last check in your account: "
+ "\u00daltima revisi\u00f3n en tu cuenta: ": "Last check in your account: ",
+ "La reproducci\u00f3n autom\u00e1tica nunca elige fuentes que tu Roku no puede reproducir (HEVC o 4K seg\u00fan tu modelo) y deja al final los REMUX con audio TrueHD o DTS-HD.": "Auto-play never picks sources your Roku can't play (HEVC or 4K, depending on your model) and leaves REMUX files with TrueHD or DTS-HD audio for last."
 }

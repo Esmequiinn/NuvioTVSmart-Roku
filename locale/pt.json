@@ -729,5 +729,6 @@
  "Este enlace es HEVC (x265) y tu Roku no puede reproducir ese formato. Elige una fuente x264 o H.264.": "Este link \u00e9 HEVC (x265) e seu Roku n\u00e3o reproduz esse formato. Escolha uma fonte x264 ou H.264.",
  "Espacio libre: ": "Espa\u00e7o livre: ",
  "claves": "chaves",
- "\u00daltima revisi\u00f3n en tu cuenta: ": "\u00daltima verifica\u00e7\u00e3o na sua conta: "
+ "\u00daltima revisi\u00f3n en tu cuenta: ": "\u00daltima verifica\u00e7\u00e3o na sua conta: ",
+ "La reproducci\u00f3n autom\u00e1tica nunca elige fuentes que tu Roku no puede reproducir (HEVC o 4K seg\u00fan tu modelo) y deja al final los REMUX con audio TrueHD o DTS-HD.": "A reprodu\u00e7\u00e3o autom\u00e1tica nunca escolhe fontes que seu Roku n\u00e3o reproduz (HEVC ou 4K, conforme o modelo) e deixa por \u00faltimo os REMUX com \u00e1udio TrueHD ou DTS-HD."
 }
