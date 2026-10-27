@@ -4,6 +4,20 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.0.7] - 2026-10-27
+
+### Added
+- New auto-play preset **HDR without Dolby Vision**, for TVs with HDR but no Dolby Vision.
+- If your TV doesn't support Dolby Vision, auto-play skips sources that are only Dolby Vision (they show a green or purple picture). Sources marked DV + HDR10 still play. **Settings → About** shows whether your TV supports Dolby Vision.
+- **Settings → About** shows your Roku model and video mode, and which formats it supports (HEVC, HDR10, Dolby Vision and 4K).
+
+### Fixed
+- Addons whose link has something after `manifest.json` (like `manifest.json?token=...`) showed their catalogs but never returned sources. The channel now keeps that part at the end of every request, like Nuvio on Android and phones. These links can also be added from the phone page now.
+- With a light theme color (like Nuvio's White theme), the selected player buttons, source filters and switches turned completely white and their icons disappeared. Icons and text on the highlight now turn dark when the color is light.
+- Shows with many seasons couldn't scroll past the seasons that fit on screen. The season tabs now scroll with the focus.
+- Single `.ts` video files stayed frozen at 0:00 with a huge length (around 10 hours). The channel now checks what the link really is before playing it, and plays these files through a small playlist made on the Roku, so they can play and seek.
+- If a source never starts playing, the channel now tries the next way to open it after 20 seconds, and shows an error at the end instead of staying frozen.
+
 ## [0.0.6] - 2026-10-26
 
 ### Added
