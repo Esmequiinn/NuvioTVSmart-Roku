@@ -235,6 +235,7 @@ function Autoplay_Presets() as object
         { name: "HEVC / x265", p: "(hevc|x265|h\.?265)" }
         { name: "AVC / x264", p: "(\bavc\b|x264|h\.?264)" }
         { name: "HDR / Dolby Vision", p: "\b(hdr|hdr10\+?|dv|dolby\s*vision)\b" }
+        { name: L("HDR sin Dolby Vision"), p: "^(?=.*\b(hdr|hdr10\+?)\b)(?!.*\b(dv|dovi|dolby\s*vision)\b).*$" }
         { name: "Atmos / DTS", p: "(atmos|\bdts\b|truehd)" }
         { name: "Latino", p: "(latino|\blat\b|español|espanol|spanish|castellano|dual)" }
         { name: L("Inglés"), p: "(english|\beng\b)" }
@@ -268,13 +269,16 @@ end function
 
 function Stream_Unplayable(s as object) as boolean
     if m.devCaps = invalid
-        m.devCaps = { k4: Device_Can4K(), hevc: Device_CanHevc() }
+        m.devCaps = { k4: Device_Can4K(), hevc: Device_CanHevc(), dv: Device_CanDV() }
+        m.devCaps.dvRe = CreateObject("roRegex", "\b(dv|dovi|dolby\s*vision)\b", "i")
+        m.devCaps.hdrRe = CreateObject("roRegex", "\bhdr(10)?\+?\b", "i")
         m.devCaps.uhd = CreateObject("roRegex", "2160p|\b4k\b|\buhd\b", "i")
         m.devCaps.hevcRe = CreateObject("roRegex", "\b(x265|hevc|h\.?265|10bit|10-bit|hdr|hdr10|dv|dolby\s*vision)\b", "i")
     end if
     text = Stream_SearchText(s)
     if not m.devCaps.k4 and m.devCaps.uhd.IsMatch(text) then return true
     if not m.devCaps.hevc and m.devCaps.hevcRe.IsMatch(text) then return true
+    if not m.devCaps.dv and m.devCaps.dvRe.IsMatch(text) and not m.devCaps.hdrRe.IsMatch(text) then return true
     return false
 end function
 

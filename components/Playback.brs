@@ -816,6 +816,58 @@ sub playStream(index as integer, startAt as integer)
     m.ctx.startAt = resume
     m.lastSaved = resume
     showPlayer(index)
+    if Probe_Needed(s.url)
+        m.probeTask = CreateObject("roSGNode", "ProbeTask")
+        m.probeTask.url = s.url
+        if type(s.headers) = "roArray" then m.probeTask.headers = s.headers
+        m.probeTask.observeField("result", "onProbeResult")
+        m.probeTask.control = "RUN"
+        return
+    end if
+    Play_Begin()
+end sub
+
+function Probe_Needed(url as string) as boolean
+    if Stream_Format(url) <> "" then return false
+    lowered = LCase(url)
+    if Left(lowered, 4) <> "http" then return false
+    if Instr(1, lowered, "/live/") > 0 then return false
+    return m.server <> invalid
+end function
+
+sub onProbeResult(event as object)
+    task = event.getRoSGNode()
+    if m.probeTask = invalid or not task.isSameNode(m.probeTask) then return
+    m.probeTask = invalid
+    s = m.ctx.playingStream
+    if s = invalid or not m.player.visible then return
+    r = task.result
+    if r <> invalid and Bool_Of(r.ts, false) and Bool_Of(r.ranges, false) and r.size > 1000000
+        m.server.hls = { url: s.url, size: r.size, duration: Probe_Duration() }
+        m.hlsSerial = ToInt(m.hlsSerial, 0) + 1
+        wrapped = [{ url: "http://127.0.0.1:8888/hls.m3u8?v=" + m.hlsSerial.ToStr(), fmt: "hls" }]
+        wrapped.Append(m.ctx.attempts)
+        m.ctx.attempts = wrapped
+    end if
+    Play_Begin()
+end sub
+
+function Probe_Duration() as integer
+    meta = invalid
+    if m.metaCache <> invalid then meta = m.metaCache[m.ctx.metaId]
+    if meta = invalid then return 0
+    vid = Str_Of(m.ctx.videoId)
+    if vid <> "" and type(meta.videos) = "roArray"
+        for each v in meta.videos
+            if type(v) = "roAssociativeArray" and Str_Of(v.id) = vid and ToInt(v.runtime, 0) > 0 then return ToInt(v.runtime, 0) * 60
+        end for
+    end if
+    minutes = Val(Str_Any(meta.runtime))
+    if minutes > 0 then return Int(minutes) * 60
+    return 0
+end function
+
+sub Play_Begin()
     if m.subtitleTask <> invalid and not Bool_Of(m.ctx.subsWaited, false)
         m.ctx.waitingSubs = true
         m.subsWait.control = "stop"
@@ -925,6 +977,14 @@ sub launchAttempt()
     video.content = content
     video.control = "play"
     m.ctx.launchedAt = CreateObject("roTimespan")
+    if m.stallTimer = invalid
+        m.stallTimer = CreateObject("roSGNode", "Timer")
+        m.stallTimer.duration = 20
+        m.stallTimer.repeat = false
+        m.stallTimer.observeField("fire", "onStallTimer")
+    end if
+    m.stallTimer.control = "stop"
+    m.stallTimer.control = "start"
     lowered = LCase(s.url)
     q = Instr(1, lowered, "?")
     if q > 0 then lowered = Left(lowered, q - 1)
@@ -1485,4 +1545,16 @@ sub onTrailerEvent()
     m.trailerPlayer.trailer = { url: "" }
     if Bool_Of(ev.error, false) then showMessage(L("Tráiler no disponible"), L("No se pudo reproducir el tráiler de este título en Roku."))
     focusCurrent()
+end sub
+
+sub onStallTimer()
+    if m.ctx = invalid or not m.player.visible or m.ctx.playingStream = invalid then return
+    video = m.playerVideo
+    if video.position >= 1 then return
+    state = video.state
+    if state = "buffering" or state = "error" or state = "finished" then return
+    if not nextAttempt(0)
+        closePlayer(false)
+        showMessage(L("No se pudo reproducir"), playbackFailureText(L("la fuente no empezó a reproducirse")))
+    end if
 end sub

@@ -250,7 +250,7 @@ function Settings_Model() as object
     playback.rows.Push(Set_Header(L("General")))
     playback.rows.Push(Set_Toggle("pauseOverlay", L("Pantalla de pausa"), L("Aparece después de unos segundos en pausa."), Bool_Of(Set_Pref(prefs, defaults, "pauseOverlay"), true)))
     playback.rows.Push(Set_Toggle("clock", L("Reloj en el reproductor"), "", Bool_Of(Set_Pref(prefs, defaults, "clock"), true)))
-    playback.rows.Push(Set_Toggle("rokuSafe", L("Priorizar fuentes compatibles con Roku"), L("La reproducción automática nunca elige fuentes que tu Roku no puede reproducir (HEVC o 4K según tu modelo) y deja al final los REMUX con audio TrueHD o DTS-HD."), Bool_Of(Set_Pref(prefs, defaults, "rokuSafe"), true)))
+    playback.rows.Push(Set_Toggle("rokuSafe", L("Priorizar fuentes compatibles con Roku"), L("La reproducción automática nunca elige fuentes que tu Roku no puede reproducir (HEVC, 4K o Dolby Vision según tu modelo y tu tele) y deja al final los REMUX con audio TrueHD o DTS-HD."), Bool_Of(Set_Pref(prefs, defaults, "rokuSafe"), true)))
     playback.rows.Push(Set_Toggle("parentalGuide", L("Avisos de contenido"), L("Al empezar muestra si tiene violencia, desnudez, lenguaje soez, drogas o terror."), Bool_Of(Set_Pref(prefs, defaults, "parentalGuide"), true)))
     playback.rows.Push(Set_Header(L("Saltar segmentos")))
     playback.rows.Push(Set_Toggle("skipIntro", L("Botón para saltar"), L("Usa introdb.app y AniSkip para encontrar intros, resúmenes y créditos."), Bool_Of(Set_Pref(prefs, defaults, "skipIntro"), true)))
@@ -369,6 +369,15 @@ function Settings_Model() as object
     about.rows.Push({ id: "", kind: "logo", label: L("Versión ") + App_Version(), desc: L("Fork no oficial de Nuvio para Roku, con permiso de sus desarrolladores. Hecho con cariño por Tapframe y amigos.") })
     about.rows.Push(Set_Info("version", L("Nuvio TV para Roku"), L("Fork no oficial de Nuvio, con permiso de sus desarrolladores."), App_Version()))
     about.rows.Push(Set_Info("license", L("Licencia"), L("Basado en Nuvio, licencia GPL-3.0."), "GPL-3.0"))
+    dev = CreateObject("roDeviceInfo")
+    props = dev.GetDisplayProperties()
+    hdr = false
+    if type(props) = "roAssociativeArray" then hdr = Bool_Of(props.Hdr10, false)
+    yes = L("Sí")
+    no = L("No")
+    about.rows.Push(Set_Info("device", L("Tu Roku"), Str_Of(dev.GetModelDisplayName()) + " (" + Str_Of(dev.GetModel()) + ")  ·  " + L("Modo de video: ") + Str_Of(dev.GetVideoMode()), ""))
+    formats = "HEVC: " + Set_YesNo(Device_CanHevc(), yes, no) + "  ·  HDR10: " + Set_YesNo(hdr, yes, no) + "  ·  Dolby Vision: " + Set_YesNo(Device_CanDV(), yes, no) + "  ·  4K: " + Set_YesNo(Device_Can4K(), yes, no)
+    about.rows.Push(Set_Info("formats", L("Formatos compatibles"), formats + chr(10) + L("Según tu Roku y tu tele. La reproducción automática evita lo que no es compatible."), ""))
 
     return { sections: [account, profilesSection, party, appearance, layout, content, integration, fusion, playback, tracking, advanced, about] }
 end function
@@ -946,3 +955,8 @@ sub UiLang_Apply(choice as string)
     if IsStr(table[ok]) then ok = table[ok]
     Sheet_Open({ title: title, subtitle: text, items: [{ id: "ok", label: ok }] }, "message", invalid)
 end sub
+
+function Set_YesNo(v as boolean, yes as string, no as string) as string
+    if v then return yes
+    return no
+end function

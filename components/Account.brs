@@ -1004,7 +1004,7 @@ function Nuvio_PushAddons(index as integer) as boolean
         clean = St_NormalizeUrl(url)
         if not used.DoesExist(clean)
             used[clean] = true
-            entry = { url: clean + "/manifest.json", sort_order: items.Count(), enabled: true }
+            entry = { url: Addon_Url(clean, "/manifest.json"), sort_order: items.Count(), enabled: true }
             row = byUrl[clean]
             if row <> invalid
                 if Str_Of(row.url) <> "" then entry.url = row.url
@@ -1017,7 +1017,7 @@ function Nuvio_PushAddons(index as integer) as boolean
         row = byUrl[clean]
         if not used.DoesExist(clean) and not Bool_Of(row.enabled, true)
             entry = { url: Str_Of(row.url), sort_order: items.Count(), enabled: false }
-            if entry.url = "" then entry.url = clean + "/manifest.json"
+            if entry.url = "" then entry.url = Addon_Url(clean, "/manifest.json")
             if Str_Of(row.name) <> "" then entry.name = row.name
             items.Push(entry)
         end if

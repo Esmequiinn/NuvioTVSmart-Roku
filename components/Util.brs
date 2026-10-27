@@ -154,6 +154,12 @@ function Device_Can4K() as boolean
     return true
 end function
 
+function Device_CanDV() as boolean
+    props = CreateObject("roDeviceInfo").GetDisplayProperties()
+    if type(props) <> "roAssociativeArray" then return false
+    return Bool_Of(props.DolbyVision, false)
+end function
+
 function Device_CanHevc() as boolean
     r = CreateObject("roDeviceInfo").CanDecodeVideo({ Codec: "hevc" })
     if type(r) = "roAssociativeArray" and r.result = false then return false
@@ -167,8 +173,10 @@ function Device_Summary() as string
     if type(res) = "roAssociativeArray" then ui = Str_Of(res.name)
     hevc = L("No")
     if Device_CanHevc() then hevc = L("Sí")
+    dv = L("No")
+    if Device_CanDV() then dv = L("Sí")
     free = CreateObject("roRegistry").GetSpaceAvailable()
-    return L("Espacio libre: ") + free.ToStr() + " bytes  ·  Roku " + Str_Of(info.GetModelDisplayName()) + " (" + Str_Of(info.GetModel()) + ")  ·  " + Str_Of(info.GetVideoMode()) + "  ·  UI " + ui + "  ·  HEVC: " + hevc
+    return L("Espacio libre: ") + free.ToStr() + " bytes  ·  Roku " + Str_Of(info.GetModelDisplayName()) + " (" + Str_Of(info.GetModel()) + ")  ·  " + Str_Of(info.GetVideoMode()) + "  ·  UI " + ui + "  ·  HEVC: " + hevc + "  ·  Dolby Vision: " + dv
 end function
 
 function Net_Ip() as string

@@ -204,7 +204,7 @@ function St_Addons() as object
     clean = []
     if type(list) = "roArray"
         for each u in list
-            if IsStr(u) and u <> "" then clean.Push(u)
+            if IsStr(u) and u <> "" then clean.Push(St_NormalizeUrl(u))
         end for
     end if
     return clean
@@ -219,17 +219,24 @@ function St_NormalizeUrl(raw as dynamic) as string
     if not IsStr(raw) then return ""
     url = raw.Trim()
     if LCase(Left(url, 10)) = "stremio://" then url = "https://" + Mid(url, 11)
+    query = ""
+    cut = Instr(1, url, "?")
+    if cut > 0
+        query = Mid(url, cut + 1)
+        url = Left(url, cut - 1)
+    end if
     if LCase(Right(url, 14)) = "/manifest.json" then url = Left(url, Len(url) - 14)
     while Len(url) > 0 and Right(url, 1) = "/"
         url = Left(url, Len(url) - 1)
     end while
     if url <> "" and Instr(1, url, "://") = 0 then url = "https://" + url
+    if url <> "" and query <> "" then url = url + "?" + query
     return url
 end function
 
 function St_AddAddon(raw as dynamic) as boolean
     url = St_NormalizeUrl(raw)
-    valid = CreateObject("roRegex", "^https?://([^/\s:@]+\.[^/\s:@]+|localhost)(:\d+)?(/|$)", "i")
+    valid = CreateObject("roRegex", "^https?://([^/\s:@]+\.[^/\s:@]+|localhost)(:\d+)?(/|\?|$)", "i")
     if not valid.IsMatch(url) then return false
     list = St_Addons()
     for each u in list

@@ -53,7 +53,23 @@ function Addon_Supports(manifest as object, resource as string, kind as string, 
 end function
 
 function Addon_ResourceUrl(base as string, resource as string, kind as string, id as string) as string
-    return base + "/" + resource + "/" + kind.EncodeUriComponent() + "/" + id.EncodeUriComponent() + ".json"
+    return Addon_Url(base, "/" + resource + "/" + kind.EncodeUriComponent() + "/" + id.EncodeUriComponent() + ".json")
+end function
+
+function Addon_Url(base as string, path as string) as string
+    root = base
+    query = ""
+    cut = Instr(1, root, "?")
+    if cut > 0
+        query = Mid(root, cut + 1)
+        root = Left(root, cut - 1)
+    end if
+    if LCase(Right(root, 14)) = "/manifest.json" then root = Left(root, Len(root) - 14)
+    while Len(root) > 0 and Right(root, 1) = "/"
+        root = Left(root, Len(root) - 1)
+    end while
+    if query = "" then return root + path
+    return root + path + "?" + query
 end function
 
 function Addon_SearchCatalogs(man as object) as object
