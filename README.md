@@ -102,11 +102,11 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | English interface | ✅ Working |
 | Portuguese interface | ✅ Working |
 | French, German, Italian, Dutch, Polish, Turkish, Romanian, Czech and Hungarian interface | ⚠️ Not tested yet |
-| New version notice | ⚠️ Not tested yet |
+| New version notice | ✅ Working |
 | Discover | ✅ Working |
-| Recent searches | ⚠️ Not tested yet |
+| Recent searches | ✅ Working |
 | Full-screen home trailer | ✅ Working |
-| MDBList account (QR) | ⚠️ Not tested yet |
+| MDBList account (QR) | ✅ Working |
 | Watch Party | ✅ Working |
 | `*` options menu and removing Continue Watching items | ✅ Working |
 | Collections with TMDB and Trakt sources | ⚠️ Not tested yet |
