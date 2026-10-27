@@ -116,6 +116,10 @@ end sub
 
 sub Srv_Route(sock as object, req as object)
     jsonType = "application/json; charset=utf-8"
+    if req.method = "GET" and req.path = "/hls.m3u8"
+        Srv_Send(sock, "200 OK", "application/vnd.apple.mpegurl", Srv_Hls())
+        return
+    end if
     if req.method = "GET" and (req.path = "/" or req.path = "/index.html")
         Srv_Send(sock, "200 OK", "text/html; charset=utf-8", m.html)
     else if req.method = "GET" and req.path = "/api/state"
@@ -435,4 +439,44 @@ function Srv_Clean(v as dynamic, depth as integer) as dynamic
     if GetInterface(v, "ifLongInt") <> invalid then return CDbl(v)
     if GetInterface(v, "ifFloat") <> invalid or GetInterface(v, "ifDouble") <> invalid then return v
     return invalid
+end function
+
+function Srv_Hls() as string
+    h = m.top.hls
+    nl = chr(10)
+    if type(h) <> "roAssociativeArray" or Str_Of(h.url) = "" then return "#EXTM3U" + nl
+    size = h.size
+    duration = ToInt(h.duration, 0)
+    if duration <= 0 then duration = Int(size / 400000)
+    if duration < 60 then duration = 60
+    chunk = 8388560&
+    count = Int((size + chunk - 1) / chunk)
+    if count < 1 then count = 1
+    slice = duration / count
+    target = Int(slice * 1.2) + 2
+    out = ["#EXTM3U", "#EXT-X-VERSION:4", "#EXT-X-PLAYLIST-TYPE:VOD", "#EXT-X-TARGETDURATION:" + target.ToStr(), "#EXT-X-MEDIA-SEQUENCE:0"]
+    offset = 0&
+    for i = 0 to count - 1
+        length = chunk
+        if offset + length > size then length = size - offset
+        if length <= 0 then exit for
+        part = duration * (length * 1.0 / size)
+        out.Push("#EXTINF:" + Srv_Secs(part) + ",")
+        out.Push("#EXT-X-BYTERANGE:" + length.ToStr() + "@" + offset.ToStr())
+        out.Push(h.url)
+        offset = offset + length
+    end for
+    out.Push("#EXT-X-ENDLIST")
+    return out.Join(nl) + nl
+end function
+
+function Srv_Secs(v as float) as string
+    ms = Int(v * 1000 + 0.5)
+    whole = Int(ms / 1000)
+    rest = ms - whole * 1000
+    frac = rest.ToStr()
+    while Len(frac) < 3
+        frac = "0" + frac
+    end while
+    return whole.ToStr() + "." + frac
 end function

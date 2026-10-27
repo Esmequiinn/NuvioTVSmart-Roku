@@ -6,6 +6,7 @@
         <field id="status" type="string" />
         <field id="searchQuery" type="string" />
         <field id="changed" type="string" alwaysNotify="true" />
+        <field id="hls" type="assocarray" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />

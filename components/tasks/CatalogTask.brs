@@ -26,7 +26,7 @@ sub execute()
 
     manifestUrls = []
     for each base in addons
-        manifestUrls.Push(base + "/manifest.json")
+        manifestUrls.Push(Addon_Url(base, "/manifest.json"))
     end for
     raw = Http_FetchHook(manifestUrls, 15000, 0, 8, invalid).data
 

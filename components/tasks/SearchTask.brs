@@ -8,7 +8,7 @@ sub execute()
     for each entry in m.top.manifests
         if type(entry.search) = "roArray"
             for each c in entry.search
-                url = entry.base + "/catalog/" + c.kind.EncodeUriComponent() + "/" + c.id.EncodeUriComponent() + "/search=" + query.EncodeUriComponent() + ".json"
+                url = Addon_Url(entry.base, "/catalog/" + c.kind.EncodeUriComponent() + "/" + c.id.EncodeUriComponent() + "/search=" + query.EncodeUriComponent() + ".json")
                 jobs.Push({ kind: c.kind, addon: entry.name, url: url })
             end for
         end if

@@ -7,9 +7,9 @@ sub execute()
     extras = []
     if m.top.genre <> "" then extras.Push("genre=" + m.top.genre.EncodeUriComponent())
     if m.top.skip > 0 then extras.Push("skip=" + m.top.skip.ToStr())
-    url = m.top.base + "/catalog/" + kind.EncodeUriComponent() + "/" + m.top.catalogId.EncodeUriComponent()
-    if extras.Count() > 0 then url = url + "/" + extras.Join("&")
-    res = Http_Fetch([url + ".json"], 20000, 0)
+    path = "/catalog/" + kind.EncodeUriComponent() + "/" + m.top.catalogId.EncodeUriComponent()
+    if extras.Count() > 0 then path = path + "/" + extras.Join("&")
+    res = Http_Fetch([Addon_Url(m.top.base, path + ".json")], 20000, 0)
     data = res.data[0]
     if type(data) <> "roAssociativeArray" or type(data.metas) <> "roArray"
         m.top.result = { items: [], count: 0, error: res.diag[0] }
