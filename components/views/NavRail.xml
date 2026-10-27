@@ -8,6 +8,7 @@
         <field id="accent" type="string" value="0x7C4DFFFF" onChange="paint" />
         <field id="chosen" type="string" alwaysNotify="true" />
         <field id="leave" type="boolean" alwaysNotify="true" />
+        <field id="discover" type="boolean" value="false" onChange="onDiscover" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Mask.brs" />
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />

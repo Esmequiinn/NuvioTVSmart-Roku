@@ -36,7 +36,12 @@ sub onInfo()
     info = m.top.info
     if info = invalid then return
     service = Ta_Str(info.service)
-    if service = "trakt"
+    if service = "mdblist"
+        m.logo.uri = "pkg:/images/mdblist_wordmark.png"
+        m.logo.width = 221
+        m.logo.height = 60
+        m.instruction.text = L("Escanea el código o abre la página de MDBList e ingresa este código:")
+    else if service = "trakt"
         m.logo.uri = "pkg:/images/trakt_wordmark.png"
         m.logo.width = 162
         m.logo.height = 70
@@ -56,6 +61,7 @@ sub onInfo()
     if url <> ""
         target = url
         if service = "trakt" and userCode <> "" then target = url + "/" + userCode
+        if Ta_Str(info.qr) <> "" then target = info.qr
         m.spin.visible = true
         m.spin.control = "start"
         m.qr.uri = "https://api.qrserver.com/v1/create-qr-code/?size=420x420&margin=0&data=" + target.EncodeUriComponent()

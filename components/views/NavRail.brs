@@ -1,13 +1,25 @@
 sub init()
     m.panel = m.top.findNode("panel")
     m.entries = m.top.findNode("entries")
-    m.defs = [
-        { id: "profile", label: L("Perfil"), icon: "", y: 56 }
-        { id: "home", label: L("Inicio"), icon: "pkg:/images/ic_home.png", y: 400 }
-        { id: "search", label: L("Buscar"), icon: "pkg:/images/ic_search.png", y: 492 }
-        { id: "library", label: L("Biblioteca"), icon: "pkg:/images/ic_library.png", y: 584 }
-        { id: "settings", label: L("Ajustes"), icon: "pkg:/images/ic_settings.png", y: 676 }
-    ]
+    Nav_Build()
+    m.index = 1
+    m.top.observeField("focusedChild", "onFocusChanged")
+    paint()
+end sub
+
+sub Nav_Build()
+    m.entries.removeChildrenIndex(m.entries.getChildCount(), 0)
+    m.defs = [{ id: "profile", label: L("Perfil"), icon: "", y: 56 }]
+    items = [{ id: "home", label: L("Inicio"), icon: "pkg:/images/ic_home.png" }, { id: "search", label: L("Buscar"), icon: "pkg:/images/ic_search.png" }]
+    if m.top.discover then items.Push({ id: "discover", label: L("Descubrir"), icon: "pkg:/images/ic_discover.png" })
+    items.Push({ id: "library", label: L("Biblioteca"), icon: "pkg:/images/ic_library.png" })
+    items.Push({ id: "settings", label: L("Ajustes"), icon: "pkg:/images/ic_settings.png" })
+    y = 400
+    for each it in items
+        it.y = y
+        m.defs.Push(it)
+        y = y + 92
+    end for
     m.nodes = []
     for each d in m.defs
         g = m.entries.createChild("Group")
@@ -61,9 +73,12 @@ sub init()
         label.visible = false
         m.nodes.Push({ group: g, pill: pill, icon: icon, initial: initial, label: label })
     end for
-    m.index = 1
-    m.top.observeField("focusedChild", "onFocusChanged")
+    if m.index <> invalid and m.index >= m.defs.Count() then m.index = m.defs.Count() - 1
     paint()
+end sub
+
+sub onDiscover()
+    Nav_Build()
 end sub
 
 sub onFocusChanged()

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="RecentSearches" extends="Group">
+    <interface>
+        <field id="items" type="array" onChange="build" />
+        <field id="event" type="assocarray" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/RecentSearches.brs" />
+    <children>
+        <Label id="heading" height="64" vertAlign="center" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+        <Group id="clear" translation="[600,0]">
+            <Poster id="clearBg" width="300" height="64" uri="pkg:/images/pill.9.png" blendColor="0x1C1C22FF" />
+            <Label id="clearText" width="300" height="64" horizAlign="center" vertAlign="center" font="font:SmallSystemFont" color="0xD8D8E0FF" />
+        </Group>
+        <Group id="list" translation="[0,96]" />
+    </children>
+</component>

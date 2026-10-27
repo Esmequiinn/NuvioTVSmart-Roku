@@ -6,6 +6,7 @@
         <field id="videoMode" type="boolean" value="false" onChange="onVideoMode" />
         <field id="trailer" type="assocarray" onChange="onTrailer" />
         <field id="muted" type="boolean" value="true" />
+        <field id="immersive" type="boolean" value="false" alwaysNotify="true" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
@@ -25,6 +26,7 @@
             <Label id="rating" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
             <Label id="metaLine" font="font:MediumSystemFont" color="0xC9C9D4FF" />
         </LayoutGroup>
+        <LayoutGroup id="ratingsRow" translation="[160,392]" layoutDirection="horiz" itemSpacings="[28]" vertAlignment="center" visible="false" />
         <Label id="description" translation="[160,392]" width="940" height="130" wrap="true" maxLines="3" font="font:SmallSystemFont" color="0xD4D4DCFF" lineSpacing="4" />
     </children>
 </component>

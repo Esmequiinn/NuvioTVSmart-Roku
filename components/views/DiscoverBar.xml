@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="DiscoverBar" extends="Group">
+    <interface>
+        <field id="chips" type="array" onChange="build" />
+        <field id="event" type="assocarray" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/views/DiscoverBar.brs" />
+    <children>
+        <Group id="list" />
+    </children>
+</component>
