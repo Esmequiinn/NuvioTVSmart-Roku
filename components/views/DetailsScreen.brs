@@ -131,6 +131,7 @@ sub onExtra()
             x = x + w + 76
         end for
         m.chips = chips
+        m.chipOff = 0
         y = y + 96
         m.layoutInfo.episodesY = y
         m.epGroup = m.lower.createChild("Group")
@@ -317,6 +318,7 @@ sub buildEpisodes()
 end sub
 
 sub paintLower()
+    Seasons_Scroll()
     for i = 0 to m.seasonNodes.Count() - 1
         n = m.seasonNodes[i]
         if m.zone = "seasons" and i = m.seasonIndex and m.top.isInFocusChain()
@@ -355,6 +357,19 @@ sub paintLower()
     end if
     m.page.translation = [0, target]
     m.statusLabel.visible = m.zone = "buttons" and not m.top.trailerPlaying
+end sub
+
+sub Seasons_Scroll()
+    if m.chips = invalid or m.seasonNodes.Count() = 0 then return
+    if m.seasonIndex < 0 or m.seasonIndex >= m.seasonNodes.Count() then return
+    view = 1600
+    off = ToInt(m.chipOff, 0)
+    n = m.seasonNodes[m.seasonIndex]
+    if n.x + n.w - off > view then off = n.x + n.w - view
+    if n.x < off then off = n.x
+    if off < 0 then off = 0
+    m.chipOff = off
+    m.chips.translation = [160 - off, m.chips.translation[1]]
 end sub
 
 function lowerKey(key as string) as boolean

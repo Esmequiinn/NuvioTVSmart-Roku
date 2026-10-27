@@ -277,7 +277,7 @@ sub renderParty(st as object)
             bl = g.createChild("Label")
             bl.font = "font:SmallestBoldSystemFont"
             bl.font.size = 22
-            bl.color = "0xFFFFFFFF"
+            bl.color = Ui_Ink(m.top.accent)
             bl.width = badgeW
             bl.height = 40
             bl.horizAlign = "center"

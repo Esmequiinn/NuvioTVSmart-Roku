@@ -330,8 +330,10 @@ sub paint()
             if n.track <> invalid
                 if n.on
                     n.track.blendColor = accent
+                    if n.knob <> invalid then n.knob.blendColor = Ui_Ink(accent)
                 else
                     n.track.blendColor = "0x4D4D4DFF"
+                    if n.knob <> invalid then n.knob.blendColor = "0xFFFFFFFF"
                 end if
             end if
         end if

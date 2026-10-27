@@ -10,6 +10,7 @@
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Ink.brs" />
     <script type="text/brightscript" uri="pkg:/components/views/SettingsScreen.brs" />
     <children>
         <Rectangle width="1920" height="1080" color="0x0D0D0DFF" />

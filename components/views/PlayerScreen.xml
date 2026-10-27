@@ -24,6 +24,7 @@
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
     <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Ink.brs" />
     <script type="text/brightscript" uri="pkg:/components/views/PlayerScreen.brs" />
     <script type="text/brightscript" uri="pkg:/components/views/PlayerExtras.brs" />
     <children>

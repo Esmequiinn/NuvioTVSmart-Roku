@@ -251,9 +251,11 @@ sub paintButtons()
         end if
         if m.zone = "buttons" and i = m.index
             b.bg.blendColor = m.top.accent
+            b.icon.blendColor = Ui_Ink(m.top.accent)
             m.hint.text = b.hint
         else
             b.bg.blendColor = "0xFFFFFF2E"
+            b.icon.blendColor = "0xFFFFFFFF"
         end if
     end for
     m.knob.visible = m.zone = "bar"

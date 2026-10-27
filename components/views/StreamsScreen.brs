@@ -143,7 +143,7 @@ end function
 sub paintChip(d as object, focused as boolean, selected as boolean)
     if focused
         bg = m.top.accent
-        fg = "0xFFFFFFFF"
+        fg = Ui_Ink(bg)
     else if selected
         bg = "0xFFFFFFFF"
         fg = "0x0C0C0FFF"
