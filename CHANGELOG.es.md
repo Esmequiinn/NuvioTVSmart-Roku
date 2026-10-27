@@ -4,6 +4,20 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.0.7] - 2026-10-27
+
+### Agregado
+- Nuevo preset de reproducción automática **HDR sin Dolby Vision**, para TVs con HDR pero sin Dolby Vision.
+- Si tu TV no es compatible con Dolby Vision, la reproducción automática se salta las fuentes que solo son Dolby Vision (se ven verdes o moradas). Las fuentes marcadas DV + HDR10 se siguen reproduciendo. **Ajustes → Acerca de** muestra si tu tele es compatible con Dolby Vision.
+- **Ajustes → Acerca de** muestra el modelo de tu Roku, el modo de video y qué formatos admite (HEVC, HDR10, Dolby Vision y 4K).
+
+### Corregido
+- Los addons cuyo enlace lleva algo después de `manifest.json` (como `manifest.json?token=...`) mostraban sus catálogos pero nunca daban fuentes. Ahora el canal pone esa parte al final de cada petición, como Nuvio en Android y en el celular. Estos enlaces también se pueden agregar ya desde la página del celular.
+- Con un color de tema claro (como el tema Blanco de Nuvio), los botones del reproductor, los filtros de fuentes y los interruptores seleccionados se veían completamente blancos y sus íconos desaparecían. Ahora los íconos y textos sobre el resaltado se ponen oscuros cuando el color es claro.
+- Las series con muchas temporadas no dejaban avanzar más allá de las temporadas que cabían en la pantalla. Ahora las pestañas de temporadas se desplazan con el foco.
+- Los archivos `.ts` sueltos se quedaban congelados en 0:00 con una duración enorme (unas 10 horas). Ahora el canal revisa qué es realmente el enlace antes de reproducirlo, y reproduce estos archivos con una pequeña lista armada en el Roku, para que se puedan ver y adelantar.
+- Si una fuente nunca empieza a reproducirse, a los 20 segundos el canal prueba la siguiente forma de abrirla y al final muestra un error, en lugar de quedarse congelado.
+
 ## [0.0.6] - 2026-10-26
 
 ### Agregado
