@@ -11,6 +11,10 @@ sub execute()
         result = Trakt_Code()
     else if mode = "traktPoll"
         result = Trakt_Poll(Str_Of(p.deviceCode))
+    else if mode = "mdbCode"
+        result = Mdb_Code()
+    else if mode = "mdbPoll"
+        result = Mdb_Poll(Str_Of(p.deviceCode))
     else if mode = "simklPin"
         result = Simkl_Pin()
     else if mode = "simklPoll"

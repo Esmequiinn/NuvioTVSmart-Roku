@@ -29,7 +29,7 @@ sub execute()
     end if
     if Str_Of(merged.logo) = "" then merged.logo = Img_Logo(merged.imdb)
     if Str_Of(merged.background) = "" then merged.background = Img_Background(merged.imdb)
-    if integ.mdbEnabled and integ.mdbKey <> "" and merged.imdb <> ""
+    if integ.mdbEnabled and Mdb_Ready(integ) and merged.imdb <> ""
         merged.ratings = Mdb_Ratings(integ, kind, merged.imdb)
     end if
     if IsStr(merged.name) and Str_HasForeign(merged.name)
@@ -230,26 +230,52 @@ end sub
 function Mdb_Ratings(integ as object, kind as string, imdb as string) as object
     media = "movie"
     if LCase(kind) <> "movie" then media = "show"
-    data = Http_FetchJson("https://api.mdblist.com/imdb/" + media + "/" + imdb + "?apikey=" + integ.mdbKey, 10000)
+    path = "/imdb/" + media + "/" + imdb
+    data = Mdb_Get(path, integ, 10000, path + "/").json
     out = []
     if type(data) <> "roAssociativeArray" or type(data.ratings) <> "roArray" then return out
-    show = integ.mdbShow
-    labels = { imdb: "IMDb", tomatoes: "Rotten Tomatoes", popcorn: L("Audiencia"), audience: L("Audiencia"), metacritic: "Metacritic", letterboxd: "Letterboxd", tmdb: "TMDB", trakt: "Trakt" }
+    found = {}
+    alias = { popcorn: "audience", audience: "audience", tomatoesaudience: "audience" }
     for each r in data.ratings
         if type(r) = "roAssociativeArray"
             source = LCase(Str_Of(r.source))
-            key = source
-            if key = "popcorn" then key = "audience"
-            value = Str_Any(r.value)
-            if value <> "" and value <> "0" and labels.DoesExist(source) and Bool_Of(show[key], false)
-                text = value
-                if key = "tomatoes" or key = "audience" then text = value + "%"
-                if key = "tmdb" or key = "trakt" then text = value + "%"
-                out.Push({ source: key, label: labels[source], value: text })
-            end if
+            if alias.DoesExist(source) then source = alias[source]
+            value = Mdb_Num(r.value)
+            if source = "letterboxd" and Mdb_Num(r.score) >= 0 then value = Mdb_Num(r.score) / 20
+            top = 100
+            if source = "imdb" then top = 10
+            if source = "letterboxd" then top = 5
+            if value > 0 and value <= top and not found.DoesExist(source) then found[source] = value
+        end if
+    end for
+    show = integ.mdbShow
+    for each key in ["imdb", "trakt", "tmdb", "tomatoes", "audience", "letterboxd", "metacritic"]
+        if found.DoesExist(key) and Bool_Of(show[key], false)
+            value = found[key]
+            icon = "pkg:/images/s/mdb_" + key + ".png"
+            if key = "tomatoes" and value < 60 then icon = "pkg:/images/s/mdb_tomatoes_rotten.png"
+            if key = "audience" and value < 60 then icon = "pkg:/images/s/mdb_audience_stale.png"
+            decimal = key = "imdb" or key = "tmdb" or key = "letterboxd"
+            out.Push({ source: key, icon: icon, value: Mdb_Fmt(value, decimal) })
         end if
     end for
     return out
+end function
+
+function Mdb_Num(v as dynamic) as float
+    if v = invalid then return -1
+    t = type(v)
+    if t = "roInt" or t = "Integer" or t = "roInteger" or t = "LongInteger" or t = "roLongInteger" or t = "Float" or t = "roFloat" or t = "Double" or t = "roDouble" then return v
+    if IsStr(v) and v <> "" then return Val(v)
+    return -1
+end function
+
+function Mdb_Fmt(value as float, decimal as boolean) as string
+    tenths = Int(value * 10 + 0.5)
+    whole = Int(tenths / 10)
+    rest = tenths - whole * 10
+    if decimal or rest <> 0 then return whole.ToStr() + "." + rest.ToStr()
+    return whole.ToStr()
 end function
 
 sub Meta_Merge(target as object, meta as object)

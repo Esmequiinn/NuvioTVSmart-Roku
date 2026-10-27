@@ -77,6 +77,8 @@ sub execute()
                             hidden: prefs.hidden.DoesExist(key)
                             status: ""
                             count: 0
+                            genres: Disc_Genres(cat)
+                            skip: Disc_Skip(cat)
                         })
                     end if
                 end if
@@ -166,6 +168,7 @@ function Home_SlimCatalogs(list as dynamic) as dynamic
             if cat.DoesExist("extra") then slim.extra = cat.extra
             if cat.DoesExist("extraRequired") then slim.extraRequired = cat.extraRequired
             if cat.DoesExist("extraSupported") then slim.extraSupported = cat.extraSupported
+            if cat.DoesExist("genres") then slim.genres = cat.genres
             out.Push(slim)
         end if
     end for
@@ -486,7 +489,7 @@ sub Folder_Execute()
                     infos.Push({ title: Str_Of(src.title), provider: "trakt", src: src })
                     urls.Push(req)
                 end if
-            else if provider = "mdblist" and Str_Of(integ.mdbKey) <> ""
+            else if provider = "mdblist" and Mdb_Ready(integ)
                 infos.Push({ title: Str_Of(src.title), provider: "mdblist", src: src })
                 urls.Push("")
             end if
@@ -527,7 +530,7 @@ sub Folder_Execute()
             else if info.provider = "trakt"
                 metas = Folder_TraktMetas(info.src, results[i], codes[i])
             else if info.provider = "mdblist"
-                metas = Folder_MdbMetas(info.src, integ.mdbKey)
+                metas = Folder_MdbMetas(info.src, integ)
             end if
             groups = [{ title: Str_Of(info.title), metas: metas }]
             if (Str_Of(info.mode) = "person" or Str_Of(info.mode) = "director") and type(metas) = "roArray"
@@ -819,9 +822,9 @@ function Folder_TraktImage(images as dynamic, keys as object) as string
     return ""
 end function
 
-function Folder_MdbMetas(src as object, key as string) as object
+function Folder_MdbMetas(src as object, integ as object) as object
     out = []
-    r = Http_Request("GET", "https://api.mdblist.com/lists/" + Str_Any(src.listId) + "/items?apikey=" + key + "&limit=40", {}, invalid, 20000)
+    r = Mdb_Get("/lists/" + Str_Any(src.listId) + "/items?limit=40", integ, 20000)
     data = r.json
     lists = []
     if type(data) = "roArray" then lists.Push(data)
@@ -846,4 +849,37 @@ end function
 function Folder_Back(folder as object) as string
     if Str_Of(folder.backdrop) <> "" then return folder.backdrop
     return Str_Of(folder.cover)
+end function
+
+function Disc_Genres(cat as object) as object
+    out = []
+    if type(cat.extra) = "roArray"
+        for each e in cat.extra
+            if type(e) = "roAssociativeArray" and LCase(Str_Of(e.name)) = "genre" and type(e.options) = "roArray"
+                for each o in e.options
+                    if IsStr(o) and o.Trim() <> "" then out.Push(o.Trim())
+                end for
+            end if
+        end for
+    end if
+    if out.Count() = 0 and type(cat.genres) = "roArray"
+        for each o in cat.genres
+            if IsStr(o) and o.Trim() <> "" then out.Push(o.Trim())
+        end for
+    end if
+    return out
+end function
+
+function Disc_Skip(cat as object) as boolean
+    if type(cat.extra) = "roArray"
+        for each e in cat.extra
+            if type(e) = "roAssociativeArray" and LCase(Str_Of(e.name)) = "skip" then return true
+        end for
+    end if
+    if type(cat.extraSupported) = "roArray"
+        for each e in cat.extraSupported
+            if IsStr(e) and LCase(e) = "skip" then return true
+        end for
+    end if
+    return false
 end function

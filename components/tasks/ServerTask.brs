@@ -279,8 +279,8 @@ function Srv_Apply(body as dynamic) as object
         integ[name] = value
         if name = "tmdbKey" then integ.tmdbEnabled = value <> ""
         if name = "mdbKey"
-            integ.mdbEnabled = value <> ""
-            integ.mdbFrom = "tv"
+            integ["mdbEnabled"] = value <> "" or Str_Of(integ.mdbRefresh) <> "" or Str_Of(integ.mdbAccess) <> ""
+            integ["mdbFrom"] = "tv"
         end if
         St_SaveIntegrations(integ)
         res.message = L("Guardado.")

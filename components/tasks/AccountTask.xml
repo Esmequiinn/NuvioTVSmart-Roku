@@ -10,6 +10,7 @@
     <script type="text/brightscript" uri="pkg:/components/Util.brs" />
     <script type="text/brightscript" uri="pkg:/components/Store.brs" />
     <script type="text/brightscript" uri="pkg:/components/Http.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Mdb.brs" />
     <script type="text/brightscript" uri="pkg:/components/Addon.brs" />
     <script type="text/brightscript" uri="pkg:/components/Streams.brs" />
     <script type="text/brightscript" uri="pkg:/components/Account.brs" />
