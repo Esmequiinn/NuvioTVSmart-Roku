@@ -102,11 +102,11 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Interfaz en inglés | ✅ Funciona |
 | Interfaz en portugués | ✅ Funciona |
 | Interfaz en francés, alemán, italiano, neerlandés, polaco, turco, rumano, checo y húngaro | ⚠️ Sin probar |
-| Aviso de nueva versión | ⚠️ Sin probar |
+| Aviso de nueva versión | ✅ Funciona |
 | Descubrir | ✅ Funciona |
-| Búsquedas recientes | ⚠️ Sin probar |
+| Búsquedas recientes | ✅ Funciona |
 | Tráiler en pantalla completa en el inicio | ✅ Funciona |
-| Cuenta de MDBList (QR) | ⚠️ Sin probar |
+| Cuenta de MDBList (QR) | ✅ Funciona |
 | Watch Party | ✅ Funciona |
 | Menú de opciones con `*` y quitar títulos de Seguir viendo | ✅ Funciona |
 | Colecciones con fuentes de TMDB y Trakt | ⚠️ Sin probar |
