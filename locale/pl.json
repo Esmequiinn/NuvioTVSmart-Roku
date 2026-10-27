@@ -730,7 +730,6 @@
  "Espacio libre: ": "Wolne miejsce: ",
  "claves": "klucze",
  "\u00daltima revisi\u00f3n en tu cuenta: ": "Ostatnie sprawdzenie na Twoim koncie: ",
- "La reproducci\u00f3n autom\u00e1tica nunca elige fuentes que tu Roku no puede reproducir (HEVC o 4K seg\u00fan tu modelo) y deja al final los REMUX con audio TrueHD o DTS-HD.": "Autoodtwarzanie nigdy nie wybiera \u017ar\u00f3de\u0142, kt\u00f3rych Twoje Roku nie mo\u017ce odtworzy\u0107 (HEVC lub 4K, zale\u017cnie od modelu), i przesuwa na koniec pliki REMUX z d\u017awi\u0119kiem TrueHD lub DTS-HD.",
  "Actualizaci\u00f3n disponible": "Dost\u0119pna aktualizacja",
  "Novedades": "Co nowego",
  "Escanea el c\u00f3digo para descargar la nueva versi\u00f3n": "Zeskanuj kod, aby pobra\u0107 now\u0105 wersj\u0119",
@@ -764,5 +763,12 @@
  "clave de MDBList: ": "klucz MDBList: ",
  "sin sesi\u00f3n": "brak sesji",
  "renovar sesi\u00f3n": "odn\u00f3w sesj\u0119",
- "\u00daltima respuesta de MDBList: ": "Ostatnia odpowied\u017a MDBList: "
+ "\u00daltima respuesta de MDBList: ": "Ostatnia odpowied\u017a MDBList: ",
+ "la fuente no empez\u00f3 a reproducirse": "\u017ar\u00f3d\u0142o nie zacz\u0119\u0142o si\u0119 odtwarza\u0107",
+ "La reproducci\u00f3n autom\u00e1tica nunca elige fuentes que tu Roku no puede reproducir (HEVC, 4K o Dolby Vision seg\u00fan tu modelo y tu tele) y deja al final los REMUX con audio TrueHD o DTS-HD.": "Autoodtwarzanie nigdy nie wybiera \u017ar\u00f3de\u0142, kt\u00f3rych Twoje Roku nie mo\u017ce odtworzy\u0107 (HEVC, 4K lub Dolby Vision, zale\u017cnie od modelu i telewizora), i przesuwa na koniec pliki REMUX z d\u017awi\u0119kiem TrueHD lub DTS-HD.",
+ "HDR sin Dolby Vision": "HDR bez Dolby Vision",
+ "Tu Roku": "Twoje Roku",
+ "Modo de video: ": "Tryb wideo: ",
+ "Formatos compatibles": "Obs\u0142ugiwane formaty",
+ "Seg\u00fan tu Roku y tu tele. La reproducci\u00f3n autom\u00e1tica evita lo que no es compatible.": "Zale\u017cnie od Roku i telewizora. Autoodtwarzanie omija to, co nie jest obs\u0142ugiwane."
 }

@@ -730,7 +730,6 @@
  "Espacio libre: ": "Szabad hely: ",
  "claves": "kulcsok",
  "\u00daltima revisi\u00f3n en tu cuenta: ": "Utols\u00f3 ellen\u0151rz\u00e9s a fi\u00f3kodban: ",
- "La reproducci\u00f3n autom\u00e1tica nunca elige fuentes que tu Roku no puede reproducir (HEVC o 4K seg\u00fan tu modelo) y deja al final los REMUX con audio TrueHD o DTS-HD.": "Az automatikus lej\u00e1tsz\u00e1s soha nem v\u00e1laszt olyan forr\u00e1st, amelyet a Rokud nem tud lej\u00e1tszani (modellt\u0151l f\u00fcgg\u0151en HEVC vagy 4K), \u00e9s a TrueHD vagy DTS-HD hang\u00fa REMUX f\u00e1jlokat a v\u00e9g\u00e9re teszi.",
  "Actualizaci\u00f3n disponible": "Friss\u00edt\u00e9s \u00e9rhet\u0151 el",
  "Novedades": "\u00dajdons\u00e1gok",
  "Escanea el c\u00f3digo para descargar la nueva versi\u00f3n": "Olvasd be a k\u00f3dot az \u00faj verzi\u00f3 let\u00f6lt\u00e9s\u00e9hez",
@@ -764,5 +763,12 @@
  "clave de MDBList: ": "MDBList-kulcs: ",
  "sin sesi\u00f3n": "nincs munkamenet",
  "renovar sesi\u00f3n": "munkamenet meg\u00faj\u00edt\u00e1sa",
- "\u00daltima respuesta de MDBList: ": "Utols\u00f3 MDBList-v\u00e1lasz: "
+ "\u00daltima respuesta de MDBList: ": "Utols\u00f3 MDBList-v\u00e1lasz: ",
+ "la fuente no empez\u00f3 a reproducirse": "a forr\u00e1s nem indult el",
+ "La reproducci\u00f3n autom\u00e1tica nunca elige fuentes que tu Roku no puede reproducir (HEVC, 4K o Dolby Vision seg\u00fan tu modelo y tu tele) y deja al final los REMUX con audio TrueHD o DTS-HD.": "Az automatikus lej\u00e1tsz\u00e1s soha nem v\u00e1laszt olyan forr\u00e1st, amelyet a Rokud nem tud lej\u00e1tszani (modellt\u0151l \u00e9s t\u00e9v\u00e9t\u0151l f\u00fcgg\u0151en HEVC, 4K vagy Dolby Vision), \u00e9s a TrueHD vagy DTS-HD hang\u00fa REMUX f\u00e1jlokat a v\u00e9g\u00e9re teszi.",
+ "HDR sin Dolby Vision": "HDR Dolby Vision n\u00e9lk\u00fcl",
+ "Tu Roku": "A Rokud",
+ "Modo de video: ": "Vide\u00f3m\u00f3d: ",
+ "Formatos compatibles": "T\u00e1mogatott form\u00e1tumok",
+ "Seg\u00fan tu Roku y tu tele. La reproducci\u00f3n autom\u00e1tica evita lo que no es compatible.": "A Rokud \u00e9s a t\u00e9v\u00e9d alapj\u00e1n. Az automatikus lej\u00e1tsz\u00e1s elker\u00fcli, ami nem t\u00e1mogatott."
 }

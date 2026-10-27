@@ -730,7 +730,6 @@
  "Espacio libre: ": "Voln\u00e9 m\u00edsto: ",
  "claves": "kl\u00ed\u010de",
  "\u00daltima revisi\u00f3n en tu cuenta: ": "Posledn\u00ed kontrola ve va\u0161em \u00fa\u010dtu: ",
- "La reproducci\u00f3n autom\u00e1tica nunca elige fuentes que tu Roku no puede reproducir (HEVC o 4K seg\u00fan tu modelo) y deja al final los REMUX con audio TrueHD o DTS-HD.": "Automatick\u00e9 p\u0159ehr\u00e1v\u00e1n\u00ed nikdy nevybere zdroje, kter\u00e9 va\u0161e Roku neum\u00ed p\u0159ehr\u00e1t (HEVC nebo 4K podle modelu), a soubory REMUX se zvukem TrueHD nebo DTS-HD d\u00e1v\u00e1 na konec.",
  "Actualizaci\u00f3n disponible": "Je k dispozici aktualizace",
  "Novedades": "Novinky",
  "Escanea el c\u00f3digo para descargar la nueva versi\u00f3n": "Naskenujte k\u00f3d a st\u00e1hn\u011bte novou verzi",
@@ -764,5 +763,12 @@
  "clave de MDBList: ": "kl\u00ed\u010d MDBList: ",
  "sin sesi\u00f3n": "bez relace",
  "renovar sesi\u00f3n": "obnovit relaci",
- "\u00daltima respuesta de MDBList: ": "Posledn\u00ed odpov\u011b\u010f MDBList: "
+ "\u00daltima respuesta de MDBList: ": "Posledn\u00ed odpov\u011b\u010f MDBList: ",
+ "la fuente no empez\u00f3 a reproducirse": "zdroj se neza\u010dal p\u0159ehr\u00e1vat",
+ "La reproducci\u00f3n autom\u00e1tica nunca elige fuentes que tu Roku no puede reproducir (HEVC, 4K o Dolby Vision seg\u00fan tu modelo y tu tele) y deja al final los REMUX con audio TrueHD o DTS-HD.": "Automatick\u00e9 p\u0159ehr\u00e1v\u00e1n\u00ed nikdy nevybere zdroje, kter\u00e9 va\u0161e Roku neum\u00ed p\u0159ehr\u00e1t (HEVC, 4K nebo Dolby Vision podle modelu a televizoru), a soubory REMUX se zvukem TrueHD nebo DTS-HD d\u00e1v\u00e1 na konec.",
+ "HDR sin Dolby Vision": "HDR bez Dolby Vision",
+ "Tu Roku": "Va\u0161e Roku",
+ "Modo de video: ": "Re\u017eim videa: ",
+ "Formatos compatibles": "Podporovan\u00e9 form\u00e1ty",
+ "Seg\u00fan tu Roku y tu tele. La reproducci\u00f3n autom\u00e1tica evita lo que no es compatible.": "Podle va\u0161eho Roku a televizoru. Automatick\u00e9 p\u0159ehr\u00e1v\u00e1n\u00ed se vyh\u00fdb\u00e1 tomu, co nen\u00ed podporov\u00e1no."
 }

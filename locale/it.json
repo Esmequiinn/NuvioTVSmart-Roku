@@ -730,7 +730,6 @@
  "Espacio libre: ": "Spazio libero: ",
  "claves": "chiavi",
  "\u00daltima revisi\u00f3n en tu cuenta: ": "Ultimo controllo nel tuo account: ",
- "La reproducci\u00f3n autom\u00e1tica nunca elige fuentes que tu Roku no puede reproducir (HEVC o 4K seg\u00fan tu modelo) y deja al final los REMUX con audio TrueHD o DTS-HD.": "La riproduzione automatica non sceglie mai fonti che il tuo Roku non pu\u00f2 riprodurre (HEVC o 4K, a seconda del modello) e mette per ultimi i file REMUX con audio TrueHD o DTS-HD.",
  "Actualizaci\u00f3n disponible": "Aggiornamento disponibile",
  "Novedades": "Novit\u00e0",
  "Escanea el c\u00f3digo para descargar la nueva versi\u00f3n": "Scansiona il codice per scaricare la nuova versione",
@@ -764,5 +763,12 @@
  "clave de MDBList: ": "chiave MDBList: ",
  "sin sesi\u00f3n": "nessuna sessione",
  "renovar sesi\u00f3n": "rinnova sessione",
- "\u00daltima respuesta de MDBList: ": "Ultima risposta di MDBList: "
+ "\u00daltima respuesta de MDBList: ": "Ultima risposta di MDBList: ",
+ "la fuente no empez\u00f3 a reproducirse": "la fonte non \u00e8 mai partita",
+ "La reproducci\u00f3n autom\u00e1tica nunca elige fuentes que tu Roku no puede reproducir (HEVC, 4K o Dolby Vision seg\u00fan tu modelo y tu tele) y deja al final los REMUX con audio TrueHD o DTS-HD.": "La riproduzione automatica non sceglie mai fonti che il tuo Roku non pu\u00f2 riprodurre (HEVC, 4K o Dolby Vision, a seconda del modello e della TV) e mette per ultimi i file REMUX con audio TrueHD o DTS-HD.",
+ "HDR sin Dolby Vision": "HDR senza Dolby Vision",
+ "Tu Roku": "Il tuo Roku",
+ "Modo de video: ": "Modalit\u00e0 video: ",
+ "Formatos compatibles": "Formati supportati",
+ "Seg\u00fan tu Roku y tu tele. La reproducci\u00f3n autom\u00e1tica evita lo que no es compatible.": "In base al tuo Roku e alla TV. La riproduzione automatica evita ci\u00f2 che non \u00e8 supportato."
 }
