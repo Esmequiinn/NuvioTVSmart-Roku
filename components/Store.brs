@@ -266,6 +266,7 @@ end function
 function St_Prefs() as object
     p = St_Get(St_PrefsKey(), invalid)
     if type(p) <> "roAssociativeArray" then p = {}
+    p = St_CaseFix(p, St_PlayerDefaults(), true)
     if not IsStr(p.accent) then p.accent = "7C5CFF"
     p.rowSize = ToInt(p.rowSize, 40)
     if p.rowSize < 10 then p.rowSize = 40
@@ -701,6 +702,11 @@ function St_Integrations() as object
         tmdbArtwork: true
         mdbKey: ""
         mdbEnabled: false
+        mdbAccess: ""
+        mdbRefresh: ""
+        mdbExpires: 0
+        mdbUser: ""
+        mdbLast: ""
         mdbShow: { imdb: true, tomatoes: true, audience: true, metacritic: true, letterboxd: true, tmdb: false, trakt: false }
         traktClientId: ""
         traktSecret: ""
@@ -718,12 +724,35 @@ function St_Integrations() as object
         nuvioEmail: ""
         nuvioLastSync: ""
     }
+    s = St_CaseFix(s, defaults, false)
     for each k in defaults
-        if s[k] = invalid then s[k] = defaults[k]
+        if not s.DoesExist(k) then s[k] = defaults[k]
     end for
     if type(s.mdbShow) <> "roAssociativeArray" then s.mdbShow = defaults.mdbShow
     if Str_Of(s["nuvioUrl"]) = "" then s["nuvioUrl"] = defaults.nuvioUrl
     return s
+end function
+
+function St_CaseFix(src as object, defaults as object, preferMixed as boolean) as object
+    out = {}
+    for each k in src
+        v = src[k]
+        if not out.DoesExist(k)
+            out[k] = v
+        else
+            prev = FormatJson([out[k]])
+            now = FormatJson([v])
+            base = FormatJson([defaults[k]])
+            if prev <> now
+                if prev = base
+                    out[k] = v
+                else if now <> base and (k = LCase(k)) <> preferMixed
+                    out[k] = v
+                end if
+            end if
+        end if
+    end for
+    return out
 end function
 
 sub St_SaveIntegrations(s as object)
@@ -765,6 +794,7 @@ function St_PlayerDefaults() as object
         expandTrailer: false
         expandMuted: true
         trailerTarget: "hero"
+        discoverLocation: "search"
         trailerButton: true
         trailerAutoplay: false
         trailerDelay: 7
@@ -825,8 +855,18 @@ end function
 
 sub St_WriteFile(name as string, value as dynamic)
     text = FormatJson(value)
+    fs = CreateObject("roFileSystem")
+    done = false
     for each path in St_FilePaths(name)
-        if WriteAsciiFile(path, text) then return
+        if not done and WriteAsciiFile(path, text)
+            if ReadAsciiFile(path) = text
+                done = true
+            else if fs <> invalid and fs.Exists(path)
+                fs.Delete(path)
+            end if
+        else if fs <> invalid and fs.Exists(path)
+            fs.Delete(path)
+        end if
     end for
 end sub
 
@@ -918,4 +958,32 @@ sub Mask_Global()
     mode = Str_Of(St_Settings()["corners"])
     if mode = "" then mode = "auto"
     m.global.corners = mode
+end sub
+
+function St_SearchHistory() as object
+    list = St_Get("searches_" + St_ActiveProfile().id, [])
+    if type(list) <> "roArray" then list = []
+    return list
+end function
+
+sub St_AddSearch(query as string)
+    q = query.Trim()
+    if Len(q) < 2 then return
+    out = [q]
+    for each s in St_SearchHistory()
+        if IsStr(s) and LCase(s) <> LCase(q) and out.Count() < 8 then out.Push(s)
+    end for
+    St_Set("searches_" + St_ActiveProfile().id, out)
+end sub
+
+sub St_RemoveSearch(query as string)
+    out = []
+    for each s in St_SearchHistory()
+        if IsStr(s) and s <> query then out.Push(s)
+    end for
+    St_Set("searches_" + St_ActiveProfile().id, out)
+end sub
+
+sub St_ClearSearches()
+    St_Set("searches_" + St_ActiveProfile().id, [])
 end sub

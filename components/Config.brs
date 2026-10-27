@@ -21,3 +21,7 @@ end function
 function Config_SimklClientId() as string
     return ""
 end function
+
+function Config_MdbClientId() as string
+    return ""
+end function

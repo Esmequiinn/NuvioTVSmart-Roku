@@ -175,6 +175,10 @@ function Settings_Model() as object
     style = L("Horizontal")
     if Set_Pref(prefs, defaults, "cwStyle") = "poster" then style = L("Póster")
     layout.rows.Push(Set_Row("cwStyle", L("Estilo de Seguir viendo"), L("Horizontal muestra una imagen del episodio o película."), style))
+    discNames = { search: L("En Buscar"), sidebar: L("En la barra lateral"), off: L("Desactivado") }
+    discLoc = Str_Of(Set_Pref(prefs, defaults, "discoverLocation"))
+    if not discNames.DoesExist(discLoc) then discLoc = "search"
+    layout.rows.Push(Set_Row("discoverLocation", L("Ubicación de Descubrir"), L("Descubrir sirve para explorar los catálogos de tus addons por tipo y género."), discNames[discLoc]))
     layout.rows.Push(Set_Row("rowSize", L("Títulos por fila"), L("Menos títulos hace que el inicio cargue más rápido."), prefs.rowSize.ToStr()))
     layout.rows.Push(Set_Header(L("Póster enfocado")))
     layout.rows.Push(Set_Toggle("expandPoster", L("Expandir póster enfocado"), L("Después de unos segundos el póster se convierte en una vista horizontal."), Bool_Of(Set_Pref(prefs, defaults, "expandPoster"), true)))
@@ -226,6 +230,14 @@ function Settings_Model() as object
     mdbKey = L("Falta")
     if integ.mdbKey <> "" then mdbKey = L("Configurada")
     integration.rows.Push(Set_Toggle("mdbEnabled", L("Calificaciones de MDBList"), L("Muestra calificaciones de varias fuentes en la portada y la ficha."), integ.mdbEnabled))
+    mdbAccount = L("Conectar")
+    if (Str_Of(integ.mdbRefresh) <> "" or Str_Of(integ.mdbAccess) <> "")
+        mdbAccount = Str_Of(integ.mdbUser)
+        if mdbAccount = "" then mdbAccount = L("Conectada")
+    end if
+    accDesc = L("Conecta tu cuenta con un código QR, como en Nuvio. Con la cuenta no hace falta la clave.")
+    if Str_Of(integ.mdbLast) <> "" then accDesc = accDesc + chr(10) + L("Última respuesta de MDBList: ") + integ.mdbLast
+    integration.rows.Push(Set_Row("mdbAccount", L("Cuenta de MDBList"), accDesc, mdbAccount))
     mdbDesc = L("Escríbela aquí o pégala desde el celular. Es gratis en mdblist.com.")
     if Str_Of(integ.mdbDiag) <> "" then mdbDesc = mdbDesc + chr(10) + L("Última revisión en tu cuenta: ") + integ.mdbDiag
     integration.rows.Push(Set_Row("mdbKey", L("Clave de MDBList"), mdbDesc, mdbKey))
@@ -501,6 +513,19 @@ sub onSettingsEvent()
         end if
         refreshContinueRow()
         refreshSettings()
+    else if row = "discoverLocation"
+        loc = Str_Of(St_Pref("discoverLocation"))
+        if loc = "search"
+            loc = "sidebar"
+        else if loc = "sidebar"
+            loc = "off"
+        else
+            loc = "search"
+        end if
+        St_SetPref("discoverLocation", loc)
+        m.prefs = St_Prefs()
+        Disc_Location()
+        refreshSettings()
     else if row = "rowSize"
         St_SetRowSize(Set_Cycle(St_RowSizes(), m.prefs.rowSize))
         applyTheme()
@@ -535,9 +560,15 @@ sub onSettingsEvent()
         St_SaveIntegrations(integ)
         m.metaCache = {}
         refreshSettings()
+    else if row = "mdbAccount"
+        if (Str_Of(integ.mdbRefresh) <> "" or Str_Of(integ.mdbAccess) <> "")
+            Tracking_Connected("mdblist", Str_Of(integ.mdbUser))
+        else
+            startLogin("mdblist")
+        end if
     else if row = "mdbEnabled"
-        if integ.mdbKey = "" and not integ.mdbEnabled
-            showMessage(L("Falta la clave de MDBList"), L("Pega tu clave de API de MDBList desde la página de configuración del celular (pestaña Cuenta)."))
+        if integ.mdbKey = "" and (Str_Of(integ.mdbRefresh) = "" and Str_Of(integ.mdbAccess) = "") and not integ.mdbEnabled
+            showMessage(L("Falta la clave de MDBList"), L("Conecta tu cuenta de MDBList o escribe tu clave de API."))
             return
         end if
         integ.mdbEnabled = not integ.mdbEnabled
@@ -651,8 +682,9 @@ sub startLogin(service as string)
     mode = "nuvioQrStart"
     if service = "trakt" then mode = "traktCode"
     if service = "simkl" then mode = "simklPin"
-    if service = "trakt" or service = "simkl"
-        names = { trakt: "Trakt", simkl: "Simkl" }
+    if service = "mdblist" then mode = "mdbCode"
+    if service = "trakt" or service = "simkl" or service = "mdblist"
+        names = { trakt: "Trakt", simkl: "Simkl", mdblist: "MDBList" }
         m.login.dialog = true
         m.trackAuth.info = { service: service }
         m.trackAuth.status = L("Iniciando la conexión con {p}...").Replace("{p}", names[service])
@@ -689,12 +721,13 @@ sub onLoginStarted(event as object)
     m.login.nonce = Str_Of(r.nonce)
     m.login.anon = Str_Of(r.anon)
     m.login.url = Str_Of(r.url)
+    m.login.qr = Str_Of(r.qr)
     interval = ToInt(r.interval, 5)
     if interval < 3 then interval = 3
     m.loginTimer.duration = interval
     m.loginTimer.control = "start"
     if Bool_Of(m.login.dialog, false)
-        m.trackAuth.info = { service: m.login.service, userCode: m.login.userCode, url: m.login.url, expires: ToInt(r.expires, 0) }
+        m.trackAuth.info = { service: m.login.service, userCode: m.login.userCode, url: m.login.url, qr: m.login.qr, expires: ToInt(r.expires, 0) }
         m.trackAuth.status = L("Esperando aprobación")
         return
     end if
@@ -722,6 +755,7 @@ sub onLoginTimer()
     mode = "nuvioQrPoll"
     if m.login.service = "trakt" then mode = "traktPoll"
     if m.login.service = "simkl" then mode = "simklPoll"
+    if m.login.service = "mdblist" then mode = "mdbPoll"
     m.loginPoll = CreateObject("roSGNode", "AccountTask")
     m.loginPoll.mode = mode
     m.loginPoll.params = { code: m.login.code, nonce: m.login.nonce, anon: m.login.anon, deviceCode: m.login.deviceCode, userCode: m.login.userCode }
@@ -751,11 +785,17 @@ sub onLoginPolled(event as object)
     end if
     if status = "approved"
         service = m.login.service
-        if Bool_Of(m.login.dialog, false) then TrackAuth_Hide()
+        dialog = Bool_Of(m.login.dialog, false)
+        if dialog then TrackAuth_Hide()
         cancelLogin()
         refreshSettings()
+        if dialog then focusCurrent()
         if service = "nuvio"
             startNuvioSync()
+        else if service = "mdblist"
+            m.metaCache = {}
+            m.needsReload = true
+            Toast_Show(L("Tu cuenta quedó conectada."))
         else
             Toast_Show(L("Tu cuenta quedó conectada."))
         end if
@@ -763,6 +803,7 @@ sub onLoginPolled(event as object)
         cancelLogin()
         showMessage(L("No se pudo iniciar sesión"), Str_Of(r.error))
     else
+        if status = "slow" then m.loginTimer.duration = m.loginTimer.duration + 5
         m.loginTimer.control = "start"
     end if
 end sub
@@ -851,10 +892,12 @@ sub onTrackAuthEvent()
 end sub
 
 sub Tracking_Connected(service as string, user as string)
-    names = { trakt: "Trakt", simkl: "Simkl" }
+    names = { trakt: "Trakt", simkl: "Simkl", mdblist: "MDBList" }
     if user = "" then user = names[service]
     text = L("Conectado como {u}").Replace("{u}", user) + chr(10)
-    if service = "trakt"
+    if service = "mdblist"
+        text = text + L("Las calificaciones y las listas de MDBList usan tu cuenta.")
+    else if service = "trakt"
         text = text + L("Sincroniza tu lista de seguimiento, progreso, seguir viendo, scrobbles y listas personales con Trakt.")
     else
         text = text + L("Conecta Simkl para sincronizar listas, historial, progreso de reproducción y scrobbles.")
@@ -872,6 +915,13 @@ sub Tracking_Disconnect(service as string)
     else if service = "simkl"
         integ.simklToken = ""
         integ.simklUser = ""
+    else if service = "mdblist"
+        integ["mdbAccess"] = ""
+        integ["mdbRefresh"] = ""
+        integ["mdbExpires"] = 0
+        integ["mdbUser"] = ""
+        if integ.mdbKey = "" then integ["mdbEnabled"] = false
+        m.metaCache = {}
     end if
     St_SaveIntegrations(integ)
     refreshSettings()

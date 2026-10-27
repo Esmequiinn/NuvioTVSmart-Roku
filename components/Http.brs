@@ -144,7 +144,7 @@ function Http_Request(method as string, url as string, headers as object, body a
         else
             payload = FormatJson(body)
         end if
-        t.AddHeader("Content-Type", "application/json")
+        if not headers.DoesExist("Content-Type") then t.AddHeader("Content-Type", "application/json")
     end if
     started = false
     if method = "GET"

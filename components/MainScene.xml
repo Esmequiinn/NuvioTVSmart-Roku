@@ -12,6 +12,7 @@
     <script type="text/brightscript" uri="pkg:/components/Streams.brs" />
     <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
     <script type="text/brightscript" uri="pkg:/components/Pages.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Discover.brs" />
     <script type="text/brightscript" uri="pkg:/components/Playback.brs" />
     <script type="text/brightscript" uri="pkg:/components/Menus.brs" />
     <script type="text/brightscript" uri="pkg:/components/Party.brs" />
@@ -68,7 +69,13 @@
             <Label id="searchHeading" translation="[160,70]" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" text="Buscar" />
             <Label id="searchText" visible="false" />
             <Group id="keyboardHolder" translation="[140,170]" />
-            <Label id="searchHint" translation="[160,880]" width="580" wrap="true" font="font:SmallestSystemFont" color="0x8E8E9CFF" text="También puedes escribir desde tu celular, en la página de configuración." />
+            <Group id="discoverButton" translation="[156,884]">
+                <Poster id="discoverButtonBg" width="552" height="72" uri="pkg:/images/pill.9.png" blendColor="0x1C1C22FF" />
+                <Poster id="discoverButtonIcon" translation="[28,18]" width="36" height="36" uri="pkg:/images/s/ic_discover_36.png" />
+                <Label id="discoverButtonText" translation="[84,0]" width="440" height="72" vertAlign="center" font="font:SmallBoldSystemFont" color="0xF2F2F7FF" />
+            </Group>
+            <Label id="searchHint" translation="[160,972]" width="580" wrap="true" font="font:SmallestSystemFont" color="0x8E8E9CFF" text="También puedes escribir desde tu celular, en la página de configuración." />
+            <RecentSearches id="recentSearches" translation="[840,90]" visible="false" />
             <Label id="searchStatus" translation="[800,420]" width="1000" horizAlign="center" wrap="true" font="font:MediumSystemFont" color="0x9A9AAAFF" text="Escribe para buscar películas y series en tus addons." />
             <RowList
                 id="searchRows"
@@ -83,6 +90,26 @@
                 rowLabelOffset="[[8,18]]"
                 focusXOffset="[8]"
                 rowLabelColor="0xF2F2F7FF"
+                rowFocusAnimationStyle="fixedFocus"
+                vertFocusAnimationStyle="fixedFocus"
+                drawFocusFeedback="false"
+                focusBitmapBlendColor="0xFFFFFFFF" />
+        </Group>
+        <Group id="discoverPage" visible="false">
+            <Label id="discoverHeading" translation="[160,70]" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+            <DiscoverBar id="discoverBar" translation="[160,170]" />
+            <Label id="discoverStatus" translation="[160,520]" width="1600" horizAlign="center" wrap="true" font="font:MediumSystemFont" color="0x9A9AAAFF" />
+            <RowList
+                id="discoverRows"
+                translation="[152,290]"
+                itemComponentName="PosterItem"
+                numRows="2"
+                itemSize="[1760,340]"
+                itemSpacing="[0,20]"
+                rowItemSize="[[200,300]]"
+                rowItemSpacing="[[26,0]]"
+                showRowLabel="[false]"
+                focusXOffset="[8]"
                 rowFocusAnimationStyle="fixedFocus"
                 vertFocusAnimationStyle="fixedFocus"
                 drawFocusFeedback="false"

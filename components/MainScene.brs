@@ -3,6 +3,7 @@ sub init()
     m.top.backgroundColor = "0x0C0C0FFF"
     m.top.backgroundUri = ""
     m.hero = m.top.findNode("hero")
+    m.hero.observeField("immersive", "onHeroImmersive")
     m.homePage = m.top.findNode("homePage")
     m.homeRows = m.top.findNode("homeRows")
     m.emptyState = m.top.findNode("emptyState")
@@ -120,6 +121,7 @@ sub init()
     if m.keyboard = invalid then m.keyboard = CreateObject("roSGNode", "Keyboard")
     m.top.findNode("keyboardHolder").appendChild(m.keyboard)
     m.keyboard.observeField("text", "onSearchText")
+    Disc_Setup()
     m.searchTimer.observeField("fire", "onSearchTimer")
     m.heroTimer.observeField("fire", "onHeroTimer")
 
@@ -198,6 +200,7 @@ end sub
 
 sub applyTheme()
     m.prefs = St_Prefs()
+    if m.disc <> invalid then Disc_Location()
     m.accent = "0x" + m.prefs.accent + "FF"
     m.global.accent = m.accent
     m.list.accent = m.accent
@@ -519,6 +522,7 @@ function overlayOpen() as boolean
 end function
 
 sub focusCurrent()
+    if Bool_Of(m.immersiveOn, false) then Hero_EndImmersive()
     if m.top.dialog <> invalid then return
     if m.sheet.visible
         m.sheet.setFocus(true)
@@ -613,6 +617,7 @@ end sub
 sub onRowSelected(event as object)
     if m.busy then return
     rows = event.getRoSGNode()
+    if rows.isSameNode(m.searchRows) and Str_Of(m.lastQuery) <> "" then St_AddSearch(m.lastQuery)
     item = getRowItem(rows, rows.rowItemSelected)
     if item = invalid then return
     if item.itemType = "folder"
@@ -875,6 +880,7 @@ sub onServerChanged()
         showPage("search")
         m.keyboard.text = m.server.searchQuery
         runSearch(m.server.searchQuery)
+        St_AddSearch(m.server.searchQuery)
         m.searchFocus = "results"
         return
     end if
@@ -966,6 +972,10 @@ sub onImportDone(event as object)
 end sub
 
 function onKeyEvent(key as string, press as boolean) as boolean
+    if Bool_Of(m.immersiveOn, false)
+        if press then Hero_EndImmersive()
+        return true
+    end if
     if not press then return false
     if m.busy
         if key = "back" then cancelBusy()
@@ -994,6 +1004,7 @@ function onKeyEvent(key as string, press as boolean) as boolean
         return true
     end if
     if m.page = "search" then return searchKey(key)
+    if m.page = "discover" then return Disc_Key(key)
     if m.page = "folder" and key = "back"
         m.area = "page"
         showPage("home")
@@ -1010,12 +1021,14 @@ function activeRows() as dynamic
     if m.page = "home" then return m.homeRows
     if m.page = "library" or m.page = "folder" then return m.libraryRows
     if m.page = "search" then return m.searchRows
+    if m.page = "discover" then return m.discoverRows
     return invalid
 end function
 
 sub onFocusCard()
+    if Bool_Of(m.immersiveOn, false) then return
     hideExpanded()
-    if m.ui = invalid or m.page = "library" or m.page = "search" then return
+    if m.ui = invalid or m.page = "library" or m.page = "search" or m.page = "discover" then return
     if not m.ui.expandOn and not m.ui.expandTrailer then return
     m.expandTimer.duration = m.ui.expandDelay
     m.expandTimer.control = "start"
@@ -1029,6 +1042,7 @@ sub hideExpanded()
         m.heroTrailerOn = false
         m.hero.trailer = {}
     end if
+    if Bool_Of(m.immersiveOn, false) then Rows_Restore()
     if m.expanded.open then m.expanded.open = false
     if m.expandRows <> invalid
         m.expandRows.focusBitmapBlendColor = "0xFFFFFFFF"
@@ -1044,7 +1058,7 @@ sub onExpandTimer()
     if rows = invalid or not rows.isInFocusChain() then return
     item = card.itemContent
     if item = invalid then return
-    if item.itemType = "folder" or m.page = "library" or m.page = "search" then return
+    if item.itemType = "folder" or m.page = "library" or m.page = "search" or m.page = "discover" then return
     focus = rows.rowItemFocused
     if type(focus) = "roArray" and focus.Count() > 0 and rows.content <> invalid
         row = rows.content.getChild(focus[0])
@@ -1158,7 +1172,10 @@ sub onCardTrailer(event as object)
         if m.busy or m.area <> "page" or overlayOpen() then return
         m.heroTrailerOn = true
         m.hero.muted = m.ui.expandMuted
-        m.hero.trailer = r
+        full = {}
+        full.Append(r)
+        full.full = true
+        m.hero.trailer = full
         return
     end if
     if not m.expanded.open then return
@@ -1236,4 +1253,37 @@ sub onUpdateEvent()
     m.updateInfo = invalid
     m.updatePrompt.visible = false
     focusCurrent()
+end sub
+
+sub onHeroImmersive()
+    if not m.hero.immersive
+        Rows_Restore()
+        return
+    end if
+    if Bool_Of(m.immersiveOn, false) then return
+    if m.page <> "home" or m.area <> "page" or overlayOpen() or m.busy or not m.homeRows.isInFocusChain()
+        Hero_EndImmersive()
+        return
+    end if
+    m.immersiveOn = true
+    m.expandTimer.control = "stop"
+    m.homeRows.opacity = 0
+    m.expanded.opacity = 0
+    m.nav.opacity = 0
+    m.top.setFocus(true)
+end sub
+
+sub Hero_EndImmersive()
+    m.heroTrailerOn = false
+    m.hero.trailer = {}
+    Rows_Restore()
+end sub
+
+sub Rows_Restore()
+    was = Bool_Of(m.immersiveOn, false)
+    m.immersiveOn = false
+    m.homeRows.opacity = 1
+    m.expanded.opacity = 1
+    m.nav.opacity = 1
+    if was and (m.top.hasFocus() or m.hero.hasFocus()) then focusCurrent()
 end sub

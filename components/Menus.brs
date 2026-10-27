@@ -477,8 +477,8 @@ sub handleKeyboard(kind as string, text as string, data as object)
             integ.tmdbFrom = "tv"
         end if
         if name = "mdbKey"
-            integ.mdbEnabled = value <> ""
-            integ.mdbFrom = "tv"
+            integ["mdbEnabled"] = value <> "" or Str_Of(integ.mdbRefresh) <> "" or Str_Of(integ.mdbAccess) <> ""
+            integ["mdbFrom"] = "tv"
         end if
         St_SaveIntegrations(integ)
         m.metaCache = {}

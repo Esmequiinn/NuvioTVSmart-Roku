@@ -758,12 +758,14 @@ sub Nuvio_PullSettings(pid as string, index as integer, primary as boolean)
             integ["mdbFrom"] = "account"
         else if Str_Of(integ.mdbFrom) = "account"
             integ["mdbKey"] = ""
-            integ["mdbEnabled"] = false
+            linked = St_Integrations()
+            integ["mdbEnabled"] = (Str_Of(linked.mdbRefresh) <> "" or Str_Of(linked.mdbAccess) <> "") and Bool_Of(integ.mdbEnabled, false)
             integ["mdbFrom"] = ""
         end if
     end if
     prefs = St_Get("prefs_" + pid, invalid)
     if type(prefs) <> "roAssociativeArray" then prefs = {}
+    prefs = St_CaseFix(prefs, St_PlayerDefaults(), true)
     Nuvio_PullCatalogs(prefs, index)
     if f = invalid
         St_Set("prefs_" + pid, prefs)
@@ -882,6 +884,16 @@ sub Nuvio_MapFeatures(prefs as object, f as object, integ as object, pid as stri
         if target = "expanded_card" then prefs["trailerTarget"] = "card"
         if target = "hero_media" then prefs["trailerTarget"] = "hero"
         Nuvio_SetBool(prefs, "trailerButton", ly.detail_page_trailer_button_enabled)
+        loc = UCase(Str_Of(ly.discover_location))
+        if loc = "IN_SEARCH"
+            prefs["discoverLocation"] = "search"
+        else if loc = "IN_SIDEBAR"
+            prefs["discoverLocation"] = "sidebar"
+        else if loc = "OFF"
+            prefs["discoverLocation"] = "off"
+        else if IsBool(ly.search_discover_enabled)
+            if ly.search_discover_enabled then prefs["discoverLocation"] = "search" else prefs["discoverLocation"] = "off"
+        end if
     end if
 
     Nuvio_SetBool(prefs, "showAddonName", Nuvio_Get(f, "layout_settings", "catalog_addon_name_enabled"))
@@ -1294,7 +1306,7 @@ function Nuvio_PushSettings(pid as string, index as integer) as boolean
 end function
 
 function Nuvio_PushKeys() as object
-    return ["audioLang", "audioLang2", "subLang", "subLang2", "forcedSubs", "pauseOverlay", "clock", "autoNext", "bingeNext", "bingeReuse", "reuseLink", "reuseHours", "autoplayMode", "autoplayRegex", "autoplayTimeout", "cwStyle", "customPoster", "posterScreens", "expandPoster", "expandDelay", "expandTrailer", "expandMuted", "trailerTarget", "trailerButton", "trailerAutoplay", "trailerDelay", "tmdbLanguage", "sizeBadges", "addonLogo", "badgePlace", "accent", "skipIntro", "autoSkipIntro", "autoSkipRecap", "autoSkipOutro", "autoSkipCredits", "preloadNext", "bingeFallback", "stillWatching", "stillCount", "nextMode", "nextPct", "nextMin", "postPlay", "postPct", "parentalGuide", "stripSdh", "onlyPrefSubs"]
+    return ["audioLang", "audioLang2", "subLang", "subLang2", "forcedSubs", "pauseOverlay", "clock", "autoNext", "bingeNext", "bingeReuse", "reuseLink", "reuseHours", "autoplayMode", "autoplayRegex", "autoplayTimeout", "cwStyle", "customPoster", "posterScreens", "expandPoster", "expandDelay", "expandTrailer", "expandMuted", "trailerTarget", "trailerButton", "trailerAutoplay", "trailerDelay", "tmdbLanguage", "sizeBadges", "addonLogo", "badgePlace", "accent", "skipIntro", "autoSkipIntro", "autoSkipRecap", "autoSkipOutro", "autoSkipCredits", "preloadNext", "bingeFallback", "stillWatching", "stillCount", "nextMode", "nextPct", "nextMin", "postPlay", "postPct", "parentalGuide", "stripSdh", "onlyPrefSubs", "discoverLocation"]
 end function
 
 function Nuvio_Same(a as dynamic, b as dynamic) as boolean
@@ -1419,6 +1431,17 @@ function Nuvio_WriteSetting(f as object, k as string, p as object) as boolean
         if Str_Of(v) = "card" then Nuvio_Feature(f, "layout_settings").focused_poster_backdrop_trailer_playback_target = "EXPANDED_CARD" else Nuvio_Feature(f, "layout_settings").focused_poster_backdrop_trailer_playback_target = "HERO_MEDIA"
     else if k = "trailerButton"
         Nuvio_Feature(f, "layout_settings").detail_page_trailer_button_enabled = Bool_Of(v, true)
+    else if k = "discoverLocation"
+        loc = Str_Of(v)
+        ly = Nuvio_Feature(f, "layout_settings")
+        if loc = "sidebar"
+            ly.discover_location = "IN_SIDEBAR"
+        else if loc = "off"
+            ly.discover_location = "OFF"
+        else
+            ly.discover_location = "IN_SEARCH"
+        end if
+        ly.search_discover_enabled = loc <> "off"
     else if k = "trailerAutoplay"
         Nuvio_Feature(f, "trailer_settings").trailer_enabled = Bool_Of(v, false)
     else if k = "trailerDelay"
@@ -1585,35 +1608,33 @@ function Nuvio_MdbCredential(index as integer) as dynamic
     r = Nuvio_Call("POST", "/rest/v1/rpc/sync_pull_provider_credentials", { p_profile_id: index })
     credentials = invalid
     if r.code >= 200 and r.code < 300 then credentials = r.json
-    names = []
+    m.credTmdb = invalid
+    found = ""
+    seen = false
+    count = 0
     if type(credentials) = "roArray"
+        m.credTmdb = ""
         for each c in credentials
-            if type(c) = "roAssociativeArray" then names.Push(Str_Of(c.provider))
+            if type(c) = "roAssociativeArray"
+                count = count + 1
+                provider = LCase(Str_Of(c.provider))
+                cj = c.credential_json
+                if IsStr(cj) then cj = ParseJson(cj)
+                if type(cj) <> "roAssociativeArray" then cj = {}
+                key = Str_Any(cj.api_key).Trim()
+                if key = "" then key = Str_Any(cj.apiKey).Trim()
+                if provider = "tmdb" then m.credTmdb = key
+                if provider = "mdblist"
+                    seen = true
+                    if key <> "" then found = key
+                end if
+            end if
         end for
     end if
-    diag = L("Perfil ") + index.ToStr() + "  ·  HTTP " + r.code.ToStr() + "  ·  " + names.Count().ToStr() + " " + L("claves")
-    if names.Count() > 0 then diag = diag + " (" + names.Join(", ") + ")"
-    m.credDiag = diag
-    m.credTmdb = invalid
+    mdb = L("no aparece en la cuenta")
+    if seen then mdb = L("vacía en la cuenta")
+    if found <> "" then mdb = L("recibida") + " (…" + Right(found, 4) + ")"
+    m.credDiag = L("Perfil ") + index.ToStr() + "  ·  HTTP " + r.code.ToStr() + "  ·  " + L("clave de MDBList: ") + mdb + "  ·  " + count.ToStr() + " " + L("claves")
     if type(credentials) <> "roArray" then return invalid
-    m.credTmdb = ""
-    for each c in credentials
-        if type(c) = "roAssociativeArray" and LCase(Str_Of(c.provider)) = "tmdb"
-            cj = c.credential_json
-            if IsStr(cj) then cj = ParseJson(cj)
-            if type(cj) = "roAssociativeArray" then m.credTmdb = Str_Of(cj.api_key).Trim()
-        end if
-    end for
-    for each c in credentials
-        if type(c) = "roAssociativeArray" and LCase(Str_Of(c.provider)) = "mdblist"
-            cj = c.credential_json
-            if IsStr(cj) then cj = ParseJson(cj)
-            if type(cj) = "roAssociativeArray"
-                key = Str_Of(cj.api_key).Trim()
-                if key = "" then key = Str_Of(cj.apiKey).Trim()
-                if key <> "" then return key
-            end if
-        end if
-    end for
-    return ""
+    return found
 end function

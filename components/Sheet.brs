@@ -35,7 +35,7 @@ sub onSheetChosen()
     else if handler = "party"
         Party_RunMenu(choice)
     else if handler = "tracking"
-        if choice = "trakt" or choice = "simkl" then Tracking_Disconnect(choice)
+        if choice = "trakt" or choice = "simkl" or choice = "mdblist" then Tracking_Disconnect(choice)
         focusCurrent()
     else if handler = "langPick"
         if choice <> "" and data <> invalid
@@ -50,6 +50,10 @@ sub onSheetChosen()
         else
             focusCurrent()
         end if
+    else if handler = "discoverPick"
+        chip = ""
+        if data <> invalid then chip = Str_Of(data.chip)
+        Disc_Chosen(chip, choice)
     else if handler = "message"
         if Bool_Of(m.exitAfterDialog, false) then m.top.exitApp = true
         focusCurrent()

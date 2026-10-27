@@ -36,7 +36,9 @@ sub openDetails(item as object)
     if Left(m.ctx.metaId, 2) = "tt" then m.ctx.imdb = m.ctx.metaId
     m.detailsOpen = true
     m.details.visible = true
-    m.details.data = heroData(item, m.metaCache[item.metaId])
+    first = heroData(item, m.metaCache[item.metaId])
+    if m.metaCache[item.metaId] <> invalid then first.ratings = m.metaCache[item.metaId].ratings
+    m.details.data = first
     m.details.extra = {}
     m.details.status = L("Cargando información...")
     renderDetailButtons()
@@ -119,6 +121,7 @@ sub onDetailsMeta(event as object)
         rating: Str_Of(meta.imdbRating)
         metaLine: m.ctx.metaLine
         description: m.ctx.description
+        ratings: meta.ratings
     }
     m.details.status = ""
     renderDetailButtons()

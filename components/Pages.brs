@@ -5,6 +5,7 @@ sub showPage(name as string)
     if name = "folder" then m.nav.active = "home" else m.nav.active = name
     m.homePage.visible = name = "home"
     m.searchPage.visible = name = "search"
+    m.discoverPage.visible = name = "discover"
     m.libraryPage.visible = name = "library" or name = "folder"
     m.hero.visible = false
     if name = "home"
@@ -26,6 +27,10 @@ sub showPage(name as string)
         showHeroFor(getRowItem(m.libraryRows, [0, 0]))
     else if name = "search"
         m.searchFocus = "keyboard"
+        Recent_Refresh()
+    else if name = "discover"
+        m.discFocus = "bar"
+        Disc_Show()
     end if
     if m.area = "page" and not overlayOpen() then focusPage()
 end sub
@@ -54,9 +59,16 @@ sub focusPage()
         else
             Focus_Scene()
         end if
+    else if m.page = "discover"
+        Disc_Focus()
     else if m.page = "search"
         if m.searchFocus = "results" and searchHasResults()
             m.searchRows.setFocus(true)
+        else if m.searchFocus = "recent" and m.recent.visible
+            m.recent.setFocus(true)
+        else if m.searchFocus = "button" and m.discoverButton.visible
+            m.discoverButton.setFocus(true)
+            Disc_ButtonPaint(true)
         else
             m.searchFocus = "keyboard"
             m.keyboard.setFocus(true)
@@ -178,21 +190,47 @@ end function
 
 function searchKey(key as string) as boolean
     inResults = m.searchRows.isInFocusChain()
+    if m.searchFocus = "button" and m.discoverButton.hasFocus()
+        if key = "up" or key = "back"
+            Search_ToKeyboard()
+            return true
+        end if
+        if key = "OK"
+            Disc_ButtonPaint(false)
+            m.area = "page"
+            showPage("discover")
+            return true
+        end if
+        if key = "right"
+            Search_ToRight()
+            return true
+        end if
+        if key = "left"
+            Disc_ButtonPaint(false)
+            focusNav()
+            return true
+        end if
+        return true
+    end if
     if key = "back"
         focusNav()
         return true
     end if
     if inResults
         if key = "left"
-            m.searchFocus = "keyboard"
-            m.keyboard.setFocus(true)
+            Search_ToKeyboard()
             return true
         end if
         return false
     end if
-    if key = "right" and searchHasResults()
-        m.searchFocus = "results"
-        m.searchRows.setFocus(true)
+    if key = "right"
+        Search_ToRight()
+        return true
+    end if
+    if key = "down" and m.discoverButton.visible and m.keyboard.isInFocusChain()
+        m.searchFocus = "button"
+        m.discoverButton.setFocus(true)
+        Disc_ButtonPaint(true)
         return true
     end if
     if key = "left"
@@ -202,9 +240,43 @@ function searchKey(key as string) as boolean
     return false
 end function
 
+sub Search_ToKeyboard()
+    Disc_ButtonPaint(false)
+    m.searchFocus = "keyboard"
+    m.keyboard.setFocus(true)
+end sub
+
+sub Search_ToRight()
+    if searchHasResults() and m.searchRows.visible
+        Disc_ButtonPaint(false)
+        m.searchFocus = "results"
+        m.searchRows.setFocus(true)
+        if Str_Of(m.lastQuery) <> "" then St_AddSearch(m.lastQuery)
+    else if m.recent.visible
+        Disc_ButtonPaint(false)
+        m.searchFocus = "recent"
+        m.recent.setFocus(true)
+    end if
+end sub
+
 sub onSearchText()
     m.searchText.text = m.keyboard.text
     m.searchTimer.control = "stop"
+    if m.keyboard.text.Trim() = ""
+        if m.searchTask <> invalid
+            m.searchTask.unobserveField("row")
+            m.searchTask.unobserveField("done")
+            m.searchTask.control = "STOP"
+            m.searchTask = invalid
+        end if
+        m.lastQuery = ""
+        m.searchRows.content = CreateObject("roSGNode", "ContentNode")
+        m.searchRows.visible = false
+        Recent_Refresh()
+        Search_Idle()
+        return
+    end if
+    m.recent.visible = false
     m.searchTimer.control = "start"
 end sub
 
@@ -229,6 +301,7 @@ sub runSearch(query as string)
         m.searchTask.unobserveField("done")
         m.searchTask.control = "STOP"
     end if
+    m.recent.visible = false
     m.searchRoot = CreateObject("roSGNode", "ContentNode")
     m.searchRows.content = m.searchRoot
     m.searchRows.visible = false
