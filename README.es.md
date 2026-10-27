@@ -16,7 +16,7 @@
 
 </div>
 
-Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.0.5**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
+Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.0.6**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
 
 > **Esta no es una app oficial de Nuvio** y no está afiliada ni respaldada por el equipo de Nuvio. No aloja, guarda ni distribuye ningún contenido. Todo lo que ves viene de los addons que instalas.
 
@@ -35,7 +35,8 @@ Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMe
 - Estilo para los subtítulos de addons, filtro de subtítulos SDH y solo subtítulos en tus idiomas preferidos
 - Datos técnicos de la reproducción en pantalla
 - **Next up** en Seguir viendo al terminar un episodio
-- Búsqueda en todos tus addons
+- Búsqueda en todos tus addons, con búsquedas recientes
+- Descubrir: explora cualquier catálogo de tus addons por tipo, catálogo y género, desde Buscar o con su propio lugar en el menú lateral
 - Perfiles, con addons compartidos o por perfil
 - Mi lista y Seguir viendo
 - Página de configuración desde el celular: agrega addons, importa colecciones y administra catálogos y ajustes desde el navegador de tu celular
@@ -57,6 +58,7 @@ Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMe
 - Interfaz en español, inglés, portugués, francés, alemán, italiano, neerlandés, polaco, turco, rumano, checo y húngaro
 - Inicio rápido: el último inicio se abre al instante mientras los catálogos se actualizan en segundo plano
 - Aviso de nueva versión con las novedades y un código QR para descargarla
+- Tráiler en pantalla completa en el inicio después de unos segundos en un título, como en Nuvio TV para Android
 
 ## Estado
 
@@ -81,7 +83,7 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Tráilers | ✅ Funciona |
 | Póster enfocado que se expande | ✅ Funciona |
 | Integración con TMDB | ✅ Funciona |
-| Integración con MDBList | ⚠️ Sin probar |
+| Integración con MDBList | ✅ Funciona |
 | Trakt | ⚠️ Sin probar |
 | Simkl | ⚠️ Sin probar |
 | Inicio de sesión y sincronización con tu cuenta de Nuvio | ✅ Funciona |
@@ -101,6 +103,10 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Interfaz en portugués | ✅ Funciona |
 | Interfaz en francés, alemán, italiano, neerlandés, polaco, turco, rumano, checo y húngaro | ⚠️ Sin probar |
 | Aviso de nueva versión | ⚠️ Sin probar |
+| Descubrir | ✅ Funciona |
+| Búsquedas recientes | ⚠️ Sin probar |
+| Tráiler en pantalla completa en el inicio | ✅ Funciona |
+| Cuenta de MDBList (QR) | ⚠️ Sin probar |
 | Watch Party | ✅ Funciona |
 | Menú de opciones con `*` y quitar títulos de Seguir viendo | ✅ Funciona |
 | Colecciones con fuentes de TMDB y Trakt | ⚠️ Sin probar |
@@ -112,7 +118,7 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Estilo de subtítulos y filtro SDH | ⚠️ Sin probar |
 | Datos técnicos de la reproducción | ⚠️ Sin probar |
 | Next up en Seguir viendo | ⚠️ Sin probar |
-| Clave de MDBList desde tu cuenta de Nuvio | ⚠️ Todavía no funciona |
+| Clave de MDBList desde tu cuenta de Nuvio | ✅ Funciona |
 
 ### Limitaciones conocidas
 
@@ -160,7 +166,7 @@ El `.zip` del release ya trae las claves de TMDB, Trakt y Simkl, así que no tie
 | Servicio | Qué tienes que hacer |
 | --- | --- |
 | TMDB | Nada. Si quieres, puedes pegar tu propia clave en la página del celular (Cuenta) o escribirla en el Roku en **Ajustes → Integraciones**. |
-| MDBList | Pega tu clave gratis de [mdblist.com](https://mdblist.com) en la página del celular (Cuenta), escríbela en el Roku en **Ajustes → Integraciones**, o llega sola si está guardada en tu cuenta de Nuvio. |
+| MDBList | Conecta tu cuenta con el código QR en **Ajustes → Integraciones → Cuenta de MDBList**, o usa tu clave gratis de [mdblist.com](https://mdblist.com): pégala en la página del celular (Cuenta), escríbela en el Roku en **Ajustes → Integraciones**, o llega sola si está guardada en tu cuenta de Nuvio. |
 | Trakt | Vincula tu cuenta en el Roku en **Ajustes → Seguimiento** e ingresa el código. |
 | Simkl | Vincula tu cuenta en el Roku en **Ajustes → Seguimiento** e ingresa el código. |
 

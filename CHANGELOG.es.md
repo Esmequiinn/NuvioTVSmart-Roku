@@ -4,6 +4,20 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.0.6] - 2026-10-26
+
+### Agregado
+- **Descubrir**, como en Nuvio TV: explora cualquier catálogo de tus addons por tipo, catálogo y género, y se cargan más títulos conforme bajas. Por defecto es un botón debajo del teclado en Buscar. En **Ajustes → Diseño → Ubicación de Descubrir** puedes moverlo a su propio lugar en el menú lateral o desactivarlo. Este ajuste se sincroniza con tu cuenta de Nuvio.
+- **Búsquedas recientes** en Buscar, como en Nuvio TV. Tus últimas 8 búsquedas aparecen cuando el buscador está vacío. Elige una para buscarla otra vez, usa la X de al lado para quitarla o usa **Borrar historial**. Cada perfil tiene su propio historial.
+- **Cuenta de MDBList**, como en Nuvio: en **Ajustes → Integraciones → Cuenta de MDBList**, escanea el código QR con tu celular y aprueba el acceso. Las calificaciones y las listas de MDBList funcionan con tu cuenta, sin escribir ninguna clave.
+
+### Cambiado
+- El tráiler que se reproduce en el inicio después de unos segundos en un título ahora ocupa toda la pantalla, como en Nuvio TV para Android. Las filas, el menú lateral y la descripción se ocultan y solo queda el logo del título. Presiona cualquier botón para detenerlo y volver a las filas.
+
+### Corregido
+- Las calificaciones de MDBList se descargaban pero nunca se mostraban. Ahora aparecen en la página de detalles debajo de la información del título, con el ícono de cada sitio, como en Nuvio.
+- La clave de MDBList de tu cuenta de Nuvio (y la cuenta de MDBList) se guardaba, pero el canal la leía vacía, así que siempre decía que faltaba. Esto también podía afectar otros ajustes que llegan de tu cuenta.
+
 ## [0.0.5] - 2026-10-25
 
 ### Agregado

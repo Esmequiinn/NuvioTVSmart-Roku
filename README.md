@@ -16,7 +16,7 @@
 
 </div>
 
-This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.0.5**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
+This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.0.6**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
 
 > **This is not an official Nuvio app** and it is not affiliated with or endorsed by the Nuvio team. It does not host, store or distribute any content. Everything you see comes from the addons you install.
 
@@ -35,7 +35,8 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - Subtitle style for addon subtitles, SDH filtering and preferred-languages-only subtitles
 - Playback stats overlay
 - **Next up** in Continue Watching after you finish an episode
-- Search across all your addons
+- Search across all your addons, with recent searches
+- Discover: browse any addon catalog by type, catalog and genre, from Search or its own spot in the side menu
 - Profiles, with shared or per-profile addons
 - My List and Continue Watching
 - Phone setup page: add addons, import collections, manage catalogs and settings from your phone's browser
@@ -57,6 +58,7 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - Interface in Spanish, English, Portuguese, French, German, Italian, Dutch, Polish, Turkish, Romanian, Czech and Hungarian
 - Fast home: the last home screen opens right away while catalogs refresh in the background
 - New version notice with what's new and a QR code to download it
+- Full-screen trailer on the home screen after a few seconds on a title, like Nuvio TV on Android
 
 ## Status
 
@@ -81,7 +83,7 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Trailers | ✅ Working |
 | Expanding focused poster | ✅ Working |
 | TMDB integration | ✅ Working |
-| MDBList integration | ⚠️ Not tested yet |
+| MDBList integration | ✅ Working |
 | Trakt | ⚠️ Not tested yet |
 | Simkl | ⚠️ Not tested yet |
 | Nuvio account sign-in and sync | ✅ Working |
@@ -101,6 +103,10 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Portuguese interface | ✅ Working |
 | French, German, Italian, Dutch, Polish, Turkish, Romanian, Czech and Hungarian interface | ⚠️ Not tested yet |
 | New version notice | ⚠️ Not tested yet |
+| Discover | ✅ Working |
+| Recent searches | ⚠️ Not tested yet |
+| Full-screen home trailer | ✅ Working |
+| MDBList account (QR) | ⚠️ Not tested yet |
 | Watch Party | ✅ Working |
 | `*` options menu and removing Continue Watching items | ✅ Working |
 | Collections with TMDB and Trakt sources | ⚠️ Not tested yet |
@@ -112,7 +118,7 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Subtitle style and SDH filtering | ⚠️ Not tested yet |
 | Playback stats | ⚠️ Not tested yet |
 | Next up in Continue Watching | ⚠️ Not tested yet |
-| MDBList key from your Nuvio account | ⚠️ Not working yet |
+| MDBList key from your Nuvio account | ✅ Working |
 
 ### Known limitations
 
@@ -160,7 +166,7 @@ The release `.zip` already includes the TMDB, Trakt and Simkl keys, so you don't
 | Service | What you need to do |
 | --- | --- |
 | TMDB | Nothing. You can still paste your own key on the phone page (Account) if you want. |
-| MDBList | Paste your free key from [mdblist.com](https://mdblist.com) on the phone page (Account), or it comes in automatically if it's saved in your Nuvio account. |
+| MDBList | Connect your account with the QR code in **Settings → Integrations → MDBList account**, or use your free key from [mdblist.com](https://mdblist.com): paste it on the phone page (Account), type it on the Roku in **Settings → Integrations**, or it comes in automatically if it's saved in your Nuvio account. |
 | Trakt | Link your account on the Roku in **Settings → Tracking** and enter the code. |
 | Simkl | Link your account on the Roku in **Settings → Tracking** and enter the code. |
 

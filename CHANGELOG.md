@@ -4,6 +4,20 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.0.6] - 2026-10-26
+
+### Added
+- **Discover**, like Nuvio TV: browse any catalog from your addons by type, catalog and genre, and more titles load as you scroll down. By default it's a button under the keyboard in Search. In **Settings → Layout → Discover location** you can move it to its own spot in the side menu or turn it off. This setting syncs with your Nuvio account.
+- **Recent searches** in Search, like Nuvio TV. Your last 8 searches show up when the search box is empty. Select one to search again, use the X next to it to remove it, or use **Clear history**. Each profile has its own history.
+- **MDBList account**, like Nuvio: in **Settings → Integrations → MDBList account**, scan the QR code with your phone and approve. Ratings and MDBList lists then work with your account, without typing a key.
+
+### Changed
+- The trailer that plays on the home screen after a few seconds on a title now fills the whole screen, like Nuvio TV on Android. The rows, the side menu and the description fade out and only the title logo stays. Press any button to stop it and go back to the rows.
+
+### Fixed
+- MDBList ratings were downloaded but never shown. They now appear on the details page under the title info, with each site's icon, like Nuvio.
+- The MDBList key from your Nuvio account (and the MDBList account) was saved but read back as empty, so the channel always said it was missing. This could also affect other settings synced from your account.
+
 ## [0.0.5] - 2026-10-25
 
 ### Added
