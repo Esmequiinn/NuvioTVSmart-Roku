@@ -1217,6 +1217,12 @@ sub onPlayerEvent()
         Player_Event()
     catch e
         print "PLAYBACK ERROR "; Err_Text(e)
+        ev = m.player.event
+        if ev <> invalid and Str_Of(ev.type) = "close" and m.player.visible
+            m.player.active = false
+            m.player.visible = false
+            focusCurrent()
+        end if
         showMessage(L("Error del reproductor"), Err_Text(e))
     end try
 end sub
@@ -1607,29 +1613,42 @@ function progressThumb() as string
 end function
 
 sub closePlayer(save as boolean)
-    Progress_Soon()
-    Poster_Check()
-    if m.party <> invalid
-        m.partyIdle = m.party.mediaKey
-        m.partyFollowing = ""
-        Party_Status("browsing")
-    end if
-    if save then saveProgress()
-    if m.scrobbleState <> "" then scrobble("stop")
+    try
+        Progress_Soon()
+        Poster_Check()
+        if m.party <> invalid
+            m.partyIdle = m.party.mediaKey
+            m.partyFollowing = ""
+            Party_Status("browsing")
+        end if
+        if save then saveProgress()
+        if m.scrobbleState <> "" then scrobble("stop")
+    catch e
+        print "CLOSE SAVE ERROR "; Err_Text(e)
+    end try
     m.scrobbleState = ""
     m.player.active = false
     m.player.visible = false
-    m.ctx.fromStart = false
-    m.ctx.nextAuto = false
-    if m.detailsOpen then renderDetailButtons()
-    if m.streamsOpen
-        m.streamsScreen.fromStart = false
-        focusCurrent()
-    else if m.stack.Count() > 0
-        renderMenu(m.stack.Peek().focus)
-    else
-        focusCurrent()
+    if m.ctx <> invalid
+        m.ctx.fromStart = false
+        m.ctx.nextAuto = false
     end if
+    try
+        if m.detailsOpen then renderDetailButtons()
+        if m.streamsOpen
+            m.streamsScreen.fromStart = false
+            focusCurrent()
+        else if m.stack.Count() > 0
+            renderMenu(m.stack.Peek().focus)
+        else
+            focusCurrent()
+        end if
+    catch e
+        print "CLOSE FOCUS ERROR "; Err_Text(e)
+        m.stack.Clear()
+        m.list.visible = false
+        focusCurrent()
+    end try
 end sub
 
 sub startTrailerLookup(meta as object)

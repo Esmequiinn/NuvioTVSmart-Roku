@@ -278,8 +278,11 @@ function menuSeasons() as object
     menu.poster = m.ctx.poster
     menu.backdrop = m.ctx.background
     seasons = m.ctx.seasons
+    if type(seasons) <> "roArray" or seasons.Count() = 0 then return goneMenu()
     for i = 0 to seasons.Count() - 1
-        addEntry(menu, seasons[i].label, seasons[i].episodes.Count().ToStr() + L(" episodios"), { go: "episodes", season: i })
+        count = 0
+        if type(seasons[i].episodes) = "roArray" then count = seasons[i].episodes.Count()
+        addEntry(menu, Str_Of(seasons[i].label), count.ToStr() + L(" episodios"), { go: "episodes", season: i })
     end for
     return menu
 end function
@@ -287,8 +290,9 @@ end function
 function menuEpisodes(data as object) as object
     seasons = m.ctx.seasons
     idx = ToInt(data.season, 0)
-    if seasons = invalid or idx < 0 or idx >= seasons.Count() then return goneMenu()
+    if type(seasons) <> "roArray" or idx < 0 or idx >= seasons.Count() then return goneMenu()
     season = seasons[idx]
+    if type(season.episodes) <> "roArray" then return goneMenu()
     menu = menuOf(m.ctx.title, season.label)
     menu.poster = m.ctx.poster
     menu.backdrop = m.ctx.background

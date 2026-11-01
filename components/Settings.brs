@@ -103,8 +103,11 @@ function Err_Text(e as object) as string
     if e.number <> invalid then text = text + " (" + Str_Any(e.number) + ")"
     if type(e.backtrace) = "roArray"
         spots = []
-        for each b in e.backtrace
-            if type(b) = "roAssociativeArray" and spots.Count() < 3
+        first = e.backtrace.Count() - 4
+        if first < 0 then first = 0
+        for n = e.backtrace.Count() - 1 to first step -1
+            b = e.backtrace[n]
+            if type(b) = "roAssociativeArray"
                 file = Str_Of(b.filename)
                 cut = file.Split("/")
                 file = cut[cut.Count() - 1]
