@@ -12,6 +12,7 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 ### Corregido
 - Al presionar Atrás mientras veías algo, a veces salía el error "'Dot' Operator attempted with invalid BrightScript Component" y no podías salir del video. Ahora el video siempre se cierra y regresas a la pantalla anterior.
+- Algunos videos se reproducían sin sonido, y el reproductor mostraba una sola pista de audio aunque el archivo tuviera más. Pasaba con enlaces que no terminan en `.mkv` o `.mp4` (como muchos de AIOStreams, TorBox y otros servicios debrid). Ahora el canal revisa qué tipo de archivo es y se lo indica al Roku, así aparecen todas las pistas de audio.
 
 ## [0.0.8] - 2026-10-31
 
