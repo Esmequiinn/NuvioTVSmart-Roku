@@ -13,14 +13,13 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 - **More like this, collection and production** on the details page, like Nuvio TV: below the episodes there are tabs for Cast, More like this and the movie's collection (for example, every movie of a saga), and the production companies or networks are shown at the end. They need a TMDB key.
 
 ### Changed
-- **Recommendations at the end of a movie** now look like Nuvio TV: full screen with the backdrop, logo, rating, year and description, while the movie keeps playing in a small window. They change on their own every 10 seconds, and you can also move between them.
+- **Recommendations at the end of a movie** Full screen with the backdrop, logo, rating, year and description, while the movie keeps playing in a small window. They change on their own every 10 seconds, and you can also move between them.
 - **Discover** now moves the highlight across the grid instead of sliding the whole row, like Nuvio TV.
 - When a video gets stuck loading, the channel shows the title's backdrop and logo with the loading percentage, like Nuvio, instead of a black screen.
 - TMDB now only works with a TMDB key from your Nuvio account or one you add yourself. Its language follows the channel's language unless you choose another one in **Settings → Integrations → Metadata language**.
 
 ### Fixed
 - YouTube trailers in your language weren't playing, so the channel fell back to the English trailer from IMDb. The channel now opens YouTube the same way Nuvio TV on Android does, trying several YouTube clients and refreshing its session when YouTube asks for it. **Settings → About** shows what happened with the last YouTube trailer.
-- Titles, descriptions, episode names and logos could stay in Spanish with the interface in another language, because the metadata language defaulted to Spanish.
 - Some sources played without sound because the channel picked an audio track the Roku can't play (like DTS or TrueHD). It now skips those tracks and picks one the Roku can play.
 - **Next up** wasn't showing at the top of Continue Watching. The channel now builds it from your watched episodes, like Nuvio, and refreshes your Continue Watching from your Nuvio account every few minutes and after you stop watching.
 - Watching more than 95% of a movie or episode now marks it as watched and sends it to your Nuvio account.
