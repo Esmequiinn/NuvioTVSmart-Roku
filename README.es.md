@@ -16,7 +16,7 @@
 
 </div>
 
-Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.0.8**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
+Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.0.9**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
 
 > **Esta no es una app oficial de Nuvio** y no está afiliada ni respaldada por el equipo de Nuvio. No aloja, guarda ni distribuye ningún contenido. Todo lo que ves viene de los addons que instalas.
 
@@ -62,6 +62,8 @@ Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMe
 - Opciones de episodio con el botón `*` en la página de detalles, como en Nuvio TV: marcar un episodio, su temporada o los anteriores como vistos, reproducir, reproducir manualmente o empezar desde el inicio
 - Los perfiles con PIN en tu cuenta de Nuvio piden el PIN en el Roku
 - Más como esto, colección, y productoras o cadenas en la página de detalles, como en Nuvio TV
+- Servicios conectados como en Nuvio TV: TorBox (QR o clave de API) y Premiumize (clave de API), para reproducir resultados de torrent que ya están en la caché de tu servicio
+- Servidores multimedia como en Nuvio TV: bibliotecas de Jellyfin y Emby en el inicio y como fuentes
 
 ## Estado
 
@@ -126,11 +128,13 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | PIN de perfiles | ✅ Funciona |
 | Panel de episodios en el reproductor | ⚠️ Sin probar |
 | Más como esto y colección en detalles | ⚠️ Sin probar |
+| TorBox y Premiumize (torrents en caché) | ⚠️ Sin probar |
+| Jellyfin y Emby | ⚠️ Sin probar |
 | Clave de MDBList desde tu cuenta de Nuvio | ✅ Funciona |
 
 ### Limitaciones conocidas
 
-- Roku solo puede reproducir enlaces directos. Los torrents, magnets y enlaces externos se omiten.
+- Roku solo puede reproducir enlaces directos. Los torrents y magnets solo se reproducen si ya están en la caché de tu cuenta de TorBox o Premiumize (**Ajustes → Servicios conectados**). Los demás, y los enlaces externos, se omiten.
 - Los formatos que se pueden reproducir dependen del modelo de tu Roku (MP4, MKV, HLS y DASH son los más comunes).
 - Algunos modelos de Roku, como el Roku Express, no pueden decodificar algunos códecs de video, como HEVC (x265), 10 bits o HDR. El canal revisa qué puede reproducir tu Roku y la reproducción automática nunca elige esas fuentes, aunque coincidan con tu regex. Si eliges una tú, puede fallar con "la conexión se cortó" o con un error de códec. En **Ajustes → Acerca de** dentro del canal puedes ver el modelo de tu Roku y si puede reproducir HEVC.
 - En teles de 720p el Roku reduce la interfaz, así que los marcos de selección y los botones se ven menos nítidos que en teles 1080p o 4K.
@@ -177,6 +181,9 @@ El `.zip` del release ya trae las claves de Trakt y Simkl. TMDB solo funciona co
 | MDBList | Conecta tu cuenta con el código QR en **Ajustes → Integraciones → Cuenta de MDBList**, o usa tu clave gratis de [mdblist.com](https://mdblist.com): pégala en la página del celular (Cuenta), escríbela en el Roku en **Ajustes → Integraciones**, o llega sola si está guardada en tu cuenta de Nuvio. |
 | Trakt | Vincula tu cuenta en el Roku en **Ajustes → Seguimiento** e ingresa el código. |
 | Simkl | Vincula tu cuenta en el Roku en **Ajustes → Seguimiento** e ingresa el código. |
+| TorBox | Opcional. Vincúlala con el código QR en **Ajustes → Servicios conectados**, escribe ahí tu clave de API, o llega sola si está guardada en tu cuenta de Nuvio. |
+| Premiumize | Opcional. Escribe tu clave de API de premiumize.me en **Ajustes → Servicios conectados**, o llega sola si está guardada en tu cuenta de Nuvio. |
+| Jellyfin o Emby | Opcional. Inicia sesión con la dirección de tu servidor, tu usuario y tu contraseña en **Ajustes → Servidores multimedia**. |
 
 ### Cuenta de Nuvio
 

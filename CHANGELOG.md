@@ -4,6 +4,15 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.0.9] - 2026-11-01
+
+### Added
+- **Connected services** (TorBox and Premiumize), like Nuvio TV: in **Settings → Connected services**, link your TorBox account with a QR code or enter your TorBox or Premiumize API key. They also come in from your Nuvio account. Torrent results from your addons that are already cached on your service now show up as sources (with a TB or PM badge) and play directly. Torrents that aren't cached are still skipped.
+- **Media servers** (Jellyfin and Emby), like Nuvio TV: in **Settings → Media servers**, sign in with your server address, username and password. Your movie and series libraries show up as rows on the home screen, and when a title is on your server it appears first in the sources, as the original file or converted by the server (HLS) for files your Roku can't play. You can turn the server off, choose which libraries to show, refresh them or remove the server.
+
+### Changed
+- **Settings → About** now only says "Unofficial Nuvio fork for Roku".
+
 ## [0.0.8] - 2026-10-31
 
 ### Added

@@ -16,7 +16,7 @@
 
 </div>
 
-This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.0.8**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
+This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.0.9**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
 
 > **This is not an official Nuvio app** and it is not affiliated with or endorsed by the Nuvio team. It does not host, store or distribute any content. Everything you see comes from the addons you install.
 
@@ -62,6 +62,8 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - Episode options with the `*` button on the details page, like Nuvio TV: mark an episode, its season or the previous ones as watched, play, play manually or start from the beginning
 - Profiles locked with a PIN in your Nuvio account ask for the PIN on the Roku
 - More like this, collection, and production companies or networks on the details page, like Nuvio TV
+- Connected services like Nuvio TV: TorBox (QR or API key) and Premiumize (API key), to play torrent results that are already cached on your service
+- Media servers like Nuvio TV: Jellyfin and Emby libraries on the home screen and as sources
 
 ## Status
 
@@ -126,11 +128,13 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Profile PIN | ✅ Working |
 | Episodes panel in the player | ⚠️ Not tested yet |
 | More like this and collection in details | ⚠️ Not tested yet |
+| TorBox and Premiumize (cached torrents) | ⚠️ Not tested yet |
+| Jellyfin and Emby | ⚠️ Not tested yet |
 | MDBList key from your Nuvio account | ✅ Working |
 
 ### Known limitations
 
-- Roku can only play direct links. Torrent, magnet and external links are skipped.
+- Roku can only play direct links. Torrent and magnet links only play when they're already cached on your TorBox or Premiumize account (**Settings → Connected services**). The rest, and external links, are skipped.
 - Playable formats depend on your Roku model (MP4, MKV, HLS and DASH are the usual ones).
 - Some Roku models, like the Roku Express, can't decode some video codecs, such as HEVC (x265), 10-bit or HDR. The channel checks what your Roku can play, and auto-play never picks those sources, even if they match your regex. If you pick one yourself it may fail with "the connection dropped" or a codec error. **Settings → About** in the channel shows your Roku model and whether it can play HEVC.
 - On 720p TVs the Roku scales the interface down, so focus frames and buttons look less sharp than on 1080p or 4K TVs.
@@ -177,6 +181,9 @@ The release `.zip` already includes the Trakt and Simkl keys. TMDB only works wi
 | MDBList | Connect your account with the QR code in **Settings → Integrations → MDBList account**, or use your free key from [mdblist.com](https://mdblist.com): paste it on the phone page (Account), type it on the Roku in **Settings → Integrations**, or it comes in automatically if it's saved in your Nuvio account. |
 | Trakt | Link your account on the Roku in **Settings → Tracking** and enter the code. |
 | Simkl | Link your account on the Roku in **Settings → Tracking** and enter the code. |
+| TorBox | Optional. Link it with the QR code in **Settings → Connected services**, enter your API key there, or it comes in automatically if it's saved in your Nuvio account. |
+| Premiumize | Optional. Enter your API key from premiumize.me in **Settings → Connected services**, or it comes in automatically if it's saved in your Nuvio account. |
+| Jellyfin or Emby | Optional. Sign in with your server address, username and password in **Settings → Media servers**. |
 
 ### Nuvio account
 
