@@ -283,6 +283,18 @@ function Nuvio_Owner() as string
     return ""
 end function
 
+function Nuvio_VerifyPin(remote as integer, pin as string) as object
+    Nuvio_Ensure()
+    r = Nuvio_Call("POST", "/rest/v1/rpc/verify_profile_pin", { p_profile_id: remote, p_pin: pin })
+    if r.code < 200 or r.code >= 300 then return { ok: false, error: L("No se pudo verificar el PIN. Intenta de nuevo.") }
+    v = r.json
+    if type(v) = "roArray"
+        if v.Count() > 0 then v = v[0] else v = {}
+    end if
+    if type(v) <> "roAssociativeArray" then v = {}
+    return { ok: true, unlocked: v.unlocked = true, retry: ToInt(v.retry_after_seconds, 0) }
+end function
+
 function Nuvio_Sync() as object
     Nuvio_Ensure()
     integ = St_Integrations()
@@ -310,6 +322,24 @@ function Nuvio_Sync() as object
         end if
     end for
     if profiles.Count() = 0 then return { ok: false, error: L("Tu cuenta de Nuvio no tiene perfiles.") }
+    locks = Nuvio_Rpc("sync_pull_profile_locks", {})
+    if type(locks) = "roArray"
+        pins = {}
+        for each lk in locks
+            if type(lk) = "roAssociativeArray" and lk.pin_enabled = true then pins["n" + ToInt(lk.profile_index, 0).ToStr()] = true
+        end for
+        for each p in profiles
+            p.pin = pins.DoesExist(p.id)
+        end for
+    else
+        old = {}
+        for each p in St_Profiles()
+            if p.pin = true then old[p.id] = true
+        end for
+        for each p in profiles
+            p.pin = old.DoesExist(p.id)
+        end for
+    end if
     St_Set("profiles", profiles)
     s = St_Settings()
     s.shared = false
@@ -351,6 +381,7 @@ function Nuvio_Sync() as object
         Nuvio_PullSettings(p.id, p.remote, p.id = s.active)
         Nuvio_PullCollections(p.id, p.remote)
         Nuvio_PullWatched(p.id, p.remote)
+        if p.id = s.active then Nuvio_NextUp(p.id)
     end for
     now = CreateObject("roDateTime")
     now.ToLocalTime()
@@ -583,6 +614,7 @@ function Nuvio_MergeProgress(pid as string, remote as object) as object
             mineMs = Nuvio_Ms(mine.updatedMs)
             if mineMs = 0 and mine.updated <> invalid then mineMs = ToInt(mine.updated, 0) * 1000&
             if dirty and mineMs > Nuvio_Ms(e.updatedMs) then e = mine
+            if Bool_Of(mine.nextUp, false) and mineMs > Nuvio_Ms(e.updatedMs) then e = mine
         end if
         seen[e.metaId] = true
         out.Push(e)
@@ -1154,7 +1186,8 @@ sub Nuvio_PullWatched(pid as string, index as integer)
         for each row in rows
             if type(row) = "roAssociativeArray" and Str_Of(row.content_id) <> ""
                 key = St_WatchedKey(row.content_id, row.season, row.episode)
-                all[key] = { k: Str_Of(row.content_type), t: "", at: 0 }
+                at = Int(Nuvio_Ms(row.watched_at) / 1000)
+                all[key] = { k: Str_Of(row.content_type), t: Str_Of(row.title), at: at }
             end if
         end for
         if rows.Count() < 900 then exit while
@@ -1637,4 +1670,143 @@ function Nuvio_MdbCredential(index as integer) as dynamic
     m.credDiag = L("Perfil ") + index.ToStr() + "  ·  HTTP " + r.code.ToStr() + "  ·  " + L("clave de MDBList: ") + mdb + "  ·  " + count.ToStr() + " " + L("claves")
     if type(credentials) <> "roArray" then return invalid
     return found
+end function
+
+sub Nuvio_NextUp(pid as string)
+    watched = St_ReadFile("watched_" + pid)
+    if type(watched) <> "roAssociativeArray" then return
+    progress = St_Get("progress_" + pid, invalid)
+    if type(progress) <> "roArray" then progress = []
+    busy = {}
+    for each e in progress
+        if type(e) = "roAssociativeArray" and not Bool_Of(e.nextUp, false) then busy[Str_Of(e.metaId)] = true
+    end for
+    now = CreateObject("roDateTime").AsSeconds()
+    best = {}
+    for each key in watched
+        parts = key.Split(":")
+        n = parts.Count()
+        if n >= 3
+            s = parts[n - 2].ToInt()
+            ep = parts[n - 1].ToInt()
+            idParts = []
+            for i = 0 to n - 3
+                idParts.Push(parts[i])
+            end for
+            id = idParts.Join(":")
+            w = watched[key]
+            at = 0
+            if type(w) = "roAssociativeArray" then at = ToInt(w.at, 0)
+            if s > 0 and ep > 0 and at > 0 and now - at < 2592000 and Left(id, 2) = "tt" and not busy.DoesExist(id)
+                cur = best[id]
+                better = cur = invalid
+                if not better then better = s > cur.s or (s = cur.s and ep > cur.e)
+                if better then best[id] = { id: id, s: s, e: ep, at: at }
+            end if
+        end if
+    end for
+    seeds = []
+    for each id in best
+        seeds.Push(best[id])
+    end for
+    seeds.SortBy("at", "r")
+    while seeds.Count() > 6
+        seeds.Pop()
+    end while
+    if seeds.Count() = 0 then return
+    urls = []
+    for each sd in seeds
+        urls.Push("https://v3-cinemeta.strem.io/meta/series/" + sd.id + ".json")
+    end for
+    results = Http_FetchJsonAll(urls, 15000)
+    today = Left(CreateObject("roDateTime").ToISOString(), 10)
+    fresh = []
+    for i = 0 to seeds.Count() - 1
+        sd = seeds[i]
+        data = results[i]
+        meta = invalid
+        if type(data) = "roAssociativeArray" then meta = data.meta
+        if type(meta) = "roAssociativeArray" and type(meta.videos) = "roArray"
+            pick = invalid
+            for each v in meta.videos
+                if type(v) = "roAssociativeArray"
+                    vs = ToInt(v.season, 0)
+                    ve = ToInt(v.episode, 0)
+                    after = vs > sd.s or (vs = sd.s and ve > sd.e)
+                    released = Left(Str_Of(v.released), 10)
+                    aired = released = "" or released <= today
+                    seen = watched.DoesExist(St_WatchedKey(sd.id, vs, ve))
+                    if vs > 0 and ve > 0 and after and aired and not seen
+                        if pick = invalid
+                            pick = v
+                        else if vs < ToInt(pick.season, 0) or (vs = ToInt(pick.season, 0) and ve < ToInt(pick.episode, 0))
+                            pick = v
+                        end if
+                    end if
+                end if
+            end for
+            if pick <> invalid
+                ps = ToInt(pick.season, 0)
+                pe = ToInt(pick.episode, 0)
+                name = Str_Of(pick.name)
+                if name = "" then name = Str_Of(pick.title)
+                label = L("T") + ps.ToStr() + ":E" + pe.ToStr()
+                if name <> "" then label = label + "  " + name
+                vid = Str_Of(pick.id)
+                if vid = "" then vid = sd.id + ":" + ps.ToStr() + ":" + pe.ToStr()
+                fresh.Push({ metaId: sd.id, videoId: vid, kind: "series", title: Str_Of(meta.name), poster: Str_Of(meta.poster), background: Str_Of(meta.background), episode: label, thumb: Str_Of(pick.thumbnail), altIds: [vid, sd.id + ":" + ps.ToStr() + ":" + pe.ToStr()], position: 0, duration: 0, nextUp: true, season: ps, ep: pe, updated: sd.at })
+            end if
+        end if
+    end for
+    if fresh.Count() = 0 then return
+    byId = {}
+    for each f in fresh
+        byId[f.metaId] = f
+    end for
+    out = []
+    for each e in progress
+        if type(e) = "roAssociativeArray"
+            id = Str_Of(e.metaId)
+            f = byId[id]
+            if f <> invalid and Bool_Of(e.nextUp, false)
+                if ToInt(e.updated, 0) > f.updated then byId.Delete(id) else e = invalid
+            end if
+            if e <> invalid then out.Push(e)
+        end if
+    end for
+    for each id in byId
+        out.Push(byId[id])
+    end for
+    sorted = []
+    while out.Count() > 0 and sorted.Count() < 20
+        bestIndex = 0
+        bestMs = -1&
+        for i = 0 to out.Count() - 1
+            ms = Nuvio_Ms(out[i].updatedMs)
+            if ms = 0 and out[i].updated <> invalid then ms = ToInt(out[i].updated, 0) * 1000&
+            if ms > bestMs
+                bestMs = ms
+                bestIndex = i
+            end if
+        end for
+        sorted.Push(out[bestIndex])
+        out.Delete(bestIndex)
+    end while
+    St_Set("progress_" + pid, sorted)
+end sub
+
+function Nuvio_ProgressRefresh() as object
+    Nuvio_Ensure()
+    integ = St_Integrations()
+    if not Nuvio_Configured(integ) or integ.nuvioAccess = "" then return { ok: false }
+    p = St_ActiveProfile()
+    if p = invalid then return { ok: false }
+    if St_SyncDirty(p.id).Count() > 0 then Nuvio_Push()
+    index = ToInt(p.remote, 0)
+    if index <= 0 then return { ok: false }
+    progress = Nuvio_PullProgress(index)
+    if progress <> invalid then St_Set("progress_" + p.id, Nuvio_MergeProgress(p.id, progress))
+    Nuvio_PullWatched(p.id, index)
+    Nuvio_NextUp(p.id)
+    return { ok: true }
 end function

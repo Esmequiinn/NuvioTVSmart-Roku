@@ -109,7 +109,7 @@ function St_Profiles() as object
     if type(list) = "roArray"
         for each p in list
             if type(p) = "roAssociativeArray" and IsStr(p.id) and IsStr(p.name)
-                clean.Push({ id: p.id, name: p.name, color: Str_Of(p.color), remote: ToInt(p.remote, 0), avatar: Str_Of(p.avatar) })
+                clean.Push({ id: p.id, name: p.name, color: Str_Of(p.color), remote: ToInt(p.remote, 0), avatar: Str_Of(p.avatar), pin: p.pin = true })
             end if
         end for
     end if
@@ -672,7 +672,7 @@ end function
 
 function Tmdb_Lang() as string
     raw = Str_Of(St_Pref("tmdbLanguage")).Trim().Replace("_", "-")
-    if raw = "" then return "es-MX"
+    if raw = "" then return Tmdb_DefaultLang()
     parts = raw.Split("-")
     out = LCase(parts[0])
     if parts.Count() = 2 then out = out + "-" + UCase(parts[1])
@@ -680,9 +680,17 @@ function Tmdb_Lang() as string
     return out
 end function
 
+function Tmdb_DefaultLang() as string
+    ui = ""
+    if m.global <> invalid and m.global.hasField("uiLang") then ui = Str_Of(m.global.uiLang)
+    if ui = "" or ui = "auto" then ui = LCase(Left(CreateObject("roDeviceInfo").GetCurrentLocale(), 2))
+    map = { es: "es-MX", en: "en-US", pt: "pt-BR", fr: "fr-FR", de: "de-DE", it: "it-IT", nl: "nl-NL", pl: "pl-PL", tr: "tr-TR", ro: "ro-RO", cs: "cs-CZ", hu: "hu-HU" }
+    if map.DoesExist(ui) then return map[ui]
+    return "en-US"
+end function
+
 function Key_Tmdb(integ as object) as string
-    if Str_Of(integ.tmdbKey) <> "" then return integ.tmdbKey
-    return Config_TmdbKey()
+    return Str_Of(integ.tmdbKey)
 end function
 
 function Key_TraktId(integ as object) as string
@@ -784,7 +792,7 @@ function St_PlayerDefaults() as object
         pauseOverlay: true
         autoNext: true
         clock: true
-        tmdbLanguage: "es-MX"
+        tmdbLanguage: ""
         showAddonName: false
         showTypeSuffix: true
         autoplayMode: "manual"

@@ -70,7 +70,7 @@ end function
 
 sub Set_OpenLangPicker(pref as string, title as string, extras as object)
     current = Str_Of(St_Pref(pref))
-    if pref = "tmdbLanguage" and current = "" then current = "es-MX"
+    if pref = "tmdbLanguage" and current = "" then current = Tmdb_DefaultLang()
     items = []
     focus = 0
     for each e in extras
@@ -219,11 +219,12 @@ function Settings_Model() as object
     integration = { id: "integration", label: L("Integraciones"), subtitle: L("Administrar integraciones disponibles"), rows: [] }
     integration.rows.Push(Set_Header("TMDB"))
     tmdbKey = L("Falta")
-    if Config_TmdbKey() <> "" then tmdbKey = L("Incluida")
     if integ.tmdbKey <> "" then tmdbKey = L("Configurada")
     integration.rows.Push(Set_Toggle("tmdbEnabled", L("Usar TMDB"), L("Títulos, sinopsis, logos, fondos y episodios en tu idioma."), integ.tmdbEnabled))
     integration.rows.Push(Set_Row("tmdbKey", L("Clave de TMDB"), L("Escríbela aquí o pégala desde el celular. Es gratis en themoviedb.org."), tmdbKey))
-    langName = Set_TmdbName(Str_Of(Set_Pref(prefs, defaults, "tmdbLanguage")))
+    tmdbLang = Str_Of(Set_Pref(prefs, defaults, "tmdbLanguage"))
+    if tmdbLang = "" then tmdbLang = Tmdb_DefaultLang()
+    langName = Set_TmdbName(tmdbLang)
     integration.rows.Push(Set_Row("tmdbLanguage", L("Idioma de la metadata"), L("Para este perfil."), langName))
     integration.rows.Push(Set_Toggle("tmdbArtwork", L("Imágenes de TMDB"), L("Usa logos y fondos de TMDB."), integ.tmdbArtwork))
     integration.rows.Push(Set_Header("MDBList"))
@@ -377,6 +378,8 @@ function Settings_Model() as object
     no = L("No")
     about.rows.Push(Set_Info("device", L("Tu Roku"), Str_Of(dev.GetModelDisplayName()) + " (" + Str_Of(dev.GetModel()) + ")  ·  " + L("Modo de video: ") + Str_Of(dev.GetVideoMode()), ""))
     formats = "HEVC: " + Set_YesNo(Device_CanHevc(), yes, no) + "  ·  HDR10: " + Set_YesNo(hdr, yes, no) + "  ·  Dolby Vision: " + Set_YesNo(Device_CanDV(), yes, no) + "  ·  4K: " + Set_YesNo(Device_Can4K(), yes, no)
+    trailerDiag = Str_Of(St_Get("trailerDiag", ""))
+    if trailerDiag <> "" then about.rows.Push(Set_Info("trailerDiag", L("Último tráiler de YouTube"), trailerDiag, ""))
     about.rows.Push(Set_Info("formats", L("Formatos compatibles"), formats + chr(10) + L("Según tu Roku y tu tele. La reproducción automática evita lo que no es compatible."), ""))
 
     return { sections: [account, profilesSection, party, appearance, layout, content, integration, fusion, playback, tracking, advanced, about] }

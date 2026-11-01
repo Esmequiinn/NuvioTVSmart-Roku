@@ -104,6 +104,14 @@ sub init()
     m.pushTimer = m.top.createChild("Timer")
     m.pushTimer.duration = 8
     m.pushTimer.observeField("fire", "onPushTimer")
+    m.progressTimer = m.top.createChild("Timer")
+    m.progressTimer.duration = 300
+    m.progressTimer.repeat = true
+    m.progressTimer.observeField("fire", "onProgressTimer")
+    m.progressTimer.control = "start"
+    m.progressSoon = m.top.createChild("Timer")
+    m.progressSoon.duration = 12
+    m.progressSoon.observeField("fire", "onProgressTimer")
     m.global.addField("expandRow", "node", false)
     m.global.observeField("focusCard", "onFocusCard")
     m.expandTimer.observeField("fire", "onExpandTimer")
@@ -132,6 +140,9 @@ sub init()
     m.list.observeField("selected", "onListSelected")
     m.list.observeField("back", "onListBack")
     m.profiles.observeField("selected", "onProfileChosen")
+    m.pinPad = m.top.findNode("pinPad")
+    m.pinPad.observeField("pin", "onPinEntered")
+    m.pinPad.observeField("cancel", "onPinCancel")
     m.settings.observeField("event", "onSettingsEvent")
     m.settings.observeField("back", "onSettingsBack")
     m.settings.observeField("leave", "onSettingsLeave")
@@ -232,11 +243,11 @@ sub showProfiles()
     list = []
     profiles = St_Profiles()
     for i = 0 to profiles.Count() - 1
-        list.Push({ id: profiles[i].id, name: profiles[i].name, color: St_ProfileColor(i), avatar: Str_Of(profiles[i].avatar) })
+        list.Push({ id: profiles[i].id, name: profiles[i].name, color: St_ProfileColor(i), avatar: Str_Of(profiles[i].avatar), pin: profiles[i].pin = true })
     end for
     m.profiles.profiles = list
     m.profiles.visible = true
-    m.profiles.setFocus(true)
+    if not m.pinPad.visible then m.profiles.setFocus(true)
 end sub
 
 sub onProfileChosen()
@@ -245,6 +256,70 @@ sub onProfileChosen()
         showKeyboard("pickerProfile", L("Nombre del perfil"), "", {})
         return
     end if
+    profiles = St_Profiles()
+    idx = St_ProfileIndex(profiles, pid)
+    if idx >= 0 and profiles[idx].pin = true and St_Integrations().nuvioAccess <> ""
+        Pin_Open(profiles[idx])
+        return
+    end if
+    Profile_Enter(pid)
+end sub
+
+sub Pin_Open(profile as object)
+    m.pinProfile = profile
+    m.pinPad.name = Str_Of(profile.name)
+    m.pinPad.error = ""
+    m.pinPad.working = false
+    m.pinPad.visible = true
+    m.pinPad.setFocus(true)
+end sub
+
+sub Pin_Close()
+    m.pinPad.visible = false
+    m.pinTask = invalid
+    m.profiles.setFocus(true)
+end sub
+
+sub onPinCancel()
+    Pin_Close()
+end sub
+
+sub onPinEntered()
+    if m.pinProfile = invalid or m.pinPad.pin = "" then return
+    m.pinPad.working = true
+    m.pinTask = CreateObject("roSGNode", "AccountTask")
+    m.pinTask.mode = "verifyPin"
+    m.pinTask.params = { remote: ToInt(m.pinProfile.remote, 0), pin: m.pinPad.pin }
+    m.pinTask.observeField("result", "onPinVerified")
+    m.pinTask.control = "RUN"
+end sub
+
+sub onPinVerified(event as object)
+    task = event.getRoSGNode()
+    if m.pinTask = invalid or not task.isSameNode(m.pinTask) then return
+    m.pinTask = invalid
+    r = task.result
+    m.pinPad.working = false
+    if r = invalid or r.ok <> true
+        msg = L("No se pudo verificar el PIN. Intenta de nuevo.")
+        if r <> invalid and Str_Of(r.error) <> "" then msg = r.error
+        m.pinPad.error = msg
+        return
+    end if
+    if r.unlocked = true
+        pid = m.pinProfile.id
+        m.pinPad.visible = false
+        Profile_Enter(pid)
+        return
+    end if
+    if ToInt(r.retry, 0) > 0
+        m.pinPad.error = L("Perfil bloqueado. Intenta de nuevo en") + " " + ToInt(r.retry, 0).ToStr() + " s."
+    else
+        m.pinPad.error = L("PIN incorrecto. Intenta de nuevo.")
+    end if
+end sub
+
+sub Profile_Enter(pid as string)
     changed = St_Settings().active <> pid or not m.homeLoaded
     St_SetActiveProfile(pid)
     m.profiles.visible = false
@@ -381,6 +456,14 @@ sub Poster_Localize(root as object)
                 item.HDPosterUrl = local
             end if
         end for
+    end for
+end sub
+
+sub Poster_Check()
+    if m.posterMap = invalid then return
+    fs = CreateObject("roFileSystem")
+    for each k in m.posterMap.Keys()
+        if not fs.Exists(m.posterMap[k]) then m.posterMap.Delete(k)
     end for
 end sub
 
@@ -1286,4 +1369,30 @@ sub Rows_Restore()
     m.expanded.opacity = 1
     m.nav.opacity = 1
     if was and (m.top.hasFocus() or m.hero.hasFocus()) then focusCurrent()
+end sub
+
+sub Progress_Soon()
+    if St_Integrations().nuvioAccess = "" then return
+    m.progressSoon.control = "stop"
+    m.progressSoon.control = "start"
+end sub
+
+sub onProgressTimer()
+    if m.accountTask <> invalid or m.pushTask <> invalid or m.progressTask <> invalid then return
+    if m.player.visible or m.busy then return
+    if St_Integrations().nuvioAccess = "" then return
+    m.progressTask = CreateObject("roSGNode", "AccountTask")
+    m.progressTask.mode = "nuvioProgress"
+    m.progressTask.observeField("result", "onProgressRefreshed")
+    m.progressTask.control = "RUN"
+end sub
+
+sub onProgressRefreshed(event as object)
+    task = event.getRoSGNode()
+    if m.progressTask = invalid or not task.isSameNode(m.progressTask) then return
+    m.progressTask = invalid
+    r = task.result
+    if r = invalid or not Bool_Of(r.ok, false) then return
+    m.watchedCache = invalid
+    refreshContinueRow()
 end sub

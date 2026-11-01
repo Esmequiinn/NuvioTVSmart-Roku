@@ -97,6 +97,10 @@ sub onDetailsMeta(event as object)
     m.ctx.meta = meta
     m.ctx.metaReady = true
     if Str_Of(meta.imdb) <> "" then m.ctx.imdb = meta.imdb
+    if LCase(Left(m.ctx.metaId, 5)) = "tmdb:" and Left(Str_Of(meta.imdb), 2) = "tt"
+        m.ctx.metaId = meta.imdb
+        cacheMeta(m.ctx.metaId, meta)
+    end if
     if m.ctx.title = "" then m.ctx.title = Str_Of(meta.name)
     if Str_Of(meta.poster) <> ""
         m.ctx.poster = Str_Of(meta.poster)
@@ -165,13 +169,17 @@ sub Details_Extra()
                 progress = 0.0
                 if v.id = resumeId and ToInt(entry.duration, 0) > 0 then progress = ToInt(entry.position, 0) / ToInt(entry.duration, 1)
                 seen = watched.DoesExist(St_WatchedKey(m.ctx.metaId, v.season, v.episode))
-                eps.Push({ id: v.id, code: code, name: name, overview: overview, meta: parts.Join("  ·  "), thumb: thumb, progress: progress, watched: seen })
+                eps.Push({ id: v.id, code: code, name: name, overview: overview, meta: parts.Join("  ·  "), thumb: thumb, progress: progress, watched: seen, s: ToInt(v.season, -1), rating: Str_Of(v.rating) })
                 if v.id = resumeId then extra.seasonIndex = si
             end for
             extra.seasons.Push({ label: season.label, episodes: eps })
         end for
     end if
     if type(meta.cast) = "roArray" then extra.cast = meta.cast
+    if type(meta.moreLike) = "roArray" then extra.moreLike = meta.moreLike
+    if type(meta.collection) = "roAssociativeArray" then extra.collection = meta.collection
+    if type(meta.companies) = "roArray" then extra.companies = meta.companies
+    if type(meta.networks) = "roArray" then extra.networks = meta.networks
     if type(meta.directors) = "roArray" and meta.directors.Count() > 0
         extra.crew = L("Dirección: ") + meta.directors.Join(", ")
     else if type(meta.creators) = "roArray" and meta.creators.Count() > 0
@@ -225,6 +233,10 @@ sub onDetailsSelected()
 end sub
 
 sub runDetailAction(action as string)
+    if Left(action, 6) = "epact:"
+        EpAct_Run(action)
+        return
+    end if
     if Left(action, 3) = "ep:"
         m.ctx.fromStart = false
         pickEpisodeById(Mid(action, 4))
@@ -236,6 +248,10 @@ sub runDetailAction(action as string)
     end if
     if Left(action, 5) = "cast:"
         Cast_Open(ToInt(Mid(action, 6), -1))
+        return
+    end if
+    if Left(action, 5) = "more:" or Left(action, 5) = "coll:"
+        Related_Open(action)
         return
     end if
     if action = "manual"
@@ -270,6 +286,76 @@ sub runDetailAction(action as string)
     else if action = "partyPlay"
         Party_PlayMedia()
     end if
+end sub
+
+sub EpAct_Run(action as string)
+    rest = Mid(action, 7)
+    cut = Instr(1, rest, ":")
+    if cut = 0 then return
+    act = Left(rest, cut - 1)
+    vid = Mid(rest, cut + 1)
+    if act = "play" or act = "manual" or act = "restart"
+        m.ctx.fromStart = act = "restart"
+        if act = "manual" then m.ctx.forceManual = true
+        pickEpisodeById(vid)
+        return
+    end if
+    if not isSeries() then return
+    target = invalid
+    for each season in m.ctx.seasons
+        for i = 0 to season.episodes.Count() - 1
+            if season.episodes[i].id = vid then target = { season: season, index: i }
+        end for
+    end for
+    if target = invalid then return
+    eps = target.season.episodes
+    pick = []
+    if act = "watched" or act = "unwatched"
+        pick.Push(eps[target.index])
+    else if act = "seasonon" or act = "seasonoff"
+        pick = eps
+    else if act = "prev"
+        for i = 0 to target.index - 1
+            pick.Push(eps[i])
+        end for
+    end if
+    on = act = "watched" or act = "seasonon" or act = "prev"
+    items = []
+    for each v in pick
+        if ToInt(v.season, -1) >= 0 and ToInt(v.episode, -1) > 0 then items.Push({ id: m.ctx.metaId, kind: "series", title: m.ctx.title, season: ToInt(v.season, 0), episode: ToInt(v.episode, 0) })
+    end for
+    if items.Count() = 0 then return
+    St_SetWatched(items, on)
+    entry = resumeEntry()
+    if on and entry <> invalid
+        for each v in pick
+            if v.id = Str_Of(entry.videoId) then St_RemoveProgress(m.ctx.metaId)
+        end for
+    end if
+    if on then Toast_Show(L("Marcado como visto.")) else Toast_Show(L("Marcado como no visto."))
+    refreshContinueRow()
+    Progress_Soon()
+    Details_Extra()
+    ex = m.details.extra
+    ex.keep = true
+    m.details.extra = ex
+    renderDetailButtons()
+end sub
+
+sub Related_Open(action as string)
+    ex = m.details.extra
+    list = invalid
+    if Left(action, 5) = "more:" then list = ex.moreLike
+    if Left(action, 5) = "coll:" and type(ex.collection) = "roAssociativeArray" then list = ex.collection.items
+    index = ToInt(Mid(action, 6), -1)
+    if type(list) <> "roArray" or index < 0 or index >= list.Count() then return
+    r = list[index]
+    item = CreateObject("roSGNode", "ContentNode")
+    item.title = Str_Of(r.name)
+    item.HDPosterUrl = Str_Of(r.poster)
+    item.addFields({ itemType: Str_Of(r.kind), metaId: Str_Of(r.id), videoId: "", background: Str_Of(r.background), metaLine: "", episodeLabel: "", progress: 0.0, logo: "", rating: "", fallback: "", portrait: Str_Of(r.poster) })
+    closeDetails(false)
+    openDetails(item)
 end sub
 
 sub Cast_Open(index as integer)
@@ -396,6 +482,7 @@ end function
 
 sub setVideo(primary as string, ids as object)
     m.ctx.nextUpSaved = false
+    m.ctx.watchedSaved = false
     all = [primary]
     for each id in ids
         all.Push(id)
@@ -729,6 +816,11 @@ end sub
 
 sub openStreams()
     m.ctx.nextAuto = false
+    if Bool_Of(m.ctx.refreshing, false) and m.streamsOpen
+        m.streamsScreen.note = ""
+        m.streamsScreen.loading = true
+        return
+    end if
     code = ""
     epTitle = ""
     if m.ctx.episodeLabel <> ""
@@ -778,7 +870,9 @@ sub onStreamsEvent()
         playStream(ToInt(ev.index, -1), 0)
     else if kind = "refresh"
         m.ctx.forceManual = true
+        m.ctx.refreshing = true
         fetchStreams()
+        m.ctx.refreshing = false
     else if kind = "toggleStart"
         m.ctx.fromStart = not m.ctx.fromStart
         m.streamsScreen.fromStart = m.ctx.fromStart
@@ -1152,6 +1246,7 @@ sub Player_Event()
         item.addFields({ itemType: Str_Of(ev.kind), metaId: Str_Of(ev.id), videoId: "", background: Str_Of(ev.background), metaLine: "", episodeLabel: "", progress: 0.0, logo: "", rating: "", fallback: "", portrait: Str_Of(ev.poster) })
         if m.detailsOpen then closeDetails(false)
         openDetails(item)
+        if ev.play = true then runDetailAction("play")
     else if kind = "altAudio"
         Alt_Audio(ToInt(ev.position, 0))
     else if kind = "subsReload"
@@ -1176,6 +1271,7 @@ sub Player_Event()
         end if
     else if kind = "finished"
         St_RemoveProgress(m.ctx.metaId)
+        Watched_Finish()
         NextUp_Save()
         scrobble("stop")
         m.scrobbleState = ""
@@ -1203,6 +1299,18 @@ sub Player_Event()
             saveProgress()
             playNext(nxt)
         end if
+    else if kind = "episodes" and ev.inPlayer = true and isSeries()
+        if m.details.extra = invalid or type(m.details.extra.seasons) <> "roArray" or m.details.extra.seasons.Count() = 0 then Details_Extra()
+        m.player.episodes = { seasons: m.details.extra.seasons, current: Str_Of(m.ctx.videoId) }
+    else if kind = "pickEpisode"
+        saveProgress()
+        m.autoCount = 0
+        m.ctx.bingePrefer = ""
+        if m.ctx.playingStream <> invalid then m.ctx.bingePrefer = Str_Of(m.ctx.playingStream.binge)
+        m.ctx.nextAuto = true
+        m.ctx.fromStart = false
+        if m.streamsOpen then closeStreams(false)
+        pickEpisodeById(Str_Of(ev.id))
     else if kind = "episodes"
         closePlayer(true)
         if m.streamsOpen then closeStreams(false)
@@ -1385,6 +1493,7 @@ sub saveProgress()
     if kind = "tv" or kind = "channel" or kind = "channels" or kind = "events" or kind = "live" then return
     if total > 0 and current > total * 0.95
         St_RemoveProgress(m.ctx.metaId)
+        Watched_Finish()
         NextUp_Save()
         return
     end if
@@ -1475,6 +1584,8 @@ function progressThumb() as string
 end function
 
 sub closePlayer(save as boolean)
+    Progress_Soon()
+    Poster_Check()
     if m.party <> invalid
         m.partyIdle = m.party.mediaKey
         m.partyFollowing = ""
@@ -1557,4 +1668,25 @@ sub onStallTimer()
         closePlayer(false)
         showMessage(L("No se pudo reproducir"), playbackFailureText(L("la fuente no empezó a reproducirse")))
     end if
+end sub
+
+sub Watched_Finish()
+    if Bool_Of(m.ctx.watchedSaved, false) then return
+    kind = LCase(Str_Of(m.ctx.kind))
+    if kind = "tv" then kind = "series"
+    if kind <> "movie" and kind <> "series" then return
+    m.ctx.watchedSaved = true
+    season = invalid
+    episode = invalid
+    if kind = "series"
+        s = ToInt(m.ctx.epSeason, -1)
+        e = ToInt(m.ctx.epEpisode, -1)
+        if s < 0 or e <= 0 then return
+        season = s
+        episode = e
+    end if
+    key = St_WatchedKey(m.ctx.metaId, season, episode)
+    if St_Watched().DoesExist(key) then return
+    St_SetWatched([{ id: m.ctx.metaId, kind: kind, title: m.ctx.title, season: season, episode: episode }], true)
+    if kind = "movie" then Watched_Refresh(m.ctx.metaId, true)
 end sub

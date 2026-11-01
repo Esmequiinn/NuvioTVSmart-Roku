@@ -110,7 +110,7 @@
                 rowItemSpacing="[[26,0]]"
                 showRowLabel="[false]"
                 focusXOffset="[8]"
-                rowFocusAnimationStyle="fixedFocus"
+                rowFocusAnimationStyle="floatingFocus"
                 vertFocusAnimationStyle="fixedFocus"
                 drawFocusFeedback="false"
                 focusBitmapBlendColor="0xFFFFFFFF" />
@@ -142,6 +142,7 @@
         <ListScreen id="list" visible="false" />
         <StreamsScreen id="streamsScreen" visible="false" />
         <ProfilePicker id="profiles" visible="false" />
+        <ProfilePin id="pinPad" visible="false" />
         <AuthScreen id="auth" visible="false" />
         <TrackAuth id="trackAuth" visible="false" />
         <PlayerScreen id="player" visible="false" />
