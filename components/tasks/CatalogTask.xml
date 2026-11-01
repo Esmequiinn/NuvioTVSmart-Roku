@@ -20,5 +20,7 @@
     <script type="text/brightscript" uri="pkg:/components/Names.brs" />
     <script type="text/brightscript" uri="pkg:/components/Addon.brs" />
     <script type="text/brightscript" uri="pkg:/components/Content.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Servers.brs" />
+    <script type="text/brightscript" uri="pkg:/components/ServerRows.brs" />
     <script type="text/brightscript" uri="pkg:/components/tasks/CatalogTask.brs" />
 </component>

@@ -3,11 +3,14 @@
     <interface>
         <field id="url" type="string" />
         <field id="headers" type="array" />
+        <field id="debrid" type="assocarray" />
         <field id="result" type="assocarray" alwaysNotify="true" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
     <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Store.brs" />
     <script type="text/brightscript" uri="pkg:/components/Http.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Debrid.brs" />
     <script type="text/brightscript" uri="pkg:/components/tasks/ProbeTask.brs" />
 </component>

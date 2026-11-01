@@ -4,6 +4,7 @@
         <field id="manifests" type="array" />
         <field id="kind" type="string" />
         <field id="videoIds" type="array" />
+        <field id="title" type="string" />
         <field id="skipped" type="integer" />
         <field id="batch" type="assocarray" alwaysNotify="true" />
         <field id="streams" type="array" />
@@ -15,5 +16,7 @@
     <script type="text/brightscript" uri="pkg:/components/Http.brs" />
     <script type="text/brightscript" uri="pkg:/components/Addon.brs" />
     <script type="text/brightscript" uri="pkg:/components/Streams.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Debrid.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Servers.brs" />
     <script type="text/brightscript" uri="pkg:/components/tasks/StreamTask.brs" />
 </component>

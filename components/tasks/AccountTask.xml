@@ -14,5 +14,7 @@
     <script type="text/brightscript" uri="pkg:/components/Addon.brs" />
     <script type="text/brightscript" uri="pkg:/components/Streams.brs" />
     <script type="text/brightscript" uri="pkg:/components/Account.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Debrid.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Servers.brs" />
     <script type="text/brightscript" uri="pkg:/components/tasks/AccountTask.brs" />
 </component>

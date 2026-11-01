@@ -22,6 +22,17 @@ sub execute()
         order = order + 1
     end for
 
+    deb = Deb_Active(St_Integrations())
+    season = -1
+    episode = -1
+    for each vid in ids
+        parts = Str_Of(vid).Split(":")
+        if parts.Count() >= 3 and season < 0
+            season = parts[parts.Count() - 2].ToInt()
+            episode = parts[parts.Count() - 1].ToInt()
+        end if
+    end for
+    torrents = []
     rules = []
     if Bool_Of(St_Pref("fusionBadges"), true) then rules = Badge_Compile(St_Badges(St_ActiveProfile().id))
     sizeBadges = Bool_Of(St_Pref("sizeBadges"), true)
@@ -62,6 +73,8 @@ sub execute()
                                     seen[url] = true
                                     added.Push(Stream_Build(s, url, target, rules, sizeBadges))
                                 end if
+                            else if deb <> invalid and Str_Of(s.infoHash) <> ""
+                                torrents.Push({ s: s, index: job.index })
                             else
                                 skipped = skipped + 1
                             end if
@@ -80,6 +93,47 @@ sub execute()
             end if
         end for
     end while
+    servers = Srv_Streams(Str_Of(m.top.title), kind, ids)
+    if servers.Count() > 0
+        added = []
+        for each x in servers
+            st = Stream_Build({ name: x.name, title: x.desc, behaviorHints: { filename: x.filename } }, x.url, { name: x.name, logo: "", order: -1 }, rules, sizeBadges)
+            added.Push(st)
+        end for
+        buckets.Unshift(added)
+        m.top.batch = { addon: -1, count: added.Count(), streams: added, pending: 0 }
+    end if
+    if torrents.Count() > 0
+        hashes = []
+        for each t in torrents
+            hashes.Push(t.s.infoHash)
+        end for
+        cached = Deb_CheckCached(deb, hashes)
+        if cached = invalid then cached = {}
+        added = []
+        for each t in torrents
+            h = LCase(Str_Of(t.s.infoHash))
+            if cached.DoesExist(h)
+                file = ""
+                if type(t.s.behaviorHints) = "roAssociativeArray" then file = Str_Of(t.s.behaviorHints.filename)
+                if file = "" then file = Str_Of(cached[h].name)
+                url = "debrid:" + deb.id + ":" + h + ":" + ToInt(t.s.fileIdx, -1).ToStr()
+                if not seen.DoesExist(url)
+                    seen[url] = true
+                    st = Stream_Build(t.s, url, targets[t.index], rules, sizeBadges)
+                    chips = [deb.short]
+                    chips.Append(st.chips)
+                    st.chips = chips
+                    st.debrid = { provider: deb.id, hash: h, idx: ToInt(t.s.fileIdx, -1), file: file, sources: t.s.sources, s: season, e: episode }
+                    buckets[t.index].Push(st)
+                    added.Push(st)
+                end if
+            else
+                skipped = skipped + 1
+            end if
+        end for
+        if added.Count() > 0 then m.top.batch = { addon: -1, count: added.Count(), streams: added, pending: 0 }
+    end if
     out = []
     for each b in buckets
         for each s in b

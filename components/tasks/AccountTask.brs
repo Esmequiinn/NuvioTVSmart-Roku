@@ -32,6 +32,29 @@ sub execute()
         result = Nuvio_Sync()
     else if mode = "nuvioProgress"
         result = Nuvio_ProgressRefresh()
+    else if mode = "debTbStart"
+        result = Deb_TorboxStart()
+    else if mode = "debTbPoll"
+        result = Deb_TorboxPoll(Str_Of(p.deviceCode))
+    else if mode = "debKey"
+        id = Str_Of(p.id)
+        key = Str_Of(p.key)
+        if key = "" or Deb_Validate(id, key)
+            integ = St_Integrations()
+            integ[id + "Key"] = key
+            integ[id + "From"] = ""
+            if key <> "" then integ["debridOn"] = true
+            if Deb_Connected(integ).Count() = 0 then integ["debridOn"] = false
+            St_SaveIntegrations(integ)
+            result = { ok: true, key: key }
+        else
+            result = { ok: false, error: L("La clave no es válida.") }
+        end if
+    else if mode = "srvSignIn"
+        result = Srv_SignIn(Str_Of(p.kind), Str_Of(p.address), Str_Of(p.user), Str_Of(p.pass))
+    else if mode = "srvRefresh"
+        Srv_Refresh(Str_Of(p.id))
+        result = { ok: true }
     else if mode = "verifyPin"
         result = Nuvio_VerifyPin(ToInt(p.remote, 0), Str_Of(p.pin))
     else if mode = "nuvioPush"

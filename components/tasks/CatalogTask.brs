@@ -146,6 +146,11 @@ sub execute()
             rows.Push(saved[visible[i].key])
         end if
     end for
+    srv = Srv_HomeRows(ToInt(prefs.rowSize, 20))
+    if srv.Count() > 0
+        srv.Append(rows)
+        rows = srv
+    end if
     root = Home_Build(rows, prefs, true)
 
     Home_WriteCache(addons, manifests, ordered, rows)

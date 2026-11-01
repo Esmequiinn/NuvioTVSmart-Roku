@@ -3,9 +3,20 @@ sub init()
 end sub
 
 sub execute()
-    out = { ts: false, size: 0&, type: "", code: 0 }
+    out = { ts: false, size: 0&, type: "", code: 0, url: "" }
+    target = m.top.url
+    d = m.top.debrid
+    if type(d) = "roAssociativeArray" and Str_Of(d.hash) <> ""
+        r = Deb_Resolve(St_Integrations(), d)
+        if not Bool_Of(r.ok, false)
+            m.top.result = { failed: true, error: Str_Of(r.error) }
+            return
+        end if
+        target = r.url
+        out.url = target
+    end if
     port = CreateObject("roMessagePort")
-    t = Http_Transfer(m.top.url, port)
+    t = Http_Transfer(target, port)
     t.AddHeader("Range", "bytes=0-375")
     if type(m.top.headers) = "roArray"
         for each h in m.top.headers
