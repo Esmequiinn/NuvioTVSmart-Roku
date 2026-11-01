@@ -4,6 +4,30 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.0.8] - 2026-10-31
+
+### Agregado
+- **Opciones de episodio**, como en Nuvio TV: en la página de detalles, presiona `*` en un episodio para verlo en pantalla completa con su imagen, calificación y descripción, y marcarlo como visto o no visto, marcar toda la temporada, marcar los episodios anteriores de la temporada, reproducirlo, reproducirlo manualmente o empezarlo desde el inicio. Usa izquierda y derecha para pasar de un episodio a otro. Los cambios se envían a tu cuenta de Nuvio.
+- **PIN de perfiles**: los perfiles con PIN en tu cuenta de Nuvio ahora piden el PIN de 4 dígitos en el Roku antes de abrirse, y muestran un candado en la pantalla de perfiles. El PIN lo revisa tu cuenta de Nuvio. Para poner, cambiar o quitar un PIN, usa Nuvio en otro dispositivo.
+- **Panel de episodios en el reproductor**, como en Nuvio TV: el botón Episodios abre un panel lateral sobre el video con las temporadas y los episodios, con imágenes y descripciones, en lugar de cerrar el video.
+- **Más como esto, colección y productoras** en la página de detalles, como en Nuvio TV: debajo de los episodios hay pestañas de Reparto, Más como esto y la colección de la película (por ejemplo, todas las películas de una saga), y al final se muestran las productoras o cadenas. Necesitan una clave de TMDB.
+
+### Cambiado
+- Las **recomendaciones al final de una película** ahora se ven como en Nuvio TV: pantalla completa con el fondo, el logo, la calificación, el año y la descripción, mientras la película sigue en una ventana pequeña. Cambian solas cada 10 segundos, y también puedes moverte entre ellas.
+- **Descubrir** ahora mueve la selección por la cuadrícula en lugar de deslizar toda la fila, como en Nuvio TV.
+- Cuando un video se queda cargando, el canal muestra el fondo y el logo del título con el porcentaje de carga, como Nuvio, en lugar de una pantalla negra.
+- TMDB ahora solo funciona con una clave de TMDB de tu cuenta de Nuvio o una que agregues tú. Su idioma sigue el idioma del canal, a menos que elijas otro en **Ajustes → Integraciones → Idioma de la metadata**.
+
+### Corregido
+- Los tráilers de YouTube en tu idioma no se reproducían, así que el canal terminaba usando el tráiler en inglés de IMDb. Ahora el canal abre YouTube igual que Nuvio TV en Android: prueba varios clientes de YouTube y renueva su sesión cuando YouTube lo pide. **Ajustes → Acerca de** muestra qué pasó con el último tráiler de YouTube.
+- Los títulos, descripciones, nombres de episodios y logos podían quedarse en español con la interfaz en otro idioma, porque el idioma de la metadata venía en español por defecto.
+- Algunas fuentes se reproducían sin sonido porque el canal elegía una pista de audio que el Roku no puede reproducir (como DTS o TrueHD). Ahora se salta esas pistas y elige una que el Roku sí pueda reproducir.
+- **Next up** no aparecía arriba en Seguir viendo. Ahora el canal lo arma con tus episodios vistos, como Nuvio, y actualiza tu Seguir viendo desde tu cuenta de Nuvio cada pocos minutos y al dejar de ver algo.
+- Ver más del 95% de una película o episodio ahora lo marca como visto y lo envía a tu cuenta de Nuvio.
+- Después de recargar las fuentes, a veces las flechas dejaban de responder hasta presionarlas muchas veces.
+- Después de ver algo, algunos pósters del inicio podían quedarse grises. Ahora vuelven a cargar.
+- Las fotos del reparto tardaban mucho o no cargaban en algunos Roku. Ahora cargan directo de TMDB.
+
 ## [0.0.7] - 2026-10-27
 
 ### Agregado

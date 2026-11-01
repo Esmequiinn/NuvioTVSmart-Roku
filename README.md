@@ -16,7 +16,7 @@
 
 </div>
 
-This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.0.7**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
+This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.0.8**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
 
 > **This is not an official Nuvio app** and it is not affiliated with or endorsed by the Nuvio team. It does not host, store or distribute any content. Everything you see comes from the addons you install.
 
@@ -59,6 +59,9 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - Fast home: the last home screen opens right away while catalogs refresh in the background
 - New version notice with what's new and a QR code to download it
 - Full-screen trailer on the home screen after a few seconds on a title, like Nuvio TV on Android
+- Episode options with the `*` button on the details page, like Nuvio TV: mark an episode, its season or the previous ones as watched, play, play manually or start from the beginning
+- Profiles locked with a PIN in your Nuvio account ask for the PIN on the Roku
+- More like this, collection, and production companies or networks on the details page, like Nuvio TV
 
 ## Status
 
@@ -118,6 +121,11 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Subtitle style and SDH filtering | ⚠️ Not tested yet |
 | Playback stats | ⚠️ Not tested yet |
 | Next up in Continue Watching | ⚠️ Not tested yet |
+| YouTube trailers in your language | ✅ Working |
+| Episode options (`*` on an episode) | ⚠️ Not tested yet |
+| Profile PIN | ⚠️ Not tested yet |
+| Episodes panel in the player | ⚠️ Not tested yet |
+| More like this and collection in details | ⚠️ Not tested yet |
 | MDBList key from your Nuvio account | ✅ Working |
 
 ### Known limitations
@@ -161,11 +169,11 @@ You can also add an addon from your computer with Roku's External Control: `curl
 
 ### API keys and accounts
 
-The release `.zip` already includes the TMDB, Trakt and Simkl keys, so you don't need to create anything:
+The release `.zip` already includes the Trakt and Simkl keys. TMDB only works with your own key:
 
 | Service | What you need to do |
 | --- | --- |
-| TMDB | Nothing. You can still paste your own key on the phone page (Account) if you want. |
+| TMDB | Optional. It turns on when your Nuvio account has a TMDB key, or when you paste your own free key from [themoviedb.org](https://www.themoviedb.org) on the phone page (Account) or type it on the Roku in **Settings → Integrations**. Without it, titles and descriptions come from your addons. |
 | MDBList | Connect your account with the QR code in **Settings → Integrations → MDBList account**, or use your free key from [mdblist.com](https://mdblist.com): paste it on the phone page (Account), type it on the Roku in **Settings → Integrations**, or it comes in automatically if it's saved in your Nuvio account. |
 | Trakt | Link your account on the Roku in **Settings → Tracking** and enter the code. |
 | Simkl | Link your account on the Roku in **Settings → Tracking** and enter the code. |

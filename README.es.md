@@ -16,7 +16,7 @@
 
 </div>
 
-Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.0.7**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
+Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.0.8**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
 
 > **Esta no es una app oficial de Nuvio** y no está afiliada ni respaldada por el equipo de Nuvio. No aloja, guarda ni distribuye ningún contenido. Todo lo que ves viene de los addons que instalas.
 
@@ -59,6 +59,9 @@ Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMe
 - Inicio rápido: el último inicio se abre al instante mientras los catálogos se actualizan en segundo plano
 - Aviso de nueva versión con las novedades y un código QR para descargarla
 - Tráiler en pantalla completa en el inicio después de unos segundos en un título, como en Nuvio TV para Android
+- Opciones de episodio con el botón `*` en la página de detalles, como en Nuvio TV: marcar un episodio, su temporada o los anteriores como vistos, reproducir, reproducir manualmente o empezar desde el inicio
+- Los perfiles con PIN en tu cuenta de Nuvio piden el PIN en el Roku
+- Más como esto, colección, y productoras o cadenas en la página de detalles, como en Nuvio TV
 
 ## Estado
 
@@ -118,6 +121,11 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Estilo de subtítulos y filtro SDH | ⚠️ Sin probar |
 | Datos técnicos de la reproducción | ⚠️ Sin probar |
 | Next up en Seguir viendo | ⚠️ Sin probar |
+| Tráilers de YouTube en tu idioma | ✅ Funciona |
+| Opciones de episodio (`*` en un episodio) | ⚠️ Sin probar |
+| PIN de perfiles | ⚠️ Sin probar |
+| Panel de episodios en el reproductor | ⚠️ Sin probar |
+| Más como esto y colección en detalles | ⚠️ Sin probar |
 | Clave de MDBList desde tu cuenta de Nuvio | ✅ Funciona |
 
 ### Limitaciones conocidas
@@ -161,11 +169,11 @@ También puedes agregar un addon desde tu computadora con el control externo de 
 
 ### Claves de API y cuentas
 
-El `.zip` del release ya trae las claves de TMDB, Trakt y Simkl, así que no tienes que crear nada:
+El `.zip` del release ya trae las claves de Trakt y Simkl. TMDB solo funciona con tu propia clave:
 
 | Servicio | Qué tienes que hacer |
 | --- | --- |
-| TMDB | Nada. Si quieres, puedes pegar tu propia clave en la página del celular (Cuenta) o escribirla en el Roku en **Ajustes → Integraciones**. |
+| TMDB | Opcional. Se activa cuando tu cuenta de Nuvio tiene una clave de TMDB, o cuando pegas tu propia clave gratis de [themoviedb.org](https://www.themoviedb.org) en la página del celular (Cuenta) o la escribes en el Roku en **Ajustes → Integraciones**. Sin ella, los títulos y descripciones vienen de tus addons. |
 | MDBList | Conecta tu cuenta con el código QR en **Ajustes → Integraciones → Cuenta de MDBList**, o usa tu clave gratis de [mdblist.com](https://mdblist.com): pégala en la página del celular (Cuenta), escríbela en el Roku en **Ajustes → Integraciones**, o llega sola si está guardada en tu cuenta de Nuvio. |
 | Trakt | Vincula tu cuenta en el Roku en **Ajustes → Seguimiento** e ingresa el código. |
 | Simkl | Vincula tu cuenta en el Roku en **Ajustes → Seguimiento** e ingresa el código. |
