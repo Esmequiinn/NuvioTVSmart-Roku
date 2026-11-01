@@ -122,8 +122,8 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Datos técnicos de la reproducción | ⚠️ Sin probar |
 | Next up en Seguir viendo | ⚠️ Sin probar |
 | Tráilers de YouTube en tu idioma | ✅ Funciona |
-| Opciones de episodio (`*` en un episodio) | ⚠️ Sin probar |
-| PIN de perfiles | ⚠️ Sin probar |
+| Opciones de episodio (`*` en un episodio) | ✅ Funciona |
+| PIN de perfiles | ✅ Funciona |
 | Panel de episodios en el reproductor | ⚠️ Sin probar |
 | Más como esto y colección en detalles | ⚠️ Sin probar |
 | Clave de MDBList desde tu cuenta de Nuvio | ✅ Funciona |
