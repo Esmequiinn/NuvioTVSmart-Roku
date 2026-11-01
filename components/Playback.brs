@@ -601,6 +601,7 @@ sub fetchStreams()
         m.streamTask.manifests = m.manifests
         m.streamTask.kind = m.ctx.kind
         m.streamTask.videoIds = ids
+        m.streamTask.title = Str_Of(m.ctx.title)
         m.streamTask.observeField("batch", "onStreamBatch")
         m.streamTask.observeField("streams", "onStreamsLoaded")
         m.streamTask.control = "RUN"
@@ -910,6 +911,15 @@ sub playStream(index as integer, startAt as integer)
     m.ctx.startAt = resume
     m.lastSaved = resume
     showPlayer(index)
+    if type(s.debrid) = "roAssociativeArray"
+        m.ctx.attempts = []
+        m.probeTask = CreateObject("roSGNode", "ProbeTask")
+        m.probeTask.url = ""
+        m.probeTask.debrid = s.debrid
+        m.probeTask.observeField("result", "onProbeResult")
+        m.probeTask.control = "RUN"
+        return
+    end if
     if Probe_Needed(s.url)
         m.probeTask = CreateObject("roSGNode", "ProbeTask")
         m.probeTask.url = s.url
@@ -936,8 +946,20 @@ sub onProbeResult(event as object)
     s = m.ctx.playingStream
     if s = invalid or not m.player.visible then return
     r = task.result
+    src = s.url
+    if r <> invalid and Bool_Of(r.failed, false)
+        if not nextAttempt(0)
+            closePlayer(false)
+            showMessage(L("No se pudo reproducir"), Str_Of(r.error))
+        end if
+        return
+    end if
+    if r <> invalid and Str_Of(r.url) <> ""
+        src = r.url
+        m.ctx.attempts = Stream_Attempts(src)
+    end if
     if r <> invalid and Bool_Of(r.ts, false) and Bool_Of(r.ranges, false) and r.size > 1000000
-        m.server.hls = { url: s.url, size: r.size, duration: Probe_Duration() }
+        m.server.hls = { url: src, size: r.size, duration: Probe_Duration() }
         m.hlsSerial = ToInt(m.hlsSerial, 0) + 1
         wrapped = [{ url: "http://127.0.0.1:8888/hls.m3u8?v=" + m.hlsSerial.ToStr(), fmt: "hls" }]
         wrapped.Append(m.ctx.attempts)
@@ -1185,7 +1207,7 @@ sub rememberStream()
     if s = invalid then return
     m.ctx.savedLink = true
     if s.url <> ""
-        St_SaveLink("v:" + m.ctx.videoId, { stream: { url: s.url, headers: s.headers, name: s.name, desc: s.desc, addon: s.addon, logo: s.logo, binge: s.binge, chips: s.chips, badges: [], label: s.label, order: -1 } })
+        St_SaveLink("v:" + m.ctx.videoId, { stream: { url: s.url, headers: s.headers, name: s.name, desc: s.desc, addon: s.addon, logo: s.logo, binge: s.binge, chips: s.chips, badges: [], label: s.label, order: -1, debrid: s.debrid } })
     end if
     if Str_Of(s.binge) <> "" and isSeries() then St_SaveLink("b:" + m.ctx.metaId, { binge: s.binge })
 end sub
@@ -1430,6 +1452,7 @@ sub Next_Prefetch()
     task.manifests = m.manifests
     task.kind = m.ctx.kind
     task.videoIds = Addon_UniqueIds(ids)
+    task.title = Str_Of(m.ctx.title)
     task.control = "RUN"
     m.prefetch = { videoId: v.id, task: task }
 end sub

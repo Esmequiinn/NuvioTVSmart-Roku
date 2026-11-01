@@ -782,6 +782,19 @@ sub Nuvio_PullSettings(pid as string, index as integer, primary as boolean)
                 integ["tmdbFrom"] = ""
             end if
         end if
+        if m.credDebrid <> invalid
+            for each pair in [["torbox", "torboxKey", "torboxFrom"], ["premiumize", "premiumizeKey", "premiumizeFrom"]]
+                v = Str_Of(m.credDebrid[pair[0]])
+                if v <> ""
+                    if Str_Of(integ[pair[1]]) = "" then integ["debridOn"] = true
+                    integ[pair[1]] = v
+                    integ[pair[2]] = "account"
+                else if Str_Of(integ[pair[2]]) = "account"
+                    integ[pair[1]] = ""
+                    integ[pair[2]] = ""
+                end if
+            end for
+        end if
     end if
     if found <> invalid
         if found <> ""
@@ -938,6 +951,12 @@ sub Nuvio_MapFeatures(prefs as object, f as object, integ as object, pid as stri
         if tr.trailer_delay_seconds <> invalid then prefs["trailerDelay"] = ToInt(tr.trailer_delay_seconds, 7)
     end if
 
+    db = f.debrid_settings
+    if primary and type(db) = "roAssociativeArray"
+        if IsBool(db.debrid_enabled) then integ["debridOn"] = db.debrid_enabled
+        pick = Str_Of(db.preferred_resolver_provider_id)
+        if pick = "torbox" or pick = "premiumize" then integ["debridPick"] = pick
+    end if
     tm = f.tmdb_settings
     if type(tm) = "roAssociativeArray"
         lang = Str_Of(tm.tmdb_language)
@@ -1642,11 +1661,13 @@ function Nuvio_MdbCredential(index as integer) as dynamic
     credentials = invalid
     if r.code >= 200 and r.code < 300 then credentials = r.json
     m.credTmdb = invalid
+    m.credDebrid = invalid
     found = ""
     seen = false
     count = 0
     if type(credentials) = "roArray"
         m.credTmdb = ""
+        m.credDebrid = { torbox: "", premiumize: "" }
         for each c in credentials
             if type(c) = "roAssociativeArray"
                 count = count + 1
@@ -1657,6 +1678,8 @@ function Nuvio_MdbCredential(index as integer) as dynamic
                 key = Str_Any(cj.api_key).Trim()
                 if key = "" then key = Str_Any(cj.apiKey).Trim()
                 if provider = "tmdb" then m.credTmdb = key
+                if provider = "debrid:torbox" then m.credDebrid.torbox = key
+                if provider = "debrid:premiumize" then m.credDebrid.premiumize = key
                 if provider = "mdblist"
                     seen = true
                     if key <> "" then found = key

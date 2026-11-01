@@ -19,6 +19,9 @@
     <script type="text/brightscript" uri="pkg:/components/Sheet.brs" />
     <script type="text/brightscript" uri="pkg:/components/Auth.brs" />
     <script type="text/brightscript" uri="pkg:/components/Settings.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Debrid.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Servers.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Connected.brs" />
     <children>
         <Rectangle width="1920" height="1080" color="0x0C0C0FFF" />
         <Hero id="hero" />

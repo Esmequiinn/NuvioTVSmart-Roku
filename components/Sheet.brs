@@ -28,6 +28,7 @@ sub onSheetChosen()
     m.sheet.visible = false
     m.sheet.setFocus(false)
     m.sheetHandler = ""
+    if Conn_Sheet(handler, choice, data) then return
     if handler = "cw"
         Options_RunContinue(choice, data)
     else if handler = "poster"

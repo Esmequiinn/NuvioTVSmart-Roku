@@ -267,7 +267,7 @@ function menuAppearance() as object
 end function
 
 function menuAbout() as object
-    info = L("Fork no oficial de Nuvio para Roku, hecho con permiso de los desarrolladores de Nuvio. No es una app oficial de Nuvio.") + chr(10) + L("Versión ") + App_Version() + L("  ·  Basado en Nuvio (licencia GPL-3.0)") + chr(10) + Device_Summary()
+    info = L("Fork no oficial de Nuvio para Roku") + chr(10) + L("Versión ") + App_Version() + L("  ·  Basado en Nuvio (licencia GPL-3.0)") + chr(10) + Device_Summary()
     menu = menuOf(L("Nuvio TV para Roku"), info)
     addEntry(menu, L("Volver"), "", { act: "back" })
     return menu
@@ -452,6 +452,7 @@ sub runAction(a as object)
 end sub
 
 sub handleKeyboard(kind as string, text as string, data as object)
+    if Conn_Keyboard(kind, text, data) then return
     if kind = "partyCode"
         if text.Trim() = "" then return
         Party_Join(text)

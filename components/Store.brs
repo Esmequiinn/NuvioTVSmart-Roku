@@ -732,6 +732,12 @@ function St_Integrations() as object
         simklToken: ""
         simklUser: ""
         scrobble: true
+        torboxKey: ""
+        torboxFrom: ""
+        premiumizeKey: ""
+        premiumizeFrom: ""
+        debridOn: false
+        debridPick: ""
         nuvioUrl: Config_NuvioServer()
         nuvioKey: ""
         nuvioAccess: ""

@@ -367,8 +367,8 @@ function Settings_Model() as object
     advanced.rows.Push(Set_Row("phone", L("Configurar desde el celular"), "", url))
 
     about = { id: "about", label: L("Acerca de"), subtitle: L("Información de la app, actualizaciones y enlaces legales"), rows: [] }
-    about.rows.Push({ id: "", kind: "logo", label: L("Versión ") + App_Version(), desc: L("Fork no oficial de Nuvio para Roku, con permiso de sus desarrolladores. Hecho con cariño por Tapframe y amigos.") })
-    about.rows.Push(Set_Info("version", L("Nuvio TV para Roku"), L("Fork no oficial de Nuvio, con permiso de sus desarrolladores."), App_Version()))
+    about.rows.Push({ id: "", kind: "logo", label: L("Versión ") + App_Version(), desc: L("Fork no oficial de Nuvio para Roku") })
+    about.rows.Push(Set_Info("version", L("Nuvio TV para Roku"), L("Fork no oficial de Nuvio para Roku"), App_Version()))
     about.rows.Push(Set_Info("license", L("Licencia"), L("Basado en Nuvio, licencia GPL-3.0."), "GPL-3.0"))
     dev = CreateObject("roDeviceInfo")
     props = dev.GetDisplayProperties()
@@ -382,7 +382,8 @@ function Settings_Model() as object
     if trailerDiag <> "" then about.rows.Push(Set_Info("trailerDiag", L("Último tráiler de YouTube"), trailerDiag, ""))
     about.rows.Push(Set_Info("formats", L("Formatos compatibles"), formats + chr(10) + L("Según tu Roku y tu tele. La reproducción automática evita lo que no es compatible."), ""))
 
-    return { sections: [account, profilesSection, party, appearance, layout, content, integration, fusion, playback, tracking, advanced, about] }
+    conn = Conn_Sections(integ)
+    return { sections: [account, profilesSection, party, appearance, layout, content, integration, conn[0], conn[1], fusion, playback, tracking, advanced, about] }
 end function
 
 sub openSettings()
@@ -450,6 +451,7 @@ sub onSettingsEvent()
         refreshSettings()
         return
     end if
+    if Conn_Row(row) then return
     if Left(row, 4) = "mdb:"
         k = Mid(row, 5)
         integ.mdbShow[k] = not Bool_Of(integ.mdbShow[k], false)
@@ -695,8 +697,9 @@ sub startLogin(service as string)
     if service = "trakt" then mode = "traktCode"
     if service = "simkl" then mode = "simklPin"
     if service = "mdblist" then mode = "mdbCode"
-    if service = "trakt" or service = "simkl" or service = "mdblist"
-        names = { trakt: "Trakt", simkl: "Simkl", mdblist: "MDBList" }
+    if service = "torbox" then mode = "debTbStart"
+    if service = "trakt" or service = "simkl" or service = "mdblist" or service = "torbox"
+        names = { trakt: "Trakt", simkl: "Simkl", mdblist: "MDBList", torbox: "TorBox" }
         m.login.dialog = true
         m.trackAuth.info = { service: service }
         m.trackAuth.status = L("Iniciando la conexión con {p}...").Replace("{p}", names[service])
@@ -768,6 +771,7 @@ sub onLoginTimer()
     if m.login.service = "trakt" then mode = "traktPoll"
     if m.login.service = "simkl" then mode = "simklPoll"
     if m.login.service = "mdblist" then mode = "mdbPoll"
+    if m.login.service = "torbox" then mode = "debTbPoll"
     m.loginPoll = CreateObject("roSGNode", "AccountTask")
     m.loginPoll.mode = mode
     m.loginPoll.params = { code: m.login.code, nonce: m.login.nonce, anon: m.login.anon, deviceCode: m.login.deviceCode, userCode: m.login.userCode }
@@ -807,6 +811,9 @@ sub onLoginPolled(event as object)
         else if service = "mdblist"
             m.metaCache = {}
             m.needsReload = true
+            Toast_Show(L("Tu cuenta quedó conectada."))
+        else if service = "torbox"
+            refreshSettings()
             Toast_Show(L("Tu cuenta quedó conectada."))
         else
             Toast_Show(L("Tu cuenta quedó conectada."))

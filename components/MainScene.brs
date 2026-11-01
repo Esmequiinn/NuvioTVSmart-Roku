@@ -1007,7 +1007,7 @@ sub onKeyboardButton()
     text = Kb_Text(dlg)
     dlg.close = true
     if choice <> 0 then return
-    if text = "" and m.kbKind <> "regex" and m.kbKind <> "customPoster" and m.kbKind <> "integKey" then return
+    if text = "" and m.kbKind <> "regex" and m.kbKind <> "customPoster" and m.kbKind <> "integKey" and m.kbKind <> "srvPass" and m.kbKind <> "debKey" then return
     handleKeyboard(m.kbKind, text, m.kbData)
 end sub
 
