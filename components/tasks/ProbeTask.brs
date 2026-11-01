@@ -3,7 +3,7 @@ sub init()
 end sub
 
 sub execute()
-    out = { ts: false, size: 0&, type: "", code: 0, url: "" }
+    out = { ts: false, size: 0&, type: "", code: 0, url: "", fmt: "" }
     target = m.top.url
     d = m.top.debrid
     if type(d) = "roAssociativeArray" and Str_Of(d.hash) <> ""
@@ -26,12 +26,16 @@ sub execute()
             end if
         end for
     end if
-    if t.AsyncGetToString()
+    file = "tmp:/probe_" + CreateObject("roDateTime").AsSeconds().ToStr() + "_" + Rnd(1000000).ToStr() + ".bin"
+    if t.AsyncGetToFile(file)
         msg = wait(5000, port)
         if type(msg) = "roUrlEvent"
             out.code = msg.GetResponseCode()
             heads = msg.GetResponseHeaders()
-            body = msg.GetString()
+            bytes = CreateObject("roByteArray")
+            if not bytes.ReadFile(file) then bytes = CreateObject("roByteArray")
+            DeleteFile(file)
+            disposition = ""
             kind = ""
             range = ""
             length = ""
@@ -41,13 +45,15 @@ sub execute()
                     if lk = "content-type" then kind = LCase(Str_Of(heads[k]))
                     if lk = "content-range" then range = Str_Of(heads[k])
                     if lk = "content-length" then length = Str_Of(heads[k])
+                    if lk = "content-disposition" then disposition = Str_Of(heads[k])
                 end for
             end if
             out.type = kind
             slash = Instr(1, range, "/")
             if slash > 0 then out.size = Probe_Long(Mid(range, slash + 1))
             if out.size <= 0 and out.code = 200 and length <> "" then out.size = Probe_Long(length)
-            sync = Len(body) > 0 and Asc(Left(body, 1)) = 71
+            sync = bytes.Count() > 0 and bytes[0] = 71
+            out.fmt = Probe_Format(bytes, kind, disposition)
             out.ts = Instr(1, kind, "mp2t") > 0 or Instr(1, kind, "mpegts") > 0 or (sync and Instr(1, kind, "mpegurl") = 0 and Instr(1, kind, "mp4") = 0)
             out.ranges = out.code = 206
         else
@@ -56,6 +62,17 @@ sub execute()
     end if
     m.top.result = out
 end sub
+
+function Probe_Format(bytes as object, kind as string, disposition as string) as string
+    if bytes.Count() >= 4 and bytes[0] = 26 and bytes[1] = 69 and bytes[2] = 223 and bytes[3] = 163 then return "mkv"
+    if bytes.Count() >= 8 and bytes[4] = 102 and bytes[5] = 116 and bytes[6] = 121 and bytes[7] = 112 then return "mp4"
+    if Instr(1, kind, "matroska") > 0 or Instr(1, kind, "webm") > 0 then return "mkv"
+    if Instr(1, kind, "video/mp4") > 0 or Instr(1, kind, "quicktime") > 0 then return "mp4"
+    low = LCase(disposition)
+    if Instr(1, low, ".mkv") > 0 then return "mkv"
+    if Instr(1, low, ".mp4") > 0 or Instr(1, low, ".m4v") > 0 then return "mp4"
+    return ""
+end function
 
 function Probe_Long(text as string) as longinteger
     n = 0&
