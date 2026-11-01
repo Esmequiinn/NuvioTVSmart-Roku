@@ -10,6 +10,8 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 - **Servicios conectados** (TorBox y Premiumize), como en Nuvio TV: en **Ajustes → Servicios conectados**, vincula tu cuenta de TorBox con un código QR o escribe tu clave de API de TorBox o Premiumize. También llegan desde tu cuenta de Nuvio. Los resultados de torrent de tus addons que ya están en la caché de tu servicio ahora aparecen como fuentes (con la etiqueta TB o PM) y se reproducen directo. Los torrents que no están en caché se siguen omitiendo.
 - **Servidores multimedia** (Jellyfin y Emby), como en Nuvio TV: en **Ajustes → Servidores multimedia**, inicia sesión con la dirección de tu servidor, tu usuario y tu contraseña. Tus bibliotecas de películas y series aparecen como filas en el inicio, y cuando un título está en tu servidor aparece primero en las fuentes, como el archivo original o convertido por el servidor (HLS) para archivos que tu Roku no puede reproducir. Puedes desactivar el servidor, elegir qué bibliotecas mostrar, actualizarlas o quitar el servidor.
 
+### Corregido
+- Al presionar Atrás mientras veías algo, a veces salía el error "'Dot' Operator attempted with invalid BrightScript Component" y no podías salir del video. Ahora el video siempre se cierra y regresas a la pantalla anterior.
 
 ## [0.0.8] - 2026-10-31
 
