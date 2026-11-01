@@ -122,8 +122,8 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Playback stats | ⚠️ Not tested yet |
 | Next up in Continue Watching | ⚠️ Not tested yet |
 | YouTube trailers in your language | ✅ Working |
-| Episode options (`*` on an episode) | ⚠️ Not tested yet |
-| Profile PIN | ⚠️ Not tested yet |
+| Episode options (`*` on an episode) | ✅ Working |
+| Profile PIN | ✅ Working |
 | Episodes panel in the player | ⚠️ Not tested yet |
 | More like this and collection in details | ⚠️ Not tested yet |
 | MDBList key from your Nuvio account | ✅ Working |
