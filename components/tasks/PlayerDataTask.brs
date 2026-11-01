@@ -170,6 +170,9 @@ function Recs_Fetch(p as object) as object
     for each r in picks
         urls.Push("https://api.themoviedb.org/3/" + media + "/" + Str_Any(r.id) + "/external_ids?api_key=" + key)
     end for
+    for each r in picks
+        urls.Push("https://api.themoviedb.org/3/" + media + "/" + Str_Any(r.id) + "/images?api_key=" + key + "&include_image_language=" + Left(lang, 2) + ",en,null")
+    end for
     ext = Http_Fetch(urls, 8000, 0).data
     for i = 0 to picks.Count() - 1
         r = picks[i]
@@ -181,7 +184,25 @@ function Recs_Fetch(p as object) as object
         if media = "tv" then kind = "series"
         back = ""
         if Str_Of(r.backdrop_path) <> "" then back = "https://image.tmdb.org/t/p/w1280" + r.backdrop_path
-        out.Push({ id: rid, kind: kind, name: Str_Glyphs(name), poster: "https://image.tmdb.org/t/p/w342" + r.poster_path, background: back })
+        logo = ""
+        imgs = ext[picks.Count() + i]
+        if type(imgs) = "roAssociativeArray" and type(imgs.logos) = "roArray"
+            best = invalid
+            for each lg in imgs.logos
+                if type(lg) = "roAssociativeArray" and Str_Of(lg.file_path) <> ""
+                    code = Str_Of(lg.iso_639_1)
+                    if best = invalid then best = lg
+                    if code = Left(lang, 2) and Str_Of(best.iso_639_1) <> Left(lang, 2) then best = lg
+                end if
+            end for
+            if best <> invalid then logo = "https://image.tmdb.org/t/p/w500" + Str_Of(best.file_path).Replace(".svg", ".png")
+        end if
+        year = Left(Str_Of(r.release_date), 4)
+        if year = "" then year = Left(Str_Of(r.first_air_date), 4)
+        rating = ""
+        v10 = Int(Val(Str_Any(r.vote_average)) * 10 + 0.5)
+        if v10 > 0 then rating = Int(v10 / 10).ToStr() + "." + (v10 mod 10).ToStr()
+        out.Push({ id: rid, kind: kind, name: Str_Glyphs(name), poster: "https://image.tmdb.org/t/p/w342" + r.poster_path, background: back, logo: logo, overview: Str_OneLine(Str_Of(r.overview)), year: year, rating: rating })
     end for
     return out
 end function

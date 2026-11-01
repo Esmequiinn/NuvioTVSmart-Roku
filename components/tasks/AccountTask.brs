@@ -30,6 +30,10 @@ sub execute()
         result = Nuvio_EmailLogin(Str_Of(p.email), Str_Of(p.password))
     else if mode = "nuvioSync"
         result = Nuvio_Sync()
+    else if mode = "nuvioProgress"
+        result = Nuvio_ProgressRefresh()
+    else if mode = "verifyPin"
+        result = Nuvio_VerifyPin(ToInt(p.remote, 0), Str_Of(p.pin))
     else if mode = "nuvioPush"
         result = Nuvio_Push()
     else if mode = "nuvioServer"

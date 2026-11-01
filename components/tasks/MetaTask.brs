@@ -5,6 +5,17 @@ end sub
 sub execute()
     kind = m.top.kind
     id = m.top.metaId
+    origId = id
+    if LCase(Left(id, 5)) = "tmdb:"
+        key = Key_Tmdb(St_Integrations())
+        if key <> ""
+            media = "movie"
+            if LCase(kind) <> "movie" then media = "tv"
+            num = Mid(id, 6).Split(":")[0]
+            ext = Http_FetchJson("https://api.themoviedb.org/3/" + media + "/" + num + "/external_ids?api_key=" + key, 8000)
+            if type(ext) = "roAssociativeArray" and Left(Str_Of(ext.imdb_id), 2) = "tt" then id = ext.imdb_id
+        end if
+    end if
     urls = []
     for each entry in m.top.manifests
         if Addon_Supports(entry.manifest, "meta", kind, id)
@@ -25,7 +36,7 @@ sub execute()
     merged.Delete("raw")
     integ = St_Integrations()
     if integ.tmdbEnabled and Key_Tmdb(integ) <> ""
-        Tmdb_Enrich(merged, integ, kind, id)
+        Tmdb_Enrich(merged, integ, kind, origId)
     end if
     if Str_Of(merged.logo) = "" then merged.logo = Img_Logo(merged.imdb)
     if Str_Of(merged.background) = "" then merged.background = Img_Background(merged.imdb)
@@ -66,7 +77,7 @@ function Tmdb_Enrich(merged as object, integ as object, kind as string, id as st
         end if
     end if
     if tmdbId = "" then return false
-    url = "https://api.themoviedb.org/3/" + media + "/" + tmdbId + "?api_key=" + key + "&language=" + lang + "&append_to_response=images,external_ids,videos,credits&include_image_language=" + lang2 + ",en,null&include_video_language=" + lang2 + ",en"
+    url = "https://api.themoviedb.org/3/" + media + "/" + tmdbId + "?api_key=" + key + "&language=" + lang + "&append_to_response=images,external_ids,videos,credits,recommendations&include_image_language=" + lang2 + ",en,null&include_video_language=" + lang2 + ",en"
     d = Http_FetchJson(url, 12000)
     if type(d) <> "roAssociativeArray" then return false
     title = Str_Of(d.title)
@@ -95,6 +106,7 @@ function Tmdb_Enrich(merged as object, integ as object, kind as string, id as st
     if merged.imdb = "" and type(d.external_ids) = "roAssociativeArray" then merged.imdb = Str_Of(d.external_ids.imdb_id)
     merged.originalLanguage = Str_Of(d.original_language)
     Tmdb_Credits(merged, d, media)
+    Tmdb_More(merged, d, media, key, lang)
     merged.tmdbId = tmdbId
     if type(d.videos) = "roAssociativeArray" and type(d.videos.results) = "roArray"
         local = []
@@ -128,6 +140,69 @@ function Tmdb_Enrich(merged as object, integ as object, kind as string, id as st
     end if
     if media = "tv" then Tmdb_Episodes(merged, key, lang, tmdbId, d)
     return true
+end function
+
+sub Tmdb_More(merged as object, d as object, media as string, key as string, lang as string)
+    kind = "movie"
+    if media = "tv" then kind = "series"
+    more = []
+    if type(d.recommendations) = "roAssociativeArray" and type(d.recommendations.results) = "roArray"
+        for each r in d.recommendations.results
+            if more.Count() >= 15 then exit for
+            it = Tmdb_Card(r, kind)
+            if it <> invalid then more.Push(it)
+        end for
+    end if
+    if more.Count() > 0 then merged.moreLike = more
+    col = d.belongs_to_collection
+    if media = "movie" and type(col) = "roAssociativeArray" and Str_Any(col.id) <> ""
+        c = Http_FetchJson("https://api.themoviedb.org/3/collection/" + Str_Any(col.id) + "?api_key=" + key + "&language=" + lang, 8000)
+        if type(c) = "roAssociativeArray" and type(c.parts) = "roArray"
+            parts = []
+            for each r in c.parts
+                if type(r) = "roAssociativeArray" and Str_Of(r.release_date) <> "" then parts.Push(r)
+            end for
+            parts.SortBy("release_date")
+            items = []
+            for each r in parts
+                it = Tmdb_Card(r, "movie")
+                if it <> invalid then items.Push(it)
+            end for
+            if items.Count() > 1
+                name = Str_Of(c.name)
+                if name = "" then name = Str_Of(col.name)
+                merged.collection = { name: name, items: items }
+            end if
+        end if
+    end if
+    merged.companies = Tmdb_Orgs(d.production_companies)
+    if media = "tv" then merged.networks = Tmdb_Orgs(d.networks)
+end sub
+
+function Tmdb_Card(r as dynamic, kind as string) as dynamic
+    if type(r) <> "roAssociativeArray" or Str_Of(r.poster_path) = "" then return invalid
+    name = Str_Of(r.title)
+    if name = "" then name = Str_Of(r.name)
+    date = Str_Of(r.release_date)
+    if date = "" then date = Str_Of(r.first_air_date)
+    back = ""
+    if Str_Of(r.backdrop_path) <> "" then back = "https://image.tmdb.org/t/p/w1280" + r.backdrop_path
+    return { id: "tmdb:" + Str_Any(r.id), kind: kind, name: name, year: Left(date, 4), poster: "https://image.tmdb.org/t/p/w342" + r.poster_path, background: back }
+end function
+
+function Tmdb_Orgs(list as dynamic) as object
+    out = []
+    if type(list) <> "roArray" then return out
+    for each c in list
+        if out.Count() >= 8 then exit for
+        if type(c) = "roAssociativeArray" and Str_Of(c.name) <> ""
+            logo = ""
+            path = Str_Of(c.logo_path)
+            if path <> "" then logo = "https://image.tmdb.org/t/p/w185" + path.Replace(".svg", ".png")
+            out.Push({ name: Str_Of(c.name), logo: logo })
+        end if
+    end for
+    return out
 end function
 
 function Tmdb_Logo(images as dynamic, lang2 as string) as string

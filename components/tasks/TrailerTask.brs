@@ -71,7 +71,10 @@ end function
 
 function Trailer_Imdb(imdb as string) as dynamic
     query = "query TitleTrailer($id: ID!) { title(id: $id) { primaryVideos(first: 1) { edges { node { id playbackURLs { url videoMimeType videoDefinition } } } } } }"
-    headers = { "x-imdb-client-name": "imdb-web-next-localized", "x-imdb-user-language": "es-MX", "x-imdb-user-country": "MX" }
+    lang = Tmdb_Lang()
+    country = "US"
+    if Len(lang) = 5 then country = Right(lang, 2)
+    headers = { "x-imdb-client-name": "imdb-web-next-localized", "x-imdb-user-language": lang, "x-imdb-user-country": country }
     r = Http_Request("POST", "https://api.graphql.imdb.com/", headers, { query: query, variables: { id: imdb } }, 12000)
     d = r.json
     if type(d) <> "roAssociativeArray" or type(d.data) <> "roAssociativeArray" then return invalid
@@ -106,51 +109,124 @@ end function
 function Trailer_YouTube(raw as string) as dynamic
     id = Trailer_YtId(raw)
     if id = "" then return invalid
-    result = Trailer_YtIos(id)
-    if result = invalid then result = Trailer_YtVr(id)
-    return result
+    cfg = Yt_Config(false)
+    notes = []
+    stale = 0
+    clients = Yt_Clients()
+    for each c in clients
+        r = Yt_Player(id, c, cfg)
+        notes.Push(c.key + " " + r.note)
+        if r.result <> invalid
+            Yt_Note(id, notes)
+            return r.result
+        end if
+        if r.note = "LOGIN_REQUIRED" then stale = stale + 1
+    end for
+    if stale = clients.Count()
+        cfg = Yt_Config(true)
+        for each c in clients
+            r = Yt_Player(id, c, cfg)
+            notes.Push(c.key + " " + r.note)
+            if r.result <> invalid
+                Yt_Note(id, notes)
+                return r.result
+            end if
+        end for
+    end if
+    Yt_Note(id, notes)
+    return invalid
 end function
 
-function Trailer_YtVr(id as string) as dynamic
-    agent = "com.google.android.apps.youtube.vr.oculus/1.65.10 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip"
-    headers = { "User-Agent": agent, "X-Youtube-Client-Name": "28", "X-Youtube-Client-Version": "1.65.10", Origin: "https://www.youtube.com" }
-    client = { clientName: "ANDROID_VR", clientVersion: "1.65.10", deviceMake: "Oculus", deviceModel: "Quest 3", androidSdkVersion: 32, osName: "Android", osVersion: "12L", hl: "es", gl: "MX" }
-    body = { context: { client: client }, videoId: id, contentCheckOk: true, racyCheckOk: true }
-    r = Http_Request("POST", "https://www.youtube.com/youtubei/v1/player?prettyPrint=false", headers, body, 12000)
+sub Yt_Note(id as string, notes as object)
+    St_Set("trailerDiag", "YouTube " + id + ": " + notes.Join(", "))
+end sub
+
+function Yt_Clients() as object
+    return [
+        { key: "ios", id: "5", version: "20.10.1", agent: "com.google.ios.youtube/20.10.1 (iPhone16,2; U; CPU iOS 17_4 like Mac OS X)", context: [["clientName", "IOS"], ["clientVersion", "20.10.1"], ["deviceModel", "iPhone16,2"], ["osName", "iPhone"], ["osVersion", "17.4.0.21E219"], ["platform", "MOBILE"], ["hl", "en"], ["gl", "US"]] }
+        { key: "visionos", id: "101", version: "1.02", agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15", context: [["clientName", "VISIONOS"], ["clientVersion", "1.02"], ["deviceMake", "Apple"], ["deviceModel", "RealityDevice17,1"], ["osName", "visionOS"], ["osVersion", "26.5.23O471"], ["hl", "en"], ["gl", "US"]] }
+        { key: "android", id: "3", version: "20.10.35", agent: "com.google.android.youtube/20.10.35 (Linux; U; Android 14; en_US) gzip", context: [["clientName", "ANDROID"], ["clientVersion", "20.10.35"], ["osName", "Android"], ["osVersion", "14"], ["platform", "MOBILE"], ["androidSdkVersion", 34], ["hl", "en"], ["gl", "US"]] }
+    ]
+end function
+
+function Yt_Body(id as string, context as object) as string
+    parts = []
+    for each pair in context
+        parts.Push(FormatJson(pair[0]) + ":" + FormatJson(pair[1]))
+    end for
+    client = "{" + parts.Join(",") + "}"
+    q = Chr(34)
+    return "{" + q + "videoId" + q + ":" + FormatJson(id) + "," + q + "contentCheckOk" + q + ":true," + q + "racyCheckOk" + q + ":true," + q + "context" + q + ":{" + q + "client" + q + ":" + client + "}," + q + "playbackContext" + q + ":{" + q + "contentPlaybackContext" + q + ":{" + q + "html5Preference" + q + ":" + q + "HTML5_PREF_WANTS" + q + "}}}"
+end function
+
+function Yt_Config(refresh as boolean) as object
+    now = CreateObject("roDateTime").AsSeconds()
+    saved = St_Get("ytConfig", invalid)
+    if not refresh and type(saved) = "roAssociativeArray" and now - ToInt(saved.at, 0) < 21600 and Str_Of(saved.key) <> "" then return saved
+    cfg = { key: "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8", visitor: "", at: now }
+    agent = "Mozilla/5.0 (Linux; Android 12; Android TV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+    r = Http_Request("GET", "https://www.youtube.com/watch?v=dQw4w9WgXcQ&hl=en", { "User-Agent": agent, "Accept-Language": "en-US,en;q=0.9" }, invalid, 12000)
+    if r.code = 200 and r.body <> ""
+        key = CreateObject("roRegex", Chr(34) + "INNERTUBE_API_KEY" + Chr(34) + ":" + Chr(34) + "([^" + Chr(34) + "]+)" + Chr(34), "").Match(r.body)
+        if key.Count() > 1 then cfg.key = key[1]
+        visitor = CreateObject("roRegex", Chr(34) + "VISITOR_DATA" + Chr(34) + ":" + Chr(34) + "([^" + Chr(34) + "]+)" + Chr(34), "").Match(r.body)
+        if visitor.Count() > 1 then cfg.visitor = visitor[1]
+    else
+        cfg.at = now - 21000
+    end if
+    St_Set("ytConfig", cfg)
+    return cfg
+end function
+
+function Yt_Player(id as string, c as object, cfg as object) as object
+    headers = { "User-Agent": c.agent, "X-Youtube-Client-Name": c.id, "X-Youtube-Client-Version": c.version, Origin: "https://www.youtube.com", "Accept-Language": "en-US,en;q=0.9" }
+    if Str_Of(cfg.visitor) <> "" then headers["X-Goog-Visitor-Id"] = cfg.visitor
+    headers["Content-Type"] = "application/json"
+    r = Http_Request("POST", "https://www.youtube.com/youtubei/v1/player?key=" + Str_Of(cfg.key) + "&prettyPrint=false", headers, Yt_Body(id, c.context), 12000)
+    out = { result: invalid, note: "HTTP " + r.code.ToStr() }
     d = r.json
-    if type(d) <> "roAssociativeArray" or type(d.streamingData) <> "roAssociativeArray" then return invalid
-    hls = Str_Of(d.streamingData.hlsManifestUrl)
-    if hls <> "" then return { url: hls, format: "hls", headers: ["User-Agent: " + agent], source: "youtube" }
+    if type(d) <> "roAssociativeArray" then return out
+    if type(d.error) = "roAssociativeArray"
+        out.note = "HTTP " + r.code.ToStr() + " " + Str_Of(d.error.status) + " " + Left(Str_Of(d.error.message), 60)
+        return out
+    end if
+    status = ""
+    reason = ""
+    if type(d.playabilityStatus) = "roAssociativeArray"
+        status = Str_Of(d.playabilityStatus.status)
+        reason = Str_Of(d.playabilityStatus.reason)
+    end if
+    if status <> "" and status <> "OK"
+        out.note = (status + " " + Left(reason, 40)).Trim()
+        return out
+    end if
+    sd = d.streamingData
+    if type(sd) <> "roAssociativeArray"
+        out.note = "HTTP " + r.code.ToStr() + " " + status + " sin video"
+        return out
+    end if
+    playHeaders = ["User-Agent: " + c.agent]
+    hls = Str_Of(sd.hlsManifestUrl)
+    if hls <> ""
+        out.note = "OK hls"
+        out.result = { url: hls, format: "hls", headers: playHeaders, source: "youtube" }
+        return out
+    end if
     best = invalid
-    if type(d.streamingData.formats) = "roArray"
-        for each f in d.streamingData.formats
+    if type(sd.formats) = "roArray"
+        for each f in sd.formats
             if type(f) = "roAssociativeArray" and Str_Of(f.url) <> "" and Instr(1, Str_Of(f.mimeType), "video/mp4") > 0
                 if best = invalid or ToInt(f.height, 0) > ToInt(best.height, 0) then best = f
             end if
         end for
     end if
-    if best = invalid then return invalid
-    return { url: best.url, format: "mp4", headers: ["User-Agent: " + agent], source: "youtube" }
-end function
-
-function Trailer_YtIos(id as string) as dynamic
-    agent = "com.google.ios.youtube/20.10.1 (iPhone16,2; U; CPU iOS 17_4 like Mac OS X)"
-    headers = { "User-Agent": agent, "X-Youtube-Client-Name": "5", "X-Youtube-Client-Version": "20.10.1", Origin: "https://www.youtube.com" }
-    client = { clientName: "IOS", clientVersion: "20.10.1", deviceMake: "Apple", deviceModel: "iPhone16,2", osName: "iPhone", osVersion: "17.4.0.21E219", hl: "es", gl: "MX" }
-    body = { context: { client: client }, videoId: id, contentCheckOk: true, racyCheckOk: true }
-    r = Http_Request("POST", "https://www.youtube.com/youtubei/v1/player?prettyPrint=false", headers, body, 12000)
-    d = r.json
-    if type(d) <> "roAssociativeArray" or type(d.streamingData) <> "roAssociativeArray" then return invalid
-    hls = Str_Of(d.streamingData.hlsManifestUrl)
-    if hls <> "" then return { url: hls, format: "hls", headers: ["User-Agent: " + agent], source: "youtube" }
-    if type(d.streamingData.formats) = "roArray"
-        for each f in d.streamingData.formats
-            if type(f) = "roAssociativeArray" and Str_Of(f.url) <> "" and Instr(1, Str_Of(f.mimeType), "video/mp4") > 0
-                return { url: f.url, format: "mp4", headers: ["User-Agent: " + agent], source: "youtube" }
-            end if
-        end for
+    if best = invalid
+        out.note = "sin formato"
+        return out
     end if
-    return invalid
+    out.note = "OK mp4"
+    out.result = { url: best.url, format: "mp4", headers: playHeaders, source: "youtube" }
+    return out
 end function
 
 function Trailer_YtId(raw as string) as string
