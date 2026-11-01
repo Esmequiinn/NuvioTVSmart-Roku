@@ -19,6 +19,7 @@
         <field id="nextInfo" type="assocarray" />
         <field id="stillWatching" type="boolean" alwaysNotify="true" onChange="Ex_OnStill" />
         <field id="postActive" type="boolean" value="false" />
+        <field id="episodes" type="assocarray" onChange="EpP_Open" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Mask.brs" />
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
@@ -29,6 +30,7 @@
     <script type="text/brightscript" uri="pkg:/components/views/PlayerExtras.brs" />
     <children>
         <Rectangle width="1920" height="1080" color="0x000000FF" />
+        <Poster id="postBg" visible="false" width="1920" height="1080" loadWidth="1280" loadHeight="720" loadDisplayMode="scaleToZoom" />
         <Video id="video" width="1920" height="1080" enableUI="false" enableTrickPlay="false" focusable="false" />
         <Group id="loadScreen" visible="false">
             <Rectangle width="1920" height="1080" color="0x0B0B0FFF" />
@@ -37,7 +39,9 @@
             <Poster id="loadLogo" translation="[560,330]" width="800" height="260" loadDisplayMode="scaleToFit" />
             <Label id="loadTitle" translation="[160,380]" width="1600" height="160" horizAlign="center" vertAlign="center" wrap="true" maxLines="2" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
             <BusySpinner id="loadSpin" translation="[932,660]" spinInterval="0.9" />
+            <Label id="loadPct" translation="[0,740]" width="1920" horizAlign="center" font="font:SmallSystemFont" color="0xD0D0D8FF" />
         </Group>
+        <Timer id="bufTimer" repeat="false" duration="1.2" />
         <Group id="subLayer" visible="false">
             <Poster id="subBg" uri="pkg:/images/card.9.png" blendColor="0x000000A0" />
             <Label id="subShadow" width="1600" horizAlign="center" vertAlign="bottom" wrap="true" maxLines="4" color="0x000000FF" />
@@ -99,11 +103,23 @@
             <Label id="statsText" translation="[24,18]" font="font:SmallestSystemFont" color="0xE8E8EEFF" />
         </Group>
         <Group id="postBox" visible="false">
-            <Poster translation="[0,420]" width="1920" height="660" uri="pkg:/images/player_bottom.png" loadDisplayMode="scaleToFill" />
-            <Label id="postHeading" translation="[120,600]" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
-            <Group id="postRow" translation="[120,660]" />
-            <Label id="postHint" translation="[120,1000]" font="font:SmallestSystemFont" color="0xB4B4C0FF" />
+            <Poster width="1400" height="1080" uri="pkg:/images/grad_left.png" loadDisplayMode="scaleToFill" blendColor="0x000000FF" />
+            <Poster translation="[0,480]" width="1920" height="600" uri="pkg:/images/player_bottom.png" loadDisplayMode="scaleToFill" />
+            <Poster id="postWinRing" translation="[1196,52]" width="632" height="380" uri="pkg:/images/iring.9.png" visible="false" />
+            <Label id="postWinHint" translation="[1208,444]" width="608" horizAlign="center" font="font:SmallestSystemFont" color="0xD0D0D8FF" visible="false" />
+            <Label id="postHeading" translation="[120,440]" width="1000" font="font:SmallBoldSystemFont" color="0xD0D0D8FF" />
+            <Poster id="postLogo" translation="[120,490]" width="620" height="170" loadWidth="620" loadHeight="170" loadDisplayMode="scaleToFit" />
+            <Label id="postTitle" translation="[120,490]" width="1000" height="170" vertAlign="bottom" wrap="true" maxLines="2" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="postMeta" translation="[120,684]" width="1000" font="font:SmallSystemFont" color="0xE0E0E8FF" />
+            <Label id="postDesc" translation="[120,732]" width="940" height="130" wrap="true" maxLines="3" font="font:SmallSystemFont" color="0xC8C8D0FF" />
+            <Group id="postRow" translation="[120,890]" />
+            <Rectangle id="postTrack" translation="[120,990]" width="560" height="4" color="0xFFFFFF33" />
+            <Rectangle id="postFill" translation="[120,990]" width="0" height="4" />
+            <Label id="postCount" translation="[700,976]" width="300" font="font:SmallestSystemFont" color="0xB4B4C0FF" />
+            <Label id="postHint" translation="[120,1010]" width="1400" font="font:SmallestSystemFont" color="0x9A9AAAFF" />
         </Group>
+        <Timer id="postTimer" repeat="true" duration="0.25" />
+        <Group id="epPanel" visible="false" />
         <Group id="stillBox" visible="false">
             <Rectangle width="1920" height="1080" color="0x000000FF" />
             <Poster id="stillBg" width="1920" height="1080" loadWidth="1280" loadHeight="720" loadDisplayMode="scaleToZoom" opacity="0.45" />

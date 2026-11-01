@@ -308,6 +308,12 @@ function onKeyEvent(key as string, press as boolean) as boolean
         m.top.event = { type: "back" }
         return true
     end if
+    if m.zone = "grid" and m.shown.Count() = 0
+        m.zone = "chips"
+        m.autoFocus = false
+        m.top.setFocus(true)
+        paintChips()
+    end if
     if m.zone = "grid"
         if key = "up"
             focusChips("chips")

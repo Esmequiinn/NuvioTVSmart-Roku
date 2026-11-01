@@ -34,7 +34,19 @@ sub onArtStatus()
     m.frame.visible = m.art.loadStatus <> "ready"
     if m.art.loadStatus <> "failed" then return
     item = m.top.itemContent
-    if item = invalid or not item.hasField("fallback") then return
+    if item = invalid then return
+    if item.hasField("remote") and item.remote <> "" and Left(m.art.uri, 4) <> "http" and m.art.uri <> item.remote
+        m.art.uri = item.remote
+        return
+    end if
+    if m.retried <> true and Left(m.art.uri, 4) = "http"
+        m.retried = true
+        u = m.art.uri
+        m.art.uri = ""
+        m.art.uri = u
+        return
+    end if
+    if not item.hasField("fallback") then return
     if item.fallback <> "" and m.art.uri <> item.fallback then m.art.uri = item.fallback
 end sub
 
@@ -87,6 +99,7 @@ sub onContent()
     end if
     onWatched()
     m.name.text = item.title
+    m.retried = false
     m.art.uri = item.HDPosterUrl
     isFolder = fieldOf(item, "itemType") = "folder"
     if isFolder

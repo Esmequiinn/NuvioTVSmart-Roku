@@ -12,6 +12,9 @@ sub init()
     m.loadSpin.poster.height = 56
     m.loadTitle.font.size = 64
     m.loadLogo.observeField("loadStatus", "onLoadLogo")
+    m.loadPct = m.top.findNode("loadPct")
+    m.bufTimer = m.top.findNode("bufTimer")
+    m.bufTimer.observeField("fire", "onBufTimer")
     m.started = false
     m.pauseScreen = m.top.findNode("pauseScreen")
     m.pauseBg = m.top.findNode("pauseBg")
@@ -67,6 +70,7 @@ sub init()
 
     m.video.observeField("state", "onState")
     m.video.observeField("availableAudioTracks", "applyAudioPreference")
+    m.video.observeField("bufferingStatus", "onBufferStatus")
     m.video.observeField("currentAudioTrack", "onAudioChanged")
     m.video.observeField("availableSubtitleTracks", "applySubtitlePreference")
     m.audioApplied = false
@@ -144,6 +148,7 @@ sub onInfo()
     m.loadLogo.uri = Str_Of(info.logo)
     onLoadLogo()
     m.started = false
+    m.loadPct.text = ""
     m.loadScreen.visible = true
     m.loadSpin.control = "start"
     logo = Str_Of(info.logo)
@@ -165,8 +170,24 @@ end sub
 
 sub hideLoadScreen()
     m.started = true
+    m.bufTimer.control = "stop"
     m.loadScreen.visible = false
     m.loadSpin.control = "stop"
+    m.loadPct.text = ""
+end sub
+
+sub onBufTimer()
+    if m.video.state <> "buffering" or not m.started or m.postBox.visible then return
+    m.loadPct.text = ""
+    m.loadScreen.visible = true
+    m.loadSpin.control = "start"
+end sub
+
+sub onBufferStatus()
+    st = m.video.bufferingStatus
+    if type(st) <> "roAssociativeArray" or not m.loadScreen.visible then return
+    pct = ToInt(st.percentage, -1)
+    if pct >= 0 and pct < 100 then m.loadPct.text = L("Cargando") + "  " + pct.ToStr() + "%" else m.loadPct.text = ""
 end sub
 
 sub setLogo(logo as string)
@@ -307,15 +328,57 @@ sub applyAudioPreference()
         wanted = Lang_Resolve(code, original)
         if wanted <> ""
             for each t in tracks
-                if Lang_Matches(Str_Of(t.Language), wanted)
-                    if Str_Of(t.Track) <> m.video.currentAudioTrack then m.video.audioTrack = Str_Of(t.Track)
-                    m.userAudio = Str_Of(t.Track)
+                if Lang_Matches(Str_Of(t.Language), wanted) and Audio_Playable(t)
+                    Audio_Pick(t)
                     return
                 end if
             end for
         end if
     end for
+    current = invalid
+    for each t in tracks
+        if Str_Of(t.Track) = m.video.currentAudioTrack then current = t
+    end for
+    if current = invalid then current = tracks[0]
+    if Audio_Playable(current) then return
+    for each t in tracks
+        if Audio_Playable(t)
+            Audio_Pick(t)
+            return
+        end if
+    end for
 end sub
+
+sub Audio_Pick(t as object)
+    if Str_Of(t.Track) <> m.video.currentAudioTrack then m.video.audioTrack = Str_Of(t.Track)
+    m.userAudio = Str_Of(t.Track)
+end sub
+
+function Audio_Codec(t as object) as string
+    text = LCase(Str_Of(t.Format) + " " + Str_Of(t.Name) + " " + Str_Of(t.Description))
+    if Instr(1, text, "truehd") > 0 or Instr(1, text, "mlp") > 0 then return "truehd"
+    if Instr(1, text, "dts") > 0 then return "dts"
+    if Instr(1, text, "eac3") > 0 or Instr(1, text, "e-ac-3") > 0 or Instr(1, text, "dd+") > 0 or Instr(1, text, "ddp") > 0 or Instr(1, text, "atmos") > 0 then return "eac3"
+    if Instr(1, text, "ac3") > 0 or Instr(1, text, "ac-3") > 0 or Instr(1, text, "dolby digital") > 0 then return "ac3"
+    if Instr(1, text, "flac") > 0 then return "flac"
+    if Instr(1, text, "opus") > 0 then return "opus"
+    if Instr(1, text, "vorbis") > 0 then return "vorbis"
+    if Instr(1, text, "pcm") > 0 then return "pcm"
+    return ""
+end function
+
+function Audio_Playable(t as object) as boolean
+    codec = Audio_Codec(t)
+    if codec = "" then return true
+    if m.audioCan = invalid then m.audioCan = {}
+    if not m.audioCan.DoesExist(codec)
+        ok = true
+        r = CreateObject("roDeviceInfo").CanDecodeAudio({ Codec: codec })
+        if type(r) = "roAssociativeArray" and r.result <> invalid then ok = r.result = true
+        m.audioCan[codec] = ok
+    end if
+    return m.audioCan[codec]
+end function
 
 sub onAudioChanged()
     if m.userAudio = "" or m.audioFixes >= 3 then return
@@ -469,7 +532,8 @@ end sub
 
 sub onState_Run()
     state = m.video.state
-    m.buffering.visible = state = "buffering" and m.started
+    m.buffering.visible = false
+    if state = "buffering" and m.started and not m.loadScreen.visible then m.bufTimer.control = "start"
     if state = "playing" or state = "paused" or state = "error" or state = "finished" then hideLoadScreen()
     if state = "playing" and not m.resumeDone
         m.resumeDone = true
@@ -572,7 +636,7 @@ sub activate(id as string)
     else if id = "next"
         m.top.event = { type: "next" }
     else if id = "episodes"
-        m.top.event = { type: "episodes" }
+        m.top.event = { type: "episodes", inPlayer: true }
     else if id = "party"
         m.top.event = { type: "party" }
     end if
@@ -743,6 +807,7 @@ end sub
 function onKeyEvent(key as string, press as boolean) as boolean
     if not press then return false
     if m.panel.visible then return true
+    if m.epPanel.visible then return EpP_Key(key)
     if Ex_OverlayKey(key) then return true
     if m.pauseScreen.visible
         m.pauseScreen.visible = false

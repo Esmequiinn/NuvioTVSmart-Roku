@@ -27,6 +27,7 @@
             <Group id="lower" translation="[0,900]" />
         </Group>
         <Label id="trailerHint" visible="false" translation="[160,1000]" width="1600" font="font:SmallestSystemFont" color="0xD6D6E0FF" text="Tráiler en reproducción  ·  Presiona cualquier botón para volver" />
+        <Group id="epOpts" visible="false" />
         <Timer id="trailerTimer" repeat="false" />
     </children>
 </component>

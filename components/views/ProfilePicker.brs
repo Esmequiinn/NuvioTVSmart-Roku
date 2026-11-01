@@ -14,7 +14,7 @@ sub build()
     if list = invalid then list = []
     entries = []
     for each p in list
-        entries.Push({ id: p.id, name: Str_Glyphs(Str_Of(p.name)), color: p.color, avatar: Str_Of(p.avatar) })
+        entries.Push({ id: p.id, name: Str_Glyphs(Str_Of(p.name)), color: p.color, avatar: Str_Of(p.avatar), pin: p.pin = true })
     end for
     if entries.Count() < 8 then entries.Push({ id: "__add", name: L("Agregar"), color: "3A3A46" })
     size = 220
@@ -59,6 +59,20 @@ sub build()
             pic.loadHeight = size
             pic.loadDisplayMode = "scaleToZoom"
             pic.uri = Mask_Circle(e.avatar, size)
+        end if
+        if e.pin = true
+            badge = g.createChild("Poster")
+            badge.uri = "pkg:/images/c/d64.png"
+            badge.width = 64
+            badge.height = 64
+            badge.translation = [size - 60, size - 60]
+            badge.blendColor = "0x0C0C0FFF"
+            lock = g.createChild("Poster")
+            lock.uri = "pkg:/images/s/ic_lock_32.png"
+            lock.width = 32
+            lock.height = 32
+            lock.translation = [size - 44, size - 44]
+            lock.blendColor = "0xFFFFFFFF"
         end if
         name = g.createChild("Label")
         name.translation = [-40, size + 34]

@@ -18,12 +18,18 @@ sub init()
     m.seasonIndex = 0
     m.epIndex = 0
     m.castIndex = 0
+    m.tabIndex = 0
+    m.tabNodes = []
+    m.tabs = []
     m.seasonNodes = []
     m.epNodes = []
     m.castNodes = []
     m.epGroup = invalid
     m.castGroup = invalid
     m.layoutInfo = { seasonsY: -1, episodesY: -1, castY: -1 }
+    m.opts = m.top.findNode("epOpts")
+    m.optIndex = 0
+    m.optActions = []
 end sub
 
 sub onTrailer()
@@ -97,6 +103,7 @@ sub onExtra()
     m.seasonNodes = []
     m.epNodes = []
     m.castNodes = []
+    m.tabNodes = []
     m.epGroup = invalid
     m.castGroup = invalid
     m.layoutInfo = { seasonsY: -1, episodesY: -1, castY: -1 }
@@ -104,7 +111,7 @@ sub onExtra()
     y = 0
     seasons = ex.seasons
     if type(seasons) = "roArray" and seasons.Count() > 0
-        if ex.seasonIndex <> invalid then m.seasonIndex = ex.seasonIndex
+        if ex.seasonIndex <> invalid and not Bool_Of(ex.keep, false) then m.seasonIndex = ex.seasonIndex
         if m.seasonIndex >= seasons.Count() then m.seasonIndex = 0
         m.layoutInfo.seasonsY = y
         chips = m.lower.createChild("Group")
@@ -150,77 +157,57 @@ sub onExtra()
         lbl.text = crew
         y = y + 60
     end if
-    cast = ex.cast
-    if type(cast) = "roArray" and cast.Count() > 0
-        head = m.lower.createChild("Label")
-        head.font = "font:MediumBoldSystemFont"
-        head.font.size = 34
-        head.color = "0xFFFFFFFF"
-        head.translation = [160, y]
-        head.text = L("Reparto")
+    if not Bool_Of(ex.keep, false)
+        m.tabIndex = 0
+        m.castIndex = 0
+    end if
+    m.tabs = []
+    if type(ex.cast) = "roArray" and ex.cast.Count() > 0 then m.tabs.Push({ id: "cast", label: L("Reparto") })
+    if type(ex.moreLike) = "roArray" and ex.moreLike.Count() > 0 then m.tabs.Push({ id: "more", label: L("Más como esto") })
+    if type(ex.collection) = "roAssociativeArray" and type(ex.collection.items) = "roArray" and ex.collection.items.Count() > 0
+        name = Str_Of(ex.collection.name)
+        if name = "" then name = L("Colección")
+        m.tabs.Push({ id: "coll", label: name })
+    end if
+    m.tabNodes = []
+    if m.tabs.Count() > 0
+        if m.tabIndex = invalid or m.tabIndex >= m.tabs.Count() then m.tabIndex = 0
         m.layoutInfo.castY = y
-        y = y + 64
+        tabsBox = m.lower.createChild("Group")
+        tabsBox.translation = [160, y]
+        x = 0
+        for i = 0 to m.tabs.Count() - 1
+            g = tabsBox.createChild("Group")
+            g.translation = [x, 0]
+            bg = g.createChild("Poster")
+            bg.uri = "pkg:/images/pill60.9.png"
+            bg.height = 60
+            lbl = g.createChild("Label")
+            lbl.font = "font:SmallBoldSystemFont"
+            lbl.font.size = 28
+            lbl.height = 60
+            lbl.vertAlign = "center"
+            lbl.translation = [30, 0]
+            lbl.text = m.tabs[i].label
+            w = Int(lbl.boundingRect().width)
+            est = Len(lbl.text) * 15
+            if w < est then w = est
+            bg.width = w + 60
+            m.tabNodes.Push({ bg: bg, label: lbl })
+            x = x + w + 76
+        end for
+        y = y + 96
         m.castGroup = m.lower.createChild("Group")
         m.castGroup.translation = [160, y]
-        for i = 0 to cast.Count() - 1
-            c = cast[i]
-            g = m.castGroup.createChild("Group")
-            g.translation = [i * 200, 0]
-            ring = g.createChild("Poster")
-            ring.uri = "pkg:/images/c/d160.png"
-            ring.width = 160
-            ring.height = 160
-            ring.translation = [-5, -5]
-            ring.visible = false
-            disc = g.createChild("Poster")
-            disc.uri = "pkg:/images/c/d150.png"
-            disc.width = 150
-            disc.height = 150
-            disc.blendColor = "0x262626FF"
-            initial = g.createChild("Label")
-            initial.font = "font:LargeBoldSystemFont"
-            initial.font.size = 54
-            initial.width = 150
-            initial.height = 150
-            initial.horizAlign = "center"
-            initial.vertAlign = "center"
-            initial.color = "0x9E9E9EFF"
-            initial.text = UCase(Left(Str_Of(c.name), 1))
-            if Str_Of(c.photo) <> ""
-                mask = g.createChild("MaskGroup")
-                mask.maskUri = "pkg:/images/c/d150.png"
-                Mask_Apply(mask, 150, 150)
-                pic = mask.createChild("Poster")
-                pic.width = 150
-                pic.height = 150
-                pic.loadWidth = 185
-                pic.loadHeight = 278
-                pic.loadDisplayMode = "scaleToZoom"
-                pic.uri = Mask_Circle(c.photo, 150)
-            end if
-            nm = g.createChild("Label")
-            nm.font = "font:SmallBoldSystemFont"
-            nm.font.size = 24
-            nm.color = "0xFFFFFFFF"
-            nm.translation = [-15, 166]
-            nm.width = 180
-            nm.horizAlign = "center"
-            nm.text = Str_Of(c.name)
-            rl = g.createChild("Label")
-            rl.font = "font:SmallestSystemFont"
-            rl.font.size = 21
-            rl.color = "0x9E9E9EFF"
-            rl.translation = [-15, 200]
-            rl.width = 180
-            rl.horizAlign = "center"
-            rl.text = Str_Of(c.role)
-            m.castNodes.Push({ ring: ring })
-        end for
+        buildRow()
+        y = y + 400
     end if
+    Companies_Build(ex, y)
     if m.castIndex >= m.castNodes.Count() then m.castIndex = 0
     if m.zone = "seasons" and m.seasonNodes.Count() = 0 then m.zone = "buttons"
     if m.zone = "episodes" and m.epNodes.Count() = 0 then m.zone = "buttons"
     if m.zone = "cast" and m.castNodes.Count() = 0 then m.zone = "buttons"
+    if m.zone = "tabs" and m.tabNodes.Count() = 0 then m.zone = "buttons"
     paintLower()
 end sub
 
@@ -317,6 +304,186 @@ sub buildEpisodes()
     if m.epIndex >= m.epNodes.Count() then m.epIndex = 0
 end sub
 
+sub buildRow()
+    if m.castGroup = invalid then return
+    m.castGroup.removeChildrenIndex(m.castGroup.getChildCount(), 0)
+    m.castNodes = []
+    ex = m.top.extra
+    tabId = m.tabs[m.tabIndex].id
+    if tabId = "cast"
+        m.rowStep = 200
+        for i = 0 to ex.cast.Count() - 1
+            Cast_Node(ex.cast[i], i)
+        end for
+    else
+        list = ex.moreLike
+        if tabId = "coll" then list = ex.collection.items
+        m.rowStep = 230
+        for i = 0 to list.Count() - 1
+            Poster_Node(list[i], i)
+        end for
+    end if
+    if m.castIndex >= m.castNodes.Count() then m.castIndex = 0
+end sub
+
+sub Cast_Node(c as object, i as integer)
+    g = m.castGroup.createChild("Group")
+    g.translation = [i * 200, 0]
+    ring = g.createChild("Poster")
+    ring.uri = "pkg:/images/c/d160.png"
+    ring.width = 160
+    ring.height = 160
+    ring.translation = [-5, -5]
+    ring.visible = false
+    disc = g.createChild("Poster")
+    disc.uri = "pkg:/images/c/d150.png"
+    disc.width = 150
+    disc.height = 150
+    disc.blendColor = "0x262626FF"
+    initial = g.createChild("Label")
+    initial.font = "font:LargeBoldSystemFont"
+    initial.font.size = 54
+    initial.width = 150
+    initial.height = 150
+    initial.horizAlign = "center"
+    initial.vertAlign = "center"
+    initial.color = "0x9E9E9EFF"
+    initial.text = UCase(Left(Str_Of(c.name), 1))
+    if Str_Of(c.photo) <> ""
+        if Mask_On()
+            mask = g.createChild("MaskGroup")
+            mask.maskUri = "pkg:/images/c/d150.png"
+            Mask_Apply(mask, 150, 150)
+            pic = mask.createChild("Poster")
+        else
+            pic = g.createChild("Poster")
+        end if
+        pic.width = 150
+        pic.height = 150
+        pic.loadWidth = 150
+        pic.loadHeight = 225
+        pic.loadDisplayMode = "scaleToZoom"
+        pic.uri = Str_Of(c.photo)
+        if not Mask_On()
+            cut = g.createChild("Poster")
+            cut.uri = "pkg:/images/c/cut150.png"
+            cut.width = 150
+            cut.height = 150
+            cut.blendColor = "0x0C0C0FFF"
+        end if
+    end if
+    nm = g.createChild("Label")
+    nm.font = "font:SmallBoldSystemFont"
+    nm.font.size = 24
+    nm.color = "0xFFFFFFFF"
+    nm.translation = [-15, 166]
+    nm.width = 180
+    nm.horizAlign = "center"
+    nm.text = Str_Of(c.name)
+    rl = g.createChild("Label")
+    rl.font = "font:SmallestSystemFont"
+    rl.font.size = 21
+    rl.color = "0x9E9E9EFF"
+    rl.translation = [-15, 200]
+    rl.width = 180
+    rl.horizAlign = "center"
+    rl.text = Str_Of(c.role)
+    m.castNodes.Push({ ring: ring })
+end sub
+
+sub Poster_Node(it as object, i as integer)
+    g = m.castGroup.createChild("Group")
+    g.translation = [i * 230, 0]
+    mask = g.createChild("MaskGroup")
+    mask.maskUri = "pkg:/images/mask_poster.png"
+    Mask_Apply(mask, 200, 300)
+    base = mask.createChild("Rectangle")
+    base.width = 200
+    base.height = 300
+    base.color = "0x262626FF"
+    pic = mask.createChild("Poster")
+    pic.width = 200
+    pic.height = 300
+    pic.loadWidth = 200
+    pic.loadHeight = 300
+    pic.loadDisplayMode = "scaleToZoom"
+    pic.uri = Str_Of(it.poster)
+    Mask_Caps(g, 200, 300, 20, "0x0C0C0FFF")
+    ring = g.createChild("Poster")
+    ring.uri = "pkg:/images/iring.9.png"
+    ring.width = 200
+    ring.height = 300
+    ring.blendColor = m.top.accent
+    ring.visible = false
+    nm = g.createChild("Label")
+    nm.font = "font:SmallBoldSystemFont"
+    nm.font.size = 22
+    nm.color = "0xFFFFFFFF"
+    nm.translation = [0, 314]
+    nm.width = 200
+    nm.text = Str_Of(it.name)
+    yr = g.createChild("Label")
+    yr.font = "font:SmallestSystemFont"
+    yr.font.size = 20
+    yr.color = "0x9E9E9EFF"
+    yr.translation = [0, 346]
+    yr.width = 200
+    yr.text = Str_Of(it.year)
+    m.castNodes.Push({ ring: ring })
+end sub
+
+sub Companies_Build(ex as object, y as integer)
+    groups = []
+    if type(ex.networks) = "roArray" and ex.networks.Count() > 0 then groups.Push({ label: L("Cadenas"), list: ex.networks })
+    if type(ex.companies) = "roArray" and ex.companies.Count() > 0 then groups.Push({ label: L("Productoras"), list: ex.companies })
+    for each grp in groups
+        head = m.lower.createChild("Label")
+        head.font = "font:MediumBoldSystemFont"
+        head.font.size = 30
+        head.color = "0xFFFFFFFF"
+        head.translation = [160, y]
+        head.text = grp.label
+        y = y + 56
+        row = m.lower.createChild("Group")
+        row.translation = [160, y]
+        x = 0
+        for each c in grp.list
+            if x > 1500 then exit for
+            g = row.createChild("Group")
+            g.translation = [x, 0]
+            bg = g.createChild("Poster")
+            bg.uri = "pkg:/images/card.9.png"
+            bg.width = 220
+            bg.height = 100
+            bg.blendColor = "0xF2F2F2FF"
+            if Str_Of(c.logo) <> ""
+                lg = g.createChild("Poster")
+                lg.translation = [24, 16]
+                lg.width = 172
+                lg.height = 68
+                lg.loadWidth = 172
+                lg.loadHeight = 68
+                lg.loadDisplayMode = "scaleToFit"
+                lg.uri = Str_Of(c.logo)
+            else
+                nm = g.createChild("Label")
+                nm.font = "font:SmallBoldSystemFont"
+                nm.font.size = 22
+                nm.color = "0x111111FF"
+                nm.width = 220
+                nm.height = 100
+                nm.horizAlign = "center"
+                nm.vertAlign = "center"
+                nm.wrap = true
+                nm.maxLines = 2
+                nm.text = Str_Of(c.name)
+            end if
+            x = x + 240
+        end for
+        y = y + 130
+    end for
+end sub
+
 sub paintLower()
     Seasons_Scroll()
     for i = 0 to m.seasonNodes.Count() - 1
@@ -345,15 +512,29 @@ sub paintLower()
         m.castNodes[i].ring.visible = m.zone = "cast" and i = m.castIndex
     end for
     if m.castGroup <> invalid
-        first = m.castIndex - 6
+        stepX = ToInt(m.rowStep, 200)
+        first = m.castIndex - Int(1500 / stepX) + 1
         if first < 0 then first = 0
-        m.castGroup.translation = [160 - first * 200, m.castGroup.translation[1]]
+        m.castGroup.translation = [160 - first * stepX, m.castGroup.translation[1]]
     end if
+    for i = 0 to m.tabNodes.Count() - 1
+        n = m.tabNodes[i]
+        if m.zone = "tabs" and i = m.tabIndex and m.top.isInFocusChain()
+            n.bg.blendColor = "0xFFFFFFFF"
+            n.label.color = "0x0D0D0DFF"
+        else if i = m.tabIndex
+            n.bg.blendColor = "0x3A3A3AFF"
+            n.label.color = "0xFFFFFFFF"
+        else
+            n.bg.blendColor = "0x1E1E1EFF"
+            n.label.color = "0xB3B3B3FF"
+        end if
+    end for
     target = 0
     if m.zone = "seasons" or m.zone = "episodes"
         target = -(900 + m.layoutInfo.seasonsY - 140)
-    else if m.zone = "cast"
-        if m.layoutInfo.seasonsY >= 0 then target = -(900 + m.layoutInfo.castY - 360) else target = -(900 + m.layoutInfo.castY - 520)
+    else if m.zone = "cast" or m.zone = "tabs"
+        target = -(900 + m.layoutInfo.castY - 160)
     end if
     m.page.translation = [0, target]
     m.statusLabel.visible = m.zone = "buttons" and not m.top.trailerPlaying
@@ -383,7 +564,7 @@ function lowerKey(key as string) as boolean
             m.epIndex = 0
             buildEpisodes()
         else if key = "down"
-            if m.epNodes.Count() > 0 then m.zone = "episodes" else if m.castNodes.Count() > 0 then m.zone = "cast"
+            if m.epNodes.Count() > 0 then m.zone = "episodes" else if m.tabNodes.Count() > 0 then m.zone = "tabs"
         else if key = "up" or key = "back"
             m.zone = "buttons"
         end if
@@ -394,13 +575,33 @@ function lowerKey(key as string) as boolean
             m.epIndex = m.epIndex + 1
         else if key = "up"
             m.zone = "seasons"
-        else if key = "down" and m.castNodes.Count() > 0
-            m.zone = "cast"
+        else if key = "down" and m.tabNodes.Count() > 0
+            m.zone = "tabs"
         else if key = "back"
             m.zone = "buttons"
         else if key = "OK"
             stopTrailer()
             m.top.selected = "ep:" + m.epNodes[m.epIndex].id
+        else if key = "options"
+            stopTrailer()
+            Opts_Open()
+            return true
+        end if
+    else if m.zone = "tabs"
+        if key = "left" and m.tabIndex > 0
+            m.tabIndex = m.tabIndex - 1
+            m.castIndex = 0
+            buildRow()
+        else if key = "right" and m.tabIndex < m.tabNodes.Count() - 1
+            m.tabIndex = m.tabIndex + 1
+            m.castIndex = 0
+            buildRow()
+        else if key = "down" and m.castNodes.Count() > 0
+            m.zone = "cast"
+        else if key = "up"
+            if m.epNodes.Count() > 0 then m.zone = "episodes" else m.zone = "buttons"
+        else if key = "back"
+            m.zone = "buttons"
         end if
     else if m.zone = "cast"
         if key = "left" and m.castIndex > 0
@@ -408,12 +609,12 @@ function lowerKey(key as string) as boolean
         else if key = "right" and m.castIndex < m.castNodes.Count() - 1
             m.castIndex = m.castIndex + 1
         else if key = "up"
-            if m.epNodes.Count() > 0 then m.zone = "episodes" else m.zone = "buttons"
+            m.zone = "tabs"
         else if key = "back"
             m.zone = "buttons"
         else if key = "OK"
             stopTrailer()
-            m.top.selected = "cast:" + m.castIndex.ToStr()
+            m.top.selected = m.tabs[m.tabIndex].id + ":" + m.castIndex.ToStr()
         end if
     end if
     paintLower()
@@ -476,6 +677,7 @@ end sub
 
 function onKeyEvent(key as string, press as boolean) as boolean
     if not press then return false
+    if m.opts.visible then return Opts_Key(key)
     if m.top.trailerPlaying
         stopTrailer()
         return true
@@ -484,8 +686,8 @@ function onKeyEvent(key as string, press as boolean) as boolean
     if key = "down"
         if m.seasonNodes.Count() > 0
             m.zone = "seasons"
-        else if m.castNodes.Count() > 0
-            m.zone = "cast"
+        else if m.tabNodes.Count() > 0
+            m.zone = "tabs"
         else
             return true
         end if
@@ -526,3 +728,195 @@ function onKeyEvent(key as string, press as boolean) as boolean
     return key = "up" or key = "down"
 end function
 
+
+function Opts_Episode() as dynamic
+    seasons = m.top.extra.seasons
+    if type(seasons) <> "roArray" or m.seasonIndex >= seasons.Count() then return invalid
+    eps = seasons[m.seasonIndex].episodes
+    if type(eps) <> "roArray" or m.epIndex >= eps.Count() then return invalid
+    return eps[m.epIndex]
+end function
+
+sub Opts_Open()
+    if Opts_Episode() = invalid then return
+    m.optIndex = 0
+    Opts_Build()
+    m.opts.visible = true
+end sub
+
+sub Opts_Close()
+    m.opts.visible = false
+    m.opts.removeChildrenIndex(m.opts.getChildCount(), 0)
+    paintLower()
+end sub
+
+sub Opts_Build()
+    e = Opts_Episode()
+    if e = invalid then return
+    seasons = m.top.extra.seasons
+    eps = seasons[m.seasonIndex].episodes
+    allSeen = true
+    for each x in eps
+        if x.watched <> true then allSeen = false
+    end for
+    acts = []
+    if e.watched = true
+        acts.Push({ id: "unwatched", icon: "ic_unwatched", label: L("Marcar como no visto") })
+    else
+        acts.Push({ id: "watched", icon: "ic_watched", label: L("Marcar como visto") })
+    end if
+    if allSeen
+        acts.Push({ id: "seasonoff", icon: "ic_episodes", label: L("Marcar temporada como no vista") })
+    else
+        acts.Push({ id: "seasonon", icon: "ic_episodes", label: L("Marcar temporada como vista") })
+    end if
+    if m.epIndex > 0 then acts.Push({ id: "prev", icon: "ic_check", label: L("Marcar anteriores de esta temporada como vistos") })
+    acts.Push({ id: "play", icon: "ic_play", label: L("Reproducir") })
+    acts.Push({ id: "manual", icon: "ic_sources", label: L("Reproducir manualmente") })
+    if e.progress <> invalid and e.progress > 0.01 then acts.Push({ id: "restart", icon: "ic_replay", label: L("Desde el inicio") })
+    m.optActions = acts
+    if m.optIndex >= acts.Count() then m.optIndex = acts.Count() - 1
+    o = m.opts
+    o.removeChildrenIndex(o.getChildCount(), 0)
+    bg = o.createChild("Rectangle")
+    bg.width = 1920
+    bg.height = 1080
+    bg.color = "0x0C0C0FFF"
+    art = o.createChild("Poster")
+    art.width = 1920
+    art.height = 1080
+    art.loadWidth = 1280
+    art.loadHeight = 720
+    art.loadDisplayMode = "scaleToZoom"
+    art.uri = Str_Of(e.thumb)
+    left = o.createChild("Poster")
+    left.width = 1500
+    left.height = 1080
+    left.loadDisplayMode = "scaleToFill"
+    left.uri = "pkg:/images/grad_left.png"
+    bottom = o.createChild("Poster")
+    bottom.width = 1920
+    bottom.height = 520
+    bottom.translation = [0, 560]
+    bottom.loadDisplayMode = "scaleToFill"
+    bottom.uri = "pkg:/images/grad_bottom.png"
+    side = o.createChild("Rectangle")
+    side.width = 640
+    side.height = 1080
+    side.translation = [1280, 0]
+    side.color = "0x0C0C0F99"
+    accent = m.top.accent
+    code = o.createChild("Label")
+    code.font = "font:MediumBoldSystemFont"
+    code.font.size = 32
+    code.color = accent
+    code.translation = [120, 380]
+    code.width = 1000
+    sn = ToInt(e.s, -1)
+    head = Str_Of(e.code)
+    if sn >= 0 then head = "S" + sn.ToStr() + " " + head
+    if Str_Of(e.rating) <> "" then head = head + "     IMDb " + Str_Of(e.rating)
+    code.text = head
+    title = o.createChild("Label")
+    title.font = "font:LargeBoldSystemFont"
+    title.font.size = 64
+    title.color = "0xFFFFFFFF"
+    title.translation = [120, 430]
+    title.width = 1060
+    title.wrap = true
+    title.maxLines = 2
+    title.text = Str_Of(e.name)
+    th = Int(title.boundingRect().height)
+    if th < 80 then th = 80
+    info = o.createChild("Label")
+    info.font = "font:SmallSystemFont"
+    info.font.size = 26
+    info.color = "0xB3B3B3FF"
+    info.translation = [120, 450 + th]
+    info.width = 1060
+    info.text = Str_Of(e.meta)
+    desc = o.createChild("Label")
+    desc.font = "font:SmallSystemFont"
+    desc.font.size = 28
+    desc.color = "0xE0E0E0FF"
+    desc.translation = [120, 500 + th]
+    desc.width = 1060
+    desc.wrap = true
+    desc.maxLines = 7
+    desc.lineSpacing = 6
+    desc.text = Str_Of(e.overview)
+    hint = o.createChild("Label")
+    hint.font = "font:SmallestSystemFont"
+    hint.font.size = 22
+    hint.color = "0x8C8C8CFF"
+    hint.translation = [120, 1000]
+    hint.width = 1060
+    hint.text = "<  " + (m.epIndex + 1).ToStr() + " / " + eps.Count().ToStr() + "  >"
+    col = o.createChild("Group")
+    y0 = 540 - Int(acts.Count() * 92 / 2)
+    col.translation = [1340, y0]
+    m.optNodes = []
+    for i = 0 to acts.Count() - 1
+        a = acts[i]
+        g = col.createChild("Group")
+        g.translation = [0, i * 92]
+        pill = g.createChild("Poster")
+        pill.uri = "pkg:/images/pill.9.png"
+        pill.width = 500
+        pill.height = 76
+        ic = g.createChild("Poster")
+        ic.uri = "pkg:/images/s/" + a.icon + "_36.png"
+        ic.width = 36
+        ic.height = 36
+        ic.translation = [28, 20]
+        lb = g.createChild("Label")
+        lb.font = "font:SmallBoldSystemFont"
+        lb.font.size = 26
+        lb.translation = [82, 0]
+        lb.width = 400
+        lb.height = 76
+        lb.vertAlign = "center"
+        lb.wrap = true
+        lb.maxLines = 2
+        lb.text = a.label
+        m.optNodes.Push({ pill: pill, icon: ic, label: lb })
+    end for
+    Opts_Paint()
+end sub
+
+sub Opts_Paint()
+    for i = 0 to m.optNodes.Count() - 1
+        n = m.optNodes[i]
+        if i = m.optIndex
+            n.pill.blendColor = "0xFFFFFFFF"
+            n.icon.blendColor = "0x0C0C0FFF"
+            n.label.color = "0x0C0C0FFF"
+        else
+            n.pill.blendColor = "0xFFFFFF26"
+            n.icon.blendColor = "0xFFFFFFFF"
+            n.label.color = "0xFFFFFFFF"
+        end if
+    end for
+end sub
+
+function Opts_Key(key as string) as boolean
+    if key = "up"
+        if m.optIndex > 0 then m.optIndex = m.optIndex - 1
+        Opts_Paint()
+    else if key = "down"
+        if m.optIndex < m.optActions.Count() - 1 then m.optIndex = m.optIndex + 1
+        Opts_Paint()
+    else if key = "left" or key = "right"
+        n = m.epNodes.Count()
+        if key = "left" and m.epIndex > 0 then m.epIndex = m.epIndex - 1 else if key = "right" and m.epIndex < n - 1 then m.epIndex = m.epIndex + 1
+        Opts_Build()
+    else if key = "OK"
+        e = Opts_Episode()
+        a = m.optActions[m.optIndex]
+        Opts_Close()
+        if e <> invalid then m.top.selected = "epact:" + a.id + ":" + Str_Of(e.id)
+    else if key = "back" or key = "options"
+        Opts_Close()
+    end if
+    return true
+end function

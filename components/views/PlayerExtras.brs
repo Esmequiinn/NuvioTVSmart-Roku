@@ -28,6 +28,20 @@ sub Ex_Init()
     m.postHeading = m.top.findNode("postHeading")
     m.postRow = m.top.findNode("postRow")
     m.postHint = m.top.findNode("postHint")
+    m.epPanel = m.top.findNode("epPanel")
+    m.postBg = m.top.findNode("postBg")
+    m.postLogo = m.top.findNode("postLogo")
+    m.postTitle = m.top.findNode("postTitle")
+    m.postMeta = m.top.findNode("postMeta")
+    m.postDesc = m.top.findNode("postDesc")
+    m.postFill = m.top.findNode("postFill")
+    m.postCount = m.top.findNode("postCount")
+    m.postWinRing = m.top.findNode("postWinRing")
+    m.postWinHint = m.top.findNode("postWinHint")
+    m.postTimer = m.top.findNode("postTimer")
+    m.postTimer.observeField("fire", "Ex_PostTick")
+    m.postLogo.observeField("loadStatus", "Ex_PostLogo")
+    m.postClock = CreateObject("roTimespan")
     m.stillBox = m.top.findNode("stillBox")
     m.stillBg = m.top.findNode("stillBg")
     m.stillLogo = m.top.findNode("stillLogo")
@@ -88,7 +102,7 @@ sub Ex_Reset()
     if m.skipBtn <> invalid
         m.skipBtn.visible = false
         m.nextCard.visible = false
-        m.postBox.visible = false
+        Ex_PostEnd()
         m.stillBox.visible = false
         m.parentalBox.visible = false
         m.subLayer.visible = false
@@ -336,71 +350,200 @@ sub Ex_ShowPost(recs as object)
     m.postShown = true
     m.postItems = recs
     m.postIndex = 0
+    m.postZone = "buttons"
+    m.postBtn = 0
+    title = Str_Of(Ex_Info("title", ""))
+    if title <> "" then m.postHeading.text = L("Porque viste") + " " + title else m.postHeading.text = L("Recomendado para ti")
+    m.postHint.text = L("Cambia sola cada 10 segundos  ·  Arriba para volver al video  ·  Atrás para cerrar")
+    m.postWinHint.text = L("OK para volver al video")
+    m.postBox.visible = true
+    m.postBg.visible = true
+    m.video.translation = [1208, 64]
+    m.video.width = 608
+    m.video.height = 342
+    Ex_PostFill()
+    m.postClock.Mark()
+    m.postTimer.control = "start"
+end sub
+
+sub Ex_PostEnd()
+    m.postTimer.control = "stop"
+    m.postBox.visible = false
+    m.postBg.visible = false
+    m.video.translation = [0, 0]
+    m.video.width = 1920
+    m.video.height = 1080
+end sub
+
+sub Ex_PostFill()
+    r = m.postItems[m.postIndex]
+    bg = Str_Of(r.background)
+    if bg = "" then bg = Str_Of(r.poster)
+    m.postBg.uri = bg
+    m.postTitle.text = Str_Of(r.name)
+    m.postTitle.visible = true
+    m.postLogo.visible = false
+    m.postLogo.uri = Str_Of(r.logo)
+    Ex_PostLogo()
+    parts = []
+    if Str_Of(r.rating) <> "" then parts.Push("IMDb " + Str_Of(r.rating))
+    if Str_Of(r.year) <> "" then parts.Push(Str_Of(r.year))
+    if Str_Of(r.kind) = "series" then parts.Push(L("Serie")) else parts.Push(L("Película"))
+    m.postMeta.text = parts.Join("   •   ")
+    m.postDesc.text = Str_Of(r.overview)
+    m.postCount.text = (m.postIndex + 1).ToStr() + " / " + m.postItems.Count().ToStr()
+    Ex_PostButtons()
+end sub
+
+sub Ex_PostLogo()
+    if m.postLogo.uri <> "" and m.postLogo.loadStatus = "ready"
+        m.postLogo.visible = true
+        m.postTitle.visible = false
+    end if
+end sub
+
+sub Ex_PostButtons()
     m.postRow.removeChildrenIndex(m.postRow.getChildCount(), 0)
-    m.postHeading.text = L("Te puede gustar")
-    m.postHint.text = L("OK para ver los detalles  ·  Atrás para cerrar")
+    r = m.postItems[m.postIndex]
+    main = { id: "play", icon: "ic_play", label: L("Reproducir"), w: 300 }
+    if Str_Of(r.kind) = "series" then main = { id: "details", icon: "ic_info", label: L("Ver detalles"), w: 300 }
+    defs = [main, { id: "prev", icon: "chevron", flip: true, label: "", w: 72 }, { id: "next", icon: "chevron", label: "", w: 72 }]
+    m.postBtns = []
     x = 0
-    m.postCards = []
-    for each r in recs
+    for each d in defs
         g = m.postRow.createChild("Group")
         g.translation = [x, 0]
-        mask = g.createChild("MaskGroup")
-        mask.maskUri = "pkg:/images/mask_poster.png"
-        Mask_Apply(mask, 200, 300)
-        base = mask.createChild("Rectangle")
-        base.width = 200
-        base.height = 300
-        base.color = "0x262626FF"
-        pic = mask.createChild("Poster")
-        pic.width = 200
-        pic.height = 300
-        pic.loadWidth = 200
-        pic.loadHeight = 300
-        pic.loadDisplayMode = "scaleToZoom"
-        pic.uri = Str_Of(r.poster)
-        Mask_Caps(g, 200, 300, 20, "0x050505FF")
-        ring = g.createChild("Poster")
-        ring.uri = "pkg:/images/iring.9.png"
-        ring.width = 200
-        ring.height = 300
-        ring.blendColor = m.top.accent
-        ring.visible = false
-        m.postCards.Push(ring)
-        x = x + 224
+        pill = g.createChild("Poster")
+        pill.uri = "pkg:/images/pill.9.png"
+        pill.width = d.w
+        pill.height = 72
+        ic = g.createChild("Poster")
+        ic.uri = "pkg:/images/s/" + d.icon + "_36.png"
+        ic.width = 36
+        ic.height = 36
+        if d.label = ""
+            ic.translation = [18, 18]
+            if d.flip = true
+                ic.scaleRotateCenter = [18, 18]
+                ic.rotation = 3.14159
+            end if
+        else
+            ic.translation = [28, 18]
+        end if
+        lb = invalid
+        if d.label <> ""
+            lb = g.createChild("Label")
+            lb.font = "font:SmallBoldSystemFont"
+            lb.font.size = 28
+            lb.translation = [78, 0]
+            lb.width = d.w - 96
+            lb.height = 72
+            lb.vertAlign = "center"
+            lb.text = d.label
+        end if
+        m.postBtns.Push({ id: d.id, pill: pill, icon: ic, label: lb })
+        x = x + d.w + 20
     end for
-    m.postBox.visible = true
     Ex_PaintPost()
 end sub
 
 sub Ex_PaintPost()
-    for i = 0 to m.postCards.Count() - 1
-        m.postCards[i].visible = i = m.postIndex
+    for i = 0 to m.postBtns.Count() - 1
+        b = m.postBtns[i]
+        on = m.postZone = "buttons" and i = m.postBtn
+        if on then b.pill.blendColor = "0xFFFFFFFF" else b.pill.blendColor = "0xFFFFFF2E"
+        ink = "0xFFFFFFFF"
+        if on then ink = "0x0C0C0FFF"
+        b.icon.blendColor = ink
+        if b.label <> invalid then b.label.color = ink
     end for
+    m.postWinRing.visible = m.postZone = "window"
+    m.postWinRing.blendColor = m.top.accent
+    m.postWinHint.visible = m.postZone = "window"
+end sub
+
+sub Ex_PostTick()
+    if not m.postBox.visible then
+        m.postTimer.control = "stop"
+        return
+    end if
+    span = 10000
+    ms = m.postClock.TotalMilliseconds()
+    if ms >= span
+        if m.postItems.Count() > 1
+            m.postIndex = (m.postIndex + 1) mod m.postItems.Count()
+            Ex_PostFill()
+        end if
+        m.postClock.Mark()
+        ms = 0
+    end if
+    m.postFill.color = m.top.accent
+    m.postFill.width = Int(560 * ms / span)
+end sub
+
+sub Ex_PostMove(delta as integer)
+    n = m.postItems.Count()
+    if n = 0 then return
+    m.postIndex = (m.postIndex + delta + n) mod n
+    m.postClock.Mark()
+    Ex_PostFill()
 end sub
 
 function Ex_PostKey(key as string) as boolean
     if not m.postBox.visible then return false
+    if m.postZone = "window"
+        if key = "down"
+            m.postZone = "buttons"
+        else if key = "OK"
+            Ex_PostEnd()
+            m.postDismissed = true
+            m.top.postActive = false
+            if m.video.state = "finished" then m.top.event = { type: "close" }
+        else if key = "back"
+            Ex_PostClose()
+        end if
+        Ex_PaintPost()
+        return true
+    end if
     if key = "left"
-        if m.postIndex > 0 then m.postIndex = m.postIndex - 1
+        if m.postBtn > 0 then m.postBtn = m.postBtn - 1
         Ex_PaintPost()
     else if key = "right"
-        if m.postIndex < m.postItems.Count() - 1 then m.postIndex = m.postIndex + 1
+        if m.postBtn < m.postBtns.Count() - 1 then m.postBtn = m.postBtn + 1
         Ex_PaintPost()
+    else if key = "up"
+        if m.video.state <> "finished" then m.postZone = "window"
+        Ex_PaintPost()
+    else if key = "rewind"
+        Ex_PostMove(-1)
+    else if key = "fastforward"
+        Ex_PostMove(1)
     else if key = "OK"
-        r = m.postItems[m.postIndex]
-        m.postBox.visible = false
-        m.top.postActive = false
-        m.top.event = { type: "recPick", id: Str_Of(r.id), kind: Str_Of(r.kind), name: Str_Of(r.name), poster: Str_Of(r.poster), background: Str_Of(r.background) }
+        id = m.postBtns[m.postBtn].id
+        if id = "prev"
+            Ex_PostMove(-1)
+        else if id = "next"
+            Ex_PostMove(1)
+        else
+            r = m.postItems[m.postIndex]
+            Ex_PostEnd()
+            m.top.postActive = false
+            m.top.event = { type: "recPick", id: Str_Of(r.id), kind: Str_Of(r.kind), name: Str_Of(r.name), poster: Str_Of(r.poster), background: Str_Of(r.background), play: id = "play" }
+        end if
     else if key = "back"
-        m.postBox.visible = false
-        m.postDismissed = true
-        m.top.postActive = false
-        if m.video.state = "finished" then m.top.event = { type: "close" }
+        Ex_PostClose()
     else
         return false
     end if
     return true
 end function
+
+sub Ex_PostClose()
+    Ex_PostEnd()
+    m.postDismissed = true
+    m.top.postActive = false
+    if m.video.state = "finished" then m.top.event = { type: "close" }
+end sub
 
 function Ex_OverlayKey(key as string) as boolean
     if m.stillOn then return Ex_StillKey(key)
@@ -774,3 +917,290 @@ sub Ex_Crash(e as object)
     print "PLAYER ERROR "; text
     m.top.event = { type: "crash", message: text }
 end sub
+
+sub EpP_Open()
+    data = m.top.episodes
+    if data = invalid or type(data.seasons) <> "roArray" or data.seasons.Count() = 0 then return
+    m.epSeasons = data.seasons
+    m.epCurrent = Str_Of(data.current)
+    m.epSeason = 0
+    m.epIdx = 0
+    for si = 0 to m.epSeasons.Count() - 1
+        eps = m.epSeasons[si].episodes
+        if type(eps) = "roArray"
+            for ei = 0 to eps.Count() - 1
+                if Str_Of(eps[ei].id) = m.epCurrent
+                    m.epSeason = si
+                    m.epIdx = ei
+                end if
+            end for
+        end if
+    end for
+    m.epZone = "list"
+    m.epRows = []
+    m.epChips = []
+    p = m.epPanel
+    p.removeChildrenIndex(p.getChildCount(), 0)
+    shade = p.createChild("Poster")
+    shade.uri = "pkg:/images/grad_left.png"
+    shade.width = 500
+    shade.height = 1080
+    shade.translation = [1420, 0]
+    shade.scaleRotateCenter = [250, 540]
+    shade.rotation = 3.14159
+    shade.blendColor = "0x000000FF"
+    bg = p.createChild("Rectangle")
+    bg.translation = [980, 0]
+    bg.width = 940
+    bg.height = 1080
+    bg.color = "0x0E0E11F2"
+    title = p.createChild("Label")
+    title.translation = [1036, 56]
+    title.font = "font:LargeBoldSystemFont"
+    title.font.size = 40
+    title.color = "0xFFFFFFFF"
+    title.text = L("Episodios")
+    hint = p.createChild("Label")
+    hint.translation = [1300, 66]
+    hint.width = 560
+    hint.horizAlign = "right"
+    hint.font = "font:SmallestSystemFont"
+    hint.font.size = 22
+    hint.color = "0x8C8C96FF"
+    hint.text = L("Atrás para cerrar")
+    m.epChipBox = p.createChild("Group")
+    m.epChipBox.translation = [1036, 136]
+    clip = p.createChild("Group")
+    clip.clippingRect = [1000, 220, 920, 860]
+    m.epList = clip.createChild("Group")
+    EpP_Chips()
+    EpP_List()
+    p.visible = true
+    m.hideTimer.control = "stop"
+    m.controls.visible = false
+end sub
+
+sub EpP_Chips()
+    m.epChipBox.removeChildrenIndex(m.epChipBox.getChildCount(), 0)
+    m.epChips = []
+    x = 0
+    for i = 0 to m.epSeasons.Count() - 1
+        g = m.epChipBox.createChild("Group")
+        g.translation = [x, 0]
+        bg = g.createChild("Poster")
+        bg.uri = "pkg:/images/pill60.9.png"
+        bg.height = 56
+        lb = g.createChild("Label")
+        lb.font = "font:SmallBoldSystemFont"
+        lb.font.size = 24
+        lb.height = 56
+        lb.vertAlign = "center"
+        lb.translation = [26, 0]
+        lb.text = Str_Of(m.epSeasons[i].label)
+        w = Int(lb.boundingRect().width)
+        est = Len(lb.text) * 13
+        if w < est then w = est
+        bg.width = w + 52
+        m.epChips.Push({ g: g, bg: bg, label: lb, x: x, w: w + 52 })
+        x = x + w + 66
+    end for
+    EpP_Paint()
+end sub
+
+sub EpP_List()
+    m.epList.removeChildrenIndex(m.epList.getChildCount(), 0)
+    m.epRows = []
+    eps = m.epSeasons[m.epSeason].episodes
+    if type(eps) <> "roArray" then eps = []
+    if m.epIdx >= eps.Count() then m.epIdx = 0
+    accent = m.top.accent
+    for i = 0 to eps.Count() - 1
+        e = eps[i]
+        g = m.epList.createChild("Group")
+        g.translation = [1016, 232 + i * 176]
+        hl = g.createChild("Poster")
+        hl.uri = "pkg:/images/card.9.png"
+        hl.width = 868
+        hl.height = 160
+        hl.translation = [0, -8]
+        ring = g.createChild("Poster")
+        ring.uri = "pkg:/images/iring.9.png"
+        ring.width = 868
+        ring.height = 160
+        ring.translation = [0, -8]
+        ring.blendColor = accent
+        mask = g.createChild("MaskGroup")
+        mask.maskUri = "pkg:/images/mask_landscape.png"
+        mask.translation = [12, 4]
+        Mask_Apply(mask, 240, 135)
+        base = mask.createChild("Rectangle")
+        base.width = 240
+        base.height = 135
+        base.color = "0x26262BFF"
+        pic = mask.createChild("Poster")
+        pic.width = 240
+        pic.height = 135
+        pic.loadWidth = 240
+        pic.loadHeight = 135
+        pic.loadDisplayMode = "scaleToZoom"
+        pic.uri = Str_Of(e.thumb)
+        badgeBg = g.createChild("Poster")
+        badgeBg.uri = "pkg:/images/pill34.9.png"
+        badgeBg.width = 64
+        badgeBg.height = 30
+        badgeBg.translation = [20, 12]
+        badgeBg.blendColor = "0x000000C0"
+        badge = g.createChild("Label")
+        badge.font = "font:SmallestBoldSystemFont"
+        badge.font.size = 18
+        badge.color = "0xFFFFFFFF"
+        badge.translation = [20, 12]
+        badge.width = 64
+        badge.height = 30
+        badge.horizAlign = "center"
+        badge.vertAlign = "center"
+        badge.text = Str_Of(e.code)
+        if Str_Of(e.id) = m.epCurrent
+            now = g.createChild("Poster")
+            now.uri = "pkg:/images/c/d38.png"
+            now.width = 34
+            now.height = 34
+            now.translation = [208, 12]
+            now.blendColor = accent
+            pl = g.createChild("Poster")
+            pl.uri = "pkg:/images/s/ic_play_24.png"
+            pl.width = 18
+            pl.height = 18
+            pl.translation = [217, 20]
+            pl.blendColor = "0x0C0C0FFF"
+        else if e.watched = true
+            dot = g.createChild("Poster")
+            dot.uri = "pkg:/images/c/d38.png"
+            dot.width = 34
+            dot.height = 34
+            dot.translation = [208, 12]
+            dot.blendColor = accent
+            chk = g.createChild("Poster")
+            chk.uri = "pkg:/images/s/ic_check_s_24.png"
+            chk.width = 22
+            chk.height = 22
+            chk.translation = [214, 18]
+            chk.blendColor = "0x0D0D0DFF"
+        end if
+        if e.progress <> invalid and e.progress > 0.01
+            tr = g.createChild("Rectangle")
+            tr.translation = [24, 126]
+            tr.width = 216
+            tr.height = 5
+            tr.color = "0xFFFFFF40"
+            fl = g.createChild("Rectangle")
+            fl.translation = [24, 126]
+            pr = e.progress
+            if pr > 1 then pr = 1
+            fl.width = Int(216 * pr)
+            fl.height = 5
+            fl.color = accent
+        end if
+        t = g.createChild("Label")
+        t.font = "font:SmallBoldSystemFont"
+        t.font.size = 27
+        t.color = "0xFFFFFFFF"
+        t.translation = [276, 6]
+        t.width = 570
+        t.text = Str_Of(e.name)
+        d = g.createChild("Label")
+        d.font = "font:SmallestSystemFont"
+        d.font.size = 20
+        d.color = "0x9A9AA6FF"
+        d.translation = [276, 44]
+        d.width = 570
+        d.text = Str_Of(e.meta)
+        o = g.createChild("Label")
+        o.font = "font:SmallestSystemFont"
+        o.font.size = 21
+        o.color = "0xC4C4CCFF"
+        o.translation = [276, 76]
+        o.width = 570
+        o.height = 64
+        o.wrap = true
+        o.maxLines = 2
+        o.text = Str_Of(e.overview)
+        m.epRows.Push({ hl: hl, ring: ring, id: Str_Of(e.id) })
+    end for
+    EpP_Paint()
+end sub
+
+sub EpP_Paint()
+    for i = 0 to m.epChips.Count() - 1
+        c = m.epChips[i]
+        if m.epZone = "seasons" and i = m.epSeason
+            c.bg.blendColor = "0xFFFFFFFF"
+            c.label.color = "0x0D0D0DFF"
+        else if i = m.epSeason
+            c.bg.blendColor = "0x3A3A40FF"
+            c.label.color = "0xFFFFFFFF"
+        else
+            c.bg.blendColor = "0x1E1E22FF"
+            c.label.color = "0xB3B3BBFF"
+        end if
+    end for
+    off = 0
+    if m.epChips.Count() > 0
+        c = m.epChips[m.epSeason]
+        if c.x + c.w > 820 then off = c.x + c.w - 820
+    end if
+    m.epChipBox.translation = [1036 - off, 136]
+    for i = 0 to m.epRows.Count() - 1
+        r = m.epRows[i]
+        on = m.epZone = "list" and i = m.epIdx
+        r.ring.visible = on
+        if on then r.hl.blendColor = "0xFFFFFF1A" else r.hl.blendColor = "0xFFFFFF00"
+    end for
+    first = m.epIdx - 1
+    if first < 0 then first = 0
+    last = m.epRows.Count() - 4
+    if last < 0 then last = 0
+    if first > last then first = last
+    m.epList.translation = [0, -first * 176]
+end sub
+
+sub EpP_Close()
+    m.epPanel.visible = false
+    m.epPanel.removeChildrenIndex(m.epPanel.getChildCount(), 0)
+    m.epRows = []
+    m.epChips = []
+    showControls("buttons")
+end sub
+
+function EpP_Key(key as string) as boolean
+    if key = "back"
+        EpP_Close()
+        return true
+    end if
+    if m.epZone = "seasons"
+        if key = "left" and m.epSeason > 0
+            m.epSeason = m.epSeason - 1
+            m.epIdx = 0
+            EpP_List()
+        else if key = "right" and m.epSeason < m.epSeasons.Count() - 1
+            m.epSeason = m.epSeason + 1
+            m.epIdx = 0
+            EpP_List()
+        else if key = "down" and m.epRows.Count() > 0
+            m.epZone = "list"
+        end if
+    else
+        if key = "up"
+            if m.epIdx > 0 then m.epIdx = m.epIdx - 1 else m.epZone = "seasons"
+        else if key = "down"
+            if m.epIdx < m.epRows.Count() - 1 then m.epIdx = m.epIdx + 1
+        else if key = "OK" and m.epRows.Count() > 0
+            id = m.epRows[m.epIdx].id
+            m.epPanel.visible = false
+            m.top.event = { type: "pickEpisode", id: id }
+            return true
+        end if
+    end if
+    EpP_Paint()
+    return true
+end function

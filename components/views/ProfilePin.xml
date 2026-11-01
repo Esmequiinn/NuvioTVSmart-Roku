@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="ProfilePin" extends="Group">
+    <interface>
+        <field id="name" type="string" onChange="reset" />
+        <field id="error" type="string" onChange="onError" />
+        <field id="working" type="boolean" onChange="paintSupport" />
+        <field id="pin" type="string" alwaysNotify="true" />
+        <field id="cancel" type="boolean" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/ProfilePin.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x050507FF" />
+        <Label id="heading" translation="[160,190]" width="1600" horizAlign="center" wrap="true" maxLines="2" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+        <Group id="boxes" translation="[0,310]" />
+        <Label id="support" translation="[260,480]" width="1400" horizAlign="center" font="font:SmallSystemFont" color="0xA9A9B8FF" />
+        <Group id="keys" translation="[0,560]" />
+        <Label id="forgot" translation="[260,990]" width="1400" horizAlign="center" font="font:SmallestSystemFont" color="0x7C7C88FF" text="¿Olvidaste el PIN? Restablécelo desde tu cuenta en la web de Nuvio." />
+    </children>
+</component>
