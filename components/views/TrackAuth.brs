@@ -41,6 +41,11 @@ sub onInfo()
         m.logo.width = 221
         m.logo.height = 60
         m.instruction.text = L("Escanea el código o abre la página de MDBList e ingresa este código:")
+    else if service = "torbox"
+        m.logo.uri = "pkg:/images/torbox_wordmark.png"
+        m.logo.width = 274
+        m.logo.height = 60
+        m.instruction.text = L("Escanea el código o abre la página de TorBox e ingresa este código:")
     else if service = "trakt"
         m.logo.uri = "pkg:/images/trakt_wordmark.png"
         m.logo.width = 162

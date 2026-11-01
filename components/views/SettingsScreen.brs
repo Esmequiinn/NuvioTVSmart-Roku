@@ -18,7 +18,7 @@ sub init()
     m.navVisible = 6
     m.navNodes = []
     m.rowNodes = []
-    m.icons = { account: "set_account", profiles: "set_profiles", party: "set_party", appearance: "set_appearance", layout: "set_layout", content: "set_content", integration: "set_integration", fusion: "set_fusion", playback: "set_playback", tracking: "set_tracking", advanced: "set_advanced", about: "set_about" }
+    m.icons = { account: "set_account", profiles: "set_profiles", party: "set_party", appearance: "set_appearance", layout: "set_layout", content: "set_content", integration: "set_integration", debrid: "set_debrid", servers: "set_servers", fusion: "set_fusion", playback: "set_playback", tracking: "set_tracking", advanced: "set_advanced", about: "set_about" }
     m.top.observeField("focusedChild", "paint")
 end sub
 
