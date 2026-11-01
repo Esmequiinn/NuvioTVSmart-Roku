@@ -902,7 +902,8 @@ sub playStream(index as integer, startAt as integer)
     m.ctx.playingUrl = s.url
     m.ctx.playingStream = s
     m.ctx.savedLink = false
-    m.ctx.attempts = Stream_Attempts(s.url)
+    m.ctx.hint = Stream_Format(Str_Of(s.filename))
+    m.ctx.attempts = Stream_Attempts(s.url, m.ctx.hint)
     m.ctx.attempt = 0
     m.ctx.retriedDrop = false
     m.ctx.resumeMode = ""
@@ -920,7 +921,7 @@ sub playStream(index as integer, startAt as integer)
         m.probeTask.control = "RUN"
         return
     end if
-    if Probe_Needed(s.url)
+    if m.ctx.hint = "" and Probe_Needed(s.url)
         m.probeTask = CreateObject("roSGNode", "ProbeTask")
         m.probeTask.url = s.url
         if type(s.headers) = "roArray" then m.probeTask.headers = s.headers
@@ -936,7 +937,7 @@ function Probe_Needed(url as string) as boolean
     lowered = LCase(url)
     if Left(lowered, 4) <> "http" then return false
     if Instr(1, lowered, "/live/") > 0 then return false
-    return m.server <> invalid
+    return true
 end function
 
 sub onProbeResult(event as object)
@@ -956,9 +957,12 @@ sub onProbeResult(event as object)
     end if
     if r <> invalid and Str_Of(r.url) <> ""
         src = r.url
-        m.ctx.attempts = Stream_Attempts(src)
+        m.ctx.attempts = Stream_Attempts(src, Stream_Format(Str_Of(r.file)))
     end if
-    if r <> invalid and Bool_Of(r.ts, false) and Bool_Of(r.ranges, false) and r.size > 1000000
+    if r <> invalid and Str_Of(r.fmt) <> "" and Stream_Format(src) = ""
+        m.ctx.attempts = Stream_Attempts(src, r.fmt)
+    end if
+    if m.server <> invalid and r <> invalid and Bool_Of(r.ts, false) and Bool_Of(r.ranges, false) and r.size > 1000000
         m.server.hls = { url: src, size: r.size, duration: Probe_Duration() }
         m.hlsSerial = ToInt(m.hlsSerial, 0) + 1
         wrapped = [{ url: "http://127.0.0.1:8888/hls.m3u8?v=" + m.hlsSerial.ToStr(), fmt: "hls" }]

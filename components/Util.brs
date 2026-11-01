@@ -98,8 +98,9 @@ function Stream_Format(url as string) as string
     return ""
 end function
 
-function Stream_Attempts(url as string) as object
+function Stream_Attempts(url as string, hint = "" as string) as object
     fmt = Stream_Format(url)
+    if fmt = "" then fmt = hint
     u = LCase(url)
     q = Instr(1, u, "?")
     path = u
