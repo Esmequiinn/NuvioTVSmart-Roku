@@ -10,9 +10,18 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 - **Servicios conectados** (TorBox y Premiumize), como en Nuvio TV: en **Ajustes → Servicios conectados**, vincula tu cuenta de TorBox con un código QR o escribe tu clave de API de TorBox o Premiumize. También llegan desde tu cuenta de Nuvio. Los resultados de torrent de tus addons que ya están en la caché de tu servicio ahora aparecen como fuentes (con la etiqueta TB o PM) y se reproducen directo. Los torrents que no están en caché se siguen omitiendo.
 - **Servidores multimedia** (Jellyfin y Emby), como en Nuvio TV: en **Ajustes → Servidores multimedia**, inicia sesión con la dirección de tu servidor, tu usuario y tu contraseña. Tus bibliotecas de películas y series aparecen como filas en el inicio, y cuando un título está en tu servidor aparece primero en las fuentes, como el archivo original o convertido por el servidor (HLS) para archivos que tu Roku no puede reproducir. Puedes desactivar el servidor, elegir qué bibliotecas mostrar, actualizarlas o quitar el servidor.
 
+### Cambiado
+- En la página de detalles ahora puedes seleccionar una productora o cadena para ver sus películas y series, como en Nuvio TV.
+
 ### Corregido
 - Al presionar Atrás mientras veías algo, a veces salía el error "'Dot' Operator attempted with invalid BrightScript Component" y no podías salir del video. Ahora el video siempre se cierra y regresas a la pantalla anterior.
 - Algunos videos se reproducían sin sonido, y el reproductor mostraba una sola pista de audio aunque el archivo tuviera más. Pasaba con enlaces que no terminan en `.mkv` o `.mp4` (como muchos de AIOStreams, TorBox y otros servicios debrid). Ahora el canal revisa qué tipo de archivo es y se lo indica al Roku, así aparecen todas las pistas de audio.
+- Los pósters de Más como esto y de la colección mostraban esquinas cuadradas oscuras alrededor de los bordes redondeados.
+- En Descubrir, el selector tardaba en moverse y a veces se veían dos pósters seleccionados al mismo tiempo. Además, al entrar a Descubrir se veía un póster seleccionado aunque estabas en los filtros de arriba.
+- Los enlaces sin extensión que en realidad son listas de video (HLS), como algunos de Nuvehub, se podían quedar cargando porque el canal se fiaba del nombre del archivo. Ahora revisa qué es el enlace de verdad. Y si un video se queda atorado cargando, el canal prueba otra forma de abrirlo en vez de esperar para siempre.
+- Cuando la primera forma de abrir un enlace falla y otra sí funciona, el canal lo recuerda para ese sitio, así la próxima vez abre directo.
+- Los enlaces de VidHide, StreamWish y sitios parecidos (directos o a través de addons como Addon Latam) se quedaban cargando, porque esos sitios esconden cada pedazo del video detrás de una imagen falsa que el Roku no sabe saltarse. Ahora el canal lo detecta y quita la imagen falsa en el mismo Roku antes de reproducir, sin pasar por ningún servidor externo. También manda los encabezados que pide el sitio del video.
+- En el panel de Episodios del reproductor se veía el video en las esquinas de las imágenes de los episodios, y en la tarjeta de Siguiente episodio podía pasar lo mismo.
 
 ## [0.0.8] - 2026-10-31
 
