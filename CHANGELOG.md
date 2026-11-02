@@ -18,9 +18,7 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 - Some videos played without sound, and the player showed only one audio track even when the file had more. This happened with links that don't end in `.mkv` or `.mp4` (like many AIOStreams, TorBox and other debrid links). The channel now checks what kind of file it is and tells the Roku, so all audio tracks show up.
 - The posters in More like this and the collection showed dark square corners around the rounded edges.
 - In Discover, the highlight was slow to move, so sometimes two posters looked selected at once. Also, when you opened Discover a poster looked selected even though you were on the filters at the top.
-- Links without an extension that are really video lists (HLS), like some from Nuvehub, could stay stuck loading because the channel trusted the file name. Now it checks what the link really is. If a video stays stuck loading, the channel also tries another way to open it instead of waiting forever.
 - When the first way of opening a link fails and another way works, the channel remembers it for that site, so next time it opens right away.
-- Links from VidHide, StreamWish and similar sites (directly or through addons like Addon Latam) stayed stuck loading, because these sites hide each piece of the video behind a fake image that the Roku can't skip. The channel now detects it and removes the fake image on the Roku itself before playing, without going through any outside server. It also sends the headers that the video site asks for.
 - In the player's Episodes panel, the video showed through the corners of the episode pictures, and the Up next card could do the same.
 
 ## [0.0.8] - 2026-10-31
