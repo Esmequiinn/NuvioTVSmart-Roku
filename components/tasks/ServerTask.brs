@@ -96,9 +96,13 @@ function Srv_Parse(buf as string) as dynamic
     body = Mid(buf, headerEnd + 4)
     if Len(body) < length then return invalid
     path = first[1]
+    query = ""
     q = Instr(1, path, "?")
-    if q > 0 then path = Left(path, q - 1)
-    return { method: UCase(first[0]), path: path, body: Left(body, length) }
+    if q > 0
+        query = Mid(path, q + 1)
+        path = Left(path, q - 1)
+    end if
+    return { method: UCase(first[0]), path: path, query: query, body: Left(body, length) }
 end function
 
 sub Srv_SafeRoute(sock as object, req as object)
@@ -116,6 +120,10 @@ end sub
 
 sub Srv_Route(sock as object, req as object)
     jsonType = "application/json; charset=utf-8"
+    if req.method = "GET" and Left(req.path, 6) = "/hlsp/"
+        Srv_Hlsp(sock, Mid(req.path, 7), Srv_Query(Str_Of(req.query), "u"))
+        return
+    end if
     if req.method = "GET" and req.path = "/hls.m3u8"
         Srv_Send(sock, "200 OK", "application/vnd.apple.mpegurl", Srv_Hls())
         return
@@ -161,11 +169,11 @@ sub Srv_Send(sock as object, status as string, contentType as string, body as st
     if payload.Count() > 0 then Srv_Write(sock, payload)
 end sub
 
-sub Srv_Write(sock as object, data as object)
+sub Srv_Write(sock as object, data as object, patience = 400 as integer)
     total = data.Count()
     sent = 0
     idle = 0
-    while sent < total and idle < 400
+    while sent < total and idle < patience
         n = sock.Send(data, sent, total - sent)
         if n > 0
             sent = sent + n
@@ -480,3 +488,59 @@ function Srv_Secs(v as float) as string
     end while
     return whole.ToStr() + "." + frac
 end function
+
+function Srv_Query(query as string, name as string) as string
+    for each part in query.Split("&")
+        cut = Instr(1, part, "=")
+        if cut > 1 and Left(part, cut - 1) = name then return CreateObject("roUrlTransfer").Unescape(Mid(part, cut + 1))
+    end for
+    return ""
+end function
+
+sub Srv_Hlsp(sock as object, kind as string, url as string)
+    if url = ""
+        Srv_Send(sock, "404 Not Found", "text/plain", "")
+        return
+    end if
+    info = m.top.hlsp
+    headers = []
+    if type(info) = "roAssociativeArray" and type(info.headers) = "roArray" then headers = info.headers
+    if kind = "p"
+        got = Hlsp_Text(url, headers, 15000)
+        if got.code < 200 or got.code >= 400
+            Srv_Send(sock, "502 Bad Gateway", "text/plain", "")
+            return
+        end if
+        Srv_Send(sock, "200 OK", "application/vnd.apple.mpegurl", Hlsp_Rewrite(got.text, url))
+        return
+    end if
+    got = Hlsp_File(url, headers, "", 60000)
+    if got.file = "" or got.code < 200 or got.code >= 400
+        if got.file <> "" then DeleteFile(got.file)
+        Srv_Send(sock, "502 Bad Gateway", "text/plain", "")
+        return
+    end if
+    fs = CreateObject("roFileSystem")
+    stat = fs.Stat(got.file)
+    size = 0
+    if type(stat) = "roAssociativeArray" and stat.size <> invalid then size = stat.size
+    start = 0
+    contentType = "application/octet-stream"
+    if got.type <> "" then contentType = got.type
+    if kind = "s"
+        head = CreateObject("roByteArray")
+        head.ReadFile(got.file, 0, 4096)
+        at = Hlsp_Sync(head)
+        if at > 0 then start = at
+        contentType = "video/mp2t"
+    end if
+    body = CreateObject("roByteArray")
+    if size > start then body.ReadFile(got.file, start, size - start)
+    DeleteFile(got.file)
+    crlf = chr(13) + chr(10)
+    text = "HTTP/1.1 200 OK" + crlf + "Content-Type: " + contentType + crlf + "Content-Length: " + body.Count().ToStr() + crlf + "Cache-Control: no-store" + crlf + "Connection: close" + crlf + crlf
+    headBytes = CreateObject("roByteArray")
+    headBytes.FromAsciiString(text)
+    Srv_Write(sock, headBytes)
+    if body.Count() > 0 then Srv_Write(sock, body, 3000)
+end sub

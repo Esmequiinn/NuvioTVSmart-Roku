@@ -7,6 +7,7 @@
         <field id="searchQuery" type="string" />
         <field id="changed" type="string" alwaysNotify="true" />
         <field id="hls" type="assocarray" />
+        <field id="hlsp" type="assocarray" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
@@ -16,5 +17,6 @@
     <script type="text/brightscript" uri="pkg:/components/Addon.brs" />
     <script type="text/brightscript" uri="pkg:/components/Streams.brs" />
     <script type="text/brightscript" uri="pkg:/components/Account.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Hlsp.brs" />
     <script type="text/brightscript" uri="pkg:/components/tasks/ServerTask.brs" />
 </component>

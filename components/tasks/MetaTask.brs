@@ -199,7 +199,7 @@ function Tmdb_Orgs(list as dynamic) as object
             logo = ""
             path = Str_Of(c.logo_path)
             if path <> "" then logo = "https://image.tmdb.org/t/p/w185" + path.Replace(".svg", ".png")
-            out.Push({ name: Str_Of(c.name), logo: logo })
+            out.Push({ id: Str_Any(c.id), name: Str_Of(c.name), logo: logo })
         end if
     end for
     return out

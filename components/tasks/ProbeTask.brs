@@ -3,6 +3,10 @@ sub init()
 end sub
 
 sub execute()
+    if m.top.mode = "hls"
+        m.top.result = { fmt: "hls", disguised: Hlsp_Disguised(m.top.url, m.top.headers) }
+        return
+    end if
     out = { ts: false, size: 0&, type: "", code: 0, url: "", fmt: "" }
     target = m.top.url
     d = m.top.debrid
@@ -26,7 +30,7 @@ sub execute()
             end if
         end for
     end if
-    file = "tmp:/probe_" + CreateObject("roDateTime").AsSeconds().ToStr() + "_" + Rnd(1000000).ToStr() + ".bin"
+    file = "tmp:/probe_" + CreateObject("roDeviceInfo").GetRandomUUID() + ".bin"
     if t.AsyncGetToFile(file)
         msg = wait(5000, port)
         if type(msg) = "roUrlEvent"
@@ -66,6 +70,9 @@ end sub
 function Probe_Format(bytes as object, kind as string, disposition as string) as string
     if bytes.Count() >= 4 and bytes[0] = 26 and bytes[1] = 69 and bytes[2] = 223 and bytes[3] = 163 then return "mkv"
     if bytes.Count() >= 8 and bytes[4] = 102 and bytes[5] = 116 and bytes[6] = 121 and bytes[7] = 112 then return "mp4"
+    if bytes.Count() >= 7 and bytes[0] = 35 and bytes[1] = 69 and bytes[2] = 88 and bytes[3] = 84 and bytes[4] = 77 and bytes[5] = 51 and bytes[6] = 85 then return "hls"
+    if Instr(1, kind, "mpegurl") > 0 then return "hls"
+    if Instr(1, kind, "dash+xml") > 0 then return "dash"
     if Instr(1, kind, "matroska") > 0 or Instr(1, kind, "webm") > 0 then return "mkv"
     if Instr(1, kind, "video/mp4") > 0 or Instr(1, kind, "quicktime") > 0 then return "mp4"
     low = LCase(disposition)
