@@ -300,13 +300,30 @@ sub onWatched()
 end sub
 
 sub onItemFocus()
-    item = m.top.itemHasFocus or m.top.focusPercent >= 0.99
+    if m.top.focusPercent > 0.001 then m.gotPercent = true
+    item = m.top.itemHasFocus
+    if m.gotPercent = true then item = m.top.focusPercent > 0.5
     m.ring.visible = item and m.top.rowHasFocus and m.top.rowListHasFocus
     if not m.seenRow and (m.top.rowHasFocus or m.top.rowListHasFocus) then m.seenRow = true
-    if not m.seenRow then m.ring.visible = item
+    if not m.seenRow then m.ring.visible = item and Host_Focused()
     focused = m.ring.visible
     Gif_Update(focused)
     if focused = m.reported then return
     m.reported = focused
     if focused and not m.landscape and m.global.hasField("focusCard") then m.global.focusCard = m.top
 end sub
+
+function Host_Focused() as boolean
+    if m.host = invalid
+        node = m.top.getParent()
+        while node <> invalid
+            if node.subtype() = "RowList"
+                m.host = node
+                exit while
+            end if
+            node = node.getParent()
+        end while
+    end if
+    if m.host = invalid then return true
+    return m.host.isInFocusChain()
+end function

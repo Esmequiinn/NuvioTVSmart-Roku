@@ -12,10 +12,10 @@ sub Ex_Init()
     m.skipLabel = m.top.findNode("skipLabel")
     m.nextCard = m.top.findNode("nextCard")
     m.nextBg = m.top.findNode("nextBg")
-    Mask_Apply(m.top.findNode("nextMask"), 256, 144)
+    m.top.findNode("nextMask").maskUri = ""
     nextCaps = m.top.findNode("nextCard").createChild("Group")
     nextCaps.translation = [24, 24]
-    Mask_Caps(nextCaps, 256, 144, 14, "0x161616FF")
+    Mask_Caps(nextCaps, 256, 144, 14, "0x161616FF", true)
     m.nextThumb = m.top.findNode("nextThumb")
     m.nextKicker = m.top.findNode("nextKicker")
     m.nextCode = m.top.findNode("nextCode")
@@ -1029,10 +1029,8 @@ sub EpP_List()
         ring.height = 160
         ring.translation = [0, -8]
         ring.blendColor = accent
-        mask = g.createChild("MaskGroup")
-        mask.maskUri = "pkg:/images/mask_landscape.png"
+        mask = g.createChild("Group")
         mask.translation = [12, 4]
-        Mask_Apply(mask, 240, 135)
         base = mask.createChild("Rectangle")
         base.width = 240
         base.height = 135
@@ -1044,6 +1042,9 @@ sub EpP_List()
         pic.loadHeight = 135
         pic.loadDisplayMode = "scaleToZoom"
         pic.uri = Str_Of(e.thumb)
+        caps = g.createChild("Group")
+        caps.translation = [12, 4]
+        Mask_Caps(caps, 240, 135, 10, "0x0E0E11FF", true)
         badgeBg = g.createChild("Poster")
         badgeBg.uri = "pkg:/images/pill34.9.png"
         badgeBg.width = 64
@@ -1125,7 +1126,7 @@ sub EpP_List()
         o.wrap = true
         o.maxLines = 2
         o.text = Str_Of(e.overview)
-        m.epRows.Push({ hl: hl, ring: ring, id: Str_Of(e.id) })
+        m.epRows.Push({ hl: hl, ring: ring, caps: caps, id: Str_Of(e.id) })
     end for
     EpP_Paint()
 end sub
@@ -1155,6 +1156,13 @@ sub EpP_Paint()
         on = m.epZone = "list" and i = m.epIdx
         r.ring.visible = on
         if on then r.hl.blendColor = "0xFFFFFF1A" else r.hl.blendColor = "0xFFFFFF00"
+        capColor = "0x0E0E11FF"
+        if on then capColor = "0x26262AFF"
+        if r.caps <> invalid
+            for each cap in r.caps.findNode("maskCaps").getChildren(-1, 0)
+                cap.blendColor = capColor
+            end for
+        end if
     end for
     first = m.epIdx - 1
     if first < 0 then first = 0

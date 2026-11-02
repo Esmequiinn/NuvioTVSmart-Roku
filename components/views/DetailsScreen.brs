@@ -21,6 +21,8 @@ sub init()
     m.tabIndex = 0
     m.tabNodes = []
     m.tabs = []
+    m.orgNodes = []
+    m.orgIndex = 0
     m.seasonNodes = []
     m.epNodes = []
     m.castNodes = []
@@ -103,6 +105,7 @@ sub onExtra()
     m.seasonNodes = []
     m.epNodes = []
     m.castNodes = []
+    m.orgNodes = []
     m.tabNodes = []
     m.epGroup = invalid
     m.castGroup = invalid
@@ -173,6 +176,17 @@ sub onExtra()
     if m.tabs.Count() > 0
         if m.tabIndex = invalid or m.tabIndex >= m.tabs.Count() then m.tabIndex = 0
         m.layoutInfo.castY = y
+        fade = m.lower.createChild("Poster")
+        fade.uri = "pkg:/images/grad_bottom.png"
+        fade.loadDisplayMode = "scaleToFill"
+        fade.width = 1920
+        fade.height = 86
+        fade.translation = [0, y - 10]
+        band = m.lower.createChild("Rectangle")
+        band.color = "0x0C0C0FFF"
+        band.width = 1920
+        band.height = 440
+        band.translation = [0, y + 76]
         tabsBox = m.lower.createChild("Group")
         tabsBox.translation = [160, y]
         x = 0
@@ -208,6 +222,8 @@ sub onExtra()
     if m.zone = "episodes" and m.epNodes.Count() = 0 then m.zone = "buttons"
     if m.zone = "cast" and m.castNodes.Count() = 0 then m.zone = "buttons"
     if m.zone = "tabs" and m.tabNodes.Count() = 0 then m.zone = "buttons"
+    if m.zone = "orgs" and m.orgNodes.Count() = 0 then m.zone = "buttons"
+    if m.orgIndex >= m.orgNodes.Count() then m.orgIndex = 0
     paintLower()
 end sub
 
@@ -408,7 +424,7 @@ sub Poster_Node(it as object, i as integer)
     pic.loadHeight = 300
     pic.loadDisplayMode = "scaleToZoom"
     pic.uri = Str_Of(it.poster)
-    Mask_Caps(g, 200, 300, 20, "0x0C0C0FFF")
+    Mask_Caps(g, 200, 300, 18, "0x0C0C0FFF", true)
     ring = g.createChild("Poster")
     ring.uri = "pkg:/images/iring.9.png"
     ring.width = 200
@@ -433,10 +449,14 @@ sub Poster_Node(it as object, i as integer)
 end sub
 
 sub Companies_Build(ex as object, y as integer)
+    m.orgNodes = []
+    m.layoutInfo.orgsY = y
+    if m.orgIndex = invalid then m.orgIndex = 0
     groups = []
     if type(ex.networks) = "roArray" and ex.networks.Count() > 0 then groups.Push({ label: L("Cadenas"), list: ex.networks })
     if type(ex.companies) = "roArray" and ex.companies.Count() > 0 then groups.Push({ label: L("Productoras"), list: ex.companies })
-    for each grp in groups
+    for gi = 0 to groups.Count() - 1
+        grp = groups[gi]
         head = m.lower.createChild("Label")
         head.font = "font:MediumBoldSystemFont"
         head.font.size = 30
@@ -456,6 +476,13 @@ sub Companies_Build(ex as object, y as integer)
             bg.width = 220
             bg.height = 100
             bg.blendColor = "0xF2F2F2FF"
+            ring = g.createChild("Poster")
+            ring.uri = "pkg:/images/iring.9.png"
+            ring.width = 220
+            ring.height = 100
+            ring.blendColor = m.top.accent
+            ring.visible = false
+            m.orgNodes.Push({ ring: ring, group: gi })
             if Str_Of(c.logo) <> ""
                 lg = g.createChild("Poster")
                 lg.translation = [24, 16]
@@ -517,6 +544,9 @@ sub paintLower()
         if first < 0 then first = 0
         m.castGroup.translation = [160 - first * stepX, m.castGroup.translation[1]]
     end if
+    for i = 0 to m.orgNodes.Count() - 1
+        m.orgNodes[i].ring.visible = m.zone = "orgs" and i = m.orgIndex
+    end for
     for i = 0 to m.tabNodes.Count() - 1
         n = m.tabNodes[i]
         if m.zone = "tabs" and i = m.tabIndex and m.top.isInFocusChain()
@@ -533,8 +563,10 @@ sub paintLower()
     target = 0
     if m.zone = "seasons" or m.zone = "episodes"
         target = -(900 + m.layoutInfo.seasonsY - 140)
-    else if m.zone = "cast" or m.zone = "tabs"
+    else if (m.zone = "cast" or m.zone = "tabs" or m.zone = "orgs") and m.layoutInfo.castY >= 0
         target = -(900 + m.layoutInfo.castY - 160)
+    else if m.zone = "orgs"
+        target = -(900 + m.layoutInfo.orgsY - 400)
     end if
     m.page.translation = [0, target]
     m.statusLabel.visible = m.zone = "buttons" and not m.top.trailerPlaying
@@ -577,6 +609,9 @@ function lowerKey(key as string) as boolean
             m.zone = "seasons"
         else if key = "down" and m.tabNodes.Count() > 0
             m.zone = "tabs"
+        else if key = "down" and m.orgNodes.Count() > 0
+            m.zone = "orgs"
+            m.orgIndex = 0
         else if key = "back"
             m.zone = "buttons"
         else if key = "OK"
@@ -603,6 +638,49 @@ function lowerKey(key as string) as boolean
         else if key = "back"
             m.zone = "buttons"
         end if
+    else if m.zone = "orgs"
+        cur = m.orgNodes[m.orgIndex].group
+        if key = "left" and m.orgIndex > 0 and m.orgNodes[m.orgIndex - 1].group = cur
+            m.orgIndex = m.orgIndex - 1
+        else if key = "right" and m.orgIndex < m.orgNodes.Count() - 1 and m.orgNodes[m.orgIndex + 1].group = cur
+            m.orgIndex = m.orgIndex + 1
+        else if key = "down"
+            for i = m.orgIndex to m.orgNodes.Count() - 1
+                if m.orgNodes[i].group > cur
+                    m.orgIndex = i
+                    exit for
+                end if
+            end for
+        else if key = "up"
+            moved = false
+            for i = m.orgIndex to 0 step -1
+                if not moved and m.orgNodes[i].group < cur
+                    target = m.orgNodes[i].group
+                    j = i
+                    while j > 0 and m.orgNodes[j - 1].group = target
+                        j = j - 1
+                    end while
+                    m.orgIndex = j
+                    moved = true
+                end if
+            end for
+            if not moved
+                if m.castNodes.Count() > 0
+                    m.zone = "cast"
+                else if m.tabNodes.Count() > 0
+                    m.zone = "tabs"
+                else if m.epNodes.Count() > 0
+                    m.zone = "episodes"
+                else
+                    m.zone = "buttons"
+                end if
+            end if
+        else if key = "back"
+            m.zone = "buttons"
+        else if key = "OK"
+            stopTrailer()
+            m.top.selected = "org:" + m.orgIndex.ToStr()
+        end if
     else if m.zone = "cast"
         if key = "left" and m.castIndex > 0
             m.castIndex = m.castIndex - 1
@@ -610,6 +688,9 @@ function lowerKey(key as string) as boolean
             m.castIndex = m.castIndex + 1
         else if key = "up"
             m.zone = "tabs"
+        else if key = "down" and m.orgNodes.Count() > 0
+            m.zone = "orgs"
+            m.orgIndex = 0
         else if key = "back"
             m.zone = "buttons"
         else if key = "OK"
@@ -688,6 +769,9 @@ function onKeyEvent(key as string, press as boolean) as boolean
             m.zone = "seasons"
         else if m.tabNodes.Count() > 0
             m.zone = "tabs"
+        else if m.orgNodes.Count() > 0
+            m.zone = "orgs"
+            m.orgIndex = 0
         else
             return true
         end if
