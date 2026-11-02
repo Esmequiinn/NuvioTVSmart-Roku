@@ -106,7 +106,7 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Patrones de URL para pósters personalizados | ⚠️ Sin probar |
 | Interfaz en inglés | ✅ Funciona |
 | Interfaz en portugués | ✅ Funciona |
-| Interfaz en francés, alemán, italiano, neerlandés, polaco, turco, rumano, checo y húngaro | ⚠️ Sin probar |
+| Interfaz en francés, alemán, italiano, neerlandés, polaco, turco, rumano, checo y húngaro | ✅ Funciona |
 | Aviso de nueva versión | ✅ Funciona |
 | Descubrir | ✅ Funciona |
 | Búsquedas recientes | ✅ Funciona |
@@ -126,10 +126,10 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Tráilers de YouTube en tu idioma | ✅ Funciona |
 | Opciones de episodio (`*` en un episodio) | ✅ Funciona |
 | PIN de perfiles | ✅ Funciona |
-| Panel de episodios en el reproductor | ⚠️ Sin probar |
-| Más como esto y colección en detalles | ⚠️ Sin probar |
+| Panel de episodios en el reproductor | ✅ Funciona |
+| Más como esto y colección en detalles | ✅ Funciona |
 | TorBox y Premiumize (torrents en caché) | ⚠️ Sin probar |
-| Jellyfin y Emby | ⚠️ Sin probar |
+| Jellyfin y Emby | ✅ Funciona |
 | Clave de MDBList desde tu cuenta de Nuvio | ✅ Funciona |
 
 ### Limitaciones conocidas
