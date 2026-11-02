@@ -106,7 +106,7 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Custom poster URL patterns | ⚠️ Not tested yet |
 | English interface | ✅ Working |
 | Portuguese interface | ✅ Working |
-| French, German, Italian, Dutch, Polish, Turkish, Romanian, Czech and Hungarian interface | ⚠️ Not tested yet |
+| French, German, Italian, Dutch, Polish, Turkish, Romanian, Czech and Hungarian interface | ✅ Working |
 | New version notice | ✅ Working |
 | Discover | ✅ Working |
 | Recent searches | ✅ Working |
@@ -126,10 +126,10 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | YouTube trailers in your language | ✅ Working |
 | Episode options (`*` on an episode) | ✅ Working |
 | Profile PIN | ✅ Working |
-| Episodes panel in the player | ⚠️ Not tested yet |
-| More like this and collection in details | ⚠️ Not tested yet |
+| Episodes panel in the player | ✅ Working |
+| More like this and collection in details | ✅ Working |
 | TorBox and Premiumize (cached torrents) | ⚠️ Not tested yet |
-| Jellyfin and Emby | ⚠️ Not tested yet |
+| Jellyfin and Emby | ✅ Working |
 | MDBList key from your Nuvio account | ✅ Working |
 
 ### Known limitations
