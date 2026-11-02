@@ -33,9 +33,9 @@ function Mask_Circle(url as string, size as integer) as string
     return "https://wsrv.nl/?url=" + url.EncodeUriComponent() + "&w=" + size.ToStr() + "&h=" + size.ToStr() + "&fit=cover&mask=circle&output=png"
 end function
 
-sub Mask_Caps(parent as object, w as integer, h as integer, radius as integer, color as string)
+sub Mask_Caps(parent as object, w as integer, h as integer, radius as integer, color as string, force = false as boolean)
     caps = parent.findNode("maskCaps")
-    if Mask_On() and Mask_Scale() > 0.99
+    if not force and Mask_On() and Mask_Scale() > 0.99
         if caps <> invalid then caps.visible = false
         return
     end if

@@ -254,6 +254,10 @@ sub runDetailAction(action as string)
         Related_Open(action)
         return
     end if
+    if Left(action, 4) = "org:"
+        Org_Open(ToInt(Mid(action, 5), -1))
+        return
+    end if
     if action = "manual"
         m.ctx.forceManual = true
         action = "play"
@@ -340,6 +344,29 @@ sub EpAct_Run(action as string)
     ex.keep = true
     m.details.extra = ex
     renderDetailButtons()
+end sub
+
+sub Org_Open(index as integer)
+    ex = m.details.extra
+    list = []
+    if type(ex.networks) = "roArray" then list.Append(ex.networks)
+    if type(ex.companies) = "roArray" then list.Append(ex.companies)
+    if index < 0 or index >= list.Count() then return
+    org = list[index]
+    id = Str_Any(org.id)
+    name = Str_Of(org.name)
+    if id = "" then return
+    nets = 0
+    if type(ex.networks) = "roArray" then nets = ex.networks.Count()
+    sources = []
+    if index < nets
+        sources.Push({ provider: "tmdb", tmdbSourceType: "NETWORK", tmdbId: id, mediaType: "TV", title: L("Series") })
+    else
+        sources.Push({ provider: "tmdb", tmdbSourceType: "COMPANY", tmdbId: id, mediaType: "MOVIE", title: L("Películas") })
+        sources.Push({ provider: "tmdb", tmdbSourceType: "COMPANY", tmdbId: id, mediaType: "TV", title: L("Series") })
+    end if
+    closeDetails(false)
+    Folder_Load(name, { title: name, sources: sources })
 end sub
 
 sub Related_Open(action as string)
@@ -903,7 +930,7 @@ sub playStream(index as integer, startAt as integer)
     m.ctx.playingStream = s
     m.ctx.savedLink = false
     m.ctx.hint = Stream_Format(Str_Of(s.filename))
-    m.ctx.attempts = Stream_Attempts(s.url, m.ctx.hint)
+    m.ctx.attempts = Stream_Attempts(s.url)
     m.ctx.attempt = 0
     m.ctx.retriedDrop = false
     m.ctx.resumeMode = ""
@@ -921,10 +948,19 @@ sub playStream(index as integer, startAt as integer)
         m.probeTask.control = "RUN"
         return
     end if
-    if m.ctx.hint = "" and Probe_Needed(s.url)
+    if Probe_Needed(s.url)
         m.probeTask = CreateObject("roSGNode", "ProbeTask")
         m.probeTask.url = s.url
         if type(s.headers) = "roArray" then m.probeTask.headers = s.headers
+        m.probeTask.observeField("result", "onProbeResult")
+        m.probeTask.control = "RUN"
+        return
+    end if
+    if Hlsp_Needed(s.url)
+        m.probeTask = CreateObject("roSGNode", "ProbeTask")
+        m.probeTask.mode = "hls"
+        m.probeTask.url = s.url
+        m.probeTask.headers = Stream_Heads(s, s.url)
         m.probeTask.observeField("result", "onProbeResult")
         m.probeTask.control = "RUN"
         return
@@ -959,8 +995,17 @@ sub onProbeResult(event as object)
         src = r.url
         m.ctx.attempts = Stream_Attempts(src, Stream_Format(Str_Of(r.file)))
     end if
-    if r <> invalid and Str_Of(r.fmt) <> "" and Stream_Format(src) = ""
-        m.ctx.attempts = Stream_Attempts(src, r.fmt)
+    if Stream_Format(src) = ""
+        fmt = ""
+        if r <> invalid then fmt = Str_Of(r.fmt)
+        if fmt = "" and (r = invalid or ToInt(r.code, 0) = 0 or ToInt(r.code, 0) >= 400) then fmt = Str_Of(m.ctx.hint)
+        if fmt <> "" then m.ctx.attempts = Stream_Attempts(src, fmt)
+    end if
+    if m.server <> invalid and r <> invalid and Bool_Of(r.disguised, false)
+        m.server.hlsp = { headers: Stream_Heads(s, src) }
+        wrapped = [{ url: "http://127.0.0.1:8888/hlsp/p?u=" + CreateObject("roUrlTransfer").Escape(src), fmt: "hls" }]
+        wrapped.Append(m.ctx.attempts)
+        m.ctx.attempts = wrapped
     end if
     if m.server <> invalid and r <> invalid and Bool_Of(r.ts, false) and Bool_Of(r.ranges, false) and r.size > 1000000
         m.server.hls = { url: src, size: r.size, duration: Probe_Duration() }
@@ -988,6 +1033,7 @@ function Probe_Duration() as integer
 end function
 
 sub Play_Begin()
+    if ToInt(m.ctx.attempt, 0) = 0 and m.ctx.playingStream <> invalid then m.ctx.attempts = Fmt_Prefer(m.ctx.attempts, Str_Of(m.ctx.playingStream.url))
     if m.subtitleTask <> invalid and not Bool_Of(m.ctx.subsWaited, false)
         m.ctx.waitingSubs = true
         m.subsWait.control = "stop"
@@ -1079,7 +1125,8 @@ sub launchAttempt()
     content.url = attempt.url
     content.title = m.ctx.title
     if attempt.fmt <> "" then content.streamFormat = attempt.fmt
-    if type(s.headers) = "roArray" and s.headers.Count() > 0 then content.HttpHeaders = s.headers
+    heads = Stream_Heads(s, attempt.url)
+    if heads.Count() > 0 then content.HttpHeaders = heads
     if LCase(Left(attempt.url, 6)) = "https:"
         content.HttpSendClientCertificates = true
         content.HttpCertificatesFile = "common:/certs/ca-bundle.crt"
@@ -1105,6 +1152,8 @@ sub launchAttempt()
     end if
     m.stallTimer.control = "stop"
     m.stallTimer.control = "start"
+    m.ctx.stallChecks = 0
+    m.ctx.stallPct = -1
     lowered = LCase(s.url)
     q = Instr(1, lowered, "?")
     if q > 0 then lowered = Left(lowered, q - 1)
@@ -1210,6 +1259,7 @@ sub rememberStream()
     s = m.ctx.playingStream
     if s = invalid then return
     m.ctx.savedLink = true
+    Fmt_Remember(Str_Of(s.url))
     if s.url <> ""
         St_SaveLink("v:" + m.ctx.videoId, { stream: { url: s.url, headers: s.headers, name: s.name, desc: s.desc, addon: s.addon, logo: s.logo, binge: s.binge, chips: s.chips, badges: [], label: s.label, order: -1, debrid: s.debrid } })
     end if
@@ -1709,7 +1759,20 @@ sub onStallTimer()
     video = m.playerVideo
     if video.position >= 1 then return
     state = video.state
-    if state = "buffering" or state = "error" or state = "finished" then return
+    if state = "error" or state = "finished" then return
+    if state = "buffering"
+        pct = -1
+        info = video.bufferingStatus
+        if type(info) = "roAssociativeArray" and info.percentage <> invalid then pct = ToInt(info.percentage, -1)
+        checks = ToInt(m.ctx.stallChecks, 0)
+        moved = pct <> ToInt(m.ctx.stallPct, -1)
+        m.ctx.stallPct = pct
+        m.ctx.stallChecks = checks + 1
+        if moved or checks < 1
+            m.stallTimer.control = "start"
+            return
+        end if
+    end if
     if not nextAttempt(0)
         closePlayer(false)
         showMessage(L("No se pudo reproducir"), playbackFailureText(L("la fuente no empezó a reproducirse")))
@@ -1736,3 +1799,93 @@ sub Watched_Finish()
     St_SetWatched([{ id: m.ctx.metaId, kind: kind, title: m.ctx.title, season: season, episode: episode }], true)
     if kind = "movie" then Watched_Refresh(m.ctx.metaId, true)
 end sub
+
+function Px_Headers(url as string, have as object) as object
+    out = []
+    cut = Instr(1, url, "/px/")
+    if cut = 0 then return out
+    token = Mid(url, cut + 4)
+    slash = Instr(1, token, "/")
+    if slash > 0 then token = Left(token, slash - 1)
+    dot = Instr(1, token, ".")
+    if dot > 0 then token = Left(token, dot - 1)
+    token = token.Replace("-", "+").Replace("_", "/")
+    while Len(token) mod 4 <> 0
+        token = token + "="
+    end while
+    raw = CreateObject("roByteArray")
+    raw.FromBase64String(token)
+    data = ParseJson(raw.ToAsciiString())
+    if type(data) <> "roAssociativeArray" or type(data.h) <> "roAssociativeArray" then return out
+    taken = {}
+    for each h in have
+        if IsStr(h)
+            c = Instr(1, h, ":")
+            if c > 1 then taken[LCase(Left(h, c - 1).Trim())] = true
+        end if
+    end for
+    for each k in data.h
+        if not taken.DoesExist(LCase(k)) and IsStr(data.h[k]) and data.h[k] <> "" then out.Push(k + ": " + data.h[k])
+    end for
+    return out
+end function
+
+function Fmt_Host(url as string) as string
+    u = LCase(url)
+    cut = Instr(1, u, "://")
+    if cut = 0 then return ""
+    u = Mid(u, cut + 3)
+    slash = Instr(1, u, "/")
+    if slash > 0 then u = Left(u, slash - 1)
+    return u
+end function
+
+sub Fmt_Remember(url as string)
+    attempts = m.ctx.attempts
+    index = ToInt(m.ctx.attempt, 0)
+    host = Fmt_Host(url)
+    if host = "" or type(attempts) <> "roArray" or index >= attempts.Count() then return
+    fmt = Str_Of(attempts[index].fmt)
+    hosts = St_Get("fmtHosts", {})
+    if type(hosts) <> "roAssociativeArray" then hosts = {}
+    if index = 0 and not hosts.DoesExist(host) then return
+    if hosts.DoesExist(host) and Str_Of(hosts[host]) = fmt then return
+    if hosts.Count() > 60 then hosts = {}
+    hosts[host] = fmt
+    St_Set("fmtHosts", hosts)
+end sub
+
+function Fmt_Prefer(attempts as dynamic, url as string) as dynamic
+    if type(attempts) <> "roArray" or attempts.Count() < 2 then return attempts
+    hosts = St_Get("fmtHosts", {})
+    host = Fmt_Host(url)
+    if type(hosts) <> "roAssociativeArray" or not hosts.DoesExist(host) then return attempts
+    want = Str_Of(hosts[host])
+    if Str_Of(attempts[0].fmt) = want then return attempts
+    for i = 1 to attempts.Count() - 1
+        if Str_Of(attempts[i].fmt) = want
+            out = [attempts[i]]
+            for j = 0 to attempts.Count() - 1
+                if j <> i then out.Push(attempts[j])
+            end for
+            return out
+        end if
+    end for
+    return attempts
+end function
+
+function Stream_Heads(s as object, url as string) as object
+    heads = []
+    if type(s.headers) = "roArray" then heads.Append(s.headers)
+    heads.Append(Px_Headers(url, heads))
+    return heads
+end function
+
+function Hlsp_Needed(url as string) as boolean
+    if m.server = invalid then return false
+    if Stream_Format(url) <> "hls" then return false
+    low = LCase(url)
+    if Left(low, 4) <> "http" then return false
+    if Instr(1, low, "/live/") > 0 or Instr(1, low, "127.0.0.1:8888") > 0 then return false
+    return true
+end function
