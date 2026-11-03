@@ -16,7 +16,7 @@
 
 </div>
 
-Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.0.9**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
+Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.1.0**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
 
 > **Esta no es una app oficial de Nuvio** y no está afiliada ni respaldada por el equipo de Nuvio. No aloja, guarda ni distribuye ningún contenido. Todo lo que ves viene de los addons que instalas.
 
@@ -64,6 +64,10 @@ Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMe
 - Más como esto, colección, y productoras o cadenas en la página de detalles, como en Nuvio TV
 - Servicios conectados como en Nuvio TV: TorBox (QR o clave de API) y Premiumize (clave de API), para reproducir resultados de torrent que ya están en la caché de tu servicio
 - Servidores multimedia como en Nuvio TV: bibliotecas de Jellyfin y Emby en el inicio y como fuentes
+- Botón **Cambiar forma de abrir** en el reproductor, como el de cambiar reproductor de Nuvio: prueba la siguiente forma de abrir un enlace cuando no carga o no tiene sonido
+- Trakt o MDBList como fuente de Seguir viendo y de tu biblioteca, con tu watchlist y tus listas personales
+- Comentarios de Trakt en la página de detalles
+- Registro de lo que ves en MDBList
 
 ## Estado
 
@@ -131,6 +135,10 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | TorBox y Premiumize (torrents en caché) | ⚠️ Sin probar |
 | Jellyfin y Emby | ✅ Funciona |
 | Clave de MDBList desde tu cuenta de Nuvio | ✅ Funciona |
+| Botón Cambiar forma de abrir | ⚠️ Sin probar |
+| Trakt o MDBList como fuente de Seguir viendo y biblioteca | ⚠️ Sin probar |
+| Comentarios de Trakt | ⚠️ Sin probar |
+| Registro en MDBList | ⚠️ Sin probar |
 
 ### Limitaciones conocidas
 

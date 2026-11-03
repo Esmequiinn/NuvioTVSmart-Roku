@@ -16,7 +16,7 @@
 
 </div>
 
-This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.0.9**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
+This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.1.0**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
 
 > **This is not an official Nuvio app** and it is not affiliated with or endorsed by the Nuvio team. It does not host, store or distribute any content. Everything you see comes from the addons you install.
 
@@ -64,6 +64,10 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - More like this, collection, and production companies or networks on the details page, like Nuvio TV
 - Connected services like Nuvio TV: TorBox (QR or API key) and Premiumize (API key), to play torrent results that are already cached on your service
 - Media servers like Nuvio TV: Jellyfin and Emby libraries on the home screen and as sources
+- **Change how it opens** button in the player, like Nuvio's switch player button: try the next way of opening a link when it doesn't load or has no sound
+- Trakt or MDBList as the source of Continue Watching and your library, with your watchlist and personal lists
+- Trakt comments on the details page
+- MDBList scrobbling
 
 ## Status
 
@@ -131,6 +135,10 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | TorBox and Premiumize (cached torrents) | ⚠️ Not tested yet |
 | Jellyfin and Emby | ✅ Working |
 | MDBList key from your Nuvio account | ✅ Working |
+| Change how it opens button | ⚠️ Not tested yet |
+| Trakt or MDBList as Continue Watching and library source | ⚠️ Not tested yet |
+| Trakt comments | ⚠️ Not tested yet |
+| MDBList scrobbling | ⚠️ Not tested yet |
 
 ### Known limitations
 

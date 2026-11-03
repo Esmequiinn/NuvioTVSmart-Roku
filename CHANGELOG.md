@@ -4,6 +4,18 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.1.0] - 2026-11-03
+
+### Added
+- **Change how it opens** button in the player, next to Sources, works like Nuvio's switch player button. Each link can be opened in several ways (automatic, HLS, MKV, MP4, cleaned on the Roku...). If a video doesn't load, gets stuck or has no sound, press it to try the next way. Each press moves to the next one, keeps your place, and shows which way you're on.
+- **Trakt and MDBList as sources**, like Nuvio TV: in **Settings → Tracking → Sources**, choose where **Continue Watching** comes from (Nuvio, Trakt or MDBList) and where your **library** comes from (My List, Trakt or MDBList). With Trakt or MDBList, Continue Watching shows what you left halfway there and your next episodes, the library shows your watchlist and your personal lists, and adding or removing from My List also changes your watchlist on that service.
+- **Trakt comments** on the details page, in a new **Comments** tab next to Cast and More like this. Comments in another language are translated into the channel's language, and you can still see the original. Comments with spoilers stay hidden until you press OK. You can turn comments or their translation off in **Settings → Tracking**.
+- What you watch is now also registered in **MDBList** (start, pause and end) when your MDBList account is connected, like it already was with Trakt and Simkl.
+
+### Fixed
+- When you pressed `*` to choose a source, sometimes the list didn't show which source or filter was selected, even though you could move through it. The highlight now always shows.
+- Trakt lists in collections that failed with "Trakt (403)" now try again the same way Nuvio TV asks Trakt for them, and if they still fail the message says why.
+
 ## [0.0.9] - 2026-11-01
 
 ### Added
