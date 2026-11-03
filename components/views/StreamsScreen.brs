@@ -32,6 +32,7 @@ sub onInfo()
     m.chipIndex = 1
     m.zone = "grid"
     m.autoFocus = true
+    m.grid.drawFocusFeedback = true
     m.bg.uri = Txt(info.background)
     m.logo.visible = false
     m.title.visible = true
@@ -214,6 +215,7 @@ sub buildGrid()
     if m.shown.Count() > 0 then m.grid.jumpToItem = target
     if m.shown.Count() > 0 and m.autoFocus and m.top.isInFocusChain()
         m.zone = "grid"
+        m.grid.drawFocusFeedback = true
         m.grid.setFocus(true)
     end if
     updateStatus()
@@ -251,6 +253,7 @@ sub onFocusChange()
         return
     end if
     if m.zone = "grid" and m.shown.Count() > 0
+        m.grid.drawFocusFeedback = true
         m.grid.setFocus(true)
     else if m.zone = "grid"
         m.zone = "chips"

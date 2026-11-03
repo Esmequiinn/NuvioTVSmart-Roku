@@ -172,6 +172,7 @@ sub onExtra()
         if name = "" then name = L("Colección")
         m.tabs.Push({ id: "coll", label: name })
     end if
+    if type(ex.comments) = "roArray" and ex.comments.Count() > 0 then m.tabs.Push({ id: "comments", label: L("Comentarios") })
     m.tabNodes = []
     if m.tabs.Count() > 0
         if m.tabIndex = invalid or m.tabIndex >= m.tabs.Count() then m.tabIndex = 0
@@ -330,6 +331,11 @@ sub buildRow()
         m.rowStep = 200
         for i = 0 to ex.cast.Count() - 1
             Cast_Node(ex.cast[i], i)
+        end for
+    else if tabId = "comments"
+        m.rowStep = 500
+        for i = 0 to ex.comments.Count() - 1
+            Comment_Node(ex.comments[i], i)
         end for
     else
         list = ex.moreLike
@@ -1004,3 +1010,54 @@ function Opts_Key(key as string) as boolean
     end if
     return true
 end function
+
+sub Comment_Node(c as object, i as integer)
+    g = m.castGroup.createChild("Group")
+    g.translation = [i * 500, 0]
+    bg = g.createChild("Poster")
+    bg.uri = "pkg:/images/card.9.png"
+    bg.width = 470
+    bg.height = 300
+    bg.blendColor = "0x1E1E22FF"
+    ring = g.createChild("Poster")
+    ring.uri = "pkg:/images/iring.9.png"
+    ring.width = 470
+    ring.height = 300
+    ring.blendColor = m.top.accent
+    ring.visible = false
+    user = g.createChild("Label")
+    user.font = "font:SmallBoldSystemFont"
+    user.font.size = 24
+    user.color = "0xFFFFFFFF"
+    user.translation = [24, 20]
+    user.width = 422
+    user.text = Str_Of(c.user)
+    parts = []
+    if ToInt(c.rating, 0) > 0 then parts.Push(ToInt(c.rating, 0).ToStr() + "/10")
+    if ToInt(c.likes, 0) > 0 then parts.Push(L("{n} me gusta").Replace("{n}", ToInt(c.likes, 0).ToStr()))
+    if Str_Of(c.date) <> "" then parts.Push(Fmt_Date(Str_Of(c.date)))
+    if Bool_Of(c.translated, false) then parts.Push(L("Traducido"))
+    meta = g.createChild("Label")
+    meta.font = "font:SmallestSystemFont"
+    meta.font.size = 20
+    meta.color = "0x9E9E9EFF"
+    meta.translation = [24, 56]
+    meta.width = 422
+    meta.text = parts.Join("  ·  ")
+    body = g.createChild("Label")
+    body.font = "font:SmallestSystemFont"
+    body.font.size = 22
+    body.color = "0xD6D6E0FF"
+    body.translation = [24, 96]
+    body.width = 422
+    body.height = 180
+    body.wrap = true
+    body.maxLines = 6
+    if Bool_Of(c.spoiler, false)
+        body.color = "0x8C8C96FF"
+        body.text = L("Este comentario tiene spoilers. Presiona OK para leerlo.")
+    else
+        body.text = Str_Of(c.text)
+    end if
+    m.castNodes.Push({ ring: ring })
+end sub

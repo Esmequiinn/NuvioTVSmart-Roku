@@ -230,6 +230,7 @@ sub buildButtons(isSeries as boolean)
         { id: "subs", icon: "pkg:/images/ic_subs.png", hint: L("Subtítulos") }
         { id: "audio", icon: "pkg:/images/ic_audio.png", hint: "Audio" }
         { id: "sources", icon: "pkg:/images/ic_sources.png", hint: L("Fuentes") }
+        { id: "switch", icon: "pkg:/images/ic_switch.png", hint: L("Cambiar forma de abrir") }
     ]
     if isSeries
         defs.Push({ id: "next", icon: "pkg:/images/ic_next.png", hint: L("Siguiente episodio") })
@@ -639,6 +640,8 @@ sub activate(id as string)
         m.top.event = { type: "episodes", inPlayer: true }
     else if id = "party"
         m.top.event = { type: "party" }
+    else if id = "switch"
+        m.top.event = { type: "switch", position: Int(m.video.position) }
     end if
 end sub
 
