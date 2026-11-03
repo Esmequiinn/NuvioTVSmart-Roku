@@ -91,6 +91,18 @@ sub Scrobble_Send(action as string, p as object)
     if integ.simklToken <> ""
         Http_Request("POST", Simkl_Url("/scrobble/" + action, integ), { Authorization: "Bearer " + integ.simklToken }, body, 10000)
     end if
+    if Str_Of(integ.mdbAccess) <> "" or Str_Of(integ.mdbRefresh) <> ""
+        token = Mdb_Token(integ)
+        if token <> ""
+            mdb = { progress: Int(progress * 100) / 100.0 }
+            if isShow
+                mdb.show = { ids: { imdb: imdb }, season: season, episode: episode }
+            else
+                mdb.movie = { ids: { imdb: imdb } }
+            end if
+            Http_Request("POST", "https://api.mdblist.com/scrobble/" + action, { Authorization: "Bearer " + token }, mdb, 10000)
+        end if
+    end if
 end sub
 
 function Nuvio_Headers(integ as object, withSession as boolean) as object
@@ -1695,15 +1707,7 @@ function Nuvio_MdbCredential(index as integer) as dynamic
     return found
 end function
 
-sub Nuvio_NextUp(pid as string)
-    watched = St_ReadFile("watched_" + pid)
-    if type(watched) <> "roAssociativeArray" then return
-    progress = St_Get("progress_" + pid, invalid)
-    if type(progress) <> "roArray" then progress = []
-    busy = {}
-    for each e in progress
-        if type(e) = "roAssociativeArray" and not Bool_Of(e.nextUp, false) then busy[Str_Of(e.metaId)] = true
-    end for
+function NextUp_Fresh(watched as object, busy as object) as object
     now = CreateObject("roDateTime").AsSeconds()
     best = {}
     for each key in watched
@@ -1736,7 +1740,7 @@ sub Nuvio_NextUp(pid as string)
     while seeds.Count() > 6
         seeds.Pop()
     end while
-    if seeds.Count() = 0 then return
+    if seeds.Count() = 0 then return []
     urls = []
     for each sd in seeds
         urls.Push("https://v3-cinemeta.strem.io/meta/series/" + sd.id + ".json")
@@ -1781,6 +1785,19 @@ sub Nuvio_NextUp(pid as string)
             end if
         end if
     end for
+    return fresh
+end function
+
+sub Nuvio_NextUp(pid as string)
+    watched = St_ReadFile("watched_" + pid)
+    if type(watched) <> "roAssociativeArray" then return
+    progress = St_Get("progress_" + pid, invalid)
+    if type(progress) <> "roArray" then progress = []
+    busy = {}
+    for each e in progress
+        if type(e) = "roAssociativeArray" and not Bool_Of(e.nextUp, false) then busy[Str_Of(e.metaId)] = true
+    end for
+    fresh = NextUp_Fresh(watched, busy)
     if fresh.Count() = 0 then return
     byId = {}
     for each f in fresh

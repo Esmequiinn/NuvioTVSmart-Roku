@@ -62,7 +62,7 @@ end function
 function Content_ContinueRow() as dynamic
     prefs = St_Prefs()
     if not prefs.continueWatching then return invalid
-    list = St_Progress()
+    list = St_ProgressView()
     if list.Count() = 0 then return invalid
     row = CreateObject("roSGNode", "ContentNode")
     row.id = "cw"

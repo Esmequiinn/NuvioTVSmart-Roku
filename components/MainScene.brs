@@ -342,6 +342,7 @@ end sub
 
 sub loadHome()
     applyTheme()
+    if not Bool_Of(m.homeLoaded, false) then Progress_Soon()
     m.homeLoaded = true
     m.needsReload = false
     m.emptyState.visible = false
@@ -1372,7 +1373,8 @@ sub Rows_Restore()
 end sub
 
 sub Progress_Soon()
-    if St_Integrations().nuvioAccess = "" then return
+    integ = St_Integrations()
+    if integ.nuvioAccess = "" and Track_CwSource(integ) = "" and Track_LibSource(integ) = "" then return
     m.progressSoon.control = "stop"
     m.progressSoon.control = "start"
 end sub
@@ -1380,7 +1382,8 @@ end sub
 sub onProgressTimer()
     if m.accountTask <> invalid or m.pushTask <> invalid or m.progressTask <> invalid then return
     if m.player.visible or m.busy then return
-    if St_Integrations().nuvioAccess = "" then return
+    integ = St_Integrations()
+    if integ.nuvioAccess = "" and Track_CwSource(integ) = "" and Track_LibSource(integ) = "" then return
     m.progressTask = CreateObject("roSGNode", "AccountTask")
     m.progressTask.mode = "nuvioProgress"
     m.progressTask.observeField("result", "onProgressRefreshed")
@@ -1395,4 +1398,5 @@ sub onProgressRefreshed(event as object)
     if r = invalid or not Bool_Of(r.ok, false) then return
     m.watchedCache = invalid
     refreshContinueRow()
+    if m.page = "library" then buildLibrary()
 end sub

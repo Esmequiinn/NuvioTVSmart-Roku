@@ -135,46 +135,61 @@ end sub
 
 sub buildLibrary()
     root = CreateObject("roSGNode", "ContentNode")
-    saved = St_Library()
-    if saved.Count() > 0
-        row = root.createChild("ContentNode")
-        row.title = L("Mi lista")
-        pattern = Poster_Pattern("library")
-        for each e in saved
-            poster = Str_Of(e.poster)
-            fallback = ""
-            if pattern <> ""
-                custom = Poster_Custom(pattern, Str_Of(e.id), "", Str_Of(e.kind))
-                if custom <> ""
-                    fallback = poster
-                    poster = custom
-                end if
-            end if
-            Content_Item(row, {
-                fallback: fallback
-                title: Str_Of(e.name)
-                poster: poster
-                description: ""
-                kind: Str_Of(e.kind)
-                metaId: e.id
-                videoId: ""
-                background: ""
-                metaLine: TypeLabel(Str_Of(e.kind))
-                episodeLabel: ""
-                progress: 0.0
-            })
-        end for
+    rows = invalid
+    source = Track_LibSource(St_Integrations())
+    if source <> ""
+        cache = St_ReadFile("tlib_" + St_ActiveProfile().id)
+        if type(cache) = "roAssociativeArray" and Str_Of(cache.source) = source and type(cache.rows) = "roArray" then rows = cache.rows
     end if
+    if rows = invalid then rows = [{ title: L("Mi lista"), items: St_Library() }]
+    pattern = Poster_Pattern("library")
+    for each r in rows
+        if type(r) = "roAssociativeArray" and type(r.items) = "roArray" and r.items.Count() > 0
+            row = root.createChild("ContentNode")
+            row.title = Str_Of(r.title)
+            for each e in r.items
+                if type(e) = "roAssociativeArray"
+                    poster = Str_Of(e.poster)
+                    fallback = ""
+                    if pattern <> ""
+                        custom = Poster_Custom(pattern, Str_Of(e.id), "", Str_Of(e.kind))
+                        if custom <> ""
+                            fallback = poster
+                            poster = custom
+                        end if
+                    end if
+                    Content_Item(row, {
+                        fallback: fallback
+                        title: Str_Of(e.name)
+                        poster: poster
+                        description: ""
+                        kind: Str_Of(e.kind)
+                        metaId: Str_Of(e.id)
+                        videoId: ""
+                        background: ""
+                        metaLine: TypeLabel(Str_Of(e.kind))
+                        episodeLabel: ""
+                        progress: 0.0
+                    })
+                end if
+            end for
+        end if
+    end for
     prev = m.libraryRows.rowItemFocused
     m.libraryRows.content = root
     applyRowSizes(m.libraryRows)
     if root.getChildCount() > 0
         col = 0
-        if type(prev) = "roArray" and prev.Count() > 1 then col = prev[1]
-        last = root.getChild(0).getChildCount() - 1
+        rowAt = 0
+        if type(prev) = "roArray" and prev.Count() > 1
+            rowAt = prev[0]
+            col = prev[1]
+        end if
+        if rowAt < 0 or rowAt >= root.getChildCount() then rowAt = 0
+        last = root.getChild(rowAt).getChildCount() - 1
         if col > last then col = last
         if col < 0 then col = 0
-        m.libraryRows.jumpToRowItem = [0, col]
+        m.libraryRows.jumpToRowItem = [rowAt, col]
     end if
     hasItems = root.getChildCount() > 0
     m.libraryRows.visible = hasItems

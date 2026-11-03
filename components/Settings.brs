@@ -359,6 +359,11 @@ function Settings_Model() as object
     end if
     tracking.rows.Push(Set_Row("simkl", "Simkl", L("Vincula tu cuenta de Simkl con un código."), simklValue))
     tracking.rows.Push(Set_Toggle("scrobble", L("Registrar lo que veo"), L("Envía inicio, pausa y fin de cada título."), integ.scrobble))
+    tracking.rows.Push(Set_Header(L("Fuentes")))
+    tracking.rows.Push(Set_Row("cwSource", L("Seguir viendo desde"), L("De dónde sale la fila Seguir viendo. Trakt y MDBList aparecen cuando conectas su cuenta."), Track_SourceName(Track_Pick(integ, "cw"))))
+    tracking.rows.Push(Set_Row("libSource", L("Biblioteca desde"), L("De dónde salen las listas de la biblioteca. Con Trakt o MDBList, agregar a Mi lista guarda en su watchlist."), Track_SourceName(Track_Pick(integ, "lib"))))
+    tracking.rows.Push(Set_Toggle("traktComments", L("Comentarios de Trakt"), L("Muestra comentarios de Trakt en la ficha."), Bool_Of(integ.traktComments, true)))
+    tracking.rows.Push(Set_Toggle("traktTranslate", L("Traducir comentarios"), L("Traduce al idioma del canal los comentarios que están en otro idioma."), Bool_Of(integ.traktTranslate, true)))
 
     advanced = { id: "advanced", label: L("Avanzado"), subtitle: L("Rendimiento, navegación, caché y diagnósticos"), rows: [] }
     cornerNames = { auto: L("Automático"), full: L("Normal"), hd: L("Pantalla HD"), off: L("Tapar esquinas") }
@@ -687,6 +692,33 @@ sub onSettingsEvent()
         integ.scrobble = not integ.scrobble
         St_SaveIntegrations(integ)
         refreshSettings()
+    else if row = "cwSource" or row = "libSource"
+        which = "cw"
+        if row = "libSource" then which = "lib"
+        opts = Track_Options(integ, which)
+        if opts.Count() < 2
+            showMessage(L("Fuentes"), L("Conecta Trakt o MDBList para elegir otra fuente."))
+        else
+            cur = Track_Pick(integ, which)
+            nxt = opts[0]
+            for i = 0 to opts.Count() - 1
+                if opts[i] = cur and i + 1 < opts.Count() then nxt = opts[i + 1]
+            end for
+            integ[row] = nxt
+            St_SaveIntegrations(integ)
+            refreshSettings()
+            refreshContinueRow()
+            m.progressSoon.control = "stop"
+            m.progressSoon.control = "start"
+        end if
+    else if row = "traktTranslate"
+        integ["traktTranslate"] = not Bool_Of(integ.traktTranslate, true)
+        St_SaveIntegrations(integ)
+        refreshSettings()
+    else if row = "traktComments"
+        integ["traktComments"] = not Bool_Of(integ.traktComments, true)
+        St_SaveIntegrations(integ)
+        refreshSettings()
     else if row = "clearHistory"
         St_ClearProgress()
         refreshContinueRow()
@@ -972,4 +1004,30 @@ end sub
 function Set_YesNo(v as boolean, yes as string, no as string) as string
     if v then return yes
     return no
+end function
+
+function Track_Options(integ as object, which as string) as object
+    out = ["nuvio"]
+    if which = "lib" then out = ["local"]
+    if Str_Of(integ.traktToken) <> "" then out.Push("trakt")
+    if Str_Of(integ.mdbAccess) <> "" or Str_Of(integ.mdbRefresh) <> "" then out.Push("mdblist")
+    return out
+end function
+
+function Track_Pick(integ as object, which as string) as string
+    if which = "cw"
+        v = Track_CwSource(integ)
+        if v = "" then v = "nuvio"
+        return v
+    end if
+    v = Track_LibSource(integ)
+    if v = "" then v = "local"
+    return v
+end function
+
+function Track_SourceName(v as string) as string
+    if v = "trakt" then return "Trakt"
+    if v = "mdblist" then return "MDBList"
+    if v = "local" then return L("Mi lista")
+    return "Nuvio"
 end function

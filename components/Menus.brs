@@ -297,7 +297,7 @@ function menuEpisodes(data as object) as object
     menu.poster = m.ctx.poster
     menu.backdrop = m.ctx.background
     resumeId = ""
-    for each e in St_Progress()
+    for each e in St_ProgressView()
         if e.metaId = m.ctx.metaId then resumeId = e.videoId
     end for
     for each v in season.episodes

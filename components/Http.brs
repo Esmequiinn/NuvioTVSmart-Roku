@@ -8,7 +8,7 @@ function Http_Transfer(url as string, port as object, ua = "" as string) as obje
     if ua <> ""
         t.AddHeader("User-Agent", ua)
     else if Instr(1, url, "api.trakt.tv") > 0
-        t.AddHeader("User-Agent", "NuvioTV-Roku/" + App_Version())
+        t.AddHeader("User-Agent", "Nuvio/" + CreateObject("roAppInfo").GetVersion())
     else
         t.AddHeader("User-Agent", "Mozilla/5.0 (Roku) NuvioTV/1.0")
     end if

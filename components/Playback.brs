@@ -177,6 +177,7 @@ sub Details_Extra()
     end if
     if type(meta.cast) = "roArray" then extra.cast = meta.cast
     if type(meta.moreLike) = "roArray" then extra.moreLike = meta.moreLike
+    if type(meta.comments) = "roArray" then extra.comments = meta.comments
     if type(meta.collection) = "roAssociativeArray" then extra.collection = meta.collection
     if type(meta.companies) = "roArray" then extra.companies = meta.companies
     if type(meta.networks) = "roArray" then extra.networks = meta.networks
@@ -193,7 +194,7 @@ function isSeries() as boolean
 end function
 
 function resumeEntry() as dynamic
-    for each e in St_Progress()
+    for each e in St_ProgressView()
         if e.metaId = m.ctx.metaId then return e
     end for
     return invalid
@@ -248,6 +249,10 @@ sub runDetailAction(action as string)
     end if
     if Left(action, 5) = "cast:"
         Cast_Open(ToInt(Mid(action, 6), -1))
+        return
+    end if
+    if Left(action, 9) = "comments:"
+        Comment_Open(ToInt(Mid(action, 10), -1))
         return
     end if
     if Left(action, 5) = "more:" or Left(action, 5) = "coll:"
@@ -1293,6 +1298,8 @@ sub Player_Event()
         Party_Publish(Bool_Of(ev.paused, false), 0.0 + ev.position)
     else if kind = "party"
         Party_Menu()
+    else if kind = "switch"
+        Switch_Attempt(ToInt(ev.position, 0))
     else if kind = "source"
         saveProgress()
         playStream(ToInt(ev.index, 0), ToInt(ev.position, 0))
@@ -1548,7 +1555,7 @@ end sub
 
 sub scrobble(action as string)
     integ = St_Integrations()
-    if integ.traktToken = "" and integ.simklToken = "" then return
+    if integ.traktToken = "" and integ.simklToken = "" and Str_Of(integ.mdbAccess) = "" and Str_Of(integ.mdbRefresh) = "" then return
     if m.ctx.imdb = "" then return
     video = m.playerVideo
     progress = 0.0
@@ -1889,3 +1896,47 @@ function Hlsp_Needed(url as string) as boolean
     if Instr(1, low, "/live/") > 0 or Instr(1, low, "127.0.0.1:8888") > 0 then return false
     return true
 end function
+
+sub Switch_Attempt(position as integer)
+    attempts = m.ctx.attempts
+    if m.ctx.playingStream = invalid or type(attempts) <> "roArray" then return
+    if attempts.Count() < 2
+        Toast_Show(L("Este enlace solo tiene una forma de abrirse."))
+        return
+    end if
+    nxt = ToInt(m.ctx.attempt, 0) + 1
+    if nxt >= attempts.Count() then nxt = 0
+    m.ctx.attempt = nxt
+    m.ctx.savedLink = false
+    m.ctx.stallChecks = 0
+    if position > 10 then m.ctx.startAt = position
+    refreshResume()
+    launchAttempt()
+    text = L("Forma {n} de {t}").Replace("{n}", (nxt + 1).ToStr()).Replace("{t}", attempts.Count().ToStr())
+    Toast_Show(text + ": " + Switch_Name(attempts[nxt]))
+end sub
+
+function Switch_Name(attempt as object) as string
+    url = LCase(Str_Of(attempt.url))
+    if Instr(1, url, "127.0.0.1:8888/hlsp/") > 0 then return L("HLS limpiado en el Roku")
+    if Instr(1, url, "127.0.0.1:8888/hls.m3u8") > 0 then return L("TS en lista HLS")
+    fmt = Str_Of(attempt.fmt)
+    if fmt = "" then return L("Automática")
+    return UCase(fmt)
+end function
+
+sub Comment_Open(index as integer)
+    ex = m.details.extra
+    if ex = invalid or type(ex.comments) <> "roArray" or index < 0 or index >= ex.comments.Count() then return
+    c = ex.comments[index]
+    title = Str_Of(c.user)
+    if ToInt(c.rating, 0) > 0 then title = title + "  ·  " + ToInt(c.rating, 0).ToStr() + "/10"
+    text = Str_Of(c.text)
+    if Len(text) > 1400 then text = Left(text, 1400).Trim() + "..."
+    if Bool_Of(c.translated, false) and Len(text) < 900
+        original = Str_Of(c.original)
+        if Len(original) > 600 then original = Left(original, 600).Trim() + "..."
+        text = text + chr(10) + chr(10) + L("Original:") + " " + original
+    end if
+    showMessage(title, text)
+end sub

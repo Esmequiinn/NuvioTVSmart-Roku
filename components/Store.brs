@@ -495,13 +495,14 @@ sub St_SaveProgress(entry as object)
 end sub
 
 function St_ResumeFor(videoId as string) as integer
-    for each e in St_Progress()
+    for each e in St_ProgressView()
         if e.videoId = videoId then return ToInt(e.position, 0)
     end for
     return 0
 end function
 
 sub St_RemoveProgress(metaId as string)
+    Track_DropProgress(metaId)
     out = []
     found = false
     for each e in St_Progress()
@@ -629,6 +630,7 @@ function St_Library() as object
 end function
 
 function St_InLibrary(id as string) as boolean
+    if Track_LibSource(St_Integrations()) <> "" then return Track_InWatchlist(id)
     for each e in St_Library()
         if e.id = id then return true
     end for
@@ -649,6 +651,8 @@ sub St_FixLibraryPoster(id as string, poster as string)
 end sub
 
 function St_ToggleLibrary(entry as object) as boolean
+    remote = Track_LibSource(St_Integrations())
+    if remote <> "" then return Track_ToggleWatchlist(remote, entry)
     list = St_Library()
     out = []
     found = false
@@ -732,6 +736,10 @@ function St_Integrations() as object
         simklToken: ""
         simklUser: ""
         scrobble: true
+        cwSource: "nuvio"
+        libSource: "local"
+        traktComments: true
+        traktTranslate: true
         torboxKey: ""
         torboxFrom: ""
         premiumizeKey: ""
@@ -1008,3 +1016,124 @@ end sub
 sub St_ClearSearches()
     St_Set("searches_" + St_ActiveProfile().id, [])
 end sub
+
+function Track_CwSource(integ as object) as string
+    v = LCase(Str_Of(integ.cwSource))
+    if v = "trakt" and Str_Of(integ.traktToken) <> "" then return "trakt"
+    if v = "mdblist" and (Str_Of(integ.mdbAccess) <> "" or Str_Of(integ.mdbRefresh) <> "") then return "mdblist"
+    return ""
+end function
+
+function Track_LibSource(integ as object) as string
+    v = LCase(Str_Of(integ.libSource))
+    if v = "trakt" and Str_Of(integ.traktToken) <> "" then return "trakt"
+    if v = "mdblist" and (Str_Of(integ.mdbAccess) <> "" or Str_Of(integ.mdbRefresh) <> "") then return "mdblist"
+    return ""
+end function
+
+function St_ProgressView() as object
+    local = St_Progress()
+    source = Track_CwSource(St_Integrations())
+    if source = "" then return local
+    pid = St_ActiveProfile().id
+    cache = St_ReadFile("tprogress_" + pid)
+    if type(cache) <> "roAssociativeArray" or Str_Of(cache.source) <> source or type(cache.items) <> "roArray" then return local
+    drops = St_ReadFile("tdrop_" + pid)
+    if type(drops) <> "roAssociativeArray" then drops = {}
+    at = ToInt(cache.at, 0)
+    out = []
+    seen = {}
+    for each e in local
+        if ToInt(e.updated, 0) > at and not seen.DoesExist(e.metaId)
+            seen[e.metaId] = true
+            out.Push(e)
+        end if
+    end for
+    for each e in cache.items
+        if type(e) = "roAssociativeArray" and IsStr(e.metaId) and IsStr(e.videoId) and not seen.DoesExist(e.metaId)
+            if not drops.DoesExist(e.metaId) or ToInt(drops[e.metaId], 0) < ToInt(e.updated, 0)
+                seen[e.metaId] = true
+                out.Push(e)
+            end if
+        end if
+    end for
+    return out
+end function
+
+sub Track_DropProgress(metaId as string)
+    source = Track_CwSource(St_Integrations())
+    if source = "" then return
+    pid = St_ActiveProfile().id
+    drops = St_ReadFile("tdrop_" + pid)
+    if type(drops) <> "roAssociativeArray" then drops = {}
+    drops[metaId] = St_Now()
+    St_WriteFile("tdrop_" + pid, drops)
+    cache = St_ReadFile("tprogress_" + pid)
+    if type(cache) <> "roAssociativeArray" or type(cache.items) <> "roArray" then return
+    for each e in cache.items
+        if type(e) = "roAssociativeArray" and Str_Of(e.metaId) = metaId and Str_Of(e.remoteId) <> ""
+            Track_QueueOp({ op: "dropProgress", source: source, id: metaId, remoteId: Str_Of(e.remoteId) })
+        end if
+    end for
+end sub
+
+sub Track_QueueOp(op as object)
+    pid = St_ActiveProfile().id
+    ops = St_ReadFile("tops_" + pid)
+    if type(ops) <> "roArray" then ops = []
+    ops.Push(op)
+    while ops.Count() > 100
+        ops.Shift()
+    end while
+    St_WriteFile("tops_" + pid, ops)
+    if m.progressSoon <> invalid
+        m.progressSoon.control = "stop"
+        m.progressSoon.control = "start"
+    end if
+end sub
+
+function Track_Watchlist() as object
+    cache = St_ReadFile("tlib_" + St_ActiveProfile().id)
+    if type(cache) = "roAssociativeArray" and type(cache.rows) = "roArray"
+        for each r in cache.rows
+            if type(r) = "roAssociativeArray" and Str_Of(r.key) = "watchlist" and type(r.items) = "roArray" then return r.items
+        end for
+    end if
+    return []
+end function
+
+function Track_InWatchlist(id as string) as boolean
+    for each e in Track_Watchlist()
+        if type(e) = "roAssociativeArray" and Str_Of(e.id) = id then return true
+    end for
+    return false
+end function
+
+function Track_ToggleWatchlist(source as string, entry as object) as boolean
+    pid = St_ActiveProfile().id
+    cache = St_ReadFile("tlib_" + pid)
+    if type(cache) <> "roAssociativeArray" or type(cache.rows) <> "roArray" then cache = { source: source, at: 0, rows: [] }
+    row = invalid
+    for each r in cache.rows
+        if type(r) = "roAssociativeArray" and Str_Of(r.key) = "watchlist" then row = r
+    end for
+    if row = invalid
+        row = { key: "watchlist", title: "Watchlist", items: [] }
+        if source = "trakt" then row.title = L("Watchlist de Trakt")
+        if source = "mdblist" then row.title = L("Watchlist de MDBList")
+        cache.rows.Unshift(row)
+    end if
+    if type(row.items) <> "roArray" then row.items = []
+    found = false
+    kept = []
+    for each e in row.items
+        if type(e) = "roAssociativeArray" and Str_Of(e.id) = entry.id then found = true else kept.Push(e)
+    end for
+    if not found then kept.Unshift({ id: entry.id, kind: Str_Of(entry.kind), name: Left(Str_Of(entry.name), 80), poster: Str_Of(entry.poster) })
+    row.items = kept
+    St_WriteFile("tlib_" + pid, cache)
+    op = "add"
+    if found then op = "remove"
+    Track_QueueOp({ op: op, source: source, id: entry.id, kind: Str_Of(entry.kind) })
+    return not found
+end function
