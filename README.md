@@ -135,7 +135,7 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | TorBox and Premiumize (cached torrents) | ⚠️ Not tested yet |
 | Jellyfin and Emby | ✅ Working |
 | MDBList key from your Nuvio account | ✅ Working |
-| Change how it opens button | ⚠️ Not tested yet |
+| Change how it opens button | ✅ Working |
 | Trakt or MDBList as Continue Watching and library source | ⚠️ Not tested yet |
 | Trakt comments | ⚠️ Not tested yet |
 | MDBList scrobbling | ⚠️ Not tested yet |
