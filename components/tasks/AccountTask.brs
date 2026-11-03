@@ -31,7 +31,10 @@ sub execute()
     else if mode = "nuvioSync"
         result = Nuvio_Sync()
     else if mode = "nuvioProgress"
-        result = Nuvio_ProgressRefresh()
+        result = { ok: false }
+        if St_Integrations().nuvioAccess <> "" then result = Nuvio_ProgressRefresh()
+        tracked = Track_Refresh()
+        if Bool_Of(tracked.ok, false) then result = { ok: true }
     else if mode = "debTbStart"
         result = Deb_TorboxStart()
     else if mode = "debTbPoll"

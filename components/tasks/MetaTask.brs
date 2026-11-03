@@ -43,6 +43,11 @@ sub execute()
     if integ.mdbEnabled and Mdb_Ready(integ) and merged.imdb <> ""
         merged.ratings = Mdb_Ratings(integ, kind, merged.imdb)
     end if
+    if Bool_Of(integ.traktComments, true) and Key_TraktId(integ) <> "" and merged.imdb <> ""
+        comments = Trakt_Comments(integ, kind, merged.imdb)
+        if comments.Count() > 0 and Bool_Of(integ.traktTranslate, true) then Comments_Translate(comments)
+        if comments.Count() > 0 then merged.comments = comments
+    end if
     if IsStr(merged.name) and Str_HasForeign(merged.name)
         one = [{ id: id, kind: kind, title: merged.name, original: merged.name }]
         if Str_Of(merged.imdb) <> "" then one[0].id = merged.imdb
@@ -425,4 +430,89 @@ sub Meta_Merge(target as object, meta as object)
     if type(hints) = "roAssociativeArray" and target.defaultVideoId = invalid
         if IsStr(hints.defaultVideoId) then target.defaultVideoId = hints.defaultVideoId
     end if
+end sub
+
+function Trakt_Comments(integ as object, kind as string, imdb as string) as object
+    media = "movies"
+    if LCase(kind) <> "movie" then media = "shows"
+    headers = { "trakt-api-version": "2", "trakt-api-key": Key_TraktId(integ) }
+    r = Http_Request("GET", "https://api.trakt.tv/" + media + "/" + imdb + "/comments/likes?limit=20", headers, invalid, 10000)
+    out = []
+    if type(r.json) <> "roArray" then return out
+    for each c in r.json
+        if type(c) = "roAssociativeArray"
+            text = Str_Of(c.comment).Trim()
+            if text <> ""
+                user = ""
+                if type(c.user) = "roAssociativeArray"
+                    user = Str_Of(c.user.name)
+                    if user = "" then user = Str_Of(c.user.username)
+                end if
+                if user = "" then user = "Trakt"
+                rating = 0
+                if type(c.user_stats) = "roAssociativeArray" then rating = ToInt(c.user_stats.rating, 0)
+                out.Push({ user: user, text: text, spoiler: Bool_Of(c.spoiler, false), review: Bool_Of(c.review, false), likes: ToInt(c.likes, 0), rating: rating, date: Left(Str_Of(c.created_at), 10) })
+            end if
+        end if
+    end for
+    return out
+end function
+
+function Comments_Lang() as string
+    ui = ""
+    if m.global <> invalid and m.global.hasField("uiLang") then ui = LCase(Str_Of(m.global.uiLang))
+    if ui = "" or ui = "auto" then ui = LCase(Left(CreateObject("roDeviceInfo").GetCurrentLocale(), 2))
+    if ui = "" then ui = "en"
+    return Left(ui, 2)
+end function
+
+sub Comments_Translate(list as object)
+    lang = Comments_Lang()
+    port = CreateObject("roMessagePort")
+    jobs = {}
+    for i = 0 to list.Count() - 1
+        if i >= 12 then exit for
+        c = list[i]
+        t = CreateObject("roUrlTransfer")
+        t.SetUrl("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + lang + "&dt=t")
+        t.SetPort(port)
+        t.SetCertificatesFile("common:/certs/ca-bundle.crt")
+        t.AddHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
+        t.AddHeader("User-Agent", "Mozilla/5.0")
+        if t.AsyncPostFromString("q=" + Left(Str_Of(c.text), 1800).EncodeUriComponent())
+            jobs[Stri(t.GetIdentity()).Trim()] = { t: t, index: i }
+        end if
+    end for
+    clock = CreateObject("roTimespan")
+    while jobs.Count() > 0 and clock.TotalMilliseconds() < 9000
+        msg = wait(500, port)
+        if type(msg) = "roUrlEvent"
+            key = Stri(msg.GetSourceIdentity()).Trim()
+            job = jobs[key]
+            if job <> invalid
+                jobs.Delete(key)
+                if msg.GetResponseCode() = 200
+                    data = ParseJson(msg.GetString())
+                    if type(data) = "roArray" and data.Count() > 2 and type(data[0]) = "roArray"
+                        source = LCase(Left(Str_Of(data[2]), 2))
+                        if source <> "" and source <> lang
+                            out = ""
+                            for each seg in data[0]
+                                if type(seg) = "roArray" and seg.Count() > 0 and IsStr(seg[0]) then out = out + seg[0]
+                            end for
+                            if out.Trim() <> ""
+                                c = list[job.index]
+                                c.original = c.text
+                                c.text = out.Trim()
+                                c.translated = true
+                            end if
+                        end if
+                    end if
+                end if
+            end if
+        end if
+    end while
+    for each key in jobs
+        jobs[key].t.AsyncCancel()
+    end for
 end sub

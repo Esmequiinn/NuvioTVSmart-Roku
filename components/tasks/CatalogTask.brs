@@ -712,14 +712,15 @@ function Folder_TraktMedia(src as object) as string
 end function
 
 function Folder_TraktRequest(src as object, media as string) as dynamic
-    client = Config_TraktClientId()
-    listId = Str_Any(src.traktListId)
+    client = Key_TraktId(St_Integrations())
+    listId = Str_Any(src.traktListId).Trim()
     if client = "" or listId = "" then return invalid
     if media = "" then media = Folder_TraktMedia(src)
-    sortBy = Str_Of(src.sortBy)
-    if sortBy = "" then sortBy = "rank"
-    sortHow = Str_Of(src.sortHow)
-    if sortHow = "" then sortHow = "asc"
+    sortBy = LCase(Str_Of(src.sortBy).Trim())
+    allowed = { rank: true, added: true, title: true, released: true, runtime: true, popularity: true, percentage: true, votes: true }
+    if not allowed.DoesExist(sortBy) then sortBy = "rank"
+    sortHow = LCase(Str_Of(src.sortHow).Trim())
+    if sortHow <> "desc" then sortHow = "asc"
     headers = { "Content-Type": "application/json", "trakt-api-version": "2", "trakt-api-key": client }
     url = "https://api.trakt.tv/lists/" + listId.EncodeUriComponent() + "/items/" + media + "?extended=full,images&page=1&limit=60&sort_by=" + sortBy + "&sort_how=" + sortHow
     return { url: url, headers: headers }
@@ -747,14 +748,15 @@ function Folder_TraktMetas(src as object, first as dynamic, firstCode as integer
     if r.code = 0 or r.code = 429 or r.code >= 500
         r = Folder_TraktGet(req, false)
     end if
-    if r.code = 403
-        alt = { url: req.url, headers: {} }
-        for each k in req.headers
-            alt.headers[k] = req.headers[k]
+    if r.code = 403 or r.code = 0
+        for each ua in ["Nuvio/" + CreateObject("roAppInfo").GetVersion(), "okhttp/4.12.0", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"]
+            r2 = Folder_TraktRaw(req, ua)
+            if r2.code >= 200 and r2.code < 300
+                r = r2
+                exit for
+            end if
+            if r2.code <> 0 then r = r2
         end for
-        alt.headers["User-Agent"] = "okhttp/4.12.0"
-        r2 = Folder_TraktGet(alt, false)
-        if r2.code >= 200 and r2.code < 300 then r = r2
     end if
     if (r.code = 401 or r.code = 403 or r.code = 404) and token
         r2 = Folder_TraktGet(req, true)
@@ -767,7 +769,7 @@ function Folder_TraktMetas(src as object, first as dynamic, firstCode as integer
         if r.code = 404
             Folder_Fail(L("Trakt: lista privada o eliminada"), r.code)
         else
-            Folder_Fail("Trakt", r.code)
+            Folder_Fail("Trakt" + Folder_TraktWhy(r), r.code)
         end if
         return out
     end if
@@ -887,4 +889,43 @@ function Disc_Skip(cat as object) as boolean
         end for
     end if
     return false
+end function
+
+function Folder_TraktRaw(req as object, ua as string) as object
+    port = CreateObject("roMessagePort")
+    t = CreateObject("roUrlTransfer")
+    t.SetUrl(req.url)
+    t.SetPort(port)
+    t.EnableEncodings(true)
+    t.RetainBodyOnError(true)
+    t.SetCertificatesFile("common:/certs/ca-bundle.crt")
+    t.AddHeader("Accept", "application/json")
+    t.AddHeader("User-Agent", ua)
+    for each k in req.headers
+        t.AddHeader(k, req.headers[k])
+    end for
+    out = { code: 0, body: "", json: invalid }
+    if not t.AsyncGetToString() then return out
+    msg = wait(20000, port)
+    if type(msg) = "roUrlEvent"
+        out.code = msg.GetResponseCode()
+        out.body = msg.GetString()
+        if out.body <> "" then out.json = ParseJson(out.body)
+    else
+        t.AsyncCancel()
+    end if
+    return out
+end function
+
+function Folder_TraktWhy(r as object) as string
+    body = LCase(Str_Of(r.body))
+    if body = "" then return ""
+    if Instr(1, body, "cloudflare") > 0 or Instr(1, body, "<html") > 0 then return " · Cloudflare"
+    if type(r.json) = "roAssociativeArray"
+        why = Str_Of(r.json.error_description)
+        if why = "" then why = Str_Of(r.json.error)
+        if why = "" then why = Str_Of(r.json.message)
+        if why <> "" then return " · " + Left(why, 60)
+    end if
+    return ""
 end function
