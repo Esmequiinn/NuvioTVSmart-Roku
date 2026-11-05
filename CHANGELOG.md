@@ -15,6 +15,7 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 ### Fixed
 - Cached torrents with **TorBox** could fail with "TorBox could not prepare this link". The channel now asks TorBox for the link the same way Nuvio TV does, waits a moment when TorBox isn't ready yet, and if it still fails the message says what TorBox answered and at which step.
+- **TorBox**: some cached torrents failed with "(step 2 · 422)". When TorBox doesn't accept the torrent number, the channel now finds the torrent in your TorBox list instead, and the message shows exactly what TorBox rejected.
 
 ## [0.1.0] - 2026-11-03
 
