@@ -619,6 +619,8 @@ sub fetchStreams()
     m.ctx.timerFired = false
     m.ctx.skipped = 0
     m.ctx.auto = autoplayOptions()
+    m.ctx.failovers = 0
+    m.ctx.tried = {}
     m.autoTimer.control = "stop"
     pre = m.prefetch
     m.prefetch = invalid
@@ -664,7 +666,7 @@ sub fetchStreams()
         end if
     end if
     if m.ctx.auto.active
-        showBusy(L("Buscando enlaces..."))
+        Loader_Begin()
         timeout = m.ctx.auto.timeout
         if timeout > 0
             m.autoTimer.duration = timeout
@@ -826,6 +828,7 @@ end function
 sub tryAutoPick(final as boolean)
     index = Autoplay_Pick(m.ctx.streams, m.ctx.auto)
     if index >= 0
+        Load_Status(L("Eligiendo fuente..."))
         m.ctx.decided = true
         m.ctx.reusedPlay = false
         m.autoTimer.control = "stop"
@@ -900,6 +903,8 @@ sub onStreamsEvent()
     else if kind = "play"
         m.ctx.decided = true
         m.ctx.reusedPlay = false
+        m.ctx.failovers = 0
+        m.ctx.tried = {}
         playStream(ToInt(ev.index, -1), 0)
     else if kind = "refresh"
         m.ctx.forceManual = true
@@ -953,6 +958,7 @@ sub playStream(index as integer, startAt as integer)
         m.probeTask.control = "RUN"
         return
     end if
+    if Probe_Needed(s.url) or Hlsp_Needed(s.url) then Load_Status(L("Revisando el enlace..."))
     if Probe_Needed(s.url)
         m.probeTask = CreateObject("roSGNode", "ProbeTask")
         m.probeTask.url = s.url
@@ -990,10 +996,7 @@ sub onProbeResult(event as object)
     r = task.result
     src = s.url
     if r <> invalid and Bool_Of(r.failed, false)
-        if not nextAttempt(0)
-            closePlayer(false)
-            showMessage(L("No se pudo reproducir"), Str_Of(r.error))
-        end if
+        if not nextAttempt(0) then Play_Fail(0, Str_Of(r.error))
         return
     end if
     if r <> invalid and Str_Of(r.url) <> ""
@@ -1006,6 +1009,7 @@ sub onProbeResult(event as object)
         if fmt = "" and (r = invalid or ToInt(r.code, 0) = 0 or ToInt(r.code, 0) >= 400) then fmt = Str_Of(m.ctx.hint)
         if fmt <> "" then m.ctx.attempts = Stream_Attempts(src, fmt)
     end if
+    Load_Status(L("Abriendo el video..."))
     if m.server <> invalid and r <> invalid and Bool_Of(r.disguised, false)
         m.server.hlsp = { headers: Stream_Heads(s, src) }
         wrapped = [{ url: "http://127.0.0.1:8888/hlsp/p?u=" + CreateObject("roUrlTransfer").Escape(src), fmt: "hls" }]
@@ -1068,6 +1072,7 @@ sub showPlayer(index as integer)
     end if
     m.player.partyEnabled = true
     m.player.extraSubs = []
+    m.player.loadDetails = Bool_Of(St_Pref("loadDetails"), true)
     m.player.info = {
         title: title
         logo: m.ctx.logo
@@ -1151,10 +1156,11 @@ sub launchAttempt()
     m.ctx.launchedAt = CreateObject("roTimespan")
     if m.stallTimer = invalid
         m.stallTimer = CreateObject("roSGNode", "Timer")
-        m.stallTimer.duration = 20
         m.stallTimer.repeat = false
         m.stallTimer.observeField("fire", "onStallTimer")
     end if
+    m.stallTimer.duration = 20
+    if Bool_Of(St_Pref("sourceFailover"), false) then m.stallTimer.duration = 14
     m.stallTimer.control = "stop"
     m.stallTimer.control = "start"
     m.ctx.stallChecks = 0
@@ -1222,6 +1228,7 @@ function nextAttempt(position as integer) as boolean
     m.ctx.attempt = nxt
     if position > 10 then m.ctx.startAt = position
     refreshResume()
+    Load_Status(L("Probando otra forma de abrir el enlace..."))
     launchAttempt()
     return true
 end function
@@ -1355,8 +1362,7 @@ sub Player_Event()
             fallbackFromReuse()
         else if not nextAttempt(position)
             saveProgress()
-            closePlayer(false)
-            showMessage(L("No se pudo reproducir"), playbackFailureText(L("la conexión se cortó")))
+            Play_Fail(position, playbackFailureText(L("la conexión se cortó")))
         end if
     else if kind = "finished"
         St_RemoveProgress(m.ctx.metaId)
@@ -1376,8 +1382,8 @@ sub Player_Event()
         else if position < 10 and Bool_Of(m.ctx.reusedPlay, false)
             fallbackFromReuse()
         else if not nextAttempt(position)
-            closePlayer(position > 10)
-            showMessage(L("No se pudo reproducir"), playbackFailureText(Str_Of(ev.message)))
+            if position > 10 then saveProgress()
+            Play_Fail(position, playbackFailureText(Str_Of(ev.message)))
         end if
     else if kind = "next"
         m.autoCount = 0
@@ -1690,6 +1696,12 @@ sub closePlayer(save as boolean)
     m.scrobbleState = ""
     m.player.active = false
     m.player.visible = false
+    m.player.loadStatus = ""
+    if m.ctx <> invalid and m.ctx.DoesExist("decided") and not Bool_Of(m.ctx.decided, true)
+        m.ctx.decided = true
+        m.streamTask = invalid
+        m.autoTimer.control = "stop"
+    end if
     if m.ctx <> invalid
         m.ctx.fromStart = false
         m.ctx.nextAuto = false
@@ -1780,10 +1792,7 @@ sub onStallTimer()
             return
         end if
     end if
-    if not nextAttempt(0)
-        closePlayer(false)
-        showMessage(L("No se pudo reproducir"), playbackFailureText(L("la fuente no empezó a reproducirse")))
-    end if
+    if not nextAttempt(0) then Play_Fail(0, playbackFailureText(L("la fuente no empezó a reproducirse")))
 end sub
 
 sub Watched_Finish()
@@ -1911,6 +1920,7 @@ sub Switch_Attempt(position as integer)
     m.ctx.stallChecks = 0
     if position > 10 then m.ctx.startAt = position
     refreshResume()
+    Load_Status(L("Cambiando la forma de abrir el enlace..."))
     launchAttempt()
     text = L("Forma {n} de {t}").Replace("{n}", (nxt + 1).ToStr()).Replace("{t}", attempts.Count().ToStr())
     Toast_Show(text + ": " + Switch_Name(attempts[nxt]))
@@ -1940,3 +1950,71 @@ sub Comment_Open(index as integer)
     end if
     showMessage(title, text)
 end sub
+
+sub Load_Status(text as string)
+    if m.player <> invalid then m.player.loadStatus = text
+end sub
+
+sub Loader_Begin()
+    showPlayer(0)
+    Load_Status(L("Buscando fuentes..."))
+end sub
+
+sub Play_Fail(position as integer, text as string)
+    if Failover_Next(position) then return
+    exhausted = Bool_Of(St_Pref("sourceFailover"), false) and ToInt(m.ctx.failovers, 0) > 0
+    closePlayer(false)
+    if exhausted and type(m.ctx.streams) = "roArray" and m.ctx.streams.Count() > 1
+        m.ctx.failovers = 0
+        m.ctx.tried = {}
+        openStreams()
+        Toast_Show(L("Ninguna de las fuentes que se probaron funcionó. Elige otra."))
+        return
+    end if
+    showMessage(L("No se pudo reproducir"), text)
+end sub
+
+function Failover_Next(position as integer) as boolean
+    if not Bool_Of(St_Pref("sourceFailover"), false) then return false
+    streams = m.ctx.streams
+    if type(streams) <> "roArray" or streams.Count() < 2 then return false
+    limit = ToInt(St_Pref("failoverCount"), 2)
+    if limit < 1 then limit = 1
+    done = ToInt(m.ctx.failovers, 0)
+    if done >= limit then return false
+    tried = m.ctx.tried
+    if type(tried) <> "roAssociativeArray" then tried = {}
+    tried[Str_Of(m.ctx.playingUrl)] = true
+    m.ctx.tried = tried
+    index = Failover_Pick(streams, tried)
+    if index < 0 then return false
+    m.ctx.failovers = done + 1
+    status = L("La fuente falló. Probando otra ({n} de {t})...").Replace("{n}", m.ctx.failovers.ToStr()).Replace("{t}", limit.ToStr())
+    start = 0
+    if position > 10 then start = position
+    m.ctx.reusedPlay = false
+    playStream(index, start)
+    Load_Status(status)
+    return true
+end function
+
+function Failover_Pick(streams as object, tried as object) as integer
+    pool = []
+    map = []
+    for i = 0 to streams.Count() - 1
+        s = streams[i]
+        if not tried.DoesExist(Str_Of(s.url)) and not Stream_Unplayable(s)
+            pool.Push(s)
+            map.Push(i)
+        end if
+    end for
+    if pool.Count() = 0 then return -1
+    opts = m.ctx.auto
+    if type(opts) <> "roAssociativeArray" then opts = {}
+    pick = -1
+    if Str_Of(opts.mode) = "regex" then pick = Autoplay_Pick(pool, { mode: "regex", regex: opts.regex, addons: opts.addons, scope: "", file: "", binge: "" })
+    if pick < 0 then pick = Autoplay_Pick(pool, { mode: "first", addons: opts.addons, scope: "", file: "", binge: "" })
+    if pick < 0 then pick = Autoplay_Pick(pool, { mode: "first", scope: "", file: "", binge: "" })
+    if pick < 0 then return -1
+    return map[pick]
+end function

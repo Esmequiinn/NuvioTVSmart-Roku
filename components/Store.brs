@@ -816,6 +816,9 @@ function St_PlayerDefaults() as object
         autoplayTimeout: 3
         reuseLink: false
         reuseHours: 24
+        loadDetails: true
+        sourceFailover: false
+        failoverCount: 2
         bingeNext: true
         bingeReuse: false
         expandPoster: true

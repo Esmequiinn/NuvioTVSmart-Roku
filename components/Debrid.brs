@@ -53,7 +53,6 @@ end function
 
 function Deb_Magnet(hash as string, sources as dynamic, filename as string) as string
     out = "magnet:?xt=urn:btih:" + hash
-    if filename <> "" then out = out + "&dn=" + filename.EncodeUriComponent()
     if type(sources) = "roArray"
         for each src in sources
             v = Str_Of(src).Trim()
@@ -206,23 +205,29 @@ function Deb_Resolve(integ as object, d as object) as object
 end function
 
 function Deb_TorboxResolve(acc as object, magnet as string, d as object) as object
-    fail = { ok: false, error: L("TorBox no pudo preparar este enlace.") }
     boundary = "----NuvioRoku" + CreateObject("roDateTime").AsSeconds().ToStr()
+    crlf = chr(13) + chr(10)
     body = ""
     for each pair in [["magnet", magnet], ["add_only_if_cached", "true"], ["allow_zip", "false"]]
-        body = body + "--" + boundary + chr(13) + chr(10) + "Content-Disposition: form-data; name=" + chr(34) + pair[0] + chr(34) + chr(13) + chr(10) + chr(13) + chr(10) + pair[1] + chr(13) + chr(10)
+        body = body + "--" + boundary + crlf + "Content-Disposition: form-data; name=" + chr(34) + pair[0] + chr(34) + crlf + "Content-Type: text/plain; charset=utf-8" + crlf + crlf + pair[1] + crlf
     end for
-    body = body + "--" + boundary + "--" + chr(13) + chr(10)
+    body = body + "--" + boundary + "--" + crlf
     headers = Deb_Auth(acc)
     headers["Content-Type"] = "multipart/form-data; boundary=" + boundary
     r = Http_Request("POST", "https://api.torbox.app/v1/api/torrents/createtorrent", headers, body, 20000)
     if r.code = 409 then return { ok: false, error: L("Este torrent ya no está en la caché de TorBox.") }
-    if type(r.json) <> "roAssociativeArray" or type(r.json.data) <> "roAssociativeArray" then return fail
+    if r.code = 401 or r.code = 403 then return Deb_TorboxFail(r, 1, L("TorBox no aceptó tu cuenta. Vuelve a vincularla en Ajustes."))
+    if type(r.json) <> "roAssociativeArray" or r.json.success = false or type(r.json.data) <> "roAssociativeArray" then return Deb_TorboxFail(r, 1, "")
     tid = Str_Any(r.json.data.torrent_id)
     if tid = "" then tid = Str_Any(r.json.data.id)
-    if tid = "" then return fail
-    t = Http_Request("GET", "https://api.torbox.app/v1/api/torrents/mylist?id=" + tid + "&bypass_cache=true", Deb_Auth(acc), invalid, 15000)
-    if type(t.json) <> "roAssociativeArray" or type(t.json.data) <> "roAssociativeArray" or type(t.json.data.files) <> "roArray" then return fail
+    if tid = "" then return Deb_TorboxFail(r, 1, "")
+    t = invalid
+    for tries = 1 to 3
+        t = Http_Request("GET", "https://api.torbox.app/v1/api/torrents/mylist?id=" + tid + "&bypass_cache=true", Deb_Auth(acc), invalid, 15000)
+        if type(t.json) = "roAssociativeArray" and type(t.json.data) = "roAssociativeArray" and type(t.json.data.files) = "roArray" and t.json.data.files.Count() > 0 then exit for
+        sleep(800)
+    end for
+    if type(t.json) <> "roAssociativeArray" or type(t.json.data) <> "roAssociativeArray" or type(t.json.data.files) <> "roArray" then return Deb_TorboxFail(t, 2, "")
     files = []
     for each f in t.json.data.files
         if type(f) = "roAssociativeArray"
@@ -234,12 +239,27 @@ function Deb_TorboxResolve(acc as object, magnet as string, d as object) as obje
         end if
     end for
     pick = Deb_Pick(files, d)
-    if pick = invalid or pick.id = "" then return fail
-    dl = Http_Request("GET", "https://api.torbox.app/v1/api/torrents/requestdl?token=" + acc.key.EncodeUriComponent() + "&torrent_id=" + tid + "&file_id=" + pick.id + "&zip_link=false&redirect=false", Deb_Auth(acc), invalid, 15000)
-    if type(dl.json) <> "roAssociativeArray" then return fail
-    url = Str_Of(dl.json.data)
-    if LCase(Left(url, 4)) <> "http" then return fail
+    if pick = invalid or pick.id = "" then return { ok: false, error: L("TorBox no encontró el video de este episodio dentro del torrent.") }
+    dl = Http_Request("GET", "https://api.torbox.app/v1/api/torrents/requestdl?token=" + acc.key.EncodeUriComponent() + "&torrent_id=" + tid + "&file_id=" + pick.id + "&zip_link=false&redirect=false&append_name=false", Deb_Auth(acc), invalid, 15000)
+    url = ""
+    if type(dl.json) = "roAssociativeArray" then url = Str_Of(dl.json.data)
+    if LCase(Left(url, 4)) <> "http" then return Deb_TorboxFail(dl, 3, "")
     return { ok: true, url: url, file: Deb_Base(pick.path) }
+end function
+
+function Deb_TorboxFail(r as object, stage as integer, text as string) as object
+    msg = text
+    if msg = ""
+        msg = L("TorBox no pudo preparar este enlace.")
+        detail = ""
+        if type(r.json) = "roAssociativeArray"
+            detail = Str_Of(r.json.detail)
+            if detail = "" then detail = Str_Of(r.json.error)
+        end if
+        if detail <> "" then msg = msg + chr(10) + "TorBox: " + Left(detail, 160)
+    end if
+    msg = msg + chr(10) + "(" + L("paso") + " " + stage.ToStr() + " · " + r.code.ToStr() + ")"
+    return { ok: false, error: msg }
 end function
 
 function Deb_PmResolve(acc as object, magnet as string, d as object) as object

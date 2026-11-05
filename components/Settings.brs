@@ -35,7 +35,7 @@ function Set_SubLangs() as object
 end function
 
 function Set_Toggles() as object
-    return { forcedSubs: true, openSubs: true, autoNext: true, pauseOverlay: true, clock: true, reuseLink: true, bingeNext: true, bingeReuse: true, sizeBadges: true, addonLogo: true, fusionBadges: true, expandPoster: true, expandTrailer: true, expandMuted: true, trailerButton: true, trailerAutoplay: true, rokuSafe: true, skipIntro: true, autoSkipIntro: true, autoSkipRecap: true, autoSkipOutro: true, autoSkipCredits: true, preloadNext: true, bingeFallback: true, stillWatching: true, postPlay: true, parentalGuide: true, stripSdh: true, onlyPrefSubs: true, customSubs: true, subBold: true, playerStats: true }
+    return { forcedSubs: true, openSubs: true, autoNext: true, pauseOverlay: true, clock: true, reuseLink: true, bingeNext: true, bingeReuse: true, sizeBadges: true, addonLogo: true, fusionBadges: true, expandPoster: true, expandTrailer: true, expandMuted: true, trailerButton: true, trailerAutoplay: true, rokuSafe: true, skipIntro: true, autoSkipIntro: true, autoSkipRecap: true, autoSkipOutro: true, autoSkipCredits: true, preloadNext: true, bingeFallback: true, stillWatching: true, postPlay: true, parentalGuide: true, stripSdh: true, onlyPrefSubs: true, customSubs: true, subBold: true, playerStats: true, loadDetails: true, sourceFailover: true }
 end function
 
 function Set_Seconds(v as integer) as string
@@ -256,6 +256,8 @@ function Settings_Model() as object
     playback.rows.Push(Set_Toggle("clock", L("Reloj en el reproductor"), "", Bool_Of(Set_Pref(prefs, defaults, "clock"), true)))
     playback.rows.Push(Set_Toggle("rokuSafe", L("Priorizar fuentes compatibles con Roku"), L("La reproducción automática nunca elige fuentes que tu Roku no puede reproducir (HEVC, 4K o Dolby Vision según tu modelo y tu tele) y deja al final los REMUX con audio TrueHD o DTS-HD."), Bool_Of(Set_Pref(prefs, defaults, "rokuSafe"), true)))
     playback.rows.Push(Set_Toggle("parentalGuide", L("Avisos de contenido"), L("Al empezar muestra si tiene violencia, desnudez, lenguaje soez, drogas o terror."), Bool_Of(Set_Pref(prefs, defaults, "parentalGuide"), true)))
+    playback.rows.Push(Set_Header(L("Pantalla de carga")))
+    playback.rows.Push(Set_Toggle("loadDetails", L("Mostrar lo que está pasando"), L("Debajo del logo dice si está buscando o eligiendo fuente, revisando el enlace, cargando o probando otra forma de abrirlo. Apágalo para ver solo el fondo y el logo."), Bool_Of(Set_Pref(prefs, defaults, "loadDetails"), true)))
     playback.rows.Push(Set_Header(L("Saltar segmentos")))
     playback.rows.Push(Set_Toggle("skipIntro", L("Botón para saltar"), L("Usa introdb.app y AniSkip para encontrar intros, resúmenes y créditos."), Bool_Of(Set_Pref(prefs, defaults, "skipIntro"), true)))
     playback.rows.Push(Set_Toggle("autoSkipIntro", L("Saltar intros automáticamente"), L("También las aperturas de anime."), Bool_Of(Set_Pref(prefs, defaults, "autoSkipIntro"), false)))
@@ -327,6 +329,10 @@ function Settings_Model() as object
     sources.rows.Push(Set_Row("reuseHours", L("Guardar el enlace por"), "", Set_Hours(ToInt(Set_Pref(prefs, defaults, "reuseHours"), 24))))
     sources.rows.Push(Set_Toggle("bingeNext", L("Misma fuente en el siguiente episodio"), L("Prefiere el mismo addon y calidad que el episodio anterior."), Bool_Of(Set_Pref(prefs, defaults, "bingeNext"), true)))
     sources.rows.Push(Set_Toggle("bingeReuse", L("Recordar la fuente de cada serie"), L("También al volver desde Seguir viendo o la ficha."), Bool_Of(Set_Pref(prefs, defaults, "bingeReuse"), false)))
+    sources.rows.Push(Set_Header(L("Si una fuente falla")))
+    failover = Bool_Of(Set_Pref(prefs, defaults, "sourceFailover"), false)
+    sources.rows.Push(Set_Toggle("sourceFailover", L("Probar otra fuente"), L("Si la fuente no abre, el canal elige otra compatible de los resultados, sin repetir las que ya fallaron, mientras sigue la pantalla de carga."), failover))
+    if failover then sources.rows.Push(Set_Row("failoverCount", L("Fuentes que puede probar"), L("Después de esas, te muestra la lista para que elijas tú."), ToInt(Set_Pref(prefs, defaults, "failoverCount"), 2).ToStr()))
     fusion = { id: "fusion", label: L("Estilo Fusion"), subtitle: L("Badges de calidad, HDR, códec, audio y tamaño en las fuentes"), rows: [] }
     sources = fusion
     sources.rows.Push(Set_Toggle("sizeBadges", L("Badges de tamaño"), "", Bool_Of(Set_Pref(prefs, defaults, "sizeBadges"), true)))
@@ -656,6 +662,9 @@ sub onSettingsEvent()
         refreshSettings()
     else if row = "subOffset"
         St_SetPref("subOffset", Set_Cycle([0, 1, 2, 3, 4, 5, 6, 8, 10], ToInt(St_Pref("subOffset"), 0)))
+        refreshSettings()
+    else if row = "failoverCount"
+        St_SetPref("failoverCount", Set_Cycle([1, 2, 3, 4, 5], ToInt(St_Pref("failoverCount"), 2)))
         refreshSettings()
     else if row = "reuseHours"
         St_SetPref("reuseHours", Set_Cycle([1, 3, 6, 12, 24, 48, 72, 168], ToInt(St_Pref("reuseHours"), 24)))
