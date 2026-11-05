@@ -4,6 +4,18 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.1.1] - 2026-11-05
+
+### Agregado
+- **Pantalla de carga como en Nuvio TV**: al presionar Reproducir aparecen enseguida el fondo y el logo del título mientras el canal busca y elige la fuente, en vez del cuadro de "Buscando enlaces". Debajo del logo dice lo que está pasando (buscando fuentes, eligiendo una, revisando el enlace, cargando, probando otra forma de abrirlo). Si prefieres ver solo el fondo y el logo, apaga **Ajustes → Reproducción → Pantalla de carga → Mostrar lo que está pasando**.
+- **Probar otra fuente cuando una falla** (**Ajustes → Reproducción → Si una fuente falla**), apagado de inicio. Cuando una fuente no abre, el canal elige otra compatible de los resultados, siguiendo tus reglas de reproducción automática (regex o primera fuente) y sin repetir ninguna que ya falló, todo mientras sigue la pantalla de carga. Tú eliges cuántas fuentes puede probar (de 1 a 5). Después te muestra la lista para que elijas tú.
+
+### Cambiado
+- Cuando una lista de Trakt de una colección falla, el mensaje también muestra el número de lista que el canal le pidió a Trakt.
+
+### Corregido
+- Los torrents en caché con **TorBox** podían fallar con "TorBox no pudo preparar este enlace". Ahora el canal le pide el enlace a TorBox de la misma forma que Nuvio TV, espera un momento cuando TorBox todavía no lo tiene listo, y si aun así falla, el mensaje dice qué contestó TorBox y en qué paso.
+
 ## [0.1.0] - 2026-11-03
 
 ### Agregado

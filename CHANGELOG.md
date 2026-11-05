@@ -4,6 +4,18 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.1.1] - 2026-11-05
+
+### Added
+- **Loading screen like Nuvio TV**: when you press Play, the title's background and logo show up right away while the channel finds and chooses the source, instead of the "Finding links" box. Under the logo it says what's happening (finding sources, choosing one, checking the link, loading, trying another way to open it). If you prefer only the background and logo, turn off **Settings → Playback → Loading screen → Show what's happening**.
+- **Try another source when one fails** (**Settings → Playback → If a source fails**), off by default. When a source doesn't open, the channel picks another compatible one from the results, following your auto-play rules (regex or first source) and never repeating one that already failed, all while the loading screen stays up. You choose how many sources it can try (1 to 5). After that it shows you the list so you can pick one yourself.
+
+### Changed
+- When a Trakt list in a collection fails, the message also shows the list number the channel asked Trakt for.
+
+### Fixed
+- Cached torrents with **TorBox** could fail with "TorBox could not prepare this link". The channel now asks TorBox for the link the same way Nuvio TV does, waits a moment when TorBox isn't ready yet, and if it still fails the message says what TorBox answered and at which step.
+
 ## [0.1.0] - 2026-11-03
 
 ### Added

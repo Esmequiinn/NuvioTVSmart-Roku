@@ -16,7 +16,7 @@
 
 </div>
 
-Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.1.0**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
+Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.1.1**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
 
 > **Esta no es una app oficial de Nuvio** y no está afiliada ni respaldada por el equipo de Nuvio. No aloja, guarda ni distribuye ningún contenido. Todo lo que ves viene de los addons que instalas.
 
@@ -68,6 +68,8 @@ Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMe
 - Trakt o MDBList como fuente de Seguir viendo y de tu biblioteca, con tu watchlist y tus listas personales
 - Comentarios de Trakt en la página de detalles
 - Registro de lo que ves en MDBList
+- Pantalla de carga como en Nuvio, con el fondo y el logo del título y lo que está pasando debajo
+- Opcional: probar otra fuente compatible automáticamente cuando una falla
 
 ## Estado
 
@@ -139,6 +141,8 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Trakt o MDBList como fuente de Seguir viendo y biblioteca | ⚠️ Sin probar |
 | Comentarios de Trakt | ⚠️ Sin probar |
 | Registro en MDBList | ⚠️ Sin probar |
+| Pantalla de carga con estado | ⚠️ Sin probar |
+| Probar otra fuente cuando una falla | ⚠️ Sin probar |
 
 ### Limitaciones conocidas
 

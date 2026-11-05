@@ -16,7 +16,7 @@
 
 </div>
 
-This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.1.0**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
+This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.1.1**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
 
 > **This is not an official Nuvio app** and it is not affiliated with or endorsed by the Nuvio team. It does not host, store or distribute any content. Everything you see comes from the addons you install.
 
@@ -68,6 +68,8 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - Trakt or MDBList as the source of Continue Watching and your library, with your watchlist and personal lists
 - Trakt comments on the details page
 - MDBList scrobbling
+- Nuvio-style loading screen with the title's background and logo, and what's happening under it
+- Optional: try another compatible source automatically when one fails
 
 ## Status
 
@@ -139,6 +141,8 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Trakt or MDBList as Continue Watching and library source | ⚠️ Not tested yet |
 | Trakt comments | ⚠️ Not tested yet |
 | MDBList scrobbling | ⚠️ Not tested yet |
+| Loading screen with status | ⚠️ Not tested yet |
+| Try another source when one fails | ⚠️ Not tested yet |
 
 ### Known limitations
 
