@@ -765,11 +765,18 @@ function Folder_TraktMetas(src as object, first as dynamic, firstCode as integer
     if (type(r.json) <> "roArray" or r.json.Count() = 0) and r.code >= 200 and r.code < 300
         r = Folder_TraktGet(Folder_TraktRequest(src, "movie,show"), token)
     end if
+    if r.code = 403
+        alt = Folder_TraktOwnerRequest(req, Str_Any(src.traktListId).Trim(), media, token)
+        if alt <> invalid
+            r2 = Folder_TraktGet(alt, token)
+            if r2.code >= 200 and r2.code < 300 then r = r2
+        end if
+    end if
     if type(r.json) <> "roArray"
         if r.code = 404
             Folder_Fail(L("Trakt: lista privada o eliminada"), r.code)
         else
-            Folder_Fail("Trakt" + Folder_TraktWhy(r), r.code)
+            Folder_Fail("Trakt" + Folder_TraktWhy(r) + " · " + L("lista") + " " + Str_Any(src.traktListId), r.code)
         end if
         return out
     end if
@@ -928,4 +935,20 @@ function Folder_TraktWhy(r as object) as string
         if why <> "" then return " · " + Left(why, 60)
     end if
     return ""
+end function
+
+function Folder_TraktOwnerRequest(req as object, listId as string, media as string, token as boolean) as dynamic
+    info = Folder_TraktGet({ url: "https://api.trakt.tv/lists/" + listId.EncodeUriComponent(), headers: req.headers }, token)
+    if type(info.json) <> "roAssociativeArray" then return invalid
+    user = info.json.user
+    if type(user) <> "roAssociativeArray" then return invalid
+    slug = ""
+    if type(user.ids) = "roAssociativeArray" then slug = Str_Of(user.ids.slug)
+    if slug = "" then slug = Str_Of(user.username)
+    listSlug = ""
+    if type(info.json.ids) = "roAssociativeArray" then listSlug = Str_Of(info.json.ids.slug)
+    if listSlug = "" then listSlug = listId
+    if slug = "" then return invalid
+    q = Mid(req.url, Instr(1, req.url, "?"))
+    return { url: "https://api.trakt.tv/users/" + slug.EncodeUriComponent() + "/lists/" + listSlug.EncodeUriComponent() + "/items/" + media + q, headers: req.headers }
 end function
