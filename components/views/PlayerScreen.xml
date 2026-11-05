@@ -20,6 +20,8 @@
         <field id="stillWatching" type="boolean" alwaysNotify="true" onChange="Ex_OnStill" />
         <field id="postActive" type="boolean" value="false" />
         <field id="episodes" type="assocarray" onChange="EpP_Open" />
+        <field id="loadStatus" type="string" onChange="onLoadStatus" />
+        <field id="loadDetails" type="boolean" value="true" onChange="onLoadStatus" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Mask.brs" />
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />

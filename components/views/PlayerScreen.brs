@@ -149,8 +149,10 @@ sub onInfo()
     onLoadLogo()
     m.started = false
     m.loadPct.text = ""
+    m.bufPct = -1
     m.loadScreen.visible = true
     m.loadSpin.control = "start"
+    paintLoadText()
     logo = Str_Of(info.logo)
     m.logo.visible = false
     m.pauseLogo.visible = false
@@ -174,11 +176,13 @@ sub hideLoadScreen()
     m.loadScreen.visible = false
     m.loadSpin.control = "stop"
     m.loadPct.text = ""
+    m.top.loadStatus = ""
 end sub
 
 sub onBufTimer()
     if m.video.state <> "buffering" or not m.started or m.postBox.visible then return
-    m.loadPct.text = ""
+    m.bufPct = -1
+    paintLoadText()
     m.loadScreen.visible = true
     m.loadSpin.control = "start"
 end sub
@@ -186,8 +190,26 @@ end sub
 sub onBufferStatus()
     st = m.video.bufferingStatus
     if type(st) <> "roAssociativeArray" or not m.loadScreen.visible then return
-    pct = ToInt(st.percentage, -1)
-    if pct >= 0 and pct < 100 then m.loadPct.text = L("Cargando") + "  " + pct.ToStr() + "%" else m.loadPct.text = ""
+    m.bufPct = ToInt(st.percentage, -1)
+    paintLoadText()
+end sub
+
+sub onLoadStatus()
+    m.bufPct = -1
+    paintLoadText()
+end sub
+
+sub paintLoadText()
+    if not m.top.loadDetails
+        m.loadPct.text = ""
+        return
+    end if
+    pct = ToInt(m.bufPct, -1)
+    if pct >= 0 and pct < 100
+        m.loadPct.text = L("Cargando") + "  " + pct.ToStr() + "%"
+    else
+        m.loadPct.text = Str_Of(m.top.loadStatus)
+    end if
 end sub
 
 sub setLogo(logo as string)
