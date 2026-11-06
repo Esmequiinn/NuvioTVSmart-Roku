@@ -218,18 +218,30 @@ function Deb_TorboxResolve(acc as object, magnet as string, d as object) as obje
     if r.code = 409 then return { ok: false, error: L("Este torrent ya no está en la caché de TorBox.") }
     if r.code = 401 or r.code = 403 then return Deb_TorboxFail(r, 1, L("TorBox no aceptó tu cuenta. Vuelve a vincularla en Ajustes."))
     if type(r.json) <> "roAssociativeArray" or r.json.success = false or type(r.json.data) <> "roAssociativeArray" then return Deb_TorboxFail(r, 1, "")
-    tid = Str_Any(r.json.data.torrent_id)
-    if tid = "" then tid = Str_Any(r.json.data.id)
-    if tid = "" then return Deb_TorboxFail(r, 1, "")
-    t = invalid
+    tid = Deb_TorboxId(r.json.data.torrent_id)
+    if tid = "" then tid = Deb_TorboxId(r.json.data.id)
+    hash = LCase(Str_Of(r.json.data.hash))
+    if hash = "" then hash = LCase(Str_Of(d.hash))
+    if tid = "" and hash = "" then return Deb_TorboxFail(r, 1, "")
+    item = invalid
+    t = { code: 0, body: "", json: invalid }
     for tries = 1 to 3
-        t = Http_Request("GET", "https://api.torbox.app/v1/api/torrents/mylist?id=" + tid + "&bypass_cache=true", Deb_Auth(acc), invalid, 15000)
-        if type(t.json) = "roAssociativeArray" and type(t.json.data) = "roAssociativeArray" and type(t.json.data.files) = "roArray" and t.json.data.files.Count() > 0 then exit for
+        if tid <> ""
+            t = Http_Request("GET", "https://api.torbox.app/v1/api/torrents/mylist?id=" + tid + "&bypass_cache=true", Deb_Auth(acc), invalid, 15000)
+            if type(t.json) = "roAssociativeArray" and type(t.json.data) = "roAssociativeArray" then item = t.json.data
+        end if
+        if item = invalid
+            t = Http_Request("GET", "https://api.torbox.app/v1/api/torrents/mylist?bypass_cache=true", Deb_Auth(acc), invalid, 20000)
+            item = Deb_TorboxFind(t.json, tid, hash)
+        end if
+        if item <> invalid and type(item.files) = "roArray" and item.files.Count() > 0 then exit for
+        item = invalid
         sleep(800)
     end for
-    if type(t.json) <> "roAssociativeArray" or type(t.json.data) <> "roAssociativeArray" or type(t.json.data.files) <> "roArray" then return Deb_TorboxFail(t, 2, "")
+    if item = invalid then return Deb_TorboxFail(t, 2, "")
+    if tid = "" then tid = Deb_TorboxId(item.id)
     files = []
-    for each f in t.json.data.files
+    for each f in item.files
         if type(f) = "roAssociativeArray"
             path = Str_Of(f.name)
             if path = "" then path = Str_Of(f.absolute_path)
@@ -253,7 +265,14 @@ function Deb_TorboxFail(r as object, stage as integer, text as string) as object
         msg = L("TorBox no pudo preparar este enlace.")
         detail = ""
         if type(r.json) = "roAssociativeArray"
-            detail = Str_Of(r.json.detail)
+            if type(r.json.detail) = "roArray" and r.json.detail.Count() > 0 and type(r.json.detail[0]) = "roAssociativeArray"
+                x = r.json.detail[0]
+                where = ""
+                if type(x.loc) = "roArray" then where = Str_Any(x.loc[x.loc.Count() - 1]) + ": "
+                detail = where + Str_Of(x.msg)
+            else
+                detail = Str_Of(r.json.detail)
+            end if
             if detail = "" then detail = Str_Of(r.json.error)
         end if
         if detail <> "" then msg = msg + chr(10) + "TorBox: " + Left(detail, 160)
@@ -321,4 +340,42 @@ function Deb_Validate(id as string, key as string) as boolean
     end if
     r = Http_Request("GET", Deb_PmUrl(acc, "/api/account/info"), Deb_Auth(acc), invalid, 12000)
     return r.code >= 200 and r.code < 300 and type(r.json) = "roAssociativeArray" and LCase(Str_Of(r.json.status)) <> "error"
+end function
+
+function Deb_TorboxId(v as dynamic) as string
+    if v = invalid then return ""
+    if IsStr(v)
+        t = v.Trim()
+        if CreateObject("roRegex", "^[0-9]+$", "").IsMatch(t) then return t
+        return ""
+    end if
+    if GetInterface(v, "ifInt") <> invalid or GetInterface(v, "ifLongInt") <> invalid then return Str(v).Trim()
+    if GetInterface(v, "ifFloat") <> invalid or GetInterface(v, "ifDouble") <> invalid
+        d = 0# + v
+        text = Str(d).Trim()
+        if Instr(1, text, "e") = 0 and Instr(1, text, "E") = 0
+            dot = Instr(1, text, ".")
+            if dot > 0 then text = Left(text, dot - 1)
+            return text
+        end if
+        out = ""
+        while d >= 1
+            q = Int(d / 10)
+            out = Chr(48 + Int(d - q * 10)) + out
+            d = q
+        end while
+        return out
+    end if
+    return ""
+end function
+
+function Deb_TorboxFind(j as dynamic, tid as string, hash as string) as dynamic
+    if type(j) <> "roAssociativeArray" or type(j.data) <> "roArray" then return invalid
+    for each it in j.data
+        if type(it) = "roAssociativeArray"
+            if tid <> "" and Deb_TorboxId(it.id) = tid then return it
+            if hash <> "" and LCase(Str_Of(it.hash)) = hash then return it
+        end if
+    end for
+    return invalid
 end function
