@@ -99,8 +99,8 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Expanding focused poster | ✅ Working |
 | TMDB integration | ✅ Working |
 | MDBList integration | ✅ Working |
-| Trakt | ⚠️ Not tested yet |
-| Simkl | ⚠️ Not tested yet |
+| Trakt | ✅ Working |
+| Simkl | ✅ Working |
 | Nuvio account sign-in and sync | ✅ Working |
 | Sources with addon formatter text | ✅ Working but with no emojis |
 | Badges (quality, HDR, codec, audio, size and Fusion) | ✅ Working |
@@ -132,7 +132,7 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Skip intro, recap and credits | ✅ Working |
 | Subtitle style and SDH filtering | ⚠️ Not tested yet |
 | Playback stats | ⚠️ Not tested yet |
-| Next up in Continue Watching | ⚠️ Not tested yet |
+| Next up in Continue Watching | ✅ Working |
 | YouTube trailers in your language | ✅ Working |
 | Episode options (`*` on an episode) | ✅ Working |
 | Profile PIN | ✅ Working |
@@ -143,10 +143,10 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | MDBList key from your Nuvio account | ✅ Working |
 | Change how it opens button | ✅ Working |
 | Trakt or MDBList as Continue Watching and library source | ⚠️ Not tested yet |
-| Trakt comments | ⚠️ Not tested yet |
+| Trakt comments | ✅ Working |
 | MDBList scrobbling | ⚠️ Not tested yet |
-| Loading screen with status | ⚠️ Not tested yet |
-| Try another source when one fails | ⚠️ Not tested yet |
+| Loading screen with status | ✅ Working |
+| Try another source when one fails | ✅ Working |
 | Modern, Classic and Grid home styles | ⚠️ Not tested yet |
 | Home layout options (hero, poster titles, unreleased content, ratings) | ⚠️ Not tested yet |
 | Modern and collapsed sidebar | ⚠️ Not tested yet |
