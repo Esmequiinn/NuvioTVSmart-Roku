@@ -204,6 +204,7 @@ sub Disc_Append(fresh as object)
 end sub
 
 sub onDiscoverFocused()
+    Ambient_Poke()
     hideExpanded()
     focus = m.discoverRows.rowItemFocused
     root = m.discoverRows.content

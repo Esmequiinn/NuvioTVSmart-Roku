@@ -35,7 +35,12 @@ function Set_SubLangs() as object
 end function
 
 function Set_Toggles() as object
-    return { forcedSubs: true, openSubs: true, autoNext: true, pauseOverlay: true, clock: true, reuseLink: true, bingeNext: true, bingeReuse: true, sizeBadges: true, addonLogo: true, fusionBadges: true, expandPoster: true, expandTrailer: true, expandMuted: true, trailerButton: true, trailerAutoplay: true, rokuSafe: true, skipIntro: true, autoSkipIntro: true, autoSkipRecap: true, autoSkipOutro: true, autoSkipCredits: true, preloadNext: true, bingeFallback: true, stillWatching: true, postPlay: true, parentalGuide: true, stripSdh: true, onlyPrefSubs: true, customSubs: true, subBold: true, playerStats: true, loadDetails: true, sourceFailover: true }
+    return { forcedSubs: true, openSubs: true, autoNext: true, pauseOverlay: true, clock: true, reuseLink: true, bingeNext: true, bingeReuse: true, sizeBadges: true, addonLogo: true, fusionBadges: true, expandPoster: true, expandTrailer: true, expandMuted: true, trailerButton: true, trailerAutoplay: true, rokuSafe: true, skipIntro: true, autoSkipIntro: true, autoSkipRecap: true, autoSkipOutro: true, autoSkipCredits: true, preloadNext: true, bingeFallback: true, stillWatching: true, postPlay: true, parentalGuide: true, stripSdh: true, onlyPrefSubs: true, customSubs: true, subBold: true, playerStats: true, loadDetails: true, sourceFailover: true, ambientOn: true, heroFull: true, classicGradient: true, posterLabels: true, homeRatings: true, navModern: true, navBlur: true, navCollapsed: true }
+end function
+
+function Set_Minutes(v as integer) as string
+    if v = 1 then return L("1 minuto")
+    return L("{n} minutos").Replace("{n}", v.ToStr())
 end function
 
 function Set_Seconds(v as integer) as string
@@ -166,14 +171,40 @@ function Settings_Model() as object
     party.rows.Push(Set_Info("partyNote", L("Función experimental"), L("Las watch parties son experimentales y pueden no funcionar como se espera."), ""))
 
     appearance = { id: "appearance", label: L("Apariencia"), subtitle: L("Elige tu tema de color e idioma"), rows: [] }
-    appearance.rows.Push(Set_Row("accent", L("Color de acento"), L("Se usa en el foco, barras de progreso y botones."), St_ColorName(prefs.accent)))
+    appearance.rows.Push(Set_Row("accent", L("Color de acento"), L("Se usa en el foco, barras de progreso y botones. Elige uno o crea el tuyo."), St_ColorName(prefs.accent)))
     langs = Ui_LangNames()
     uiLang = Str_Of(St_Settings()["uiLang"])
     if not langs.DoesExist(uiLang) then uiLang = "auto"
     appearance.rows.Push(Set_Row("uiLang", L("Idioma de la interfaz"), L("El idioma del canal. Automático usa el idioma de tu Roku."), langs[uiLang]))
 
+    appearance.rows.Push(Set_Header(L("Modo ambiente")))
+    ambientOn = Bool_Of(Set_Pref(prefs, defaults, "ambientOn"), false)
+    appearance.rows.Push(Set_Toggle("ambientOn", L("Modo ambiente"), L("Si no tocas el control por un rato, muestra fondos de tus catálogos en pantalla completa. Cualquier botón lo cierra."), ambientOn))
+    if ambientOn then appearance.rows.Push(Set_Row("ambientMinutes", L("Empezar después de"), L("El protector de pantalla de tu Roku puede aparecer antes si su tiempo es menor."), Set_Minutes(ToInt(Set_Pref(prefs, defaults, "ambientMinutes"), 5))))
+
     layout = { id: "layout", label: L("Diseño"), subtitle: L("Estructura de inicio y estilos de pósteres"), rows: [] }
     layout.rows.Push(Set_Header(L("Inicio")))
+    modes = { modern: L("Moderno"), classic: L("Clásico"), grid: L("Cuadrícula") }
+    mode = Home_Mode()
+    layout.rows.Push(Set_Row("homeLayout", L("Estilo del inicio"), L("Moderno deja la portada fija con una fila activa. Clásico recorre las filas hacia abajo. Cuadrícula muestra cada catálogo en varias filas con Ver todo al final."), modes[mode]))
+    if mode = "modern"
+        layout.rows.Push(Set_Toggle("heroFull", L("Fondo de la portada a pantalla completa"), L("El fondo de la portada llena toda la pantalla."), Bool_Of(Set_Pref(prefs, defaults, "heroFull"), false)))
+    else
+        heroOn = Bool_Of(Set_Pref(prefs, defaults, "heroSection"), true)
+        layout.rows.Push(Set_Toggle("heroSection", L("Mostrar la portada"), L("Muestra arriba del inicio una portada que cambia sola entre títulos de tus catálogos."), heroOn))
+        if heroOn
+            chosen = St_Pref("heroCatalogs")
+            count = 0
+            if type(chosen) = "roArray" then count = chosen.Count()
+            value = L("Automático")
+            if count > 0 then value = count.ToStr()
+            layout.rows.Push(Set_Row("heroCatalogs", L("Catálogos de la portada"), L("Elige uno o más catálogos para la portada."), value))
+        end if
+        if mode = "classic" then layout.rows.Push(Set_Toggle("classicGradient", L("Degradado del título enfocado"), L("Muestra el fondo del título enfocado del lado derecho del inicio Clásico."), Bool_Of(Set_Pref(prefs, defaults, "classicGradient"), false)))
+    end if
+    layout.rows.Push(Set_Toggle("posterLabels", L("Nombres debajo de los pósteres"), L("Muestra el título debajo de los pósteres en las filas, la cuadrícula y Ver todo."), Bool_Of(Set_Pref(prefs, defaults, "posterLabels"), false)))
+    layout.rows.Push(Set_Toggle("hideUnreleased", L("Ocultar lo que no se ha estrenado"), L("Oculta películas y series que todavía no se estrenan."), Bool_Of(Set_Pref(prefs, defaults, "hideUnreleased"), false)))
+    layout.rows.Push(Set_Toggle("homeRatings", L("Calificaciones generales"), L("Muestra la calificación de IMDb en la portada del inicio. Las de MDBList siguen su propio ajuste."), Bool_Of(Set_Pref(prefs, defaults, "homeRatings"), true)))
     layout.rows.Push(Set_Toggle("cw", L("Seguir viendo"), L("Muestra la fila de lo que estás viendo."), prefs.continueWatching))
     style = L("Horizontal")
     if Set_Pref(prefs, defaults, "cwStyle") = "poster" then style = L("Póster")
@@ -183,6 +214,16 @@ function Settings_Model() as object
     if not discNames.DoesExist(discLoc) then discLoc = "search"
     layout.rows.Push(Set_Row("discoverLocation", L("Ubicación de Descubrir"), L("Descubrir sirve para explorar los catálogos de tus addons por tipo y género."), discNames[discLoc]))
     layout.rows.Push(Set_Row("rowSize", L("Títulos por fila"), L("Menos títulos hace que el inicio cargue más rápido."), prefs.rowSize.ToStr()))
+    layout.rows.Push(Set_Header(L("Barra lateral")))
+    navModern = Bool_Of(Set_Pref(prefs, defaults, "navModern"), false)
+    navCollapsed = Bool_Of(Set_Pref(prefs, defaults, "navCollapsed"), false)
+    layout.rows.Push(Set_Toggle("navModern", L("Barra lateral moderna"), L("Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice dónde estás."), navModern))
+    if navModern
+        layout.rows.Push(Set_Toggle("navBlur", L("Fondo translúcido de la barra"), L("Roku no puede desenfocar, así que la barra y la pastilla se ven semitransparentes."), Bool_Of(Set_Pref(prefs, defaults, "navBlur"), false)))
+        layout.rows.Push(Set_Toggle("navCollapsed", L("Ocultar la pastilla flotante"), L("Quita el indicador flotante de arriba a la izquierda."), navCollapsed))
+    else
+        layout.rows.Push(Set_Toggle("navCollapsed", L("Contraer la barra lateral"), L("La barra se oculta y aparece al ir a la izquierda."), navCollapsed))
+    end if
     layout.rows.Push(Set_Header(L("Póster enfocado")))
     layout.rows.Push(Set_Toggle("expandPoster", L("Expandir póster enfocado"), L("Después de unos segundos el póster se convierte en una vista horizontal."), Bool_Of(Set_Pref(prefs, defaults, "expandPoster"), true)))
     layout.rows.Push(Set_Row("expandDelay", L("Espera para expandir"), "", Set_Seconds(ToInt(Set_Pref(prefs, defaults, "expandDelay"), 3))))
@@ -519,14 +560,18 @@ sub onSettingsEvent()
         end for
         Sheet_Open({ title: L("Idioma de la interfaz"), items: items, focus: focus, style: "cards", width: 760 }, "uiLangPick", invalid)
     else if row = "accent"
-        colors = St_Colors()
-        hexes = []
-        for each c in colors
-            hexes.Push(c.hex)
-        end for
-        St_SetAccent(Set_Cycle(hexes, UCase(m.prefs.accent)))
-        applyTheme()
-        m.settings.accent = m.accent
+        Accent_Open()
+    else if row = "homeLayout"
+        St_SetPref("homeLayout", Set_Cycle(["modern", "classic", "grid"], Home_Mode()))
+        Home_Reload()
+    else if row = "heroSection" or row = "posterLabels" or row = "hideUnreleased"
+        St_SetPref(row, not Bool_Of(St_Pref(row), row = "heroSection"))
+        Home_Reload()
+    else if row = "heroCatalogs"
+        HeroCats_Open(0)
+    else if row = "ambientMinutes"
+        St_SetPref("ambientMinutes", Set_Cycle([1, 2, 5, 10, 15, 30], ToInt(St_Pref("ambientMinutes"), 5)))
+        Ambient_Poke()
         refreshSettings()
     else if row = "cw"
         St_SetFlag("continueWatching", not m.prefs.continueWatching)
@@ -1040,3 +1085,105 @@ function Track_SourceName(v as string) as string
     if v = "local" then return L("Mi lista")
     return "Nuvio"
 end function
+
+sub Accent_Open()
+    current = UCase(Str_Of(m.prefs.accent))
+    items = []
+    focus = 0
+    known = false
+    for each c in St_Colors()
+        if c.hex = current
+            focus = items.Count()
+            known = true
+        end if
+        items.Push({ id: c.hex, label: c.name, swatch: c.hex, checked: c.hex = current })
+    end for
+    if not known
+        focus = items.Count()
+        items.Push({ id: current, label: L("Personalizado") + "  #" + current, swatch: current, checked: true })
+    end if
+    items.Push({ id: "custom", label: L("Crear un color...") })
+    Sheet_Open({ title: L("Color de acento"), items: items, focus: focus, style: "cards", width: 760 }, "accentPick", invalid)
+end sub
+
+sub Accent_Custom()
+    current = UCase(Str_Of(m.prefs.accent))
+    items = [{ id: "hex", label: L("Escribir el código del color...") }]
+    focus = 0
+    for each hex in St_CustomColors()
+        if hex = current then focus = items.Count()
+        items.Push({ id: hex, label: "#" + hex, swatch: hex, checked: hex = current })
+    end for
+    Sheet_Open({ title: L("Crear un color"), items: items, focus: focus, style: "cards", width: 760 }, "accentCustom", invalid)
+end sub
+
+sub Accent_Apply(hex as string)
+    if not St_SetAccent(hex) then return
+    applyTheme()
+    m.settings.accent = m.accent
+    refreshSettings()
+end sub
+
+sub Home_Reload()
+    m.homeRows.content = invalid
+    m.needsReload = true
+    applyTheme()
+    refreshSettings()
+end sub
+
+sub HeroCats_Open(focus as integer)
+    chosen = St_Pref("heroCatalogs")
+    picked = {}
+    if type(chosen) = "roArray"
+        for each k in chosen
+            if IsStr(k) then picked[k] = true
+        end for
+    end if
+    items = []
+    if type(m.catalogs) = "roArray"
+        for each c in m.catalogs
+            if type(c) = "roAssociativeArray" and not Bool_Of(c.hidden, false)
+                key = Hero_Key(Str_Of(c.key))
+                label = Str_Glyphs(Str_Of(c.name)).Trim() + "  ·  " + TypePlural(Str_Of(c.kind))
+                items.Push({ id: key, label: label, checked: picked.DoesExist(key) })
+            end if
+        end for
+    end if
+    if items.Count() = 0
+        showMessage(L("Catálogos de la portada"), L("Primero agrega addons con catálogos."))
+        return
+    end if
+    items.Push({ id: "auto", label: L("Automático (quitar la selección)"), checked: picked.Count() = 0 })
+    if focus >= items.Count() then focus = items.Count() - 1
+    Sheet_Open({ title: L("Catálogos de la portada"), subtitle: L("Elige uno o más. Atrás para terminar."), items: items, focus: focus, style: "cards", width: 900 }, "heroCats", invalid)
+end sub
+
+sub HeroCats_Toggle(choice as string)
+    chosen = St_Pref("heroCatalogs")
+    list = []
+    found = false
+    if type(chosen) = "roArray" and choice <> "auto"
+        for each k in chosen
+            if IsStr(k)
+                if k = choice then found = true else list.Push(k)
+            end if
+        end for
+        if not found then list.Push(choice)
+    end if
+    St_SetPref("heroCatalogs", list)
+    m.homeRows.content = invalid
+    m.needsReload = true
+    focus = 0
+    if type(m.catalogs) = "roArray"
+        index = 0
+        for each c in m.catalogs
+            if type(c) = "roAssociativeArray" and not Bool_Of(c.hidden, false)
+                if Hero_Key(Str_Of(c.key)) = choice then focus = index
+                index = index + 1
+            end if
+        end for
+        if choice = "auto" then focus = index
+    end if
+    refreshSettings()
+    HeroCats_Open(focus)
+end sub

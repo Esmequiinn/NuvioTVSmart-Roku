@@ -1228,7 +1228,7 @@ function nextAttempt(position as integer) as boolean
     m.ctx.attempt = nxt
     if position > 10 then m.ctx.startAt = position
     refreshResume()
-    Load_Status(L("Probando otra forma de abrir el enlace..."))
+    Load_Note(L("Probando otra forma de abrir el enlace...") + chr(10) + L("Forma {n} de {t}").Replace("{n}", (nxt + 1).ToStr()).Replace("{t}", attempts.Count().ToStr()) + ": " + Switch_Name(attempts[nxt]))
     launchAttempt()
     return true
 end function
@@ -1920,10 +1920,10 @@ sub Switch_Attempt(position as integer)
     m.ctx.stallChecks = 0
     if position > 10 then m.ctx.startAt = position
     refreshResume()
-    Load_Status(L("Cambiando la forma de abrir el enlace..."))
+    text = L("Forma {n} de {t}").Replace("{n}", (nxt + 1).ToStr()).Replace("{t}", attempts.Count().ToStr()) + ": " + Switch_Name(attempts[nxt])
+    Load_Note(L("Cambiando la forma de abrir el enlace...") + chr(10) + text)
     launchAttempt()
-    text = L("Forma {n} de {t}").Replace("{n}", (nxt + 1).ToStr()).Replace("{t}", attempts.Count().ToStr())
-    Toast_Show(text + ": " + Switch_Name(attempts[nxt]))
+    Toast_Show(text)
 end sub
 
 function Switch_Name(attempt as object) as string
@@ -1954,6 +1954,28 @@ end sub
 sub Load_Status(text as string)
     if m.player <> invalid then m.player.loadStatus = text
 end sub
+
+sub Load_Note(text as string)
+    if m.player <> invalid then m.player.loadNote = text
+end sub
+
+function Source_Label(s as object) as string
+    if type(s) <> "roAssociativeArray" then return ""
+    parts = []
+    for each v in [s.addon, s.name, s.label]
+        t = Str_Of(v).Replace(chr(13), " ").Replace(chr(10), " ").Trim()
+        if t <> "" and parts.Count() < 2
+            dup = false
+            for each p in parts
+                if p = t then dup = true
+            end for
+            if not dup then parts.Push(t)
+        end if
+    end for
+    text = parts.Join("  ·  ")
+    if Len(text) > 90 then text = Left(text, 90).Trim() + "..."
+    return text
+end function
 
 sub Loader_Begin()
     showPlayer(0)
@@ -1993,8 +2015,11 @@ function Failover_Next(position as integer) as boolean
     start = 0
     if position > 10 then start = position
     m.ctx.reusedPlay = false
+    label = Source_Label(streams[index])
+    if label <> "" then status = status + chr(10) + label
+    Load_Note(status)
     playStream(index, start)
-    Load_Status(status)
+    if label <> "" then Toast_Show(label)
     return true
 end function
 

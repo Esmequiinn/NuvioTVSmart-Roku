@@ -764,6 +764,24 @@ function Nuvio_Hex(v as dynamic) as string
     return UCase(out)
 end function
 
+function Nuvio_LayoutFlags() as object
+    return { heroFull: "modern_hero_full_screen_backdrop", classicGradient: "classic_focus_gradient_enabled", heroSection: "hero_section_enabled", posterLabels: "poster_labels_enabled", hideUnreleased: "hide_unreleased_content", navModern: "modern_sidebar_enabled", navBlur: "modern_sidebar_blur_enabled", navCollapsed: "sidebar_collapsed_by_default" }
+end function
+
+function Nuvio_KeyList(v as dynamic) as dynamic
+    if IsStr(v)
+        text = v.Trim()
+        if text = "" then return invalid
+        if Left(text, 1) = "[" then v = ParseJson(text) else v = text.Split(",")
+    end if
+    if type(v) <> "roArray" then return invalid
+    out = []
+    for each k in v
+        if IsStr(k) and k.Trim() <> "" then out.Push(k.Trim())
+    end for
+    return out
+end function
+
 sub Nuvio_SetBool(prefs as object, name as string, v as dynamic)
     if IsBool(v) then prefs[name] = v
 end sub
@@ -941,6 +959,24 @@ sub Nuvio_MapFeatures(prefs as object, f as object, integ as object, pid as stri
         if target = "expanded_card" then prefs["trailerTarget"] = "card"
         if target = "hero_media" then prefs["trailerTarget"] = "hero"
         Nuvio_SetBool(prefs, "trailerButton", ly.detail_page_trailer_button_enabled)
+        layoutName = UCase(Str_Of(ly.selected_layout))
+        if layoutName = "GRID" then prefs["homeLayout"] = "grid"
+        if layoutName = "CLASSIC" then prefs["homeLayout"] = "classic"
+        if layoutName = "MODERN" then prefs["homeLayout"] = "modern"
+        Nuvio_SetBool(prefs, "heroFull", ly.modern_hero_full_screen_backdrop)
+        Nuvio_SetBool(prefs, "classicGradient", ly.classic_focus_gradient_enabled)
+        Nuvio_SetBool(prefs, "heroSection", ly.hero_section_enabled)
+        Nuvio_SetBool(prefs, "posterLabels", ly.poster_labels_enabled)
+        Nuvio_SetBool(prefs, "hideUnreleased", ly.hide_unreleased_content)
+        Nuvio_SetBool(prefs, "navModern", ly.modern_sidebar_enabled)
+        Nuvio_SetBool(prefs, "navBlur", ly.modern_sidebar_blur_enabled)
+        Nuvio_SetBool(prefs, "navCollapsed", ly.sidebar_collapsed_by_default)
+        ratings = UCase(Str_Of(ly.home_imdb_ratings_visibility))
+        if ratings = "SHOW_ALL" then prefs["homeRatings"] = true
+        if ratings = "HIDE_ALL" then prefs["homeRatings"] = false
+        heroKeys = Nuvio_KeyList(ly.hero_catalog_keys)
+        if heroKeys = invalid and IsStr(ly.hero_catalog_key) and ly.hero_catalog_key.Trim() <> "" then heroKeys = [ly.hero_catalog_key.Trim()]
+        if heroKeys <> invalid then prefs["heroCatalogs"] = heroKeys
         loc = UCase(Str_Of(ly.discover_location))
         if loc = "IN_SEARCH"
             prefs["discoverLocation"] = "search"
@@ -991,6 +1027,15 @@ sub Nuvio_MapFeatures(prefs as object, f as object, integ as object, pid as stri
         for each k in flags
             if IsBool(md[flags[k]]) then integ.mdbShow[k] = md[flags[k]]
         end for
+    end if
+
+    am = f.ambient_mode_settings
+    if type(am) = "roAssociativeArray"
+        Nuvio_SetBool(prefs, "ambientOn", am.ambient_enabled)
+        if am.ambient_timeout_minutes <> invalid
+            minutes = ToInt(am.ambient_timeout_minutes, 5)
+            if minutes >= 1 and minutes <= 60 then prefs["ambientMinutes"] = minutes
+        end if
     end if
 
     th = f.theme_settings
@@ -1521,8 +1566,33 @@ function Nuvio_WriteSetting(f as object, k as string, p as object) as boolean
     else if k = "accent"
         hex = UCase(Str_Of(v))
         names = { F5F5F5: "WHITE", E53935: "CRIMSON", "1E88E5": "OCEAN", "8E24AA": "VIOLET", "43A047": "EMERALD", FB8C00: "AMBER", D81B60: "ROSE", E8A91C: "GOLD", "22D37C": "JADE", EC70A9: "ROSE_GOLD", "3185F5": "ARCTIC_BLUE", AAB2BE: "GRAPHITE" }
-        if not names.DoesExist(hex) then return false
-        Nuvio_Feature(f, "theme_settings").selected_theme = names[hex]
+        th = Nuvio_Feature(f, "theme_settings")
+        if names.DoesExist(hex)
+            th.selected_theme = names[hex]
+        else
+            if Len(hex) <> 6 then return false
+            th.selected_theme = "CUSTOM"
+            th.custom_theme_colors = "#" + hex + ",#" + hex + ",#" + hex
+        end if
+    else if k = "homeLayout"
+        names = { grid: "GRID", classic: "CLASSIC", modern: "MODERN" }
+        name = names[Str_Of(v)]
+        if name = invalid then name = "MODERN"
+        Nuvio_Feature(f, "layout_settings").selected_layout = name
+    else if k = "heroCatalogs"
+        list = []
+        if type(v) = "roArray" then list = v
+        ly = Nuvio_Feature(f, "layout_settings")
+        ly.hero_catalog_keys = FormatJson(list)
+        if list.Count() > 0 then ly.hero_catalog_key = list[0] else ly.hero_catalog_key = ""
+    else if k = "homeRatings"
+        if Bool_Of(v, true) then Nuvio_Feature(f, "layout_settings").home_imdb_ratings_visibility = "SHOW_ALL" else Nuvio_Feature(f, "layout_settings").home_imdb_ratings_visibility = "HIDE_ALL"
+    else if Nuvio_LayoutFlags().DoesExist(k)
+        Nuvio_Feature(f, "layout_settings")[Nuvio_LayoutFlags()[k]] = Bool_Of(v, false)
+    else if k = "ambientOn"
+        Nuvio_Feature(f, "ambient_mode_settings").ambient_enabled = Bool_Of(v, false)
+    else if k = "ambientMinutes"
+        Nuvio_Feature(f, "ambient_mode_settings").ambient_timeout_minutes = ToInt(v, 5)
     else
         return false
     end if

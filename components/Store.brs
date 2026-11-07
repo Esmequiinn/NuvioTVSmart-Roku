@@ -84,7 +84,19 @@ function St_ColorName(hex as string) as string
     for each c in St_Colors()
         if c.hex = UCase(hex) then return c.name
     end for
-    return "#" + hex
+    return L("Personalizado") + "  #" + UCase(hex)
+end function
+
+function St_CustomColors() as object
+    return ["B75AFF", "8E24AA", "5C6BC0", "1E88E5", "3185F5", "00ACC1", "22D37C", "43A047", "9CCC65", "E8A91C", "FB8C00", "F4511E", "E53935", "D81B60", "EC70A9", "8D6E63", "AAB2BE", "F5F5F5"]
+end function
+
+function St_HexColor(text as string) as string
+    t = UCase(text.Trim())
+    if Left(t, 1) = "#" then t = Mid(t, 2)
+    if Len(t) = 3 and CreateObject("roRegex", "^[0-9A-F]{3}$", "").IsMatch(t) then t = Left(t, 1) + Left(t, 1) + Mid(t, 2, 1) + Mid(t, 2, 1) + Right(t, 1) + Right(t, 1)
+    if CreateObject("roRegex", "^[0-9A-F]{6}$", "").IsMatch(t) then return t
+    return ""
 end function
 
 function St_RowSizes() as object
@@ -357,16 +369,13 @@ function St_ClientId() as string
 end function
 
 function St_SetAccent(hex as string) as boolean
-    for each c in St_Colors()
-        if c.hex = UCase(hex)
-            p = St_Prefs()
-            p.accent = c.hex
-            St_Touch("accent")
-            St_SavePrefs(p)
-            return true
-        end if
-    end for
-    return false
+    value = St_HexColor(hex)
+    if value = "" then return false
+    p = St_Prefs()
+    p.accent = value
+    St_Touch("accent")
+    St_SavePrefs(p)
+    return true
 end function
 
 function St_SetRowSize(size as integer) as boolean
@@ -818,6 +827,19 @@ function St_PlayerDefaults() as object
         reuseHours: 24
         loadDetails: true
         sourceFailover: false
+        homeLayout: "modern"
+        heroFull: false
+        classicGradient: false
+        heroSection: true
+        heroCatalogs: []
+        posterLabels: false
+        hideUnreleased: false
+        homeRatings: true
+        navModern: false
+        navBlur: false
+        navCollapsed: false
+        ambientOn: false
+        ambientMinutes: 5
         failoverCount: 2
         bingeNext: true
         bingeReuse: false

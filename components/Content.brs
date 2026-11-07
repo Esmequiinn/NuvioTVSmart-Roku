@@ -245,5 +245,20 @@ function Catalog_ItemData(meta as object, fallbackKind as string, posterPattern 
         logo: Str_Of(meta.logo)
         rating: rating
         fallback: fallback
+        released: Str_Of(meta.released)
+        releaseInfo: Str_Any(meta.releaseInfo)
     }
+end function
+
+function Item_Unreleased(data as object, today as string) as boolean
+    released = Str_Of(data.released).Trim()
+    dateRe = CreateObject("roRegex", "^(\d{4}-\d{2}-\d{2})", "")
+    found = dateRe.Match(released)
+    if found.Count() > 1 then return found[1] > today
+    info = Str_Of(data.releaseInfo).Trim()
+    found = dateRe.Match(info)
+    if found.Count() > 1 then return found[1] > today
+    found = CreateObject("roRegex", "\b((19|20)\d{2})\b", "").Match(info)
+    if found.Count() > 1 then return found[1].ToInt() > Left(today, 4).ToInt()
+    return false
 end function

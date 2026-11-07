@@ -45,6 +45,22 @@ sub onSheetChosen()
             refreshSettings()
         end if
         focusCurrent()
+    else if handler = "heroCats"
+        HeroCats_Toggle(choice)
+    else if handler = "accentPick"
+        if choice = "custom"
+            Accent_Custom()
+            return
+        end if
+        Accent_Apply(choice)
+        focusCurrent()
+    else if handler = "accentCustom"
+        if choice = "hex"
+            showKeyboard("accentHex", L("Código del color, por ejemplo FF5CA8"), UCase(Str_Of(m.prefs.accent)), {})
+            return
+        end if
+        Accent_Apply(choice)
+        focusCurrent()
     else if handler = "uiLangPick"
         if choice <> ""
             UiLang_Apply(choice)
@@ -77,7 +93,7 @@ function Options_Open() as boolean
     target = Options_FocusedItem()
     if target = invalid then return false
     item = target.item
-    if item.itemType = "folder" then return false
+    if item.itemType = "folder" or item.itemType = "seeall" then return false
     if target.cw
         items = [{ id: "details", label: L("Ir a detalles") }]
         if Str_Of(St_Pref("autoplayMode")) <> "manual" or Bool_Of(St_Pref("reuseLink"), false) then items.Push({ id: "manual", label: L("Reproducir manualmente") })

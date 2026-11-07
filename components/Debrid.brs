@@ -218,7 +218,8 @@ function Deb_TorboxResolve(acc as object, magnet as string, d as object) as obje
     if r.code = 409 then return { ok: false, error: L("Este torrent ya no está en la caché de TorBox.") }
     if r.code = 401 or r.code = 403 then return Deb_TorboxFail(r, 1, L("TorBox no aceptó tu cuenta. Vuelve a vincularla en Ajustes."))
     if type(r.json) <> "roAssociativeArray" or r.json.success = false or type(r.json.data) <> "roAssociativeArray" then return Deb_TorboxFail(r, 1, "")
-    tid = Deb_TorboxId(r.json.data.torrent_id)
+    tid = Deb_RawId(Str_Of(r.body), "torrent_id")
+    if tid = "" then tid = Deb_TorboxId(r.json.data.torrent_id)
     if tid = "" then tid = Deb_TorboxId(r.json.data.id)
     hash = LCase(Str_Of(r.json.data.hash))
     if hash = "" then hash = LCase(Str_Of(d.hash))
@@ -233,6 +234,7 @@ function Deb_TorboxResolve(acc as object, magnet as string, d as object) as obje
         if item = invalid
             t = Http_Request("GET", "https://api.torbox.app/v1/api/torrents/mylist?bypass_cache=true", Deb_Auth(acc), invalid, 20000)
             item = Deb_TorboxFind(t.json, tid, hash)
+            if item <> invalid and tid = "" and hash <> "" then tid = Deb_RawIdNear(Str_Of(t.body), hash)
         end if
         if item <> invalid and type(item.files) = "roArray" and item.files.Count() > 0 then exit for
         item = invalid
@@ -240,6 +242,11 @@ function Deb_TorboxResolve(acc as object, magnet as string, d as object) as obje
     end for
     if item = invalid then return Deb_TorboxFail(t, 2, "")
     if tid = "" then tid = Deb_TorboxId(item.id)
+    if tid = "" then tid = Deb_TorboxId(item.torrent_id)
+    if tid = ""
+        raw = "id=" + type(item.id) + ":" + Left(Deb_Raw(item.id), 24) + " torrent_id=" + type(r.json.data.torrent_id) + ":" + Left(Deb_Raw(r.json.data.torrent_id), 24)
+        return { ok: false, error: L("TorBox no pudo preparar este enlace.") + chr(10) + "(" + L("paso") + " 3 · " + raw + ")" }
+    end if
     files = []
     for each f in item.files
         if type(f) = "roAssociativeArray"
@@ -247,7 +254,9 @@ function Deb_TorboxResolve(acc as object, magnet as string, d as object) as obje
             if path = "" then path = Str_Of(f.absolute_path)
             if path = "" then path = Str_Of(f.short_name)
             video = Left(LCase(Str_Of(f.mimetype)), 6) = "video/" or Deb_IsVideo(path)
-            files.Push({ id: Str_Any(f.id), path: path, size: Deb_Num(f.size), video: video })
+            fid = Deb_TorboxId(f.id)
+            if fid = "" then fid = Str_Any(f.id)
+            files.Push({ id: fid, path: path, size: Deb_Num(f.size), video: video })
         end if
     end for
     pick = Deb_Pick(files, d)
@@ -344,28 +353,14 @@ end function
 
 function Deb_TorboxId(v as dynamic) as string
     if v = invalid then return ""
+    text = ""
     if IsStr(v)
-        t = v.Trim()
-        if CreateObject("roRegex", "^[0-9]+$", "").IsMatch(t) then return t
-        return ""
+        text = v
+    else if GetInterface(v, "ifToStr") <> invalid
+        text = v.ToStr()
     end if
-    if GetInterface(v, "ifInt") <> invalid or GetInterface(v, "ifLongInt") <> invalid then return Str(v).Trim()
-    if GetInterface(v, "ifFloat") <> invalid or GetInterface(v, "ifDouble") <> invalid
-        d = 0# + v
-        text = Str(d).Trim()
-        if Instr(1, text, "e") = 0 and Instr(1, text, "E") = 0
-            dot = Instr(1, text, ".")
-            if dot > 0 then text = Left(text, dot - 1)
-            return text
-        end if
-        out = ""
-        while d >= 1
-            q = Int(d / 10)
-            out = Chr(48 + Int(d - q * 10)) + out
-            d = q
-        end while
-        return out
-    end if
+    found = CreateObject("roRegex", "^\s*([0-9]+)(\.0*)?\s*$", "").Match(text)
+    if found.Count() > 1 then return found[1]
     return ""
 end function
 
@@ -378,4 +373,29 @@ function Deb_TorboxFind(j as dynamic, tid as string, hash as string) as dynamic
         end if
     end for
     return invalid
+end function
+
+function Deb_Raw(v as dynamic) as string
+    if v = invalid then return "invalid"
+    if IsStr(v) then return v
+    if GetInterface(v, "ifToStr") <> invalid then return v.ToStr()
+    return FormatJson(v)
+end function
+
+function Deb_RawId(body as string, field as string) as string
+    found = CreateObject("roRegex", chr(34) + field + chr(34) + "\s*:\s*" + chr(34) + "?([0-9]+)", "").Match(body)
+    if found.Count() > 1 then return found[1]
+    return ""
+end function
+
+function Deb_RawIdNear(body as string, hash as string) as string
+    low = LCase(body)
+    at = Instr(1, low, chr(34) + hash + chr(34))
+    if at = 0 then return ""
+    start = at - 4000
+    if start < 1 then start = 1
+    before = Mid(body, start, at - start)
+    matches = CreateObject("roRegex", chr(34) + "id" + chr(34) + "\s*:\s*" + chr(34) + "?([0-9]+)", "").MatchAll(before)
+    if matches.Count() > 0 then return matches[matches.Count() - 1][1]
+    return ""
 end function

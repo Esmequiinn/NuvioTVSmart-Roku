@@ -101,6 +101,16 @@ sub init()
     m.global.addFields({ expandShift: 0.0, expandIndex: -1, syncDirty: 0, corners: "auto" })
     Mask_Global()
     m.global.observeField("syncDirty", "onSyncDirty")
+    m.global.addField("activity", "boolean", true)
+    m.global.observeField("activity", "Ambient_Poke")
+    m.ambient = m.top.findNode("ambient")
+    m.ambient.observeField("closed", "Ambient_Close")
+    m.ambientClock = CreateObject("roTimespan")
+    m.ambientTimer = m.top.createChild("Timer")
+    m.ambientTimer.duration = 10
+    m.ambientTimer.repeat = true
+    m.ambientTimer.observeField("fire", "onAmbientTimer")
+    m.ambientTimer.control = "start"
     m.pushTimer = m.top.createChild("Timer")
     m.pushTimer.duration = 8
     m.pushTimer.observeField("fire", "onPushTimer")
@@ -219,6 +229,9 @@ sub applyTheme()
     m.details.accent = m.accent
     m.player.accent = m.accent
     m.nav.accent = m.accent
+    m.nav.modern = Bool_Of(St_Pref("navModern"), false)
+    m.nav.blur = Bool_Of(St_Pref("navBlur"), false)
+    m.nav.collapsed = Bool_Of(St_Pref("navCollapsed"), false)
     m.streamsScreen.accent = m.accent
     m.ui = {
         expandOn: Bool_Of(St_Pref("expandPoster"), true)
@@ -228,6 +241,7 @@ sub applyTheme()
         trailerTarget: Str_Of(St_Pref("trailerTarget"))
     }
     if m.ui.expandDelay < 1 then m.ui.expandDelay = 1
+    Grid_Layout()
     profile = St_ActiveProfile()
     m.nav.profileName = Str_Glyphs(Str_Of(profile.name))
     m.nav.profileColor = St_ProfileColor(St_ActiveProfileIndex())
@@ -508,6 +522,7 @@ end sub
 
 sub Home_Show(content as object)
     Poster_Localize(content)
+    content = Home_Decorate(content)
     m.skeleton.visible = false
     m.emptyState.visible = false
     old = m.homeRows.content
@@ -602,12 +617,16 @@ sub showEmptyState(addonCount as integer, failed as integer)
 end sub
 
 function overlayOpen() as boolean
-    return m.sheet.visible or m.updatePrompt.visible or m.auth.visible or m.trackAuth.visible or m.partyPanel.visible or m.partyJoin.visible or m.player.visible or m.trailerOpen or m.profiles.visible or m.streamsOpen or m.stack.Count() > 0 or m.detailsOpen or m.settingsOpen
+    return m.ambient.active or m.sheet.visible or m.updatePrompt.visible or m.auth.visible or m.trackAuth.visible or m.partyPanel.visible or m.partyJoin.visible or m.player.visible or m.trailerOpen or m.profiles.visible or m.streamsOpen or m.stack.Count() > 0 or m.detailsOpen or m.settingsOpen
 end function
 
 sub focusCurrent()
     if Bool_Of(m.immersiveOn, false) then Hero_EndImmersive()
     if m.top.dialog <> invalid then return
+    if m.ambient.active
+        m.ambient.setFocus(true)
+        return
+    end if
     if m.sheet.visible
         m.sheet.setFocus(true)
     else if m.updatePrompt.visible
@@ -692,6 +711,7 @@ function getRowItem(rows as object, cell as dynamic) as dynamic
 end function
 
 sub onRowFocused(event as object)
+    Ambient_Poke()
     hideExpanded()
     rows = event.getRoSGNode()
     if rows.isSameNode(m.searchRows) then return
@@ -704,6 +724,10 @@ sub onRowSelected(event as object)
     if rows.isSameNode(m.searchRows) and Str_Of(m.lastQuery) <> "" then St_AddSearch(m.lastQuery)
     item = getRowItem(rows, rows.rowItemSelected)
     if item = invalid then return
+    if item.itemType = "seeall"
+        Grid_SeeAll(item)
+        return
+    end if
     if item.itemType = "folder"
         openFolder(item)
         return
@@ -758,6 +782,8 @@ sub onFolderLoaded(event as object)
         return
     end if
     if detail <> "" then Toast_Show(L("No se pudo cargar:") + " " + fails.Join(", "))
+    m.libraryGrid = false
+    Grid_Layout()
     m.libraryRows.content = root
     applyRowSizes(m.libraryRows)
     m.area = "page"
@@ -766,6 +792,8 @@ end sub
 
 sub showHeroFor(item as dynamic)
     if item = invalid then return
+    Home_HeroState()
+    if item.itemType = "seeall" then return
     if item.itemType = "folder"
         m.heroItem = item
         m.heroTimer.control = "stop"
@@ -836,6 +864,7 @@ function heroData(item as object, meta as dynamic) as object
     if m.logoCache <> invalid and Str_Of(m.logoCache[item.metaId]) <> "" then logo = m.logoCache[item.metaId]
     if item.videoId <> "" and item.episodeLabel <> "" then metaLine = item.metaLine
     if item.hasField("badge") and item.badge <> "" then metaLine = Cw_HeroLine(item, meta)
+    if not Bool_Of(St_Pref("homeRatings"), true) then rating = ""
     return { title: title, logo: logo, background: background, rating: rating, metaLine: metaLine, description: description }
 end function
 
@@ -1056,6 +1085,11 @@ sub onImportDone(event as object)
 end sub
 
 function onKeyEvent(key as string, press as boolean) as boolean
+    Ambient_Poke()
+    if m.ambient.active
+        if press then Ambient_Close()
+        return true
+    end if
     if Bool_Of(m.immersiveOn, false)
         if press then Hero_EndImmersive()
         return true
@@ -1142,7 +1176,8 @@ sub onExpandTimer()
     if rows = invalid or not rows.isInFocusChain() then return
     item = card.itemContent
     if item = invalid then return
-    if item.itemType = "folder" or m.page = "library" or m.page = "search" or m.page = "discover" then return
+    if item.hasField("heroCard") then return
+    if item.itemType = "folder" or item.itemType = "seeall" or m.page = "library" or m.page = "search" or m.page = "discover" then return
     focus = rows.rowItemFocused
     if type(focus) = "roArray" and focus.Count() > 0 and rows.content <> invalid
         row = rows.content.getChild(focus[0])
@@ -1150,9 +1185,11 @@ sub onExpandTimer()
     end if
     meta = m.metaCache[item.metaId]
     m.cardItem = item
-    m.trailerToHero = m.ui.trailerTarget <> "card" or not m.ui.expandOn
-    if m.ui.expandOn then openExpanded(rows, item, meta)
-    if m.ui.expandTrailer then startCardTrailer(item, meta)
+    expand = m.ui.expandOn and not (m.page = "home" and Home_Grid()) and not (m.page = "folder" and Bool_Of(m.libraryGrid, false))
+    heroOk = m.page <> "home" or Home_Mode() = "modern"
+    m.trailerToHero = heroOk and (m.ui.trailerTarget <> "card" or not expand)
+    if expand then openExpanded(rows, item, meta)
+    if m.ui.expandTrailer and (m.trailerToHero or expand) then startCardTrailer(item, meta)
 end sub
 
 sub openExpanded(rows as object, item as object, meta as dynamic)
@@ -1400,3 +1437,118 @@ sub onProgressRefreshed(event as object)
     refreshContinueRow()
     if m.page = "library" then buildLibrary()
 end sub
+
+sub Ambient_Poke()
+    if m.ambientClock <> invalid then m.ambientClock.Mark()
+end sub
+
+function Ambient_Allowed() as boolean
+    if not Bool_Of(St_Pref("ambientOn"), false) then return false
+    if not Bool_Of(m.homeLoaded, false) or m.busy or Bool_Of(m.immersiveOn, false) then return false
+    if m.top.dialog <> invalid or overlayOpen() then return false
+    pages = { home: true, library: true, folder: true, search: true, discover: true }
+    return pages.DoesExist(Str_Of(m.page))
+end function
+
+sub onAmbientTimer()
+    if m.ambient.active then return
+    if not Ambient_Allowed()
+        Ambient_Poke()
+        return
+    end if
+    minutes = ToInt(St_Pref("ambientMinutes"), 5)
+    if minutes < 1 then minutes = 1
+    if m.ambientClock.TotalSeconds() < minutes * 60 then return
+    slides = Ambient_Slides()
+    if slides.Count() = 0
+        Ambient_Poke()
+        return
+    end if
+    hideExpanded()
+    if Bool_Of(m.heroTrailerOn, false)
+        m.heroTrailerOn = false
+        m.hero.trailer = {}
+    end if
+    m.ambient.slides = slides
+    m.ambient.active = true
+end sub
+
+sub Ambient_Close()
+    if not m.ambient.active then return
+    m.ambient.active = false
+    Ambient_Poke()
+    focusCurrent()
+end sub
+
+function Ambient_Slides() as object
+    root = m.homeRows.content
+    groups = []
+    order = []
+    if root <> invalid
+        for i = 0 to root.getChildCount() - 1
+            row = root.getChild(i)
+            if row.id <> "cw"
+                key = Home_RowKey(row)
+                cut = Instr(1, key, "#")
+                if cut > 0 then key = Left(key, cut - 1)
+                index = -1
+                for j = 0 to order.Count() - 1
+                    if order[j] = key then index = j
+                end for
+                if index < 0 and order.Count() < 3
+                    order.Push(key)
+                    groups.Push([])
+                    index = order.Count() - 1
+                end if
+                if index >= 0
+                    for k = 0 to row.getChildCount() - 1
+                        item = row.getChild(k)
+                        if groups[index].Count() < 10 and item.itemType <> "folder" and item.itemType <> "seeall" then groups[index].Push(item)
+                    end for
+                end if
+            end if
+        end for
+    end if
+    picked = []
+    seen = {}
+    for n = 0 to 9
+        for each g in groups
+            if n < g.Count() and picked.Count() < 30
+                item = g[n]
+                id = Str_Of(item.metaId)
+                if id = "" or not seen.DoesExist(id)
+                    seen[id] = true
+                    slide = Ambient_Slide(item)
+                    if slide <> invalid then picked.Push(slide)
+                end if
+            end if
+        end for
+    end for
+    for i = picked.Count() - 1 to 1 step -1
+        j = Rnd(i + 1) - 1
+        tmp = picked[i]
+        picked[i] = picked[j]
+        picked[j] = tmp
+    end for
+    return picked
+end function
+
+function Ambient_Slide(item as object) as dynamic
+    meta = invalid
+    if m.metaCache <> invalid then meta = m.metaCache[Str_Of(item.metaId)]
+    background = Str_Of(item.background)
+    if background = "" and meta <> invalid then background = Str_Of(meta.background)
+    if background = "" and Left(Str_Of(item.metaId), 2) = "tt" then background = Img_Background(item.metaId)
+    if background = "" then return invalid
+    logo = Str_Of(item.logo)
+    if meta <> invalid and Str_Of(meta.logo) <> "" then logo = meta.logo
+    if logo = "" and Left(Str_Of(item.metaId), 2) = "tt" then logo = Img_Logo(item.metaId)
+    if m.logoCache <> invalid and Str_Of(m.logoCache[item.metaId]) <> "" then logo = m.logoCache[item.metaId]
+    genres = []
+    if meta <> invalid and type(meta.genres) = "roArray"
+        for each g in meta.genres
+            if IsStr(g) and genres.Count() < 3 then genres.Push(g)
+        end for
+    end if
+    return { background: background, logo: logo, title: Str_Of(item.title), genres: genres.Join("  •  ") }
+end function

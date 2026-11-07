@@ -491,6 +491,14 @@ sub handleKeyboard(kind as string, text as string, data as object)
         refreshSettings()
         return
     end if
+    if kind = "accentHex"
+        if St_HexColor(text) = ""
+            showMessage(L("Color no válido"), L("Escribe 6 caracteres del 0 al 9 y de la A a la F, por ejemplo FF5CA8."))
+            return
+        end if
+        Accent_Apply(text)
+        return
+    end if
     if kind = "customPoster"
         St_SetPref("customPoster", text)
         m.needsReload = true
