@@ -99,8 +99,8 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Póster enfocado que se expande | ✅ Funciona |
 | Integración con TMDB | ✅ Funciona |
 | Integración con MDBList | ✅ Funciona |
-| Trakt | ⚠️ Sin probar |
-| Simkl | ⚠️ Sin probar |
+| Trakt | ✅ Funciona |
+| Simkl | ✅ Funciona |
 | Inicio de sesión y sincronización con tu cuenta de Nuvio | ✅ Funciona |
 | Fuentes con el texto del formatter del addon | ✅ Funciona, pero sin emojis |
 | Insignias (calidad, HDR, códec, audio, tamaño y Fusion) | ✅ Funciona |
@@ -132,7 +132,7 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Saltar intro, resumen y créditos | ✅ Funciona |
 | Estilo de subtítulos y filtro SDH | ⚠️ Sin probar |
 | Datos técnicos de la reproducción | ⚠️ Sin probar |
-| Next up en Seguir viendo | ⚠️ Sin probar |
+| Next up en Seguir viendo | ✅ Funciona |
 | Tráilers de YouTube en tu idioma | ✅ Funciona |
 | Opciones de episodio (`*` en un episodio) | ✅ Funciona |
 | PIN de perfiles | ✅ Funciona |
@@ -141,12 +141,12 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | TorBox y Premiumize (torrents en caché) | ⚠️ Sin probar |
 | Jellyfin y Emby | ✅ Funciona |
 | Clave de MDBList desde tu cuenta de Nuvio | ✅ Funciona |
-| Botón Cambiar forma de abrir | ⚠️ Sin probar |
+| Botón Cambiar forma de abrir | ✅ Funciona |
 | Trakt o MDBList como fuente de Seguir viendo y biblioteca | ⚠️ Sin probar |
-| Comentarios de Trakt | ⚠️ Sin probar |
+| Comentarios de Trakt | ✅ Funciona |
 | Registro en MDBList | ⚠️ Sin probar |
-| Pantalla de carga con estado | ⚠️ Sin probar |
-| Probar otra fuente cuando una falla | ⚠️ Sin probar |
+| Pantalla de carga con estado | ✅ Funciona |
+| Probar otra fuente cuando una falla | ✅ Funciona |
 | Estilos del inicio Moderno, Clásico y Cuadrícula | ⚠️ Sin probar |
 | Opciones de diseño del inicio (portada, nombres en pósteres, estrenos, calificaciones) | ⚠️ Sin probar |
 | Barra lateral moderna y contraída | ⚠️ Sin probar |
