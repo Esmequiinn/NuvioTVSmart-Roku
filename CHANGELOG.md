@@ -13,9 +13,6 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 - **Create your own accent color**, like Nuvio TV's custom theme. **Settings → Appearance → Accent color** now shows each color with a preview, and **Create a color** lets you pick from more colors or type any color code (for example FF5CA8). You can also pick it with the color picker on the phone page. A custom color from your Nuvio account now shows up as is, and a custom color you make on the Roku is sent to your account.
 - **Ambient mode like Nuvio TV** (**Settings → Appearance → Ambient mode**), off by default. If you don't touch the remote for a while on the home, library, search or Discover screens, it shows full-screen backdrops from your first catalogs, slowly moving, with the logo or title and genres. Any button closes it and you're right where you left off. You choose when it starts (1 to 30 minutes). Your Roku's own screensaver can still appear first if its time is shorter. If you set it in your Nuvio account, it syncs too.
 
-### Changed
-- The loading screen details now stay up long enough to read. Each step shows for at least a moment, and when the channel tries another way to open the link or switches to another source, it says which one (for example "Way 2 of 3: HLS" or the name of the new source) for a few seconds. Playback keeps going just as fast; only the text waits.
-
 ### Fixed
 - **TorBox**: some cached torrents failed with "torrent_id: Input should be a valid integer". The channel now reads TorBox's torrent and file numbers exactly as TorBox sends them, even very large ones, so it always sends a valid number.
 
