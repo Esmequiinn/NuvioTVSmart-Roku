@@ -91,6 +91,7 @@ end sub
 
 function onKeyEvent(key as string, press as boolean) as boolean
     if not press then return false
+    if m.global.hasField("activity") then m.global.activity = true
     if key = "up"
         if m.rowIndex >= 0
             m.rowIndex = m.rowIndex - 1

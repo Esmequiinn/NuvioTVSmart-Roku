@@ -18,6 +18,13 @@ sub init()
     m.watchedDot = m.top.findNode("watchedDot")
     m.seenRow = false
     m.body = m.top.findNode("body")
+    m.under = m.body.createChild("Label")
+    m.under.font = "font:SmallestSystemFont"
+    m.under.font.size = 22
+    m.under.color = "0xC9C9D6FF"
+    m.under.maxLines = 1
+    m.under.height = 32
+    m.under.visible = false
     paintRing()
     m.global.observeField("accent", "paintRing")
     if m.global.hasField("expandShift") then m.global.observeField("expandShift", "applyShift")
@@ -102,7 +109,22 @@ sub onContent()
     m.retried = false
     m.art.uri = item.HDPosterUrl
     isFolder = fieldOf(item, "itemType") = "folder"
-    if isFolder
+    m.body.visible = not item.hasField("heroCard")
+    Under_Paint()
+    if fieldOf(item, "itemType") = "seeall"
+        m.art.uri = ""
+        m.frame.visible = true
+        m.cw.visible = false
+        m.shade.visible = false
+        m.name.visible = true
+        m.name.maxLines = 2
+        m.name.vertAlign = "center"
+        m.name.color = "0xFFFFFFFF"
+        m.name.translation = [14, 14]
+        m.name.width = m.top.width - 28
+        m.name.height = m.top.height - 28
+        m.name.text = item.title + "  ›"
+    else if isFolder
         hide = item.hasField("hideTitle") and item.hideTitle = true
         m.cw.visible = false
         m.shade.visible = not hide
@@ -196,6 +218,7 @@ sub onSize()
     h = m.top.height
     if w <= 0 or h <= 0 then return
     m.landscape = w > h
+    Under_Paint()
     m.frame.width = w
     m.frame.height = h
     if m.landscape
@@ -327,3 +350,18 @@ function Host_Focused() as boolean
     if m.host = invalid then return true
     return m.host.isInFocusChain()
 end function
+
+sub Under_Paint()
+    item = m.top.itemContent
+    show = false
+    if item <> invalid and not m.landscape
+        kind = fieldOf(item, "itemType")
+        parent = item.getParent()
+        show = kind <> "folder" and kind <> "seeall" and parent <> invalid and parent.hasField("labels") and parent.labels = true
+    end if
+    m.under.visible = show
+    if not show then return
+    m.under.text = item.title
+    m.under.width = m.top.width
+    m.under.translation = [2, m.top.height + 10]
+end sub

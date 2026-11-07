@@ -12,6 +12,9 @@ sub init()
     m.metaLine = m.top.findNode("metaLine")
     m.description = m.top.findNode("description")
     m.ratingsRow = m.top.findNode("ratingsRow")
+    m.dotRow = m.top.findNode("dotRow")
+    m.solidOn = true
+    m.floorOn = true
     m.descBase = { y: 392, lines: 3, height: 130 }
     m.video = m.top.findNode("video")
     m.video.observeField("state", "onVideoState")
@@ -46,7 +49,65 @@ sub layout()
         m.description.height = 170
         m.descBase = { y: 504, lines: 4, height: 170 }
         Hero_Ratings(m.lastRatings)
+        return
     end if
+    m.fadeBottom.height = 346
+    m.boxTop = 120
+    m.boxHeight = 180
+    m.title.translation = [160, 150]
+    m.title.height = 150
+    m.metaRow.translation = [160, 330]
+    m.descBase = { y: 392, lines: 3, height: 130 }
+    m.backdrop.opacity = 1
+    m.solidOn = true
+    m.floorOn = true
+    if m.top.bare
+        m.backdrop.translation = [700, 0]
+        m.backdrop.width = 1220
+        m.backdrop.height = 686
+        m.backdrop.opacity = 0.55
+        m.fadeLeft.translation = [700, 0]
+        m.fadeLeft.width = 900
+        m.fadeLeft.height = 686
+        m.fadeBottom.translation = [0, 380]
+        m.fadeBottom.height = 306
+        m.floor.translation = [0, 684]
+        m.floor.height = 396
+        m.solidOn = false
+    else if m.top.wide
+        m.backdrop.translation = [0, 0]
+        m.backdrop.width = 1920
+        m.backdrop.height = 1080
+        m.fadeLeft.translation = [0, 0]
+        m.fadeLeft.width = 1300
+        m.fadeLeft.height = 1080
+        m.fadeBottom.translation = [0, 560]
+        m.fadeBottom.height = 520
+        m.solidOn = false
+        m.floorOn = false
+    else
+        m.backdrop.translation = [560, 0]
+        m.backdrop.width = 1360
+        m.backdrop.height = 765
+        m.fadeLeft.translation = [560, 0]
+        m.fadeLeft.width = 760
+        m.fadeLeft.height = 765
+        m.fadeBottom.translation = [0, 420]
+        m.floor.translation = [0, 764]
+        m.floor.height = 316
+    end if
+    m.solid.visible = m.solidOn and not m.top.immersive
+    m.floor.visible = m.floorOn and not m.top.immersive
+    text = 1.0
+    if m.top.bare then text = 0.0
+    for each node in [m.logo, m.title, m.metaRow, m.description, m.ratingsRow, m.dotRow]
+        node.opacity = text
+    end for
+    m.logo.translation = [160, m.boxTop]
+    m.logo.height = m.boxHeight
+    Hero_VideoBox()
+    Hero_Ratings(m.lastRatings)
+    onLogoStatus()
 end sub
 
 sub Hero_Ratings(list as dynamic)
@@ -197,8 +258,8 @@ sub Hero_Immersive(on as boolean)
     else
         Hero_VideoBox()
     end if
-    m.solid.visible = not on and not m.top.fullscreen
-    m.floor.visible = not on and not m.top.fullscreen
+    m.solid.visible = not on and not m.top.fullscreen and m.solidOn
+    m.floor.visible = not on and not m.top.fullscreen and m.floorOn
     m.fadeLeft.visible = not on
     m.fadeBottom.visible = not on
     m.metaRow.visible = not on
@@ -209,4 +270,28 @@ end sub
 
 sub onVideoMode()
     m.backdrop.visible = not m.top.videoMode
+end sub
+
+sub onDots()
+    d = m.top.dots
+    count = 0
+    index = 0
+    if type(d) = "roAssociativeArray"
+        if d.count <> invalid then count = d.count
+        if d.index <> invalid then index = d.index
+    end if
+    if count < 2 then count = 0
+    while m.dotRow.getChildCount() > count
+        m.dotRow.removeChildIndex(m.dotRow.getChildCount() - 1)
+    end while
+    while m.dotRow.getChildCount() < count
+        dot = m.dotRow.createChild("Poster")
+        dot.uri = "pkg:/images/c/d20.png"
+        dot.width = 12
+        dot.height = 12
+    end while
+    for i = 0 to count - 1
+        dot = m.dotRow.getChild(i)
+        if i = index then dot.blendColor = "0xFFFFFFFF" else dot.blendColor = "0xFFFFFF59"
+    end for
 end sub

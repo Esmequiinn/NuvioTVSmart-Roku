@@ -3,6 +3,9 @@
     <interface>
         <field id="data" type="assocarray" onChange="render" />
         <field id="fullscreen" type="boolean" value="false" onChange="layout" />
+        <field id="wide" type="boolean" value="false" onChange="layout" />
+        <field id="bare" type="boolean" value="false" onChange="layout" />
+        <field id="dots" type="assocarray" onChange="onDots" />
         <field id="videoMode" type="boolean" value="false" onChange="onVideoMode" />
         <field id="trailer" type="assocarray" onChange="onTrailer" />
         <field id="muted" type="boolean" value="true" />
@@ -28,5 +31,6 @@
         </LayoutGroup>
         <LayoutGroup id="ratingsRow" translation="[160,392]" layoutDirection="horiz" itemSpacings="[28]" vertAlignment="center" visible="false" />
         <Label id="description" translation="[160,392]" width="940" height="130" wrap="true" maxLines="3" font="font:SmallSystemFont" color="0xD4D4DCFF" lineSpacing="4" />
+        <LayoutGroup id="dotRow" translation="[160,566]" layoutDirection="horiz" itemSpacings="[12]" vertAlignment="center" />
     </children>
 </component>

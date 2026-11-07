@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="AmbientMode" extends="Group">
+    <interface>
+        <field id="slides" type="array" onChange="onSlides" />
+        <field id="active" type="boolean" value="false" onChange="onActive" />
+        <field id="closed" type="boolean" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/views/AmbientMode.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x000000FF" />
+        <Group id="stage" scaleRotateCenter="[960,540]">
+            <Poster id="art" width="1920" height="1080" loadWidth="1280" loadHeight="720" loadDisplayMode="scaleToZoom" opacity="0" />
+        </Group>
+        <Poster id="shade" translation="[0,486]" width="1920" height="594" uri="pkg:/images/grad_bottom.png" loadDisplayMode="scaleToFill" opacity="0" />
+        <Poster id="logo" loadDisplayMode="scaleToFit" opacity="0" />
+        <Label id="title" translation="[144,700]" width="1120" height="180" horizAlign="center" vertAlign="bottom" wrap="true" maxLines="2" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" opacity="0" />
+        <Label id="genres" translation="[144,906]" width="1120" height="40" horizAlign="center" font="font:SmallSystemFont" color="0xFFFFFFD9" opacity="0" />
+        <Poster id="pre" width="1" height="1" loadWidth="1280" loadHeight="720" opacity="0" />
+        <Timer id="step" repeat="false" />
+        <Animation id="motion" duration="13.6" easeFunction="linear">
+            <Vector2DFieldInterpolator id="motionScale" key="[0.0, 1.0]" keyValue="[[1.0,1.0],[1.06,1.06]]" fieldToInterp="stage.scale" />
+            <Vector2DFieldInterpolator id="motionMove" key="[0.0, 1.0]" keyValue="[[0.0,0.0],[0.0,0.0]]" fieldToInterp="stage.translation" />
+        </Animation>
+        <Animation id="artIn" duration="0.9" easeFunction="outCubic">
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="art.opacity" />
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="shade.opacity" />
+        </Animation>
+        <Animation id="textIn" duration="0.5" easeFunction="outQuad">
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="logo.opacity" />
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="title.opacity" />
+            <FloatFieldInterpolator key="[0.0, 0.3, 1.0]" keyValue="[0.0, 0.0, 1.0]" fieldToInterp="genres.opacity" />
+        </Animation>
+        <Animation id="textOut" duration="0.4" easeFunction="inQuad">
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[1.0, 0.0]" fieldToInterp="logo.opacity" />
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[1.0, 0.0]" fieldToInterp="title.opacity" />
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[1.0, 0.0]" fieldToInterp="genres.opacity" />
+        </Animation>
+        <Animation id="artOut" duration="0.7" easeFunction="inCubic">
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[1.0, 0.0]" fieldToInterp="art.opacity" />
+            <FloatFieldInterpolator key="[0.0, 1.0]" keyValue="[1.0, 0.0]" fieldToInterp="shade.opacity" />
+        </Animation>
+    </children>
+</component>

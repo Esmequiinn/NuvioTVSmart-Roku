@@ -113,6 +113,16 @@ sub render()
         label.font.size = 34
         textX = pad
         if m.cards then textX = pad + 36
+        swatch = Sheet_Str(it.swatch)
+        if swatch <> "" and not m.tv
+            dot = g.createChild("Poster")
+            dot.uri = "pkg:/images/c/d40.png"
+            dot.width = 40
+            dot.height = 40
+            dot.blendColor = "0x" + swatch + "FF"
+            dot.translation = [textX, Int((rowH - 40) / 2)]
+            textX = textX + 60
+        end if
         label.translation = [textX, 0]
         label.width = inner - 80 - (textX - pad)
         if m.tv

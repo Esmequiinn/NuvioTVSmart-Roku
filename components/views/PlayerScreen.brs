@@ -15,6 +15,11 @@ sub init()
     m.loadPct = m.top.findNode("loadPct")
     m.bufTimer = m.top.findNode("bufTimer")
     m.bufTimer.observeField("fire", "onBufTimer")
+    m.holdTimer = m.top.findNode("holdTimer")
+    m.holdTimer.observeField("fire", "Load_Next")
+    m.loadQueue = []
+    m.loadShown = ""
+    m.holding = false
     m.started = false
     m.pauseScreen = m.top.findNode("pauseScreen")
     m.pauseBg = m.top.findNode("pauseBg")
@@ -195,7 +200,45 @@ sub onBufferStatus()
 end sub
 
 sub onLoadStatus()
+    Load_Push(Str_Of(m.top.loadStatus), false)
+end sub
+
+sub onLoadNote()
+    Load_Push(Str_Of(m.top.loadNote), true)
+end sub
+
+sub Load_Push(text as string, important as boolean)
+    if text = ""
+        if important then return
+        m.loadQueue = []
+        m.loadShown = ""
+        m.holding = false
+        m.holdTimer.control = "stop"
+        paintLoadText()
+        return
+    end if
+    keep = []
+    for each q in m.loadQueue
+        if q.important then keep.Push(q)
+    end for
+    if keep.Count() >= 3 then keep.Shift()
+    keep.Push({ text: text, important: important })
+    m.loadQueue = keep
+    if not m.holding then Load_Next()
+end sub
+
+sub Load_Next()
+    if m.loadQueue.Count() = 0
+        m.holding = false
+        return
+    end if
+    q = m.loadQueue.Shift()
+    m.loadShown = q.text
     m.bufPct = -1
+    m.holding = true
+    if q.important then m.holdTimer.duration = 3.5 else m.holdTimer.duration = 1.5
+    m.holdTimer.control = "stop"
+    m.holdTimer.control = "start"
     paintLoadText()
 end sub
 
@@ -204,12 +247,13 @@ sub paintLoadText()
         m.loadPct.text = ""
         return
     end if
+    text = m.loadShown
     pct = ToInt(m.bufPct, -1)
     if pct >= 0 and pct < 100
-        m.loadPct.text = L("Cargando") + "  " + pct.ToStr() + "%"
-    else
-        m.loadPct.text = Str_Of(m.top.loadStatus)
+        line = L("Cargando") + "  " + pct.ToStr() + "%"
+        if text = "" then text = line else text = text + chr(10) + line
     end if
+    m.loadPct.text = text
 end sub
 
 sub setLogo(logo as string)

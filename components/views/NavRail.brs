@@ -1,5 +1,14 @@
 sub init()
     m.panel = m.top.findNode("panel")
+    m.float = m.top.findNode("float")
+    m.pill = m.top.findNode("pill")
+    m.pillBg = m.top.findNode("pillBg")
+    m.pillIcon = m.top.findNode("pillIcon")
+    m.pillText = m.top.findNode("pillText")
+    m.pillTimer = m.top.findNode("pillTimer")
+    m.pillTimer.observeField("fire", "onPillTimer")
+    m.pillShort = false
+    m.pillFor = ""
     m.entries = m.top.findNode("entries")
     Nav_Build()
     m.index = 1
@@ -9,16 +18,19 @@ end sub
 
 sub Nav_Build()
     m.entries.removeChildrenIndex(m.entries.getChildCount(), 0)
-    m.defs = [{ id: "profile", label: L("Perfil"), icon: "", y: 56 }]
+    m.defs = [{ id: "profile", label: L("Perfil"), icon: "", y: 56, my: 52 }]
     items = [{ id: "home", label: L("Inicio"), icon: "pkg:/images/ic_home.png" }, { id: "search", label: L("Buscar"), icon: "pkg:/images/ic_search.png" }]
     if m.top.discover then items.Push({ id: "discover", label: L("Descubrir"), icon: "pkg:/images/ic_discover.png" })
     items.Push({ id: "library", label: L("Biblioteca"), icon: "pkg:/images/ic_library.png" })
     items.Push({ id: "settings", label: L("Ajustes"), icon: "pkg:/images/ic_settings.png" })
     y = 400
+    my = 160
     for each it in items
         it.y = y
+        it.my = my
         m.defs.Push(it)
         y = y + 92
+        my = my + 88
     end for
     m.nodes = []
     for each d in m.defs
@@ -90,10 +102,55 @@ sub onFocusChanged()
     paint()
 end sub
 
+sub onPillTimer()
+    m.pillShort = true
+    paint()
+end sub
+
+sub Nav_Pill(expanded as boolean)
+    show = m.top.modern and not m.top.collapsed and not expanded
+    m.pill.visible = show
+    if not show then return
+    active = m.top.active
+    if active <> m.pillFor
+        m.pillFor = active
+        m.pillShort = false
+        m.pillTimer.control = "stop"
+        m.pillTimer.control = "start"
+    end if
+    def = invalid
+    for each d in m.defs
+        if d.id = active then def = d
+    end for
+    if def = invalid then return
+    m.pillIcon.uri = def.icon.Replace("/images/", "/images/s/").Replace(".png", "_40.png")
+    m.pillText.text = def.label
+    m.pillText.visible = not m.pillShort
+    width = 64
+    if not m.pillShort
+        textW = m.pillText.boundingRect().width
+        if textW <= 0 then textW = Len(def.label) * 16
+        width = 62 + textW + 26
+    end if
+    m.pillBg.width = width
+    if m.top.blur then m.pillBg.blendColor = "0x2A2A33D9" else m.pillBg.blendColor = "0x1E1E24FF"
+end sub
+
 sub paint()
     if m.nodes = invalid then return
     expanded = m.top.isInFocusChain()
-    m.panel.visible = expanded
+    modern = m.top.modern
+    Nav_Pill(expanded)
+    m.entries.visible = expanded or not (m.top.collapsed or modern)
+    m.float.visible = expanded and modern
+    if modern
+        m.float.height = m.defs[m.defs.Count() - 1].my + 76 + 52 - 28
+        if m.top.blur then m.float.blendColor = "0x1F1F27E0" else m.float.blendColor = "0x141418FF"
+    end if
+    for i = 0 to m.nodes.Count() - 1
+        if modern then m.nodes[i].group.translation = [44, m.defs[i].my] else m.nodes[i].group.translation = [24, m.defs[i].y]
+    end for
+    m.panel.visible = expanded and not modern
     for i = 0 to m.nodes.Count() - 1
         n = m.nodes[i]
         d = m.defs[i]
@@ -136,6 +193,7 @@ end sub
 
 function onKeyEvent(key as string, press as boolean) as boolean
     if not press then return false
+    if m.global.hasField("activity") then m.global.activity = true
     if key = "up"
         if m.index > 0 then m.index = m.index - 1
         paint()

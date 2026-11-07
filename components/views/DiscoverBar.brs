@@ -68,6 +68,7 @@ end sub
 
 function onKeyEvent(key as string, press as boolean) as boolean
     if not press then return false
+    if m.global.hasField("activity") then m.global.activity = true
     if key = "left"
         if m.index > 0
             m.index = m.index - 1
