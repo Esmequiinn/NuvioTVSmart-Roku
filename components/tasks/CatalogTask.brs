@@ -270,6 +270,8 @@ function Home_Build(rows as object, prefs as object, withCollections as boolean)
     if cw <> invalid then root.appendChild(cw)
     hidden = prefs.hidden
     if type(hidden) <> "roAssociativeArray" then hidden = {}
+    today = ""
+    if Bool_Of(St_Pref("hideUnreleased"), false) then today = Left(CreateObject("roDateTime").ToISOString(), 10)
     for each r in rows
         if type(r) = "roAssociativeArray" and type(r.items) = "roArray" and r.items.Count() > 0 and not hidden.DoesExist(Str_Of(r.key))
             row = root.createChild("ContentNode")
@@ -277,8 +279,9 @@ function Home_Build(rows as object, prefs as object, withCollections as boolean)
             if type(prefs.titles) = "roAssociativeArray" and IsStr(prefs.titles[r.key]) then row.title = Str_Glyphs(prefs.titles[r.key]).Trim()
             row.addFields({ key: Str_Of(r.key), shape: Str_Of(r.shape) })
             for each item in r.items
-                Content_Item(row, item)
+                if today = "" or not Item_Unreleased(item, today) then Content_Item(row, item)
             end for
+            if row.getChildCount() = 0 then root.removeChild(row)
         end if
     end for
     if withCollections
