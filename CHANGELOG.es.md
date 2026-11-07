@@ -13,9 +13,6 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 - **Crea tu propio color de acento**, como el tema personalizado de Nuvio TV. **Ajustes → Apariencia → Color de acento** ahora muestra cada color con una vista previa, y **Crear un color** te deja elegir entre más colores o escribir cualquier código de color (por ejemplo FF5CA8). También lo puedes elegir con el selector de color de la página del celular. Un color personalizado de tu cuenta de Nuvio ahora se ve tal cual, y uno que crees en el Roku se envía a tu cuenta.
 - **Modo ambiente como en Nuvio TV** (**Ajustes → Apariencia → Modo ambiente**), apagado de inicio. Si no tocas el control por un rato en el inicio, la biblioteca, Buscar o Descubrir, muestra en pantalla completa fondos de tus primeros catálogos, moviéndose despacio, con el logo o el título y los géneros. Cualquier botón lo cierra y quedas donde estabas. Tú eliges cuándo empieza (de 1 a 30 minutos). El protector de pantalla de tu Roku puede aparecer antes si su tiempo es menor. Si lo tienes en tu cuenta de Nuvio, también se sincroniza.
 
-### Cambiado
-- Los detalles de la pantalla de carga ahora duran lo suficiente para leerlos. Cada paso se queda al menos un momento, y cuando el canal prueba otra forma de abrir el enlace o cambia a otra fuente, dice cuál (por ejemplo "Forma 2 de 3: HLS" o el nombre de la nueva fuente) durante unos segundos. La reproducción sigue igual de rápida; solo el texto espera.
-
 ### Corregido
 - **TorBox**: algunos torrents en caché fallaban con "torrent_id: Input should be a valid integer". Ahora el canal lee los números del torrent y del archivo tal como los manda TorBox, aunque sean muy grandes, para siempre mandar un número válido.
 
