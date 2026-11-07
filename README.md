@@ -70,6 +70,10 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - MDBList scrobbling
 - Nuvio-style loading screen with the title's background and logo, and what's happening under it
 - Optional: try another compatible source automatically when one fails
+- Modern, Classic and Grid home styles like Nuvio TV, with a rotating hero, See all tiles and more layout options
+- Modern sidebar like Nuvio TV, or a sidebar that only shows up when you need it
+- Your own accent color, from more colors or any color code, like Nuvio TV's custom theme
+- Ambient mode like Nuvio TV: full-screen backdrops from your catalogs when you leave the remote alone
 
 ## Status
 
@@ -143,6 +147,11 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | MDBList scrobbling | ⚠️ Not tested yet |
 | Loading screen with status | ⚠️ Not tested yet |
 | Try another source when one fails | ⚠️ Not tested yet |
+| Modern, Classic and Grid home styles | ⚠️ Not tested yet |
+| Home layout options (hero, poster titles, unreleased content, ratings) | ⚠️ Not tested yet |
+| Modern and collapsed sidebar | ⚠️ Not tested yet |
+| Custom accent color | ⚠️ Not tested yet |
+| Ambient mode | ⚠️ Not tested yet |
 
 ### Known limitations
 

@@ -4,6 +4,21 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.1.2] - 2026-11-07
+
+### Agregado
+- **Estilos del inicio como en Nuvio TV** (**Ajustes → Diseño → Estilo del inicio**): **Moderno** (la portada se queda fija arriba con una fila activa, como antes), **Clásico** (una portada arriba que cambia sola entre títulos de tus catálogos, y las filas se recorren hacia abajo) y **Cuadrícula** (cada catálogo en varias filas de pósteres, con un recuadro **Ver todo** que abre el catálogo completo en cuadrícula). El estilo del inicio de tu cuenta de Nuvio también se sincroniza.
+- **Más opciones de diseño del inicio de Nuvio TV** en **Ajustes → Diseño**: fondo de la portada a pantalla completa (Moderno), fondo del título enfocado del lado derecho (Clásico), mostrar u ocultar la portada y elegir de qué catálogos sale (Clásico y Cuadrícula), nombres debajo de los pósteres, ocultar películas y series que todavía no se estrenan, y mostrar u ocultar la calificación de IMDb en la portada. Se sincronizan con tu cuenta de Nuvio.
+- **Opciones de la barra lateral como en Nuvio TV** (**Ajustes → Diseño → Barra lateral**): la **barra lateral moderna** es un panel flotante que se abre al ir a la izquierda, con una pequeña pastilla arriba a la izquierda que dice dónde estás. Puedes hacerla translúcida (Roku no puede desenfocar, así que se ve semitransparente) u ocultar la pastilla. Con la barra normal puedes contraerla para que solo aparezca al ir a la izquierda.
+- **Crea tu propio color de acento**, como el tema personalizado de Nuvio TV. **Ajustes → Apariencia → Color de acento** ahora muestra cada color con una vista previa, y **Crear un color** te deja elegir entre más colores o escribir cualquier código de color (por ejemplo FF5CA8). También lo puedes elegir con el selector de color de la página del celular. Un color personalizado de tu cuenta de Nuvio ahora se ve tal cual, y uno que crees en el Roku se envía a tu cuenta.
+- **Modo ambiente como en Nuvio TV** (**Ajustes → Apariencia → Modo ambiente**), apagado de inicio. Si no tocas el control por un rato en el inicio, la biblioteca, Buscar o Descubrir, muestra en pantalla completa fondos de tus primeros catálogos, moviéndose despacio, con el logo o el título y los géneros. Cualquier botón lo cierra y quedas donde estabas. Tú eliges cuándo empieza (de 1 a 30 minutos). El protector de pantalla de tu Roku puede aparecer antes si su tiempo es menor. Si lo tienes en tu cuenta de Nuvio, también se sincroniza.
+
+### Cambiado
+- Los detalles de la pantalla de carga ahora duran lo suficiente para leerlos. Cada paso se queda al menos un momento, y cuando el canal prueba otra forma de abrir el enlace o cambia a otra fuente, dice cuál (por ejemplo "Forma 2 de 3: HLS" o el nombre de la nueva fuente) durante unos segundos. La reproducción sigue igual de rápida; solo el texto espera.
+
+### Corregido
+- **TorBox**: algunos torrents en caché fallaban con "torrent_id: Input should be a valid integer". Ahora el canal lee los números del torrent y del archivo tal como los manda TorBox, aunque sean muy grandes, para siempre mandar un número válido.
+
 ## [0.1.1] - 2026-11-05
 
 ### Agregado

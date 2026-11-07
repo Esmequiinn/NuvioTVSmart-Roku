@@ -70,6 +70,10 @@ Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMe
 - Registro de lo que ves en MDBList
 - Pantalla de carga como en Nuvio, con el fondo y el logo del título y lo que está pasando debajo
 - Opcional: probar otra fuente compatible automáticamente cuando una falla
+- Estilos del inicio Moderno, Clásico y Cuadrícula como en Nuvio TV, con portada que cambia sola, recuadros Ver todo y más opciones de diseño
+- Barra lateral moderna como en Nuvio TV, o una barra que solo aparece cuando la necesitas
+- Tu propio color de acento, entre más colores o con cualquier código de color, como el tema personalizado de Nuvio TV
+- Modo ambiente como en Nuvio TV: fondos de tus catálogos en pantalla completa cuando dejas el control
 
 ## Estado
 
@@ -143,6 +147,11 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Registro en MDBList | ⚠️ Sin probar |
 | Pantalla de carga con estado | ⚠️ Sin probar |
 | Probar otra fuente cuando una falla | ⚠️ Sin probar |
+| Estilos del inicio Moderno, Clásico y Cuadrícula | ⚠️ Sin probar |
+| Opciones de diseño del inicio (portada, nombres en pósteres, estrenos, calificaciones) | ⚠️ Sin probar |
+| Barra lateral moderna y contraída | ⚠️ Sin probar |
+| Color de acento personalizado | ⚠️ Sin probar |
+| Modo ambiente | ⚠️ Sin probar |
 
 ### Limitaciones conocidas
 
