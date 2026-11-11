@@ -35,7 +35,7 @@ end function
 
 sub Mask_Caps(parent as object, w as integer, h as integer, radius as integer, color as string, force = false as boolean)
     caps = parent.findNode("maskCaps")
-    if not force and Mask_On() and Mask_Scale() > 0.99
+    if not force and Mask_On() and (Mask_Scale() > 0.99 or Mask_Mode() <> "hd")
         if caps <> invalid then caps.visible = false
         return
     end if
@@ -60,5 +60,5 @@ sub Mask_Caps(parent as object, w as integer, h as integer, radius as integer, c
 end sub
 
 function Mask_NeedCaps() as boolean
-    return not Mask_On() or Mask_Scale() < 0.99
+    return not Mask_On() or (Mask_Scale() < 0.99 and Mask_Mode() = "hd")
 end function

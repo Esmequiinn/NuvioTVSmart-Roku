@@ -333,7 +333,16 @@ function Nuvio_Sync() as object
             end if
         end if
     end for
-    if profiles.Count() = 0 then return { ok: false, error: L("Tu cuenta de Nuvio no tiene perfiles.") }
+    if profiles.Count() = 0
+        current = St_ActiveProfile()
+        if type(current) <> "roAssociativeArray" then current = {}
+        name = Str_Of(current.name)
+        if name = "" then name = L("Perfil ") + "1"
+        color = Str_Of(current.color)
+        if color = "" then color = "3185F5"
+        profiles.Push({ id: "n1", name: Left(name, 24), color: UCase(Left(color, 6)), remote: 1, avatar: Str_Of(current.avatar), primaryAddons: false })
+        usesPrimary["n1"] = false
+    end if
     locks = Nuvio_Rpc("sync_pull_profile_locks", {})
     if type(locks) = "roArray"
         pins = {}
@@ -434,7 +443,7 @@ sub Nuvio_PullCollections(pid as string, index as integer)
     end if
     raw = row
     if type(row) = "roAssociativeArray" and row.collections_json <> invalid then raw = row.collections_json
-    if IsStr(raw) then raw = ParseJson(raw)
+    if IsStr(raw) then raw = Json_Parse(raw)
     if type(raw) = "roAssociativeArray" and type(raw.collections) = "roArray" then raw = raw.collections
     out = []
     if type(raw) = "roArray"

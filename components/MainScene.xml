@@ -7,6 +7,7 @@
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
     <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Mask.brs" />
     <script type="text/brightscript" uri="pkg:/components/Store.brs" />
     <script type="text/brightscript" uri="pkg:/components/Content.brs" />
     <script type="text/brightscript" uri="pkg:/components/Streams.brs" />
@@ -137,6 +138,13 @@
                 drawFocusFeedback="false"
                 focusBitmapBlendColor="0xFFFFFFFF" />
             <Label id="libraryEmpty" visible="false" translation="[160,620]" width="1500" wrap="true" font="font:MediumSystemFont" color="0x9A9AAAFF" text="Tu biblioteca está vacía. Abre cualquier título y elige Mi lista para guardarlo aquí." />
+        </Group>
+        <Group id="gifLayer" visible="false">
+            <MaskGroup id="gifMask" maskUri="pkg:/images/mask_poster.png" maskSize="[200,300]">
+                <AnimatedImage id="gifArt" loadDisplayMode="scaleToZoom" />
+            </MaskGroup>
+            <Group id="gifCaps" />
+            <Poster id="gifRing" uri="pkg:/images/iring.9.png" />
         </Group>
         <ExpandedCard id="expanded" />
         <SettingsScreen id="settings" visible="false" />

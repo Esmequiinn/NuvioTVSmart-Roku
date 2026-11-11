@@ -35,6 +35,7 @@ sub openDetails(item as object)
     m.trailerTask = invalid
     if Left(m.ctx.metaId, 2) = "tt" then m.ctx.imdb = m.ctx.metaId
     m.detailsOpen = true
+    Gif_Hide()
     m.details.visible = true
     first = heroData(item, m.metaCache[item.metaId])
     if m.metaCache[item.metaId] <> invalid then first.ratings = m.metaCache[item.metaId].ratings
@@ -48,7 +49,9 @@ sub openDetails(item as object)
     m.metaTask.manifests = m.manifests
     m.metaTask.kind = m.ctx.kind
     m.metaTask.metaId = m.ctx.metaId
+    m.metaTask.withComments = true
     m.metaTask.observeField("meta", "onDetailsMeta")
+    m.metaTask.observeField("comments", "onDetailsComments")
     m.metaTask.control = "RUN"
 end sub
 
@@ -91,6 +94,7 @@ sub onDetailsMeta(event as object)
     task = event.getRoSGNode()
     if m.metaTask = invalid or not task.isSameNode(m.metaTask) then return
     m.metaTask = invalid
+    m.commentTask = task
     meta = task.meta
     if meta = invalid then meta = {}
     cacheMeta(m.ctx.metaId, meta)
@@ -136,6 +140,24 @@ sub onDetailsMeta(event as object)
         hideBusy()
         runDetailAction(action)
     end if
+end sub
+
+sub onDetailsComments(event as object)
+    task = event.getRoSGNode()
+    if m.commentTask = invalid or not task.isSameNode(m.commentTask) then return
+    m.commentTask = invalid
+    list = task.comments
+    if type(list) <> "roArray" or list.Count() = 0 or m.ctx = invalid or type(m.ctx.meta) <> "roAssociativeArray" then return
+    meta = m.ctx.meta
+    meta.comments = list
+    m.ctx.meta = meta
+    cacheMeta(m.ctx.metaId, meta)
+    if not m.details.visible then return
+    ex = m.details.extra
+    if type(ex) <> "roAssociativeArray" then return
+    ex.comments = list
+    ex.keep = true
+    m.details.extra = ex
 end sub
 
 sub Details_Extra()
@@ -2028,7 +2050,7 @@ function Failover_Pick(streams as object, tried as object) as integer
     map = []
     for i = 0 to streams.Count() - 1
         s = streams[i]
-        if not tried.DoesExist(Str_Of(s.url)) and not Stream_Unplayable(s)
+        if not tried.DoesExist(Str_Of(s.url)) and not Stream_Unplayable(s) and not Audio_Unplayable(s)
             pool.Push(s)
             map.Push(i)
         end if

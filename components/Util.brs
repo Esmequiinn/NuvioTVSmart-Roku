@@ -28,10 +28,69 @@ function Str_Any(v as dynamic) as string
     if IsStr(v) then return v
     if GetInterface(v, "ifInt") <> invalid or GetInterface(v, "ifLongInt") <> invalid then return Str(v).Trim()
     if GetInterface(v, "ifFloat") <> invalid or GetInterface(v, "ifDouble") <> invalid
-        if v = Int(v) and Abs(v) < 2000000000 then return Str(Int(v)).Trim()
+        d# = v
+        if d# = Fix(d#) then return Num_Whole(d#)
         return Str(v).Trim()
     end if
     return ""
+end function
+
+function Num_Whole(d as double) as string
+    negative = d < 0
+    if negative then d = -d
+    digits = ""
+    while d >= 1
+        q# = Fix(d / 10)
+        digit = Int(d - q# * 10 + 0.5)
+        if digit > 9 then digit = 9
+        digits = digit.ToStr() + digits
+        d = q#
+    end while
+    if digits = "" then digits = "0"
+    if negative then digits = "-" + digits
+    return digits
+end function
+
+function Num_Exact(text as string) as string
+    found = CreateObject("roRegex", "^\s*(-?)([0-9]*)(?:\.([0-9]*))?(?:[eE]([+-]?[0-9]+))?\s*$", "").Match(text)
+    if found.Count() < 2 then return ""
+    whole = found[2]
+    frac = ""
+    if found.Count() > 3 then frac = found[3]
+    shift = 0
+    if found.Count() > 4 and found[4] <> "" then shift = found[4].ToInt()
+    digits = whole + frac
+    point = Len(whole) + shift
+    if point <= 0 then return "0"
+    while Len(digits) < point
+        digits = digits + "0"
+    end while
+    out = Left(digits, point)
+    while Len(out) > 1 and Left(out, 1) = "0"
+        out = Mid(out, 2)
+    end while
+    if out = "" then out = "0"
+    if found[1] = "-" and out <> "0" then out = "-" + out
+    return out
+end function
+
+function Json_Parse(text as string) as dynamic
+    if Instr(1, text, "ListId") > 0 then text = Json_FixIds(text)
+    return ParseJson(text)
+end function
+
+function Json_FixIds(text as string) as string
+    re = CreateObject("roRegex", "(" + chr(34) + "[A-Za-z]*ListId" + chr(34) + "\s*:\s*)(-?[0-9][0-9.eE+-]*)", "")
+    out = ""
+    rest = text
+    while true
+        found = re.Match(rest)
+        if found.Count() < 3 then exit while
+        at = Instr(1, rest, found[0])
+        out = out + Left(rest, at - 1) + found[1] + chr(34) + Num_Exact(found[2]) + chr(34)
+        rest = Mid(rest, at + Len(found[0]))
+    end while
+    return out + rest
 end function
 
 function Str_OneLine(v as dynamic) as string
@@ -159,6 +218,32 @@ function Device_CanDV() as boolean
     props = CreateObject("roDeviceInfo").GetDisplayProperties()
     if type(props) <> "roAssociativeArray" then return false
     return Bool_Of(props.DolbyVision, false)
+end function
+
+function Device_Audio() as object
+    if m.audioCaps <> invalid then return m.audioCaps
+    info = CreateObject("roDeviceInfo")
+    caps = {}
+    checks = { ac3: { Codec: "ac3" }, eac3: { Codec: "eac3" }, dts: { Codec: "dts" }, truehd: { Codec: "truehd" }, multi: { Codec: "aac", ChCnt: 6 } }
+    for each key in checks
+        r = info.CanDecodeAudio(checks[key])
+        caps[key] = type(r) = "roAssociativeArray" and r.result = true
+    end for
+    m.audioCaps = caps
+    return caps
+end function
+
+function Device_AudioSummary() as string
+    caps = Device_Audio()
+    names = [["multi", "5.1"], ["ac3", "Dolby Digital"], ["eac3", "Dolby Digital Plus"], ["dts", "DTS"], ["truehd", "TrueHD"]]
+    yes = [L("Estéreo")]
+    no = []
+    for each n in names
+        if caps[n[0]] then yes.Push(n[1]) else no.Push(n[1])
+    end for
+    text = L("Sí: ") + yes.Join(", ")
+    if no.Count() > 0 then text = text + "  ·  " + L("No: ") + no.Join(", ")
+    return text
 end function
 
 function Device_CanHevc() as boolean

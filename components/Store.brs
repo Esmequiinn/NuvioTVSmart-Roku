@@ -826,6 +826,8 @@ function St_PlayerDefaults() as object
         reuseLink: false
         reuseHours: 24
         loadDetails: true
+        audioSafe: true
+        stereoOnly: false
         sourceFailover: false
         homeLayout: "modern"
         heroFull: false

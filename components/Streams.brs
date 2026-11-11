@@ -282,7 +282,37 @@ function Stream_Unplayable(s as object) as boolean
     return false
 end function
 
+function Audio_Unplayable(s as object) as boolean
+    if m.audioRe = invalid
+        m.audioRe = {
+            dts: CreateObject("roRegex", "\b(dts|dts-?hd|dts-?ma|dts-?x|dtshd)\b", "i")
+            truehd: CreateObject("roRegex", "\b(true-?hd|atmos\s*true-?hd)\b", "i")
+            eac3: CreateObject("roRegex", "(\bddp|\bdd\+|\be-?ac-?3\b|\bdolby\s*digital\s*plus\b)", "i")
+            ac3: CreateObject("roRegex", "(\bac-?3\b|\bdd\s?[257]\.?[01]\b|\bdolby\s*digital\b)", "i")
+            multi: CreateObject("roRegex", "((^|[^0-9])[5-7][\.\s]1([^0-9]|$)|\b(6|8)ch\b|\bsurround\b|\batmos\b)", "i")
+            stereo: CreateObject("roRegex", "((^|[^0-9])2[\.\s]0([^0-9]|$)|\bstereo\b|\b2ch\b)", "i")
+        }
+    end if
+    caps = Device_Audio()
+    text = Stream_SearchText(s)
+    if Bool_Of(St_Pref("audioSafe"), true)
+        if not caps.truehd and m.audioRe.truehd.IsMatch(text) then return true
+        if not caps.dts and m.audioRe.dts.IsMatch(text) then return true
+        if not caps.eac3 and m.audioRe.eac3.IsMatch(text) then return true
+        if not caps.ac3 and m.audioRe.ac3.IsMatch(text) then return true
+    end if
+    if Bool_Of(St_Pref("stereoOnly"), false) and not m.audioRe.stereo.IsMatch(text)
+        if m.audioRe.multi.IsMatch(text) or m.audioRe.ac3.IsMatch(text) or m.audioRe.eac3.IsMatch(text) or m.audioRe.dts.IsMatch(text) or m.audioRe.truehd.IsMatch(text) then return true
+    end if
+    return false
+end function
+
 function Autoplay_Prefer(streams as object, candidates as object) as object
+    usable = []
+    for each i in candidates
+        if not Audio_Unplayable(streams[i]) then usable.Push(i)
+    end for
+    if usable.Count() > 0 then candidates = usable
     if not Bool_Of(St_Pref("rokuSafe"), true) then return candidates
     audio = CreateObject("roRegex", "\b(remux|truehd|true-hd|dts-hd|dts-ma|dtshd|dts-x|dtsx)\b", "i")
     good = []
@@ -329,6 +359,7 @@ function Autoplay_Pick(streams as object, opts as object) as integer
     end for
     if candidates.Count() = 0 then return -1
     candidates = Autoplay_Prefer(streams, candidates)
+    if candidates.Count() = 0 then return -1
     if mode = "first" then return candidates[0]
     pattern = Str_Of(opts.regex).Trim()
     if pattern = "" then return -1

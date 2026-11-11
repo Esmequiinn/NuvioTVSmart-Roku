@@ -1,4 +1,5 @@
 sub showPage(name as string)
+    Gif_Hide()
     if name <> "home" then Poster_Stop()
     hideExpanded()
     m.page = name
@@ -332,14 +333,13 @@ sub Grid_Split(root as object, row as object, cap as boolean)
     end if
     row.removeChildrenIndex(row.getChildCount(), 0)
     if not row.hasField("gridPart") then row.addFields({ gridPart: 0 })
-    fields = row.getFields()
     part = 0
     chunk = row
     for i = 0 to shown - 1
         if i > 0 and i mod cols = 0
             root.appendChild(chunk)
             part = part + 1
-            chunk = Grid_Chunk(fields, key, part)
+            chunk = Grid_Chunk(row, key, part)
         end if
         chunk.appendChild(items[i])
     end for
@@ -347,7 +347,7 @@ sub Grid_Split(root as object, row as object, cap as boolean)
         if chunk.getChildCount() >= cols
             root.appendChild(chunk)
             part = part + 1
-            chunk = Grid_Chunk(fields, key, part)
+            chunk = Grid_Chunk(row, key, part)
         end if
         tile = CreateObject("roSGNode", "ContentNode")
         tile.title = L("Ver todo")
@@ -357,52 +357,60 @@ sub Grid_Split(root as object, row as object, cap as boolean)
     root.appendChild(chunk)
 end sub
 
-function Grid_Chunk(fields as object, key as string, part as integer) as object
+function Grid_Chunk(row as object, key as string, part as integer) as object
     chunk = CreateObject("roSGNode", "ContentNode")
-    skip = { change: true, focusedChild: true, focusable: true, title: true, key: true, gridPart: true }
-    for each name in fields
-        if not skip.DoesExist(name) and fields[name] <> invalid
-            if chunk.hasField(name)
-                chunk.setField(name, fields[name])
-            else
-                extra = {}
-                extra[name] = fields[name]
-                chunk.addFields(extra)
-            end if
-        end if
+    chunk.id = row.id
+    extra = { key: key + "#" + part.ToStr(), gridPart: part }
+    for each name in ["shape", "pinned"]
+        if row.hasField(name) then extra[name] = row.getField(name)
     end for
-    chunk.title = ""
-    chunk.addFields({ key: key + "#" + part.ToStr(), gridPart: part })
+    chunk.addFields(extra)
     return chunk
+end function
+
+function Item_Fields() as object
+    return ["itemType", "metaId", "videoId", "background", "metaLine", "episodeLabel", "progress", "altIds", "logo", "rating", "fallback", "idx", "badge", "kicker", "subtitle", "watched", "portrait", "remote", "gif", "heroVideo", "colTitle", "hideTitle", "folder"]
 end function
 
 function Grid_Copy(src as object) as object
     node = CreateObject("roSGNode", "ContentNode")
-    skip = { change: true, focusedChild: true, focusable: true }
-    fields = src.getFields()
-    for each name in fields
-        if not skip.DoesExist(name) and fields[name] <> invalid
-            if node.hasField(name)
-                node.setField(name, fields[name])
-            else
-                extra = {}
-                extra[name] = fields[name]
-                node.addFields(extra)
-            end if
+    node.title = src.title
+    node.HDPosterUrl = src.HDPosterUrl
+    node.description = src.description
+    extra = {}
+    for each name in Item_Fields()
+        if src.hasField(name)
+            value = src.getField(name)
+            if value <> invalid then extra[name] = value
         end if
     end for
+    node.addFields(extra)
     return node
 end function
 
 sub Grid_SeeAll(tile as object)
-    if m.gridFull = invalid or not m.gridFull.DoesExist(tile.gridKey) then return
-    info = m.gridFull[tile.gridKey]
+    key = Str_Of(tile.gridKey)
+    title = ""
+    if m.gridFull <> invalid and m.gridFull.DoesExist(key) then title = m.gridFull[key].title
+    if type(m.catalogs) = "roArray"
+        for each c in m.catalogs
+            if type(c) = "roAssociativeArray" and Str_Of(c.key) = key
+                if title = "" then title = Str_Of(c.name)
+                source = { provider: "addon", base: Str_Of(c.base), type: Str_Of(c.kind), catalogId: Str_Of(c.id), title: title }
+                m.folderGrid = true
+                Folder_Load(title, { title: title, grid: true, sources: [source] })
+                return
+            end if
+        end for
+    end if
+    if m.gridFull = invalid or not m.gridFull.DoesExist(key) then return
+    info = m.gridFull[key]
     row = CreateObject("roSGNode", "ContentNode")
     row.title = info.title
     shape = "poster"
     parent = tile.getParent()
     if parent <> invalid and parent.hasField("shape") then shape = Str_Of(parent.shape)
-    row.addFields({ shape: shape, key: "all:" + Str_Of(tile.gridKey) })
+    row.addFields({ shape: shape, key: "all:" + key })
     for i = 0 to info.items.Count() - 1
         copy = Grid_Copy(info.items[i])
         if copy.hasField("idx") then copy.idx = i
@@ -412,10 +420,11 @@ sub Grid_SeeAll(tile as object)
     source.appendChild(row)
     hideExpanded()
     m.folderTitle = info.title
+    m.libraryRows.content = invalid
     m.libraryGrid = true
+    Grid_Layout()
     m.libraryRows.content = Grid_Wrap(source, false)
     applyRowSizes(m.libraryRows)
-    Grid_Layout()
     m.area = "page"
     showPage("folder")
 end sub

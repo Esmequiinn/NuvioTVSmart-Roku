@@ -77,7 +77,7 @@ function Http_FetchHook(urls as object, timeoutMs as integer, metaLimit as integ
                     if code = 200
                         body = msg.GetString()
                         parsed = invalid
-                        if body <> "" then parsed = ParseJson(body)
+                        if body <> "" then parsed = Json_Parse(body)
                         body = invalid
                         if parsed = invalid
                             diag[job.index] = L("Respuesta no es JSON válido")
@@ -158,7 +158,7 @@ function Http_Request(method as string, url as string, headers as object, body a
     if type(msg) = "roUrlEvent"
         result.code = msg.GetResponseCode()
         result.body = msg.GetString()
-        if result.body <> "" then result.json = ParseJson(result.body)
+        if result.body <> "" then result.json = Json_Parse(result.body)
     else
         t.AsyncCancel()
     end if

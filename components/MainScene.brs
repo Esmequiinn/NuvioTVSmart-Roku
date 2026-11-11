@@ -102,6 +102,21 @@ sub init()
     Mask_Global()
     m.global.observeField("syncDirty", "onSyncDirty")
     m.global.addField("activity", "boolean", true)
+    m.global.addField("gifUrl", "string", false)
+    m.global.addField("gifCard", "node", true)
+    m.global.observeField("gifCard", "onGifCard")
+    m.gifLayer = m.top.findNode("gifLayer")
+    m.gifArt = m.top.findNode("gifArt")
+    m.gifRing = m.top.findNode("gifRing")
+    m.gifArt.observeField("state", "onGifArtState")
+    m.gifTimer = m.top.createChild("Timer")
+    m.gifTimer.duration = 0.45
+    m.gifTimer.repeat = false
+    m.gifTimer.observeField("fire", "Gif_Show")
+    m.gifWait = m.top.createChild("Timer")
+    m.gifWait.duration = 7
+    m.gifWait.repeat = false
+    m.gifWait.observeField("fire", "onGifWait")
     m.global.observeField("activity", "Ambient_Poke")
     m.ambient = m.top.findNode("ambient")
     m.ambient.observeField("closed", "Ambient_Close")
@@ -133,6 +148,7 @@ sub init()
         rows.rowLabelFont.size = 32
         rows.observeField("rowItemSelected", "onRowSelected")
         rows.observeField("rowItemFocused", "onRowFocused")
+        rows.observeField("currFocusRow", "onRowsMove")
     end for
 
     m.keyboard = CreateObject("roSGNode", "MiniKeyboard")
@@ -168,7 +184,7 @@ sub init()
     if Auth_ShouldGate()
         Auth_Open("onboarding")
     else
-        showProfiles()
+        Profile_Startup()
     end if
     startQuietSync()
     Update_Start()
@@ -262,6 +278,22 @@ sub showProfiles()
     m.profiles.profiles = list
     m.profiles.visible = true
     if not m.pinPad.visible then m.profiles.setFocus(true)
+end sub
+
+sub Profile_Startup()
+    st = St_Settings()
+    profiles = St_Profiles()
+    idx = St_ProfileIndex(profiles, Str_Of(st.active))
+    if not Bool_Of(st.rememberProfile, false) or idx < 0
+        showProfiles()
+        return
+    end if
+    if profiles[idx].pin = true and St_Integrations().nuvioAccess <> ""
+        showProfiles()
+        Pin_Open(profiles[idx])
+        return
+    end if
+    Profile_Enter(profiles[idx].id)
 end sub
 
 sub onProfileChosen()
@@ -710,8 +742,18 @@ function getRowItem(rows as object, cell as dynamic) as dynamic
     return row.getChild(cell[1])
 end function
 
+sub onRowsMove(event as object)
+    if not m.gifLayer.visible and m.gifArt.uri = "" then return
+    rows = event.getRoSGNode()
+    focus = rows.rowItemFocused
+    if type(focus) <> "roArray" or focus.Count() < 1 then return
+    if Abs(event.getData() - focus[0]) > 0.02 then Gif_Hide()
+end sub
+
 sub onRowFocused(event as object)
     Ambient_Poke()
+    Gif_Hide()
+    if m.global.gifCard <> invalid then m.gifTimer.control = "start"
     hideExpanded()
     rows = event.getRoSGNode()
     if rows.isSameNode(m.searchRows) then return
@@ -725,7 +767,11 @@ sub onRowSelected(event as object)
     item = getRowItem(rows, rows.rowItemSelected)
     if item = invalid then return
     if item.itemType = "seeall"
-        Grid_SeeAll(item)
+        try
+            Grid_SeeAll(item)
+        catch e
+            Grid_Error(e)
+        end try
         return
     end if
     if item.itemType = "folder"
@@ -751,6 +797,7 @@ end sub
 
 sub openFolder(item as object)
     if not item.hasField("folder") then return
+    m.folderGrid = false
     Folder_Load(item.title, item.folder)
 end sub
 
@@ -771,6 +818,8 @@ sub onFolderLoaded(event as object)
     if m.folderTask = invalid or not task.isSameNode(m.folderTask) then return
     m.folderTask = invalid
     hideBusy()
+    grid = Bool_Of(m.folderGrid, false)
+    m.folderGrid = false
     root = task.content
     fails = task.folderFails
     detail = ""
@@ -782,12 +831,27 @@ sub onFolderLoaded(event as object)
         return
     end if
     if detail <> "" then Toast_Show(L("No se pudo cargar:") + " " + fails.Join(", "))
-    m.libraryGrid = false
-    Grid_Layout()
-    m.libraryRows.content = root
-    applyRowSizes(m.libraryRows)
-    m.area = "page"
-    showPage("folder")
+    try
+        m.libraryRows.content = invalid
+        m.libraryGrid = grid
+        Grid_Layout()
+        m.libraryRows.content = root
+        applyRowSizes(m.libraryRows)
+        m.area = "page"
+        showPage("folder")
+    catch e
+        Grid_Error(e)
+    end try
+end sub
+
+sub Grid_Error(e as object)
+    hideBusy()
+    where = ""
+    if type(e.backtrace) = "roArray" and e.backtrace.Count() > 0
+        last = e.backtrace[e.backtrace.Count() - 1]
+        if type(last) = "roAssociativeArray" then where = Str_Of(last.function) + " · " + Str_Any(last.line_number)
+    end if
+    showMessage(L("Ver todo"), Str_Of(e.message) + chr(10) + where)
 end sub
 
 sub showHeroFor(item as dynamic)
@@ -1552,3 +1616,134 @@ function Ambient_Slide(item as object) as dynamic
     end if
     return { background: background, logo: logo, title: Str_Of(item.title), genres: genres.Join("  •  ") }
 end function
+
+sub onGifCard()
+    Gif_Hide()
+    if m.global.gifCard = invalid or m.global.gifUrl = "" then return
+    m.gifTimer.control = "stop"
+    m.gifTimer.control = "start"
+end sub
+
+sub Gif_Hide()
+    m.gifTimer.control = "stop"
+    m.gifWait.control = "stop"
+    m.gifLayer.visible = false
+    if m.gifArt.uri <> ""
+        m.gifArt.control = "stop"
+        m.gifArt.uri = ""
+    end if
+end sub
+
+sub Gif_Show()
+    card = m.global.gifCard
+    url = m.global.gifUrl
+    if card = invalid or url = "" or overlayOpen() or m.top.dialog <> invalid then return
+    w = Int(card.width)
+    h = Int(card.height)
+    if w <= 0 or h <= 0 then return
+    spot = Gif_Spot(card)
+    if spot = invalid then return
+    m.gifLayer.translation = spot
+    m.gifStage = 0
+    m.gifArt.translation = [6, 6]
+    m.gifArt.width = w - 12
+    m.gifArt.height = h - 12
+    m.gifArt.loadWidth = w - 12
+    m.gifArt.loadHeight = h - 12
+    m.gifRing.width = w
+    m.gifRing.height = h
+    m.gifRing.blendColor = m.accent
+    Mask_Apply(m.top.findNode("gifMask"), w, h)
+    Mask_Caps(m.top.findNode("gifCaps"), w, h, 22, "0x0C0C0FFF", true)
+    low = LCase(url)
+    if Instr(1, low, "giphy.com") > 0 and Instr(1, low, ".mp4") > 0 then url = url.Replace(".mp4", ".gif")
+    if Instr(1, LCase(url), ".mp4") > 0 then return
+    m.gifUrl = url
+    m.gifSize = [w - 12, h - 12]
+    if Instr(1, LCase(url), "postimg.cc") > 0 then m.gifStage = 1
+    Gif_Load()
+end sub
+
+sub Gif_Load()
+    m.gifWait.control = "stop"
+    m.gifArt.control = "stop"
+    w = m.gifSize[0].ToStr()
+    h = m.gifSize[1].ToStr()
+    source = m.gifUrl
+    if m.gifStage = 1 or m.gifStage = 2 then source = "https://external-content.duckduckgo.com/iu/?u=" + m.gifUrl.EncodeUriComponent()
+    base = "https://wsrv.nl/?url=" + source.EncodeUriComponent() + "&output=webp&w=" + w + "&h=" + h + "&fit=cover"
+    if m.gifStage = 3
+        m.gifArt.mimeType = "image/gif"
+        if Instr(1, LCase(m.gifUrl), ".webp") > 0 then m.gifArt.mimeType = "video/webp"
+        m.gifArt.uri = m.gifUrl
+    else if m.gifStage = 2
+        m.gifArt.mimeType = "video/webp"
+        m.gifArt.uri = base + "&n=40&q=70"
+    else
+        m.gifArt.mimeType = "video/webp"
+        m.gifArt.uri = base + "&n=-1"
+    end if
+    m.gifWait.control = "start"
+    m.gifArt.control = "loop"
+end sub
+
+sub onGifWait()
+    st = m.gifArt.state
+    if st = "downloading" or st = "init" or st = "" or st = "error" then Gif_Next()
+end sub
+
+sub Gif_Next()
+    if m.gifUrl = "" or m.gifStage >= 3 then return
+    m.gifStage = m.gifStage + 1
+    Gif_Load()
+end sub
+
+function Gif_Spot(card as object) as dynamic
+    rows = activeRows()
+    if rows = invalid or not rows.hasFocus()
+        rows = card.getParent()
+        while rows <> invalid and rows.subtype() <> "RowList"
+            rows = rows.getParent()
+        end while
+    end if
+    if rows = invalid then return invalid
+    focus = rows.rowItemFocused
+    if type(focus) <> "roArray" or focus.Count() < 2 then return invalid
+    x = 0
+    y = 0
+    node = rows
+    while node <> invalid
+        t = node.translation
+        if type(t) = "roArray" and t.Count() > 1
+            x = x + t[0]
+            y = y + t[1]
+        end if
+        node = node.getParent()
+    end while
+    shift = Arr_At(rows.focusXOffset, focus[0])
+    if shift <> invalid then x = x + shift
+    if rows.rowFocusAnimationStyle = "floatingFocus"
+        gap = Arr_At(rows.rowItemSpacing, focus[0])
+        space = 0
+        if type(gap) = "roArray" and gap.Count() > 0 then space = gap[0]
+        x = x + focus[1] * (card.width + space)
+    end if
+    label = Arr_At(rows.showRowLabel, focus[0])
+    if label = invalid or label = true
+        y = y + Rows_LabelHeight(rows)
+        offset = Arr_At(rows.rowLabelOffset, focus[0])
+        if type(offset) = "roArray" and offset.Count() > 1 then y = y + offset[1]
+    end if
+    return [x, y]
+end function
+
+sub onGifArtState()
+    st = m.gifArt.state
+    if st = "error" and m.gifStage < 3
+        Gif_Next()
+        return
+    end if
+    if st <> "downloading" and st <> "init" and st <> "" then m.gifWait.control = "stop"
+    playing = m.gifArt.uri <> "" and st <> "downloading" and st <> "init" and st <> "error" and st <> "" and st <> "stopped"
+    m.gifLayer.visible = playing and m.global.gifCard <> invalid and not overlayOpen()
+end sub

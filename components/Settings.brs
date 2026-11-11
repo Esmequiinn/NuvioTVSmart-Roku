@@ -35,7 +35,7 @@ function Set_SubLangs() as object
 end function
 
 function Set_Toggles() as object
-    return { forcedSubs: true, openSubs: true, autoNext: true, pauseOverlay: true, clock: true, reuseLink: true, bingeNext: true, bingeReuse: true, sizeBadges: true, addonLogo: true, fusionBadges: true, expandPoster: true, expandTrailer: true, expandMuted: true, trailerButton: true, trailerAutoplay: true, rokuSafe: true, skipIntro: true, autoSkipIntro: true, autoSkipRecap: true, autoSkipOutro: true, autoSkipCredits: true, preloadNext: true, bingeFallback: true, stillWatching: true, postPlay: true, parentalGuide: true, stripSdh: true, onlyPrefSubs: true, customSubs: true, subBold: true, playerStats: true, loadDetails: true, sourceFailover: true, ambientOn: true, heroFull: true, classicGradient: true, posterLabels: true, homeRatings: true, navModern: true, navBlur: true, navCollapsed: true }
+    return { forcedSubs: true, openSubs: true, autoNext: true, pauseOverlay: true, clock: true, reuseLink: true, bingeNext: true, bingeReuse: true, sizeBadges: true, addonLogo: true, fusionBadges: true, expandPoster: true, expandTrailer: true, expandMuted: true, trailerButton: true, trailerAutoplay: true, rokuSafe: true, skipIntro: true, autoSkipIntro: true, autoSkipRecap: true, autoSkipOutro: true, autoSkipCredits: true, preloadNext: true, bingeFallback: true, stillWatching: true, postPlay: true, parentalGuide: true, stripSdh: true, onlyPrefSubs: true, customSubs: true, subBold: true, playerStats: true, loadDetails: true, audioSafe: true, stereoOnly: true, sourceFailover: true, ambientOn: true, heroFull: true, classicGradient: true, posterLabels: true, homeRatings: true, navModern: true, navBlur: true, navCollapsed: true }
 end function
 
 function Set_Minutes(v as integer) as string
@@ -164,6 +164,7 @@ function Settings_Model() as object
     profilesSection.rows.Push(Set_Row("newProfile", L("Nuevo perfil"), "", ""))
     profilesSection.rows.Push(Set_Row("profileColor", L("Color del perfil"), L("Fondo del círculo del perfil cuando no tiene foto, y color de la pantalla de perfiles."), St_ColorName(St_ProfileColor(St_ActiveProfileIndex()))))
     profilesSection.rows.Push(Set_Toggle("shared", L("Addons compartidos"), L("Todos los perfiles usan la misma lista de addons."), St_Settings().shared))
+    profilesSection.rows.Push(Set_Toggle("rememberProfile", L("Recordar el último perfil"), L("Al abrir el canal entra directo al último perfil que usaste. Si el perfil tiene PIN, te lo pide."), Bool_Of(St_Settings().rememberProfile, false)))
 
     party = { id: "party", label: "Watch Party", subtitle: L("Únete a tus amigos con un código de party"), rows: [] }
     party.rows.Push(Set_Row("partyJoin", L("Unirse a una watch party"), L("Escribe el código de 6 caracteres que compartió tu amigo."), ""))
@@ -296,6 +297,10 @@ function Settings_Model() as object
     playback.rows.Push(Set_Toggle("pauseOverlay", L("Pantalla de pausa"), L("Aparece después de unos segundos en pausa."), Bool_Of(Set_Pref(prefs, defaults, "pauseOverlay"), true)))
     playback.rows.Push(Set_Toggle("clock", L("Reloj en el reproductor"), "", Bool_Of(Set_Pref(prefs, defaults, "clock"), true)))
     playback.rows.Push(Set_Toggle("rokuSafe", L("Priorizar fuentes compatibles con Roku"), L("La reproducción automática nunca elige fuentes que tu Roku no puede reproducir (HEVC, 4K o Dolby Vision según tu modelo y tu tele) y deja al final los REMUX con audio TrueHD o DTS-HD."), Bool_Of(Set_Pref(prefs, defaults, "rokuSafe"), true)))
+    playback.rows.Push(Set_Header(L("Audio de tu Roku")))
+    playback.rows.Push(Set_Info("audioCaps", L("Lo que tu Roku puede reproducir"), Device_AudioSummary(), ""))
+    playback.rows.Push(Set_Toggle("audioSafe", L("Saltar audio que tu Roku no reproduce"), L("La reproducción automática y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD."), Bool_Of(Set_Pref(prefs, defaults, "audioSafe"), true)))
+    playback.rows.Push(Set_Toggle("stereoOnly", L("Solo audio estéreo (2.0)"), L("Para Roku o TV sin sonido envolvente: salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que también digan 2.0 o estéreo."), Bool_Of(Set_Pref(prefs, defaults, "stereoOnly"), false)))
     playback.rows.Push(Set_Toggle("parentalGuide", L("Avisos de contenido"), L("Al empezar muestra si tiene violencia, desnudez, lenguaje soez, drogas o terror."), Bool_Of(Set_Pref(prefs, defaults, "parentalGuide"), true)))
     playback.rows.Push(Set_Header(L("Pantalla de carga")))
     playback.rows.Push(Set_Toggle("loadDetails", L("Mostrar lo que está pasando"), L("Debajo del logo dice si está buscando o eligiendo fuente, revisando el enlace, cargando o probando otra forma de abrirlo. Apágalo para ver solo el fondo y el logo."), Bool_Of(Set_Pref(prefs, defaults, "loadDetails"), true)))
@@ -539,6 +544,11 @@ sub onSettingsEvent()
     else if row = "shared"
         St_SetShared(not St_Settings().shared)
         m.needsReload = true
+        refreshSettings()
+    else if row = "rememberProfile"
+        st = St_Settings()
+        st["rememberProfile"] = not Bool_Of(st.rememberProfile, false)
+        St_SaveSettings(st)
         refreshSettings()
     else if row = "corners"
         st = St_Settings()
