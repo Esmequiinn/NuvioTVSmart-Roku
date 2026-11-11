@@ -113,7 +113,7 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Reproducción automática (primera fuente y patrón regex) | ✅ Funciona |
 | Reusar el último enlace y la misma fuente para el siguiente episodio | ✅ Funciona |
 | Idiomas preferidos y secundarios de audio y subtítulos | ✅ Funciona |
-| Patrones de URL para pósters personalizados | ⚠️ Sin probar |
+| Patrones de URL para pósters personalizados | ✅ Funciona |
 | Interfaz en inglés | ✅ Funciona |
 | Interfaz en portugués | ✅ Funciona |
 | Interfaz en francés, alemán, italiano, neerlandés, polaco, turco, rumano, checo y húngaro | ✅ Funciona |
@@ -124,7 +124,7 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Cuenta de MDBList (QR) | ✅ Funciona |
 | Watch Party | ✅ Funciona |
 | Menú de opciones con `*` y quitar títulos de Seguir viendo | ✅ Funciona |
-| Colecciones con fuentes de TMDB y Trakt | ⚠️ Sin probar |
+| Colecciones con fuentes de TMDB y Trakt | ✅ Funciona |
 | Tarjeta de siguiente episodio | ✅ Funciona |
 | ¿Sigues viendo? | ✅ Funciona |
 | Recomendaciones al terminar una película | ✅ Funciona |
@@ -138,7 +138,7 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | PIN de perfiles | ✅ Funciona |
 | Panel de episodios en el reproductor | ✅ Funciona |
 | Más como esto y colección en detalles | ✅ Funciona |
-| TorBox y Premiumize (torrents en caché) | ⚠️ Sin probar |
+| TorBox y Premiumize (torrents en caché) | ✅ Funciona |
 | Jellyfin y Emby | ✅ Funciona |
 | Clave de MDBList desde tu cuenta de Nuvio | ✅ Funciona |
 | Botón Cambiar forma de abrir | ✅ Funciona |
@@ -149,8 +149,8 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Probar otra fuente cuando una falla | ✅ Funciona |
 | Estilos del inicio Moderno, Clásico y Cuadrícula | ✅ Funciona |
 | Opciones de diseño del inicio (portada, nombres en pósteres, estrenos, calificaciones) | ⚠️ Sin probar |
-| Barra lateral moderna y contraída | ⚠️ Sin probar |
-| Color de acento personalizado | ⚠️ Sin probar |
+| Barra lateral moderna y contraída | ✅ Funciona |
+| Color de acento personalizado | ✅ Funciona |
 | Modo ambiente | ⚠️ Sin probar |
 | Recordar el último perfil | ⚠️ Sin probar |
 | Revisión del audio compatible y filtro de solo estéreo | ⚠️ Sin probar |
