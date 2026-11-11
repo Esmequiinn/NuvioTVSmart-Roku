@@ -4,6 +4,21 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.1.3] - 2026-11-10
+
+### Added
+- **Remember last profile** (**Settings → Profiles → Remember last profile**), off by default. When the channel opens, it goes straight into the last profile you used instead of showing the profile list. If that profile has a PIN, it still asks for it.
+- **Audio your Roku can play** (**Settings → Playback → Your Roku's audio**). The channel checks which audio formats your Roku (and the TV or soundbar connected to it) can play: stereo, 5.1, Dolby Digital, Dolby Digital Plus, DTS and TrueHD, and shows what it supports and what it doesn't. With **Skip audio your Roku can't play** (on by default), auto-play and **If a source fails** skip sources whose name says they use an audio format from the No list, and then apply your regex to the ones left. **Stereo audio only (2.0)**, off by default, skips sources marked 5.1, 7.1, Atmos, Dolby or DTS unless they also say 2.0 or stereo.
+
+### Fixed
+- **See all** in the Grid home no longer closes the channel. It now opens the whole catalog from the addon, like Nuvio TV, instead of only the titles shown on the home.
+- **Trakt lists** in collections no longer fail with 403. Some list numbers came from your Nuvio account in a format the Roku rounded, so the channel asked Trakt for a list that didn't exist. It now reads the exact number.
+- **Sync now** no longer fails with "Your Nuvio account has no profiles". If your Nuvio account doesn't have profiles yet, the channel now syncs using your current profile, so Continue Watching and the rest of your data stay linked to it.
+- Animated images (GIFs) on collection cards now play in every home style, not only in Grid. They sit right on the focused card with rounded corners, without square edges around them, and they disappear right away when you move to another row, and when one doesn't load (for example GIFs hosted on postimg, which the usual image service blocks) the channel tries again getting it through DuckDuckGo's image proxy, then with a lighter version and then with the original image. The corners of the expanded landscape card no longer show bits of the picture outside the frame.
+- Title details open faster again. Trakt comments now load after the details are on screen, and they are translated to the channel language again, with a backup translator when the first one doesn't answer.
+- Posters no longer show dark square corners over backdrops on Roku devices with an HD screen layout.
+- The **modern sidebar** now goes all the way down the screen with the options centered, like in Nuvio TV.
+
 ## [0.1.2] - 2026-11-07
 
 ### Added

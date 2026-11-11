@@ -4,6 +4,21 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.1.3] - 2026-11-10
+
+### Agregado
+- **Recordar el último perfil** (**Ajustes → Perfiles → Recordar el último perfil**), apagado por defecto. Al abrir el canal entra directo al último perfil que usaste en vez de mostrar la lista de perfiles. Si ese perfil tiene PIN, te lo sigue pidiendo.
+- **Audio que tu Roku puede reproducir** (**Ajustes → Reproducción → Audio de tu Roku**). El canal revisa qué formatos de audio puede reproducir tu Roku (y la TV o barra de sonido conectada): estéreo, 5.1, Dolby Digital, Dolby Digital Plus, DTS y TrueHD, y muestra cuáles soporta y cuáles no. Con **Saltar audio que tu Roku no reproduce** (encendido por defecto), la reproducción automática y **Si una fuente falla** saltan las fuentes cuyo nombre dice que usan un audio de la lista de No, y luego aplican tu regex a las que quedan. **Solo audio estéreo (2.0)**, apagado por defecto, salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que también digan 2.0 o estéreo.
+
+### Corregido
+- **Ver todo** en el inicio en cuadrícula ya no cierra el canal. Ahora abre el catálogo completo del addon, como Nuvio TV, en vez de solo los títulos que se ven en el inicio.
+- Las **listas de Trakt** en colecciones ya no fallan con 403. Algunos números de lista llegaban de tu cuenta de Nuvio en un formato que el Roku redondeaba, así que el canal le pedía a Trakt una lista que no existía. Ahora lee el número exacto.
+- **Sincronizar ahora** ya no falla con "Tu cuenta de Nuvio no tiene perfiles". Si tu cuenta de Nuvio todavía no tiene perfiles, el canal sincroniza usando tu perfil actual, así Seguir viendo y el resto de tus datos quedan ligados a él.
+- Las imágenes animadas (GIF) de las tarjetas de colecciones ahora se mueven en todos los estilos del inicio, no solo en cuadrícula. Quedan justo sobre la tarjeta enfocada, con las esquinas redondeadas y sin orillas cuadradas alrededor, y se quitan en cuanto te mueves a otra fila, y si una no carga (por ejemplo los GIF subidos a postimg, que el servicio de imágenes de siempre bloquea) el canal lo vuelve a intentar pidiéndolo a través del proxy de imágenes de DuckDuckGo, luego con una versión más ligera y luego con la imagen original. Las esquinas de la tarjeta horizontal ampliada ya no muestran pedazos de la imagen fuera del marco.
+- Los detalles de los títulos vuelven a abrir rápido. Los comentarios de Trakt ahora cargan después de que los detalles ya están en pantalla, y otra vez se traducen al idioma del canal, con un traductor de respaldo cuando el primero no responde.
+- Los pósteres ya no muestran esquinas cuadradas oscuras sobre los fondos en los Roku con pantalla en HD.
+- La **barra lateral moderna** ahora llega hasta abajo de la pantalla, con las opciones centradas, como en Nuvio TV.
+
 ## [0.1.2] - 2026-11-07
 
 ### Agregado

@@ -16,7 +16,7 @@
 
 </div>
 
-Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.1.1**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
+Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.1.3**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
 
 > **Esta no es una app oficial de Nuvio** y no está afiliada ni respaldada por el equipo de Nuvio. No aloja, guarda ni distribuye ningún contenido. Todo lo que ves viene de los addons que instalas.
 
@@ -147,11 +147,13 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Registro en MDBList | ⚠️ Sin probar |
 | Pantalla de carga con estado | ✅ Funciona |
 | Probar otra fuente cuando una falla | ✅ Funciona |
-| Estilos del inicio Moderno, Clásico y Cuadrícula | ⚠️ Sin probar |
+| Estilos del inicio Moderno, Clásico y Cuadrícula | ✅ Funciona |
 | Opciones de diseño del inicio (portada, nombres en pósteres, estrenos, calificaciones) | ⚠️ Sin probar |
 | Barra lateral moderna y contraída | ⚠️ Sin probar |
 | Color de acento personalizado | ⚠️ Sin probar |
 | Modo ambiente | ⚠️ Sin probar |
+| Recordar el último perfil | ⚠️ Sin probar |
+| Revisión del audio compatible y filtro de solo estéreo | ⚠️ Sin probar |
 
 ### Limitaciones conocidas
 
