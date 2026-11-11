@@ -43,11 +43,6 @@ sub execute()
     if integ.mdbEnabled and Mdb_Ready(integ) and merged.imdb <> ""
         merged.ratings = Mdb_Ratings(integ, kind, merged.imdb)
     end if
-    if Bool_Of(integ.traktComments, true) and Key_TraktId(integ) <> "" and merged.imdb <> ""
-        comments = Trakt_Comments(integ, kind, merged.imdb)
-        if comments.Count() > 0 and Bool_Of(integ.traktTranslate, true) then Comments_Translate(comments)
-        if comments.Count() > 0 then merged.comments = comments
-    end if
     if IsStr(merged.name) and Str_HasForeign(merged.name)
         one = [{ id: id, kind: kind, title: merged.name, original: merged.name }]
         if Str_Of(merged.imdb) <> "" then one[0].id = merged.imdb
@@ -56,6 +51,11 @@ sub execute()
     end if
     merged = Str_CleanDeep(merged)
     m.top.meta = merged
+    if m.top.withComments and Bool_Of(integ.traktComments, true) and Key_TraktId(integ) <> "" and Str_Of(merged.imdb) <> ""
+        comments = Trakt_Comments(integ, kind, merged.imdb)
+        if comments.Count() > 0 and Bool_Of(integ.traktTranslate, true) then Comments_Translate(comments)
+        m.top.comments = Str_CleanDeep(comments)
+    end if
 end sub
 
 function Tmdb_Enrich(merged as object, integ as object, kind as string, id as string) as boolean
@@ -470,6 +470,7 @@ sub Comments_Translate(list as object)
     lang = Comments_Lang()
     port = CreateObject("roMessagePort")
     jobs = {}
+    failed = []
     for i = 0 to list.Count() - 1
         if i >= 12 then exit for
         c = list[i]
@@ -491,7 +492,9 @@ sub Comments_Translate(list as object)
             job = jobs[key]
             if job <> invalid
                 jobs.Delete(key)
-                if msg.GetResponseCode() = 200
+                if msg.GetResponseCode() <> 200
+                    failed.Push(job.index)
+                else
                     data = ParseJson(msg.GetString())
                     if type(data) = "roArray" and data.Count() > 2 and type(data[0]) = "roArray"
                         source = LCase(Left(Str_Of(data[2]), 2))
@@ -507,6 +510,57 @@ sub Comments_Translate(list as object)
                                 c.translated = true
                             end if
                         end if
+                    end if
+                end if
+            end if
+        end if
+    end while
+    for each key in jobs
+        jobs[key].t.AsyncCancel()
+        failed.Push(jobs[key].index)
+    end for
+    if failed.Count() > 0 then Comments_Fallback(list, failed, lang)
+end sub
+
+sub Comments_Fallback(list as object, failed as object, lang as string)
+    port = CreateObject("roMessagePort")
+    jobs = {}
+    for each index in failed
+        c = list[index]
+        t = CreateObject("roUrlTransfer")
+        t.SetUrl("https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=" + lang + "&q=" + Left(Str_Of(c.text), 1500).EncodeUriComponent())
+        t.SetPort(port)
+        t.SetCertificatesFile("common:/certs/ca-bundle.crt")
+        t.AddHeader("User-Agent", "Mozilla/5.0")
+        if t.AsyncGetToString() then jobs[Stri(t.GetIdentity()).Trim()] = { t: t, index: index }
+    end for
+    clock = CreateObject("roTimespan")
+    while jobs.Count() > 0 and clock.TotalMilliseconds() < 6000
+        msg = wait(500, port)
+        if type(msg) = "roUrlEvent"
+            key = Stri(msg.GetSourceIdentity()).Trim()
+            job = jobs[key]
+            if job <> invalid
+                jobs.Delete(key)
+                data = invalid
+                if msg.GetResponseCode() = 200 then data = ParseJson(msg.GetString())
+                text = ""
+                source = ""
+                if type(data) = "roArray" and data.Count() > 0
+                    first = data[0]
+                    if IsStr(first)
+                        text = first
+                    else if type(first) = "roArray" and first.Count() > 0 and IsStr(first[0])
+                        text = first[0]
+                        if first.Count() > 1 then source = LCase(Left(Str_Of(first[1]), 2))
+                    end if
+                end if
+                if text.Trim() <> "" and source <> lang
+                    c = list[job.index]
+                    if text.Trim() <> Str_Of(c.text).Trim()
+                        c.original = c.text
+                        c.text = text.Trim()
+                        c.translated = true
                     end if
                 end if
             end if

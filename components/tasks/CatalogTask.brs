@@ -449,8 +449,15 @@ sub Rows_Sort(root as object, order as dynamic)
     root.appendChildren(sorted)
 end sub
 
+function Folder_GridCols(shape as string) as integer
+    if shape = "landscape" then return 4
+    if shape = "square" then return 6
+    return 7
+end function
+
 sub Folder_Execute()
     f = m.top.folder
+    grid = Bool_Of(f.grid, false)
     manifests = m.top.baseManifests
     if manifests = invalid then manifests = []
     prefs = St_Prefs()
@@ -553,13 +560,13 @@ sub Folder_Execute()
                 metas = grp.metas
                 info.title = grp.title
                 if type(metas) = "roArray" and metas.Count() > 0
-                    row = root.createChild("ContentNode")
-                    row.title = Str_Glyphs(Str_Of(info.title)).Trim()
+                    title = Str_Glyphs(Str_Of(info.title)).Trim()
                     shape = Catalog_Shape(metas)
-                    row.addFields({ shape: shape })
+                    limit = prefs.rowSize
+                    if grid then limit = 200
                     batch = []
                     for each meta in metas
-                        if batch.Count() >= prefs.rowSize then exit for
+                        if batch.Count() >= limit then exit for
                         if type(meta) = "roAssociativeArray" and IsStr(meta.id)
                             kind = Str_Of(info.kind)
                             if kind = "" then kind = Str_Of(meta["type"])
@@ -567,8 +574,18 @@ sub Folder_Execute()
                         end if
                     end for
                     Names_Items(batch)
-                    for each data in batch
-                        Content_Item(row, data)
+                    cols = batch.Count()
+                    if grid then cols = Folder_GridCols(shape)
+                    row = invalid
+                    part = 0
+                    for i = 0 to batch.Count() - 1
+                        if i mod cols = 0
+                            row = root.createChild("ContentNode")
+                            if part = 0 then row.title = title
+                            row.addFields({ shape: shape, key: "all:" + title + "#" + part.ToStr(), gridPart: part })
+                            part = part + 1
+                        end if
+                        Content_Item(row, batch[i])
                     end for
                 end if
             end for

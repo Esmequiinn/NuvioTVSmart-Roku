@@ -133,7 +133,7 @@ sub Srv_Route(sock as object, req as object)
     else if req.method = "GET" and req.path = "/api/state"
         Srv_Send(sock, "200 OK", jsonType, Srv_Json(Srv_State()))
     else if req.method = "POST" and req.path = "/api/action"
-        body = ParseJson(req.body)
+        body = Json_Parse(req.body)
         rid = ""
         if type(body) = "roAssociativeArray" then rid = Str_Of(body.rid)
         if rid <> "" and rid = Str_Of(m.lastRid) and m.lastReply <> invalid

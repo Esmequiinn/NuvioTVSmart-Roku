@@ -5,6 +5,8 @@
         <field id="kind" type="string" />
         <field id="metaId" type="string" />
         <field id="meta" type="assocarray" />
+        <field id="withComments" type="boolean" value="false" />
+        <field id="comments" type="array" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
