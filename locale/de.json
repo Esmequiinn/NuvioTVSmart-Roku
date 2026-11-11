@@ -939,5 +939,16 @@
  "Primero agrega addons con cat\u00e1logos.": "F\u00fcge zuerst Addons mit Katalogen hinzu.",
  "Quita el indicador flotante de arriba a la izquierda.": "Entfernt die schwebende Anzeige oben links.",
  "Roku no puede desenfocar, as\u00ed que la barra y la pastilla se ven semitransparentes.": "Roku kann nicht weichzeichnen, daher wirken Leiste und Pille halbtransparent.",
- "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Eine schwebende Seitenleiste, die sich \u00f6ffnet, wenn du nach links gehst, mit einer Pille oben, die zeigt, wo du bist."
+ "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Eine schwebende Seitenleiste, die sich \u00f6ffnet, wenn du nach links gehst, mit einer Pille oben, die zeigt, wo du bist.",
+ "Recordar el \u00faltimo perfil": "Letztes Profil merken",
+ "Al abrir el canal entra directo al \u00faltimo perfil que usaste. Si el perfil tiene PIN, te lo pide.": "Beim \u00d6ffnen des Kanals wird direkt das zuletzt genutzte Profil ge\u00f6ffnet. Hat das Profil eine PIN, wird sie abgefragt.",
+ "Audio de tu Roku": "Audio deines Roku",
+ "Lo que tu Roku puede reproducir": "Was dein Roku abspielen kann",
+ "Saltar audio que tu Roku no reproduce": "Audio \u00fcberspringen, das dein Roku nicht abspielt",
+ "Solo audio est\u00e9reo (2.0)": "Nur Stereo-Audio (2.0)",
+ "Para Roku o TV sin sonido envolvente: salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que tambi\u00e9n digan 2.0 o est\u00e9reo.": "F\u00fcr Roku oder TV ohne Surround: \u00fcberspringt Quellen mit 5.1, 7.1, Atmos, Dolby oder DTS, au\u00dfer sie nennen auch 2.0 oder Stereo.",
+ "Est\u00e9reo": "Stereo",
+ "S\u00ed: ": "Ja: ",
+ "No: ": "Nein: ",
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Autoplay und Quellenwechsel \u00fcberspringen Quellen mit Audio aus der Nein-Liste, etwa DTS oder TrueHD."
 }

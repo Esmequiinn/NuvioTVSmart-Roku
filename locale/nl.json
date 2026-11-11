@@ -939,5 +939,16 @@
  "Primero agrega addons con cat\u00e1logos.": "Voeg eerst addons met catalogi toe.",
  "Quita el indicador flotante de arriba a la izquierda.": "Verwijdert de zwevende indicator linksboven.",
  "Roku no puede desenfocar, as\u00ed que la barra y la pastilla se ven semitransparentes.": "Roku kan niet vervagen, dus de balk en pil zijn halfdoorzichtig.",
- "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Een zwevende zijbalk die opent als je naar links gaat, met een pil bovenaan die laat zien waar je bent."
+ "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Een zwevende zijbalk die opent als je naar links gaat, met een pil bovenaan die laat zien waar je bent.",
+ "Recordar el \u00faltimo perfil": "Laatste profiel onthouden",
+ "Al abrir el canal entra directo al \u00faltimo perfil que usaste. Si el perfil tiene PIN, te lo pide.": "Bij het openen gaat het kanaal direct naar het laatst gebruikte profiel. Heeft het profiel een pincode, dan wordt die gevraagd.",
+ "Audio de tu Roku": "Audio van je Roku",
+ "Lo que tu Roku puede reproducir": "Wat je Roku kan afspelen",
+ "Saltar audio que tu Roku no reproduce": "Audio overslaan die je Roku niet afspeelt",
+ "Solo audio est\u00e9reo (2.0)": "Alleen stereo-audio (2.0)",
+ "Para Roku o TV sin sonido envolvente: salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que tambi\u00e9n digan 2.0 o est\u00e9reo.": "Voor een Roku of tv zonder surround: slaat bronnen met 5.1, 7.1, Atmos, Dolby of DTS over, tenzij ze ook 2.0 of stereo vermelden.",
+ "Est\u00e9reo": "Stereo",
+ "S\u00ed: ": "Ja: ",
+ "No: ": "Nee: ",
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Automatisch afspelen en bronwissel slaan bronnen met audio uit de Nee-lijst over, zoals DTS of TrueHD."
 }

@@ -939,5 +939,16 @@
  "Primero agrega addons con cat\u00e1logos.": "Add addons with catalogs first.",
  "Quita el indicador flotante de arriba a la izquierda.": "Removes the floating indicator at the top left.",
  "Roku no puede desenfocar, as\u00ed que la barra y la pastilla se ven semitransparentes.": "Roku can't blur, so the sidebar and pill look semi-transparent.",
- "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "A floating sidebar that opens when you go left, with a pill at the top that shows where you are."
+ "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "A floating sidebar that opens when you go left, with a pill at the top that shows where you are.",
+ "Recordar el \u00faltimo perfil": "Remember last profile",
+ "Al abrir el canal entra directo al \u00faltimo perfil que usaste. Si el perfil tiene PIN, te lo pide.": "When the channel opens it goes straight into the last profile you used. If that profile has a PIN, it asks for it.",
+ "Audio de tu Roku": "Your Roku's audio",
+ "Lo que tu Roku puede reproducir": "What your Roku can play",
+ "Saltar audio que tu Roku no reproduce": "Skip audio your Roku can't play",
+ "Solo audio est\u00e9reo (2.0)": "Stereo audio only (2.0)",
+ "Para Roku o TV sin sonido envolvente: salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que tambi\u00e9n digan 2.0 o est\u00e9reo.": "For a Roku or TV without surround sound: skips sources tagged 5.1, 7.1, Atmos, Dolby or DTS, unless they also say 2.0 or stereo.",
+ "Est\u00e9reo": "Stereo",
+ "S\u00ed: ": "Yes: ",
+ "No: ": "No: ",
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Autoplay and source switching skip sources with audio from the No list, like DTS or TrueHD."
 }

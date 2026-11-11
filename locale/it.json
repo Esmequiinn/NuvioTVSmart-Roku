@@ -939,5 +939,16 @@
  "Primero agrega addons con cat\u00e1logos.": "Aggiungi prima degli addon con cataloghi.",
  "Quita el indicador flotante de arriba a la izquierda.": "Rimuove l'indicatore fluttuante in alto a sinistra.",
  "Roku no puede desenfocar, as\u00ed que la barra y la pastilla se ven semitransparentes.": "Roku non pu\u00f2 sfocare, quindi barra e pillola appaiono semitrasparenti.",
- "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Una barra fluttuante che si apre quando vai a sinistra, con una pillola in alto che indica dove sei."
+ "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Una barra fluttuante che si apre quando vai a sinistra, con una pillola in alto che indica dove sei.",
+ "Recordar el \u00faltimo perfil": "Ricorda l'ultimo profilo",
+ "Al abrir el canal entra directo al \u00faltimo perfil que usaste. Si el perfil tiene PIN, te lo pide.": "All'apertura il canale entra subito nell'ultimo profilo usato. Se il profilo ha un PIN, lo chiede.",
+ "Audio de tu Roku": "Audio del tuo Roku",
+ "Lo que tu Roku puede reproducir": "Cosa pu\u00f2 riprodurre il tuo Roku",
+ "Saltar audio que tu Roku no reproduce": "Salta l'audio che il tuo Roku non riproduce",
+ "Solo audio est\u00e9reo (2.0)": "Solo audio stereo (2.0)",
+ "Para Roku o TV sin sonido envolvente: salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que tambi\u00e9n digan 2.0 o est\u00e9reo.": "Per Roku o TV senza audio surround: salta le fonti indicate come 5.1, 7.1, Atmos, Dolby o DTS, a meno che indichino anche 2.0 o stereo.",
+ "Est\u00e9reo": "Stereo",
+ "S\u00ed: ": "S\u00ec: ",
+ "No: ": "No: ",
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "La riproduzione automatica e il cambio fonte saltano le fonti con audio dell'elenco No, come DTS o TrueHD."
 }

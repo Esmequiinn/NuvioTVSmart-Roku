@@ -939,5 +939,16 @@
  "Primero agrega addons con cat\u00e1logos.": "Primeiro adicione addons com cat\u00e1logos.",
  "Quita el indicador flotante de arriba a la izquierda.": "Remove o indicador flutuante do canto superior esquerdo.",
  "Roku no puede desenfocar, as\u00ed que la barra y la pastilla se ven semitransparentes.": "O Roku n\u00e3o consegue desfocar, ent\u00e3o a barra e a p\u00edlula ficam semitransparentes.",
- "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Uma barra flutuante que abre ao ir para a esquerda, com uma p\u00edlula no topo que mostra onde voc\u00ea est\u00e1."
+ "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Uma barra flutuante que abre ao ir para a esquerda, com uma p\u00edlula no topo que mostra onde voc\u00ea est\u00e1.",
+ "Recordar el \u00faltimo perfil": "Lembrar o \u00faltimo perfil",
+ "Al abrir el canal entra directo al \u00faltimo perfil que usaste. Si el perfil tiene PIN, te lo pide.": "Ao abrir o canal, entra direto no \u00faltimo perfil que voc\u00ea usou. Se o perfil tiver PIN, ele pede.",
+ "Audio de tu Roku": "\u00c1udio do seu Roku",
+ "Lo que tu Roku puede reproducir": "O que seu Roku consegue reproduzir",
+ "Saltar audio que tu Roku no reproduce": "Pular \u00e1udio que seu Roku n\u00e3o reproduz",
+ "Solo audio est\u00e9reo (2.0)": "Somente \u00e1udio est\u00e9reo (2.0)",
+ "Para Roku o TV sin sonido envolvente: salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que tambi\u00e9n digan 2.0 o est\u00e9reo.": "Para Roku ou TV sem som surround: pula fontes marcadas como 5.1, 7.1, Atmos, Dolby ou DTS, a menos que tamb\u00e9m digam 2.0 ou est\u00e9reo.",
+ "Est\u00e9reo": "Est\u00e9reo",
+ "S\u00ed: ": "Sim: ",
+ "No: ": "N\u00e3o: ",
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "A reprodu\u00e7\u00e3o autom\u00e1tica e a troca de fonte pulam fontes com \u00e1udio da lista N\u00e3o, como DTS ou TrueHD."
 }

@@ -939,5 +939,16 @@
  "Primero agrega addons con cat\u00e1logos.": "Najpierw dodaj addony z katalogami.",
  "Quita el indicador flotante de arriba a la izquierda.": "Usuwa p\u0142ywaj\u0105cy wska\u017anik w lewym g\u00f3rnym rogu.",
  "Roku no puede desenfocar, as\u00ed que la barra y la pastilla se ven semitransparentes.": "Roku nie potrafi rozmywa\u0107, wi\u0119c pasek i pigu\u0142ka s\u0105 p\u00f3\u0142przezroczyste.",
- "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "P\u0142ywaj\u0105cy pasek boczny otwierany po przej\u015bciu w lewo, z pigu\u0142k\u0105 na g\u00f3rze pokazuj\u0105c\u0105, gdzie jeste\u015b."
+ "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "P\u0142ywaj\u0105cy pasek boczny otwierany po przej\u015bciu w lewo, z pigu\u0142k\u0105 na g\u00f3rze pokazuj\u0105c\u0105, gdzie jeste\u015b.",
+ "Recordar el \u00faltimo perfil": "Zapami\u0119taj ostatni profil",
+ "Al abrir el canal entra directo al \u00faltimo perfil que usaste. Si el perfil tiene PIN, te lo pide.": "Po otwarciu kana\u0142 od razu wchodzi do ostatnio u\u017cywanego profilu. Je\u015bli profil ma PIN, poprosi o niego.",
+ "Audio de tu Roku": "D\u017awi\u0119k twojego Roku",
+ "Lo que tu Roku puede reproducir": "Co twoje Roku mo\u017ce odtworzy\u0107",
+ "Saltar audio que tu Roku no reproduce": "Pomijaj d\u017awi\u0119k, kt\u00f3rego Roku nie odtwarza",
+ "Solo audio est\u00e9reo (2.0)": "Tylko d\u017awi\u0119k stereo (2.0)",
+ "Para Roku o TV sin sonido envolvente: salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que tambi\u00e9n digan 2.0 o est\u00e9reo.": "Dla Roku lub TV bez d\u017awi\u0119ku przestrzennego: pomija \u017ar\u00f3d\u0142a oznaczone 5.1, 7.1, Atmos, Dolby lub DTS, chyba \u017ce maj\u0105 te\u017c 2.0 lub stereo.",
+ "Est\u00e9reo": "Stereo",
+ "S\u00ed: ": "Tak: ",
+ "No: ": "Nie: ",
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Autoodtwarzanie i zmiana \u017ar\u00f3d\u0142a pomijaj\u0105 \u017ar\u00f3d\u0142a z d\u017awi\u0119kiem z listy Nie, np. DTS lub TrueHD."
 }

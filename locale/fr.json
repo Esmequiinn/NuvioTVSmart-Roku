@@ -939,5 +939,16 @@
  "Primero agrega addons con cat\u00e1logos.": "Ajoutez d'abord des addons avec des catalogues.",
  "Quita el indicador flotante de arriba a la izquierda.": "Supprime l'indicateur flottant en haut \u00e0 gauche.",
  "Roku no puede desenfocar, as\u00ed que la barra y la pastilla se ven semitransparentes.": "Roku ne peut pas flouter, la barre et la pastille sont donc semi-transparentes.",
- "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Une barre flottante qui s'ouvre quand vous allez \u00e0 gauche, avec une pastille en haut qui indique o\u00f9 vous \u00eates."
+ "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Une barre flottante qui s'ouvre quand vous allez \u00e0 gauche, avec une pastille en haut qui indique o\u00f9 vous \u00eates.",
+ "Recordar el \u00faltimo perfil": "M\u00e9moriser le dernier profil",
+ "Al abrir el canal entra directo al \u00faltimo perfil que usaste. Si el perfil tiene PIN, te lo pide.": "\u00c0 l'ouverture, la cha\u00eene entre directement dans le dernier profil utilis\u00e9. Si ce profil a un PIN, il est demand\u00e9.",
+ "Audio de tu Roku": "Audio de votre Roku",
+ "Lo que tu Roku puede reproducir": "Ce que votre Roku peut lire",
+ "Saltar audio que tu Roku no reproduce": "Ignorer l'audio que votre Roku ne lit pas",
+ "Solo audio est\u00e9reo (2.0)": "Audio st\u00e9r\u00e9o uniquement (2.0)",
+ "Para Roku o TV sin sonido envolvente: salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que tambi\u00e9n digan 2.0 o est\u00e9reo.": "Pour un Roku ou une TV sans son surround : ignore les sources marqu\u00e9es 5.1, 7.1, Atmos, Dolby ou DTS, sauf si elles indiquent aussi 2.0 ou st\u00e9r\u00e9o.",
+ "Est\u00e9reo": "St\u00e9r\u00e9o",
+ "S\u00ed: ": "Oui : ",
+ "No: ": "Non : ",
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "La lecture automatique et le changement de source ignorent les sources avec un audio de la liste Non, comme DTS ou TrueHD."
 }

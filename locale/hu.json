@@ -939,5 +939,16 @@
  "Primero agrega addons con cat\u00e1logos.": "El\u0151bb adj hozz\u00e1 katal\u00f3gusos kieg\u00e9sz\u00edt\u0151ket.",
  "Quita el indicador flotante de arriba a la izquierda.": "Elt\u00e1vol\u00edtja a bal fels\u0151 lebeg\u0151 jelz\u0151t.",
  "Roku no puede desenfocar, as\u00ed que la barra y la pastilla se ven semitransparentes.": "A Roku nem tud elmosni, ez\u00e9rt a s\u00e1v \u00e9s a pirula f\u00e9lig \u00e1tl\u00e1tsz\u00f3.",
- "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Lebeg\u0151 oldals\u00e1v, amely balra l\u00e9pve ny\u00edlik meg, fel\u00fcl egy pirul\u00e1val, amely mutatja, hol vagy."
+ "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Lebeg\u0151 oldals\u00e1v, amely balra l\u00e9pve ny\u00edlik meg, fel\u00fcl egy pirul\u00e1val, amely mutatja, hol vagy.",
+ "Recordar el \u00faltimo perfil": "Utols\u00f3 profil megjegyz\u00e9se",
+ "Al abrir el canal entra directo al \u00faltimo perfil que usaste. Si el perfil tiene PIN, te lo pide.": "Megnyit\u00e1skor a csatorna egyb\u0151l az utolj\u00e1ra haszn\u00e1lt profilba l\u00e9p. Ha a profilnak PIN-k\u00f3dja van, elk\u00e9ri.",
+ "Audio de tu Roku": "A Roku hangja",
+ "Lo que tu Roku puede reproducir": "Amit a Rokud le tud j\u00e1tszani",
+ "Saltar audio que tu Roku no reproduce": "A Roku \u00e1ltal nem t\u00e1mogatott hang kihagy\u00e1sa",
+ "Solo audio est\u00e9reo (2.0)": "Csak sztere\u00f3 hang (2.0)",
+ "Para Roku o TV sin sonido envolvente: salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que tambi\u00e9n digan 2.0 o est\u00e9reo.": "T\u00e9rhat\u00e1s n\u00e9lk\u00fcli Rokuhoz vagy TV-hez: kihagyja az 5.1, 7.1, Atmos, Dolby vagy DTS jel\u00f6l\u00e9s\u0171 forr\u00e1sokat, kiv\u00e9ve ha 2.0 vagy sztere\u00f3 is szerepel.",
+ "Est\u00e9reo": "Sztere\u00f3",
+ "S\u00ed: ": "Igen: ",
+ "No: ": "Nem: ",
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Az automatikus lej\u00e1tsz\u00e1s \u00e9s a forr\u00e1sv\u00e1lt\u00e1s kihagyja a Nem list\u00e1n l\u00e9v\u0151 hang\u00fa forr\u00e1sokat, p\u00e9ld\u00e1ul DTS vagy TrueHD."
 }

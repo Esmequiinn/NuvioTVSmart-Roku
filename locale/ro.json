@@ -939,5 +939,16 @@
  "Primero agrega addons con cat\u00e1logos.": "Adaug\u0103 mai \u00eent\u00e2i addonuri cu cataloage.",
  "Quita el indicador flotante de arriba a la izquierda.": "Elimin\u0103 indicatorul plutitor din st\u00e2nga sus.",
  "Roku no puede desenfocar, as\u00ed que la barra y la pastilla se ven semitransparentes.": "Roku nu poate estompa, a\u0219a c\u0103 bara \u0219i pastila par semitransparente.",
- "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "O bar\u0103 lateral\u0103 plutitoare care se deschide c\u00e2nd mergi la st\u00e2nga, cu o pastil\u0103 sus care arat\u0103 unde e\u0219ti."
+ "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "O bar\u0103 lateral\u0103 plutitoare care se deschide c\u00e2nd mergi la st\u00e2nga, cu o pastil\u0103 sus care arat\u0103 unde e\u0219ti.",
+ "Recordar el \u00faltimo perfil": "\u021aine minte ultimul profil",
+ "Al abrir el canal entra directo al \u00faltimo perfil que usaste. Si el perfil tiene PIN, te lo pide.": "La deschidere, canalul intr\u0103 direct \u00een ultimul profil folosit. Dac\u0103 profilul are PIN, \u00eel cere.",
+ "Audio de tu Roku": "Audio Roku",
+ "Lo que tu Roku puede reproducir": "Ce poate reda Roku-ul t\u0103u",
+ "Saltar audio que tu Roku no reproduce": "Sari peste audio pe care Roku nu \u00eel red\u0103",
+ "Solo audio est\u00e9reo (2.0)": "Doar audio stereo (2.0)",
+ "Para Roku o TV sin sonido envolvente: salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que tambi\u00e9n digan 2.0 o est\u00e9reo.": "Pentru Roku sau TV f\u0103r\u0103 sunet surround: sare peste sursele marcate 5.1, 7.1, Atmos, Dolby sau DTS, cu excep\u021bia celor care spun \u0219i 2.0 sau stereo.",
+ "Est\u00e9reo": "Stereo",
+ "S\u00ed: ": "Da: ",
+ "No: ": "Nu: ",
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Redarea automat\u0103 \u0219i schimbarea sursei sar peste sursele cu audio din lista Nu, ca DTS sau TrueHD."
 }

@@ -939,5 +939,16 @@
  "Primero agrega addons con cat\u00e1logos.": "\u00d6nce kataloglu eklentiler ekleyin.",
  "Quita el indicador flotante de arriba a la izquierda.": "Sol \u00fcstteki y\u00fczen g\u00f6stergeyi kald\u0131r\u0131r.",
  "Roku no puede desenfocar, as\u00ed que la barra y la pastilla se ven semitransparentes.": "Roku bulan\u0131kla\u015ft\u0131ramaz, bu y\u00fczden \u00e7ubuk ve hap yar\u0131 saydam g\u00f6r\u00fcn\u00fcr.",
- "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Sola gidince a\u00e7\u0131lan, \u00fcstte nerede oldu\u011funuzu g\u00f6steren bir hap\u0131 olan y\u00fczen kenar \u00e7ubu\u011fu."
+ "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Sola gidince a\u00e7\u0131lan, \u00fcstte nerede oldu\u011funuzu g\u00f6steren bir hap\u0131 olan y\u00fczen kenar \u00e7ubu\u011fu.",
+ "Recordar el \u00faltimo perfil": "Son profili hat\u0131rla",
+ "Al abrir el canal entra directo al \u00faltimo perfil que usaste. Si el perfil tiene PIN, te lo pide.": "Kanal a\u00e7\u0131ld\u0131\u011f\u0131nda do\u011frudan son kulland\u0131\u011f\u0131n profile girer. Profilde PIN varsa ister.",
+ "Audio de tu Roku": "Roku ses deste\u011fi",
+ "Lo que tu Roku puede reproducir": "Roku'nun oynatabildikleri",
+ "Saltar audio que tu Roku no reproduce": "Roku'nun oynatamad\u0131\u011f\u0131 sesi atla",
+ "Solo audio est\u00e9reo (2.0)": "Yaln\u0131zca stereo ses (2.0)",
+ "Para Roku o TV sin sonido envolvente: salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que tambi\u00e9n digan 2.0 o est\u00e9reo.": "Surround sesi olmayan Roku veya TV i\u00e7in: 5.1, 7.1, Atmos, Dolby veya DTS i\u015faretli kaynaklar\u0131 atlar, 2.0 veya stereo da yazm\u0131yorsa.",
+ "Est\u00e9reo": "Stereo",
+ "S\u00ed: ": "Evet: ",
+ "No: ": "Hay\u0131r: ",
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Otomatik oynatma ve kaynak de\u011fi\u015ftirme, Hay\u0131r listesindeki sesli kaynaklar\u0131 atlar (DTS veya TrueHD gibi)."
 }

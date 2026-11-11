@@ -939,5 +939,16 @@
  "Primero agrega addons con cat\u00e1logos.": "Nejprve p\u0159idejte dopl\u0148ky s katalogy.",
  "Quita el indicador flotante de arriba a la izquierda.": "Odstran\u00ed plovouc\u00ed ukazatel vlevo naho\u0159e.",
  "Roku no puede desenfocar, as\u00ed que la barra y la pastilla se ven semitransparentes.": "Roku neum\u00ed rozmaz\u00e1vat, tak\u017ee panel a pilulka jsou polopr\u016fhledn\u00e9.",
- "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Plovouc\u00ed postrann\u00ed panel, kter\u00fd se otev\u0159e, kdy\u017e p\u016fjdete doleva, s pilulkou naho\u0159e, kter\u00e1 ukazuje, kde jste."
+ "Una barra flotante que se abre al ir a la izquierda, con una pastilla arriba que dice d\u00f3nde est\u00e1s.": "Plovouc\u00ed postrann\u00ed panel, kter\u00fd se otev\u0159e, kdy\u017e p\u016fjdete doleva, s pilulkou naho\u0159e, kter\u00e1 ukazuje, kde jste.",
+ "Recordar el \u00faltimo perfil": "Pamatovat posledn\u00ed profil",
+ "Al abrir el canal entra directo al \u00faltimo perfil que usaste. Si el perfil tiene PIN, te lo pide.": "Po otev\u0159en\u00ed kan\u00e1l rovnou vstoup\u00ed do naposledy pou\u017eit\u00e9ho profilu. Pokud m\u00e1 profil PIN, vy\u017e\u00e1d\u00e1 si ho.",
+ "Audio de tu Roku": "Zvuk tv\u00e9ho Roku",
+ "Lo que tu Roku puede reproducir": "Co tv\u00e9 Roku um\u00ed p\u0159ehr\u00e1t",
+ "Saltar audio que tu Roku no reproduce": "P\u0159esko\u010dit zvuk, kter\u00fd Roku nep\u0159ehraje",
+ "Solo audio est\u00e9reo (2.0)": "Jen stereo zvuk (2.0)",
+ "Para Roku o TV sin sonido envolvente: salta las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS, salvo que tambi\u00e9n digan 2.0 o est\u00e9reo.": "Pro Roku nebo TV bez prostorov\u00e9ho zvuku: p\u0159esko\u010d\u00ed zdroje ozna\u010den\u00e9 5.1, 7.1, Atmos, Dolby nebo DTS, pokud neuv\u00e1d\u011bj\u00ed tak\u00e9 2.0 nebo stereo.",
+ "Est\u00e9reo": "Stereo",
+ "S\u00ed: ": "Ano: ",
+ "No: ": "Ne: ",
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Automatick\u00e9 p\u0159ehr\u00e1v\u00e1n\u00ed a zm\u011bna zdroje p\u0159esko\u010d\u00ed zdroje se zvukem ze seznamu Ne, nap\u0159. DTS nebo TrueHD."
 }
