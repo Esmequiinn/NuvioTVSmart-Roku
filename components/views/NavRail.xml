@@ -19,7 +19,7 @@
     <script type="text/brightscript" uri="pkg:/components/views/NavRail.brs" />
     <children>
         <Poster id="panel" visible="false" width="700" height="1080" uri="pkg:/images/rail_bg.png" loadDisplayMode="scaleToFill" />
-        <Poster id="float" visible="false" translation="[20,28]" width="470" uri="pkg:/images/panel.9.png" />
+        <Poster id="float" visible="false" translation="[20,28]" width="470" height="1024" uri="pkg:/images/panel.9.png" />
         <Group id="pill" visible="false" translation="[40,40]">
             <Poster id="pillBg" height="64" uri="pkg:/images/pill.9.png" />
             <Poster id="pillIcon" translation="[16,16]" width="32" height="32" />

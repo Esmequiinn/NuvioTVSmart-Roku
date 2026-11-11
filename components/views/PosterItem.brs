@@ -111,6 +111,7 @@ sub onContent()
     isFolder = fieldOf(item, "itemType") = "folder"
     m.body.visible = not item.hasField("heroCard")
     Under_Paint()
+    Gif_Update(m.ring.visible)
     if fieldOf(item, "itemType") = "seeall"
         m.art.uri = ""
         m.frame.visible = true
@@ -269,49 +270,22 @@ end sub
 sub Gif_Update(focused as boolean)
     item = m.top.itemContent
     url = ""
-    if focused and item <> invalid then url = fieldOf(item, "gif")
+    if focused and item <> invalid and not item.hasField("heroCard") then url = fieldOf(item, "gif")
+    if url <> "" and LCase(Left(url, 4)) <> "http" then url = ""
+    if not m.global.hasField("gifCard") then return
     if url <> ""
-        low = LCase(url)
-        if Instr(1, low, ".gif") = 0 and Instr(1, low, ".webp") = 0 and Instr(1, low, ".mp4") = 0 then url = ""
-    end if
-    if url = ""
-        if m.gif <> invalid
-            m.gif.control = "pause"
-            m.mask.removeChild(m.gif)
-            m.gif = invalid
+        if m.gifSent = url then return
+        m.gifSent = url
+        m.global.gifUrl = url
+        m.global.gifCard = m.top
+    else if m.gifSent <> invalid
+        m.gifSent = invalid
+        card = m.global.gifCard
+        if card <> invalid and card.isSameNode(m.top)
+            m.global.gifUrl = ""
+            m.global.gifCard = invalid
         end if
-        return
     end if
-    if m.gif <> invalid and m.gif.uri = url then return
-    if m.gif = invalid
-        m.gif = CreateObject("roSGNode", "AnimatedImage")
-        if m.gif = invalid then return
-        m.gif.visible = false
-        m.gif.observeField("state", "onGifState")
-        m.mask.appendChild(m.gif)
-    end if
-    w = Int(m.top.width)
-    h = Int(m.top.height)
-    m.gif.width = w
-    m.gif.height = h
-    m.gif.loadWidth = w
-    m.gif.loadHeight = h
-    m.gif.loadDisplayMode = "scaleToZoom"
-    low = LCase(url)
-    if Instr(1, low, ".mp4") > 0
-        m.gif.mimeType = "video/mp4"
-        m.gif.uri = url
-    else
-        m.gif.mimeType = "video/webp"
-        m.gif.uri = "https://wsrv.nl/?url=" + url.EncodeUriComponent() + "&n=-1&output=webp&w=" + w.ToStr() + "&h=" + h.ToStr() + "&fit=cover"
-    end if
-    m.gif.control = "loop"
-end sub
-
-sub onGifState()
-    if m.gif = invalid then return
-    st = m.gif.state
-    m.gif.visible = st <> "downloading" and st <> "init" and st <> "error" and st <> ""
 end sub
 
 sub onWatched()
@@ -330,7 +304,7 @@ sub onItemFocus()
     if not m.seenRow and (m.top.rowHasFocus or m.top.rowListHasFocus) then m.seenRow = true
     if not m.seenRow then m.ring.visible = item and Host_Focused()
     focused = m.ring.visible
-    Gif_Update(focused)
+    Gif_Update(focused and (m.gotPercent <> true or m.top.focusPercent > 0.95))
     if focused = m.reported then return
     m.reported = focused
     if focused and not m.landscape and m.global.hasField("focusCard") then m.global.focusCard = m.top

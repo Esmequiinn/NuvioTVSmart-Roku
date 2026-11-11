@@ -24,13 +24,14 @@ sub Nav_Build()
     items.Push({ id: "library", label: L("Biblioteca"), icon: "pkg:/images/ic_library.png" })
     items.Push({ id: "settings", label: L("Ajustes"), icon: "pkg:/images/ic_settings.png" })
     y = 400
-    my = 160
+    gap = 104
+    my = 180 + Int((872 - ((items.Count() - 1) * gap + 76)) / 2)
     for each it in items
         it.y = y
         it.my = my
         m.defs.Push(it)
         y = y + 92
-        my = my + 88
+        my = my + gap
     end for
     m.nodes = []
     for each d in m.defs
@@ -144,7 +145,7 @@ sub paint()
     m.entries.visible = expanded or not (m.top.collapsed or modern)
     m.float.visible = expanded and modern
     if modern
-        m.float.height = m.defs[m.defs.Count() - 1].my + 76 + 52 - 28
+        m.float.height = 1024
         if m.top.blur then m.float.blendColor = "0x1F1F27E0" else m.float.blendColor = "0x141418FF"
     end if
     for i = 0 to m.nodes.Count() - 1
