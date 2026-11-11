@@ -113,7 +113,7 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Auto-play (first source and regex pattern) | ✅ Working |
 | Reuse last link and same source for next episode | ✅ Working |
 | Preferred and secondary audio and subtitle languages | ✅ Working |
-| Custom poster URL patterns | ⚠️ Not tested yet |
+| Custom poster URL patterns | ✅ Working |
 | English interface | ✅ Working |
 | Portuguese interface | ✅ Working |
 | French, German, Italian, Dutch, Polish, Turkish, Romanian, Czech and Hungarian interface | ✅ Working |
@@ -124,7 +124,7 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | MDBList account (QR) | ✅ Working |
 | Watch Party | ✅ Working |
 | `*` options menu and removing Continue Watching items | ✅ Working |
-| Collections with TMDB and Trakt sources | ⚠️ Not tested yet |
+| Collections with TMDB and Trakt sources | ✅ Working |
 | Next episode card | ✅ Working |
 | Are you still watching? | ✅ Working |
 | Recommendations at the end of a movie | ✅ Working |
@@ -138,7 +138,7 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Profile PIN | ✅ Working |
 | Episodes panel in the player | ✅ Working |
 | More like this and collection in details | ✅ Working |
-| TorBox and Premiumize (cached torrents) | ⚠️ Not tested yet |
+| TorBox and Premiumize (cached torrents) | ✅ Working |
 | Jellyfin and Emby | ✅ Working |
 | MDBList key from your Nuvio account | ✅ Working |
 | Change how it opens button | ✅ Working |
@@ -148,9 +148,9 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Loading screen with status | ✅ Working |
 | Try another source when one fails | ✅ Working |
 | Modern, Classic and Grid home styles | ✅ Working |
-| Home layout options (hero, poster titles, unreleased content, ratings) | ⚠️ Not tested yet |
-| Modern and collapsed sidebar | ⚠️ Not tested yet |
-| Custom accent color | ⚠️ Not tested yet |
+| Home layout options (hero, poster titles, unreleased content, ratings) | ✅ Working |
+| Modern and collapsed sidebar | ✅ Working |
+| Custom accent color | ✅ Working |
 | Ambient mode | ⚠️ Not tested yet |
 | Remember last profile | ⚠️ Not tested yet |
 | Audio support check and stereo-only filter | ⚠️ Not tested yet |
