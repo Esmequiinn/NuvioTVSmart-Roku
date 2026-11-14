@@ -4,6 +4,24 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.1.4] - 2026-11-11
+
+### Added
+- **Hide spoilers**, like Nuvio TV (**Settings → Layout → Series page → Hide spoilers**), off by default. On episodes you haven't watched yet, the picture is blurred and the description is hidden. Episodes you've watched or started look normal.
+- **Shuffle** button on series pages, like Nuvio TV. It plays a random episode that's already out (specials aren't included). You can hide it in **Settings → Layout → Series page → Shuffle button**.
+- **Episode ratings** in the season list: each episode shows its rating with a star next to the date. The ratings come from the addon (IMDb) or from TMDB when the addon doesn't have them, and the full-screen episode view (`*`) says which one.
+
+### Changed
+- **Stereo audio only (2.0)** now reads only the source's name, description and file name (not the link), so a link that happens to contain "2.0" or similar no longer gets through. It also catches sources marked just "DD". Sources that list both a 5.1 and a 2.0 track go after the stereo ones and before the 5.1-only ones, and auto-play picks a stereo source whenever there is one.
+- With **Stereo audio only (2.0)** turned on, sources marked 5.1, 7.1, Atmos, Dolby or DTS now move to the end of the source list instead of staying mixed with the rest, so stereo sources show up first. They aren't hidden, so you can still pick them. With **Skip audio your Roku can't play** on, sources with an audio format your Roku can't play also move to the end.
+- When a source gets its own badge images from an addon or your Nuvio account, the channel's built-in badges (quality, codec, size) are hidden for that source.
+
+### Fixed
+- The channel opens again on Roku models that can't show animated images (like some older Roku TVs). Since 0.1.3 it closed right after the splash screen on those models. On them, collection GIFs just show the regular picture.
+- Source badges no longer pile up on top of each other when a source has many of them.
+- Collection GIFs no longer show a white edge or square corners around them.
+- The trailer preview inside the expanded landscape card no longer shows square corners outside the frame.
+
 ## [0.1.3] - 2026-11-10
 
 ### Added

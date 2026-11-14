@@ -4,6 +4,24 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.1.4] - 2026-11-11
+
+### Agregado
+- **Ocultar spoilers**, como en Nuvio TV (**Ajustes → Diseño → Ficha de series → Ocultar spoilers**), apagado por defecto. En los episodios que todavía no has visto, la imagen se ve borrosa y se oculta la descripción. Los episodios que ya viste o empezaste se ven normal.
+- Botón **Aleatorio** en la ficha de las series, como en Nuvio TV. Reproduce un episodio al azar de los que ya salieron (sin contar los especiales). Lo puedes ocultar en **Ajustes → Diseño → Ficha de series → Botón Aleatorio**.
+- **Calificación de cada episodio** en la lista de temporadas: cada episodio muestra su calificación con una estrella junto a la fecha. Vienen del addon (IMDb) o de TMDB cuando el addon no las tiene, y la vista del episodio a pantalla completa (`*`) dice de cuál es.
+
+### Cambiado
+- **Solo audio estéreo (2.0)** ahora solo lee el nombre, la descripción y el nombre del archivo de la fuente (no el enlace), así que un enlace que por casualidad tenga "2.0" o algo parecido ya no se cuela. También reconoce las fuentes marcadas solo como "DD". Las fuentes que traen una pista 5.1 y otra 2.0 quedan después de las de estéreo y antes de las que solo son 5.1, y la reproducción automática elige una en estéreo siempre que haya.
+- Con **Solo audio estéreo (2.0)** encendido, las fuentes marcadas como 5.1, 7.1, Atmos, Dolby o DTS ahora pasan al final de la lista de fuentes en vez de quedar mezcladas, así las fuentes en estéreo salen primero. No se ocultan, así que todavía puedes elegirlas. Con **Saltar audio que tu Roku no reproduce** encendido, las fuentes con un audio que tu Roku no reproduce también pasan al final.
+- Cuando una fuente trae sus propias imágenes de badges desde un addon o tu cuenta de Nuvio, se ocultan los badges que pone el canal por defecto (calidad, códec, tamaño).
+
+### Corregido
+- El canal vuelve a abrir en los modelos de Roku que no pueden mostrar imágenes animadas (como algunas TV Roku más antiguas). Desde la 0.1.3 se cerraba justo después de la pantalla de inicio en esos modelos. En ellos, los GIF de las colecciones solo muestran la imagen normal.
+- Los badges de las fuentes ya no se enciman cuando una fuente tiene muchos.
+- Los GIF de las colecciones ya no muestran una orilla blanca ni esquinas cuadradas alrededor.
+- El tráiler dentro de la tarjeta horizontal ampliada ya no muestra esquinas cuadradas fuera del marco.
+
 ## [0.1.3] - 2026-11-10
 
 ### Agregado

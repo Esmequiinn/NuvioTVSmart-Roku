@@ -16,7 +16,7 @@
 
 </div>
 
-Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.1.3**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
+Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.1.4**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
 
 > **Esta no es una app oficial de Nuvio** y no está afiliada ni respaldada por el equipo de Nuvio. No aloja, guarda ni distribuye ningún contenido. Todo lo que ves viene de los addons que instalas.
 
@@ -154,6 +154,9 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Modo ambiente | ⚠️ Sin probar |
 | Recordar el último perfil | ⚠️ Sin probar |
 | Revisión del audio compatible y filtro de solo estéreo | ⚠️ Sin probar |
+| Ocultar spoilers en episodios no vistos | ⚠️ Sin probar |
+| Botón Aleatorio en series | ⚠️ Sin probar |
+| Calificación de cada episodio en la lista de temporadas | ⚠️ Sin probar |
 
 ### Limitaciones conocidas
 

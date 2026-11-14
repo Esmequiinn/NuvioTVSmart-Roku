@@ -16,7 +16,7 @@
 
 </div>
 
-This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.1.3**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
+This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedia). It is in **beta**: the current version is **0.1.4**. It lets you browse and play content from Stremio-style addons on any Roku TV or streaming stick.
 
 > **This is not an official Nuvio app** and it is not affiliated with or endorsed by the Nuvio team. It does not host, store or distribute any content. Everything you see comes from the addons you install.
 
@@ -154,6 +154,9 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Ambient mode | ⚠️ Not tested yet |
 | Remember last profile | ⚠️ Not tested yet |
 | Audio support check and stereo-only filter | ⚠️ Not tested yet |
+| Hide spoilers on unwatched episodes | ⚠️ Not tested yet |
+| Shuffle button on series | ⚠️ Not tested yet |
+| Episode ratings in the season list | ⚠️ Not tested yet |
 
 ### Known limitations
 
