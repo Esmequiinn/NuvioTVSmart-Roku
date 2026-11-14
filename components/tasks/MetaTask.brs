@@ -283,9 +283,11 @@ sub Tmdb_Episodes(merged as object, key as string, lang as string, tmdbId as str
                     en = ToInt(e.episode_number, 0)
                     still = ""
                     if Str_Of(e.still_path) <> "" then still = "https://image.tmdb.org/t/p/w780" + e.still_path
-                    info = { name: Str_Of(e.name), overview: Str_Of(e.overview), thumbnail: still, released: Str_Of(e.air_date), runtime: ToInt(e.runtime, 0) }
+                    rating = ""
+                    if ToInt(e.vote_count, 0) > 0 then rating = Rating_Text(e.vote_average)
+                    info = { name: Str_Of(e.name), overview: Str_Of(e.overview), thumbnail: still, released: Str_Of(e.air_date), runtime: ToInt(e.runtime, 0), rating: rating }
                     byKey["s" + sn.ToStr() + "e" + en.ToStr()] = info
-                    if imdb <> "" then built.Push({ id: imdb + ":" + sn.ToStr() + ":" + en.ToStr(), season: sn, episode: en, name: info.name, title: "", overview: info.overview, description: "", released: info.released, thumbnail: still, runtime: info.runtime })
+                    if imdb <> "" then built.Push({ id: imdb + ":" + sn.ToStr() + ":" + en.ToStr(), season: sn, episode: en, name: info.name, title: "", overview: info.overview, description: "", released: info.released, thumbnail: still, runtime: info.runtime, rating: rating, ratingSrc: "TMDB" })
                 end if
             end for
         end if
@@ -300,6 +302,10 @@ sub Tmdb_Episodes(merged as object, key as string, lang as string, tmdbId as str
                 if info.thumbnail <> "" then v.thumbnail = info.thumbnail
                 if info.runtime > 0 then v.runtime = info.runtime
                 if Str_Of(v.released) = "" then v.released = info.released
+                if Rating_Text(v.rating) = "" and info.rating <> ""
+                    v.rating = info.rating
+                    v.ratingSrc = "TMDB"
+                end if
             end if
         end for
     else if built.Count() > 0
@@ -402,6 +408,8 @@ sub Meta_Merge(target as object, meta as object)
                     description: Str_Of(v.description)
                     released: Str_Of(v.released)
                     thumbnail: Str_Of(v.thumbnail)
+                    rating: Rating_Text(v.rating)
+                    ratingSrc: "IMDb"
                 })
             end if
         end for
