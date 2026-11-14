@@ -282,37 +282,60 @@ function Stream_Unplayable(s as object) as boolean
     return false
 end function
 
-function Audio_Unplayable(s as object) as boolean
+function Audio_Rank(s as object) as integer
     if m.audioRe = invalid
         m.audioRe = {
             dts: CreateObject("roRegex", "\b(dts|dts-?hd|dts-?ma|dts-?x|dtshd)\b", "i")
             truehd: CreateObject("roRegex", "\b(true-?hd|atmos\s*true-?hd)\b", "i")
             eac3: CreateObject("roRegex", "(\bddp|\bdd\+|\be-?ac-?3\b|\bdolby\s*digital\s*plus\b)", "i")
-            ac3: CreateObject("roRegex", "(\bac-?3\b|\bdd\s?[257]\.?[01]\b|\bdolby\s*digital\b)", "i")
+            ac3: CreateObject("roRegex", "(\bac-?3\b|\bdd\b|\bdd\s?[257]\.?[01]\b|\bdolby\s*digital\b)", "i")
             multi: CreateObject("roRegex", "((^|[^0-9])[5-7][\.\s]1([^0-9]|$)|\b(6|8)ch\b|\bsurround\b|\batmos\b)", "i")
             stereo: CreateObject("roRegex", "((^|[^0-9])2[\.\s]0([^0-9]|$)|\bstereo\b|\b2ch\b)", "i")
         }
     end if
-    caps = Device_Audio()
-    text = Stream_SearchText(s)
+    re = m.audioRe
+    text = [Str_OneLine(s.name), Str_OneLine(s.desc), Str_Of(s.filename)].Join(" ")
     if Bool_Of(St_Pref("audioSafe"), true)
-        if not caps.truehd and m.audioRe.truehd.IsMatch(text) then return true
-        if not caps.dts and m.audioRe.dts.IsMatch(text) then return true
-        if not caps.eac3 and m.audioRe.eac3.IsMatch(text) then return true
-        if not caps.ac3 and m.audioRe.ac3.IsMatch(text) then return true
+        caps = Device_Audio()
+        if not caps.truehd and re.truehd.IsMatch(text) then return 2
+        if not caps.dts and re.dts.IsMatch(text) then return 2
+        if not caps.eac3 and re.eac3.IsMatch(text) then return 2
+        if not caps.ac3 and re.ac3.IsMatch(text) then return 2
     end if
-    if Bool_Of(St_Pref("stereoOnly"), false) and not m.audioRe.stereo.IsMatch(text)
-        if m.audioRe.multi.IsMatch(text) or m.audioRe.ac3.IsMatch(text) or m.audioRe.eac3.IsMatch(text) or m.audioRe.dts.IsMatch(text) or m.audioRe.truehd.IsMatch(text) then return true
-    end if
-    return false
+    if not Bool_Of(St_Pref("stereoOnly"), false) then return 0
+    multi = re.multi.IsMatch(text) or re.ac3.IsMatch(text) or re.eac3.IsMatch(text) or re.dts.IsMatch(text) or re.truehd.IsMatch(text)
+    if not multi then return 0
+    if re.stereo.IsMatch(text) then return 1
+    return 2
+end function
+
+function Audio_Unplayable(s as object) as boolean
+    return Audio_Rank(s) > 0
+end function
+
+function Streams_AudioOrder(list as object) as object
+    if type(list) <> "roArray" then return list
+    if not Bool_Of(St_Pref("stereoOnly"), false) and not Bool_Of(St_Pref("audioSafe"), true) then return list
+    groups = [[], [], []]
+    for each s in list
+        groups[Audio_Rank(s)].Push(s)
+    end for
+    out = groups[0]
+    out.Append(groups[1])
+    out.Append(groups[2])
+    return out
 end function
 
 function Autoplay_Prefer(streams as object, candidates as object) as object
-    usable = []
+    ranked = [[], [], []]
     for each i in candidates
-        if not Audio_Unplayable(streams[i]) then usable.Push(i)
+        ranked[Audio_Rank(streams[i])].Push(i)
     end for
-    if usable.Count() > 0 then candidates = usable
+    if ranked[0].Count() > 0
+        candidates = ranked[0]
+    else if ranked[1].Count() > 0
+        candidates = ranked[1]
+    end if
     if not Bool_Of(St_Pref("rokuSafe"), true) then return candidates
     audio = CreateObject("roRegex", "\b(remux|truehd|true-hd|dts-hd|dts-ma|dtshd|dts-x|dtsx)\b", "i")
     good = []

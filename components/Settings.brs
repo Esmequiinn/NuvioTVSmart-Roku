@@ -35,7 +35,7 @@ function Set_SubLangs() as object
 end function
 
 function Set_Toggles() as object
-    return { forcedSubs: true, openSubs: true, autoNext: true, pauseOverlay: true, clock: true, reuseLink: true, bingeNext: true, bingeReuse: true, sizeBadges: true, addonLogo: true, fusionBadges: true, expandPoster: true, expandTrailer: true, expandMuted: true, trailerButton: true, trailerAutoplay: true, rokuSafe: true, skipIntro: true, autoSkipIntro: true, autoSkipRecap: true, autoSkipOutro: true, autoSkipCredits: true, preloadNext: true, bingeFallback: true, stillWatching: true, postPlay: true, parentalGuide: true, stripSdh: true, onlyPrefSubs: true, customSubs: true, subBold: true, playerStats: true, loadDetails: true, audioSafe: true, stereoOnly: true, sourceFailover: true, ambientOn: true, heroFull: true, classicGradient: true, posterLabels: true, homeRatings: true, navModern: true, navBlur: true, navCollapsed: true }
+    return { forcedSubs: true, openSubs: true, autoNext: true, pauseOverlay: true, clock: true, reuseLink: true, bingeNext: true, bingeReuse: true, sizeBadges: true, addonLogo: true, fusionBadges: true, expandPoster: true, expandTrailer: true, expandMuted: true, trailerButton: true, trailerAutoplay: true, rokuSafe: true, skipIntro: true, autoSkipIntro: true, autoSkipRecap: true, autoSkipOutro: true, autoSkipCredits: true, preloadNext: true, bingeFallback: true, stillWatching: true, postPlay: true, parentalGuide: true, stripSdh: true, onlyPrefSubs: true, customSubs: true, subBold: true, playerStats: true, loadDetails: true, hideSpoilers: true, shuffleButton: true, audioSafe: true, stereoOnly: true, sourceFailover: true, ambientOn: true, heroFull: true, classicGradient: true, posterLabels: true, homeRatings: true, navModern: true, navBlur: true, navCollapsed: true }
 end function
 
 function Set_Minutes(v as integer) as string
@@ -392,6 +392,9 @@ function Settings_Model() as object
     sources.rows.Push(Set_Toggle("fusionBadges", L("Badges Fusion"), fusionDesc, Bool_Of(Set_Pref(prefs, defaults, "fusionBadges"), true)))
 
     trailers = layout
+    trailers.rows.Push(Set_Header(L("Ficha de series")))
+    trailers.rows.Push(Set_Toggle("hideSpoilers", L("Ocultar spoilers"), L("En los episodios que no has visto, la imagen se ve borrosa y no se muestra la descripción."), Bool_Of(Set_Pref(prefs, defaults, "hideSpoilers"), false)))
+    trailers.rows.Push(Set_Toggle("shuffleButton", L("Botón Aleatorio"), L("Aparece en la ficha de las series y reproduce un episodio al azar."), Bool_Of(Set_Pref(prefs, defaults, "shuffleButton"), true)))
     trailers.rows.Push(Set_Header(L("Tráilers")))
     trailers.rows.Push(Set_Toggle("trailerButton", L("Botón de tráiler"), L("Aparece en la ficha cuando hay tráiler."), Bool_Of(Set_Pref(prefs, defaults, "trailerButton"), true)))
     trailers.rows.Push(Set_Toggle("trailerAutoplay", L("Reproducir tráiler en la ficha"), L("Empieza solo después de unos segundos en la ficha."), Bool_Of(Set_Pref(prefs, defaults, "trailerAutoplay"), false)))

@@ -140,8 +140,8 @@
             <Label id="libraryEmpty" visible="false" translation="[160,620]" width="1500" wrap="true" font="font:MediumSystemFont" color="0x9A9AAAFF" text="Tu biblioteca está vacía. Abre cualquier título y elige Mi lista para guardarlo aquí." />
         </Group>
         <Group id="gifLayer" visible="false">
+            <Poster id="gifBack" uri="pkg:/images/card.9.png" blendColor="0x0C0C0FFF" />
             <MaskGroup id="gifMask" maskUri="pkg:/images/mask_poster.png" maskSize="[200,300]">
-                <AnimatedImage id="gifArt" loadDisplayMode="scaleToZoom" />
             </MaskGroup>
             <Group id="gifCaps" />
             <Poster id="gifRing" uri="pkg:/images/iring.9.png" />

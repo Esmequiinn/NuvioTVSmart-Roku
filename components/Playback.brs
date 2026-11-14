@@ -163,7 +163,7 @@ end sub
 sub Details_Extra()
     meta = m.ctx.meta
     if meta = invalid then return
-    extra = { seasons: [], cast: [], crew: "", seasonIndex: 0 }
+    extra = { seasons: [], cast: [], crew: "", seasonIndex: 0, hideSpoilers: Bool_Of(St_Pref("hideSpoilers"), false) }
     entry = resumeEntry()
     resumeId = ""
     if entry <> invalid then resumeId = Str_Of(entry.videoId)
@@ -191,7 +191,7 @@ sub Details_Extra()
                 progress = 0.0
                 if v.id = resumeId and ToInt(entry.duration, 0) > 0 then progress = ToInt(entry.position, 0) / ToInt(entry.duration, 1)
                 seen = watched.DoesExist(St_WatchedKey(m.ctx.metaId, v.season, v.episode))
-                eps.Push({ id: v.id, code: code, name: name, overview: overview, meta: parts.Join("  ·  "), thumb: thumb, progress: progress, watched: seen, s: ToInt(v.season, -1), rating: Str_Of(v.rating) })
+                eps.Push({ id: v.id, code: code, name: name, overview: overview, meta: parts.Join("  ·  "), thumb: thumb, progress: progress, watched: seen, s: ToInt(v.season, -1), rating: Rating_Text(v.rating), ratingSrc: Str_Of(v.ratingSrc) })
                 if v.id = resumeId then extra.seasonIndex = si
             end for
             extra.seasons.Push({ label: season.label, episodes: eps })
@@ -242,6 +242,7 @@ sub renderDetailButtons()
     buttons.Push({ id: "play", icon: "pkg:/images/ic_play.png", label: playLabel })
     if m.ctx.trailer <> invalid and Bool_Of(St_Pref("trailerButton"), true) then buttons.Push({ id: "trailer", icon: "pkg:/images/ic_trailer.png", label: L("Tráiler") })
     if entry <> invalid and not Bool_Of(entry.nextUp, false) then buttons.Push({ id: "restart", icon: "pkg:/images/ic_next.png", label: L("Desde el inicio") })
+    if isSeries() and Bool_Of(St_Pref("shuffleButton"), true) then buttons.Push({ id: "shuffle", icon: "pkg:/images/ic_shuffle.png", label: L("Aleatorio") })
     if St_InLibrary(m.ctx.metaId)
         buttons.Push({ id: "library", icon: "pkg:/images/ic_check.png", label: L("En Mi lista") })
     else
@@ -314,9 +315,30 @@ sub runDetailAction(action as string)
     else if action = "play" or action = "restart"
         m.ctx.fromStart = action = "restart"
         playMain()
+    else if action = "shuffle"
+        Shuffle_Play()
     else if action = "partyPlay"
         Party_PlayMedia()
     end if
+end sub
+
+sub Shuffle_Play()
+    today = CreateObject("roDateTime").ToISOString()
+    today = Left(today, 10)
+    pool = []
+    for each season in m.ctx.seasons
+        for each v in season.episodes
+            released = Left(Str_Of(v.released), 10)
+            if ToInt(v.season, 0) > 0 and (released = "" or released <= today) then pool.Push(v)
+        end for
+    end for
+    if pool.Count() = 0
+        m.details.status = L("No hay episodios para elegir al azar.")
+        return
+    end if
+    pick = pool[Rnd(pool.Count()) - 1]
+    m.ctx.fromStart = true
+    pickEpisodeById(Str_Of(pick.id))
 end sub
 
 sub EpAct_Run(action as string)
@@ -785,10 +807,10 @@ sub syncStreams()
         for each s in m.ctx.pool
             list.Push(s)
         end for
-        m.ctx.streams = list
+        m.ctx.streams = Streams_AudioOrder(list)
         m.ctx.reused = invalid
     else
-        m.ctx.streams = m.ctx.pool
+        m.ctx.streams = Streams_AudioOrder(m.ctx.pool)
     end if
     playing = Str_Of(m.ctx.playingUrl)
     if playing <> ""
@@ -1670,7 +1692,7 @@ sub fallbackFromReuse()
     m.ctx.reusedPlay = false
     m.ctx.reused = invalid
     m.ctx.decided = false
-    m.ctx.streams = m.ctx.pool
+    m.ctx.streams = Streams_AudioOrder(m.ctx.pool)
     if m.ctx.auto.active
         m.playerVideo.control = "stop"
         m.player.active = false

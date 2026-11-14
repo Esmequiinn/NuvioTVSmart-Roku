@@ -106,9 +106,13 @@ sub init()
     m.global.addField("gifCard", "node", true)
     m.global.observeField("gifCard", "onGifCard")
     m.gifLayer = m.top.findNode("gifLayer")
-    m.gifArt = m.top.findNode("gifArt")
+    m.gifArt = CreateObject("roSGNode", "AnimatedImage")
+    if m.gifArt <> invalid
+        m.gifArt.loadDisplayMode = "scaleToZoom"
+        m.top.findNode("gifMask").appendChild(m.gifArt)
+        m.gifArt.observeField("state", "onGifArtState")
+    end if
     m.gifRing = m.top.findNode("gifRing")
-    m.gifArt.observeField("state", "onGifArtState")
     m.gifTimer = m.top.createChild("Timer")
     m.gifTimer.duration = 0.45
     m.gifTimer.repeat = false
@@ -743,6 +747,7 @@ function getRowItem(rows as object, cell as dynamic) as dynamic
 end function
 
 sub onRowsMove(event as object)
+    if m.gifArt = invalid then return
     if not m.gifLayer.visible and m.gifArt.uri = "" then return
     rows = event.getRoSGNode()
     focus = rows.rowItemFocused
@@ -1619,7 +1624,7 @@ end function
 
 sub onGifCard()
     Gif_Hide()
-    if m.global.gifCard = invalid or m.global.gifUrl = "" then return
+    if m.gifArt = invalid or m.global.gifCard = invalid or m.global.gifUrl = "" then return
     m.gifTimer.control = "stop"
     m.gifTimer.control = "start"
 end sub
@@ -1628,7 +1633,7 @@ sub Gif_Hide()
     m.gifTimer.control = "stop"
     m.gifWait.control = "stop"
     m.gifLayer.visible = false
-    if m.gifArt.uri <> ""
+    if m.gifArt <> invalid and m.gifArt.uri <> ""
         m.gifArt.control = "stop"
         m.gifArt.uri = ""
     end if
@@ -1637,7 +1642,7 @@ end sub
 sub Gif_Show()
     card = m.global.gifCard
     url = m.global.gifUrl
-    if card = invalid or url = "" or overlayOpen() or m.top.dialog <> invalid then return
+    if m.gifArt = invalid or card = invalid or url = "" or overlayOpen() or m.top.dialog <> invalid then return
     w = Int(card.width)
     h = Int(card.height)
     if w <= 0 or h <= 0 then return
@@ -1654,7 +1659,10 @@ sub Gif_Show()
     m.gifRing.height = h
     m.gifRing.blendColor = m.accent
     Mask_Apply(m.top.findNode("gifMask"), w, h)
-    Mask_Caps(m.top.findNode("gifCaps"), w, h, 22, "0x0C0C0FFF", true)
+    gifBack = m.top.findNode("gifBack")
+    gifBack.width = w
+    gifBack.height = h
+    Mask_Caps(m.top.findNode("gifCaps"), w, h, 22, "0x0C0C0FFF")
     low = LCase(url)
     if Instr(1, low, "giphy.com") > 0 and Instr(1, low, ".mp4") > 0 then url = url.Replace(".mp4", ".gif")
     if Instr(1, LCase(url), ".mp4") > 0 then return
@@ -1688,6 +1696,7 @@ sub Gif_Load()
 end sub
 
 sub onGifWait()
+    if m.gifArt = invalid then return
     st = m.gifArt.state
     if st = "downloading" or st = "init" or st = "" or st = "error" then Gif_Next()
 end sub

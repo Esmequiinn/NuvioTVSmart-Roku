@@ -23,6 +23,16 @@ function Str_Of(v as dynamic) as string
     return ""
 end function
 
+function Rating_Text(v as dynamic) as string
+    s = Str_Any(v).Trim()
+    if s = "" then return ""
+    x = Val(s)
+    if x <= 0 then return ""
+    if x > 10 then x = x / 10
+    r = Int(x * 10 + 0.5)
+    return Int(r / 10).ToStr() + "." + (r Mod 10).ToStr()
+end function
+
 function Str_Any(v as dynamic) as string
     if v = invalid then return ""
     if IsStr(v) then return v
