@@ -71,10 +71,13 @@ sub layout()
     m.capBl.translation = [0, h - 22]
     m.capBr.translation = [w - 22, h - 22]
     Mask_Apply(m.mask, w, h)
-    for each n in [m.base, m.art, m.video]
+    for each n in [m.base, m.art]
         n.width = w
         n.height = h
     end for
+    m.video.translation = [6, 6]
+    m.video.width = w - 12
+    m.video.height = h - 12
     shadeH = Int(h * 0.4)
     m.shade.width = w
     m.shade.height = shadeH
@@ -143,5 +146,5 @@ sub onVideoState()
     else if state = "finished" or state = "error"
         m.video.visible = false
     end if
-    m.caps.visible = m.video.visible or Mask_NeedCaps()
+    m.caps.visible = Mask_NeedCaps()
 end sub

@@ -236,8 +236,10 @@ sub buildEpisodes()
     eps = seasons[m.seasonIndex].episodes
     if type(eps) <> "roArray" then eps = []
     accent = m.top.accent
+    hide = Bool_Of(m.top.extra.hideSpoilers, false)
     for i = 0 to eps.Count() - 1
         e = eps[i]
+        spoil = hide and Ep_Spoiler(e)
         g = m.epGroup.createChild("Group")
         g.translation = [i * 478, 0]
         frame = g.createChild("Poster")
@@ -254,7 +256,7 @@ sub buildEpisodes()
         pic.loadWidth = 448
         pic.loadHeight = 252
         pic.loadDisplayMode = "scaleToZoom"
-        pic.uri = Str_Of(e.thumb)
+        pic.uri = Ep_Thumb(e, spoil, 448, 252)
         Mask_Caps(g, 448, 252, 22, "0x0C0C0FFF")
         ring = g.createChild("Poster")
         ring.uri = "pkg:/images/iring.9.png"
@@ -308,13 +310,29 @@ sub buildEpisodes()
         d.height = 96
         d.wrap = true
         d.maxLines = 3
-        d.text = Str_Of(e.overview)
+        d.text = Ep_Overview(e, spoil)
+        infoX = 0
+        if Str_Of(e.rating) <> ""
+            star = g.createChild("Poster")
+            star.uri = "pkg:/images/ic_star.png"
+            star.width = 20
+            star.height = 20
+            star.blendColor = "0xF5C518FF"
+            star.translation = [0, 417]
+            rate = g.createChild("Label")
+            rate.font = "font:SmallestBoldSystemFont"
+            rate.font.size = 21
+            rate.color = "0xE6E6E6FF"
+            rate.translation = [26, 416]
+            rate.text = Str_Of(e.rating)
+            infoX = 26 + Int(rate.boundingRect().width) + 14
+        end if
         info = g.createChild("Label")
         info.font = "font:SmallestSystemFont"
         info.font.size = 21
         info.color = "0x808080FF"
-        info.translation = [0, 416]
-        info.width = 448
+        info.translation = [infoX, 416]
+        info.width = 448 - infoX
         info.text = Str_Of(e.meta)
         m.epNodes.Push({ ring: ring, id: Str_Of(e.id) })
     end for
@@ -878,7 +896,8 @@ sub Opts_Build()
     art.loadWidth = 1280
     art.loadHeight = 720
     art.loadDisplayMode = "scaleToZoom"
-    art.uri = Str_Of(e.thumb)
+    spoil = Bool_Of(m.top.extra.hideSpoilers, false) and Ep_Spoiler(e)
+    art.uri = Ep_Thumb(e, spoil, 1280, 720)
     left = o.createChild("Poster")
     left.width = 1500
     left.height = 1080
@@ -905,7 +924,11 @@ sub Opts_Build()
     sn = ToInt(e.s, -1)
     head = Str_Of(e.code)
     if sn >= 0 then head = "S" + sn.ToStr() + " " + head
-    if Str_Of(e.rating) <> "" then head = head + "     IMDb " + Str_Of(e.rating)
+    if Str_Of(e.rating) <> ""
+        src = Str_Of(e.ratingSrc)
+        if src = "" then src = "IMDb"
+        head = head + "     " + src + " " + Str_Of(e.rating)
+    end if
     code.text = head
     title = o.createChild("Label")
     title.font = "font:LargeBoldSystemFont"
@@ -934,7 +957,7 @@ sub Opts_Build()
     desc.wrap = true
     desc.maxLines = 7
     desc.lineSpacing = 6
-    desc.text = Str_Of(e.overview)
+    desc.text = Ep_Overview(e, spoil)
     hint = o.createChild("Label")
     hint.font = "font:SmallestSystemFont"
     hint.font.size = 22
@@ -1061,3 +1084,20 @@ sub Comment_Node(c as object, i as integer)
     end if
     m.castNodes.Push({ ring: ring })
 end sub
+
+function Ep_Spoiler(e as object) as boolean
+    if e.watched = true then return false
+    if e.progress <> invalid and e.progress > 0.01 then return false
+    return true
+end function
+
+function Ep_Thumb(e as object, spoil as boolean, w as integer, h as integer) as string
+    url = Str_Of(e.thumb)
+    if not spoil or url = "" or Left(LCase(url), 4) <> "http" then return url
+    return "https://wsrv.nl/?url=" + url.EncodeUriComponent() + "&w=" + w.ToStr() + "&h=" + h.ToStr() + "&fit=cover&blur=24"
+end function
+
+function Ep_Overview(e as object, spoil as boolean) as string
+    if spoil and Str_Of(e.overview) <> "" then return L("Descripción oculta para evitar spoilers.")
+    return Str_Of(e.overview)
+end function

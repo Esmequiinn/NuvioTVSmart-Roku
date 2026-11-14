@@ -61,6 +61,7 @@ sub buildBadges(item as object)
     m.badges.removeChildrenIndex(m.badges.getChildCount(), 0)
     m.images = []
     m.cursor = 0
+    hasImages = false
     if type(item.badges) = "roArray"
         for each b in item.badges
             if CardText(b.i) <> ""
@@ -74,12 +75,13 @@ sub buildBadges(item as object)
                 img.uri = b.i
                 m.images.Push(img)
                 m.cursor = m.cursor + 34 + 10
+                hasImages = true
             else
                 addChip(CardText(b.n), CardText(b.c), CardText(b.t))
             end if
         end for
     end if
-    if type(item.chips) = "roArray"
+    if type(item.chips) = "roArray" and not hasImages
         for each c in item.chips
             addChip(c, "", "")
         end for
@@ -113,18 +115,23 @@ sub onBadgeLoaded(event as object)
     target = Int(img.bitmapWidth * 34 / img.bitmapHeight)
     if target < 20 then target = 20
     if target > 200 then target = 200
-    if target = img.width then return
-    delta = target - img.width
     img.width = target
-    shift = false
+    Badges_Layout()
+end sub
+
+sub Badges_Layout()
+    x = 0
     for i = 0 to m.badges.getChildCount() - 1
         child = m.badges.getChild(i)
-        if shift
-            child.translation = [child.translation[0] + delta, 0]
-        else if child.isSameNode(img)
-            shift = true
+        child.translation = [x, 0]
+        if child.subtype() = "Poster"
+            w = child.width
+        else
+            w = child.getChild(0).width
         end if
+        x = x + Int(w) + 10
     end for
+    m.cursor = x
 end sub
 
 sub onFocus()
