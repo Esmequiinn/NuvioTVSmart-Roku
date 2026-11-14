@@ -950,5 +950,13 @@
  "Est\u00e9reo": "Stereo",
  "S\u00ed: ": "Da: ",
  "No: ": "Nu: ",
- "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Redarea automat\u0103 \u0219i schimbarea sursei sar peste sursele cu audio din lista Nu, ca DTS sau TrueHD."
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Redarea automat\u0103 \u0219i schimbarea sursei sar peste sursele cu audio din lista Nu, ca DTS sau TrueHD.",
+ "Aleatorio": "Aleatoriu",
+ "No hay episodios para elegir al azar.": "Nu exist\u0103 episoade de ales aleatoriu.",
+ "Ficha de series": "Pagina serialelor",
+ "Ocultar spoilers": "Ascunde spoilerele",
+ "En los episodios que no has visto, la imagen se ve borrosa y no se muestra la descripci\u00f3n.": "La episoadele pe care nu le-ai v\u0103zut, imaginea este neclar\u0103 \u0219i descrierea nu apare.",
+ "Bot\u00f3n Aleatorio": "Buton Aleatoriu",
+ "Aparece en la ficha de las series y reproduce un episodio al azar.": "Apare pe pagina serialelor \u0219i red\u0103 un episod aleatoriu.",
+ "Descripci\u00f3n oculta para evitar spoilers.": "Descriere ascuns\u0103 pentru a evita spoilerele."
 }

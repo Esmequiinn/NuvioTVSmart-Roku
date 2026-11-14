@@ -950,5 +950,13 @@
  "Est\u00e9reo": "St\u00e9r\u00e9o",
  "S\u00ed: ": "Oui : ",
  "No: ": "Non : ",
- "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "La lecture automatique et le changement de source ignorent les sources avec un audio de la liste Non, comme DTS ou TrueHD."
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "La lecture automatique et le changement de source ignorent les sources avec un audio de la liste Non, comme DTS ou TrueHD.",
+ "Aleatorio": "Al\u00e9atoire",
+ "No hay episodios para elegir al azar.": "Aucun \u00e9pisode \u00e0 choisir au hasard.",
+ "Ficha de series": "Page des s\u00e9ries",
+ "Ocultar spoilers": "Masquer les spoilers",
+ "En los episodios que no has visto, la imagen se ve borrosa y no se muestra la descripci\u00f3n.": "Sur les \u00e9pisodes que vous n'avez pas vus, l'image est flout\u00e9e et la description n'est pas affich\u00e9e.",
+ "Bot\u00f3n Aleatorio": "Bouton Al\u00e9atoire",
+ "Aparece en la ficha de las series y reproduce un episodio al azar.": "Appara\u00eet sur la page des s\u00e9ries et lance un \u00e9pisode au hasard.",
+ "Descripci\u00f3n oculta para evitar spoilers.": "Description masqu\u00e9e pour \u00e9viter les spoilers."
 }

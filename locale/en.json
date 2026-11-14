@@ -950,5 +950,13 @@
  "Est\u00e9reo": "Stereo",
  "S\u00ed: ": "Yes: ",
  "No: ": "No: ",
- "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Autoplay and source switching skip sources with audio from the No list, like DTS or TrueHD."
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Autoplay and source switching skip sources with audio from the No list, like DTS or TrueHD.",
+ "Aleatorio": "Shuffle",
+ "No hay episodios para elegir al azar.": "There are no episodes to pick at random.",
+ "Ficha de series": "Series page",
+ "Ocultar spoilers": "Hide spoilers",
+ "En los episodios que no has visto, la imagen se ve borrosa y no se muestra la descripci\u00f3n.": "On episodes you haven't watched, the picture is blurred and the description isn't shown.",
+ "Bot\u00f3n Aleatorio": "Shuffle button",
+ "Aparece en la ficha de las series y reproduce un episodio al azar.": "Shows up on series pages and plays a random episode.",
+ "Descripci\u00f3n oculta para evitar spoilers.": "Description hidden to avoid spoilers."
 }

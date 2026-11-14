@@ -950,5 +950,13 @@
  "Est\u00e9reo": "Sztere\u00f3",
  "S\u00ed: ": "Igen: ",
  "No: ": "Nem: ",
- "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Az automatikus lej\u00e1tsz\u00e1s \u00e9s a forr\u00e1sv\u00e1lt\u00e1s kihagyja a Nem list\u00e1n l\u00e9v\u0151 hang\u00fa forr\u00e1sokat, p\u00e9ld\u00e1ul DTS vagy TrueHD."
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Az automatikus lej\u00e1tsz\u00e1s \u00e9s a forr\u00e1sv\u00e1lt\u00e1s kihagyja a Nem list\u00e1n l\u00e9v\u0151 hang\u00fa forr\u00e1sokat, p\u00e9ld\u00e1ul DTS vagy TrueHD.",
+ "Aleatorio": "V\u00e9letlenszer\u0171",
+ "No hay episodios para elegir al azar.": "Nincs epiz\u00f3d a v\u00e9letlenszer\u0171 v\u00e1laszt\u00e1shoz.",
+ "Ficha de series": "Sorozat oldala",
+ "Ocultar spoilers": "Spoilerek elrejt\u00e9se",
+ "En los episodios que no has visto, la imagen se ve borrosa y no se muestra la descripci\u00f3n.": "A m\u00e9g nem l\u00e1tott epiz\u00f3dokn\u00e1l a k\u00e9p elmos\u00f3dott, \u00e9s a le\u00edr\u00e1s nem jelenik meg.",
+ "Bot\u00f3n Aleatorio": "V\u00e9letlenszer\u0171 gomb",
+ "Aparece en la ficha de las series y reproduce un episodio al azar.": "Megjelenik a sorozatok oldal\u00e1n, \u00e9s lej\u00e1tszik egy v\u00e9letlenszer\u0171 epiz\u00f3dot.",
+ "Descripci\u00f3n oculta para evitar spoilers.": "A le\u00edr\u00e1s el van rejtve a spoilerek miatt."
 }

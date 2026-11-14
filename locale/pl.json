@@ -950,5 +950,13 @@
  "Est\u00e9reo": "Stereo",
  "S\u00ed: ": "Tak: ",
  "No: ": "Nie: ",
- "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Autoodtwarzanie i zmiana \u017ar\u00f3d\u0142a pomijaj\u0105 \u017ar\u00f3d\u0142a z d\u017awi\u0119kiem z listy Nie, np. DTS lub TrueHD."
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Autoodtwarzanie i zmiana \u017ar\u00f3d\u0142a pomijaj\u0105 \u017ar\u00f3d\u0142a z d\u017awi\u0119kiem z listy Nie, np. DTS lub TrueHD.",
+ "Aleatorio": "Losowo",
+ "No hay episodios para elegir al azar.": "Brak odcink\u00f3w do losowego wyboru.",
+ "Ficha de series": "Strona serialu",
+ "Ocultar spoilers": "Ukryj spoilery",
+ "En los episodios que no has visto, la imagen se ve borrosa y no se muestra la descripci\u00f3n.": "W odcinkach, kt\u00f3rych nie ogl\u0105da\u0142e\u015b, obraz jest rozmyty, a opis nie jest pokazywany.",
+ "Bot\u00f3n Aleatorio": "Przycisk Losowo",
+ "Aparece en la ficha de las series y reproduce un episodio al azar.": "Pojawia si\u0119 na stronie seriali i odtwarza losowy odcinek.",
+ "Descripci\u00f3n oculta para evitar spoilers.": "Opis ukryty, aby unikn\u0105\u0107 spoiler\u00f3w."
 }

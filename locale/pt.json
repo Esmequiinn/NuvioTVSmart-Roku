@@ -950,5 +950,13 @@
  "Est\u00e9reo": "Est\u00e9reo",
  "S\u00ed: ": "Sim: ",
  "No: ": "N\u00e3o: ",
- "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "A reprodu\u00e7\u00e3o autom\u00e1tica e a troca de fonte pulam fontes com \u00e1udio da lista N\u00e3o, como DTS ou TrueHD."
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "A reprodu\u00e7\u00e3o autom\u00e1tica e a troca de fonte pulam fontes com \u00e1udio da lista N\u00e3o, como DTS ou TrueHD.",
+ "Aleatorio": "Aleat\u00f3rio",
+ "No hay episodios para elegir al azar.": "N\u00e3o h\u00e1 epis\u00f3dios para escolher aleatoriamente.",
+ "Ficha de series": "P\u00e1gina de s\u00e9ries",
+ "Ocultar spoilers": "Ocultar spoilers",
+ "En los episodios que no has visto, la imagen se ve borrosa y no se muestra la descripci\u00f3n.": "Nos epis\u00f3dios que voc\u00ea n\u00e3o assistiu, a imagem fica desfocada e a descri\u00e7\u00e3o n\u00e3o aparece.",
+ "Bot\u00f3n Aleatorio": "Bot\u00e3o Aleat\u00f3rio",
+ "Aparece en la ficha de las series y reproduce un episodio al azar.": "Aparece na p\u00e1gina das s\u00e9ries e reproduz um epis\u00f3dio aleat\u00f3rio.",
+ "Descripci\u00f3n oculta para evitar spoilers.": "Descri\u00e7\u00e3o oculta para evitar spoilers."
 }

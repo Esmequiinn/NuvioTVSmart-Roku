@@ -950,5 +950,13 @@
  "Est\u00e9reo": "Stereo",
  "S\u00ed: ": "Ja: ",
  "No: ": "Nee: ",
- "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Automatisch afspelen en bronwissel slaan bronnen met audio uit de Nee-lijst over, zoals DTS of TrueHD."
+ "La reproducci\u00f3n autom\u00e1tica y el cambio de fuente saltan las fuentes con audio de la lista No, como DTS o TrueHD.": "Automatisch afspelen en bronwissel slaan bronnen met audio uit de Nee-lijst over, zoals DTS of TrueHD.",
+ "Aleatorio": "Willekeurig",
+ "No hay episodios para elegir al azar.": "Er zijn geen afleveringen om willekeurig te kiezen.",
+ "Ficha de series": "Seriepagina",
+ "Ocultar spoilers": "Spoilers verbergen",
+ "En los episodios que no has visto, la imagen se ve borrosa y no se muestra la descripci\u00f3n.": "Bij afleveringen die je nog niet hebt gezien, is de afbeelding wazig en wordt de beschrijving niet getoond.",
+ "Bot\u00f3n Aleatorio": "Knop Willekeurig",
+ "Aparece en la ficha de las series y reproduce un episodio al azar.": "Verschijnt op seriepagina's en speelt een willekeurige aflevering af.",
+ "Descripci\u00f3n oculta para evitar spoilers.": "Beschrijving verborgen om spoilers te voorkomen."
 }
