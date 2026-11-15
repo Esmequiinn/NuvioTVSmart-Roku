@@ -4,6 +4,16 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.1.5] - 2026-11-14
+
+### Cambiado
+- **Solo audio estéreo (2.0)** ahora ordena las fuentes en cuatro grupos: primero las que dicen que son estéreo (2.0, stereo, AAC 2.0, DD 2.0), luego las que no dicen qué audio traen, luego las que traen una pista 5.1 y otra 2.0, y al final las 5.1/7.1/Atmos. La reproducción automática elige del primer grupo que tenga algo. "DD 2.0" y parecidos ahora cuentan como estéreo.
+
+### Corregido
+- Los GIF de las colecciones vuelven a moverse. En la 0.1.4 se quedaban en negro en los Roku que antes sí los mostraban. Mientras se mueve un GIF, se oculta la imagen de la tarjeta de abajo para que no se vea una orilla blanca alrededor.
+- Con muchos perfiles, la pantalla de "¿Quién está viendo?" ya no corta perfiles en las orillas: los círculos se hacen un poco más chicos para que quepan todos.
+- El inicio carga los títulos más rápido mientras te mueves: el canal ahora trae por adelantado el fondo, el logo y la información de los títulos que están junto al que tienes seleccionado, así casi siempre ya están listos cuando llegas. Los fondos y logos de TMDB se cargan del tamaño que el Roku realmente muestra (misma calidad en pantalla), y el fondo ya no se queda vacío mientras carga el siguiente.
+
 ## [0.1.4] - 2026-11-11
 
 ### Agregado

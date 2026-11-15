@@ -4,6 +4,16 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.1.5] - 2026-11-14
+
+### Changed
+- **Stereo audio only (2.0)** now sorts sources in four groups: first the ones that say they're stereo (2.0, stereo, AAC 2.0, DD 2.0), then the ones that don't say what audio they have, then the ones with both a 5.1 and a 2.0 track, and last the 5.1/7.1/Atmos ones. Auto-play picks from the first group that has something. "DD 2.0" and similar now count as stereo.
+
+### Fixed
+- Collection GIFs play again. In 0.1.4 they stayed black on Rokus that could play them before. While a GIF plays, the card's picture underneath is hidden so no white edge shows around it.
+- With many profiles, the "Who's watching?" screen no longer cuts off profiles at the edges: the circles get a bit smaller so they all fit.
+- The home loads titles faster as you move: the channel now gets the background, logo and details of the titles next to the one you're on ahead of time, so they're usually ready when you get there. TMDB backgrounds and logos load in the size the Roku actually shows (same quality on screen), and the background no longer goes blank while the next one loads.
+
 ## [0.1.4] - 2026-11-11
 
 ### Added
