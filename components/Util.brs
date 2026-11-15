@@ -33,6 +33,19 @@ function Rating_Text(v as dynamic) as string
     return Int(r / 10).ToStr() + "." + (r Mod 10).ToStr()
 end function
 
+function Img_Sized(url as string, size as string) as string
+    marker = "image.tmdb.org/t/p/"
+    at = Instr(1, url, marker)
+    if at = 0 then return url
+    start = at + Len(marker)
+    slash = Instr(start, url, "/")
+    if slash = 0 then return url
+    current = Mid(url, start, slash - start)
+    if current <> "original" and Left(current, 1) <> "w" then return url
+    if current <> "original" and Val(Mid(current, 2)) <= Val(Mid(size, 2)) then return url
+    return Left(url, start - 1) + size + Mid(url, slash)
+end function
+
 function Str_Any(v as dynamic) as string
     if v = invalid then return ""
     if IsStr(v) then return v

@@ -297,45 +297,52 @@ function Audio_Rank(s as object) as integer
     text = [Str_OneLine(s.name), Str_OneLine(s.desc), Str_Of(s.filename)].Join(" ")
     if Bool_Of(St_Pref("audioSafe"), true)
         caps = Device_Audio()
-        if not caps.truehd and re.truehd.IsMatch(text) then return 2
-        if not caps.dts and re.dts.IsMatch(text) then return 2
-        if not caps.eac3 and re.eac3.IsMatch(text) then return 2
-        if not caps.ac3 and re.ac3.IsMatch(text) then return 2
+        if not caps.truehd and re.truehd.IsMatch(text) then return 3
+        if not caps.dts and re.dts.IsMatch(text) then return 3
+        if not caps.eac3 and re.eac3.IsMatch(text) then return 3
+        if not caps.ac3 and re.ac3.IsMatch(text) then return 3
     end if
     if not Bool_Of(St_Pref("stereoOnly"), false) then return 0
-    multi = re.multi.IsMatch(text) or re.ac3.IsMatch(text) or re.eac3.IsMatch(text) or re.dts.IsMatch(text) or re.truehd.IsMatch(text)
-    if not multi then return 0
-    if re.stereo.IsMatch(text) then return 1
-    return 2
+    stereo = re.stereo.IsMatch(text)
+    if re.multi.IsMatch(text)
+        if stereo then return 2
+        return 3
+    end if
+    codec = re.ac3.IsMatch(text) or re.eac3.IsMatch(text) or re.dts.IsMatch(text) or re.truehd.IsMatch(text)
+    if stereo then return 0
+    if codec then return 3
+    return 1
 end function
 
 function Audio_Unplayable(s as object) as boolean
-    return Audio_Rank(s) > 0
+    return Audio_Rank(s) >= 3
 end function
 
 function Streams_AudioOrder(list as object) as object
     if type(list) <> "roArray" then return list
     if not Bool_Of(St_Pref("stereoOnly"), false) and not Bool_Of(St_Pref("audioSafe"), true) then return list
-    groups = [[], [], []]
+    groups = [[], [], [], []]
     for each s in list
         groups[Audio_Rank(s)].Push(s)
     end for
-    out = groups[0]
-    out.Append(groups[1])
-    out.Append(groups[2])
+    out = []
+    for each g in groups
+        out.Append(g)
+    end for
     return out
 end function
 
 function Autoplay_Prefer(streams as object, candidates as object) as object
-    ranked = [[], [], []]
+    ranked = [[], [], [], []]
     for each i in candidates
         ranked[Audio_Rank(streams[i])].Push(i)
     end for
-    if ranked[0].Count() > 0
-        candidates = ranked[0]
-    else if ranked[1].Count() > 0
-        candidates = ranked[1]
-    end if
+    for t = 0 to 2
+        if ranked[t].Count() > 0
+            candidates = ranked[t]
+            exit for
+        end if
+    end for
     if not Bool_Of(St_Pref("rokuSafe"), true) then return candidates
     audio = CreateObject("roRegex", "\b(remux|truehd|true-hd|dts-hd|dts-ma|dtshd|dts-x|dtsx)\b", "i")
     good = []

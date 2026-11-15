@@ -106,12 +106,9 @@ sub init()
     m.global.addField("gifCard", "node", true)
     m.global.observeField("gifCard", "onGifCard")
     m.gifLayer = m.top.findNode("gifLayer")
-    m.gifArt = CreateObject("roSGNode", "AnimatedImage")
-    if m.gifArt <> invalid
-        m.gifArt.loadDisplayMode = "scaleToZoom"
-        m.top.findNode("gifMask").appendChild(m.gifArt)
-        m.gifArt.observeField("state", "onGifArtState")
-    end if
+    if m.gifLayer = invalid then m.gifLayer = CreateObject("roSGNode", "Group")
+    m.gifArt = m.top.findNode("gifArt")
+    if m.gifArt <> invalid then m.gifArt.observeField("state", "onGifArtState")
     m.gifRing = m.top.findNode("gifRing")
     m.gifTimer = m.top.createChild("Timer")
     m.gifTimer.duration = 0.45
@@ -763,6 +760,66 @@ sub onRowFocused(event as object)
     rows = event.getRoSGNode()
     if rows.isSameNode(m.searchRows) then return
     showHeroFor(getRowItem(rows, rows.rowItemFocused))
+    Hero_Prefetch(rows)
+end sub
+
+sub Hero_Prefetch(rows as object)
+    focus = rows.rowItemFocused
+    if type(focus) <> "roArray" or focus.Count() < 2 or rows.content = invalid then return
+    items = []
+    row = rows.content.getChild(focus[0])
+    if row <> invalid
+        for each offset in [1, 2, -1]
+            item = row.getChild(focus[1] + offset)
+            if item <> invalid then items.Push(item)
+        end for
+    end if
+    below = rows.content.getChild(focus[0] + 1)
+    if below <> invalid and below.getChildCount() > 0 then items.Push(below.getChild(0))
+    preload = []
+    queue = []
+    for each item in items
+        if item.itemType <> "folder" and item.itemType <> "seeall" and item.hasField("metaId")
+            meta = m.metaCache[item.metaId]
+            d = heroData(item, meta)
+            if d.background <> "" then preload.Push({ kind: "bg", url: d.background })
+            if d.logo <> "" then preload.Push({ kind: "logo", url: d.logo })
+            if meta = invalid and item.metaId <> "" then queue.Push(item)
+        else if item.itemType = "folder" and Str_Of(item.background) <> ""
+            preload.Push({ kind: "bg", url: item.background })
+        end if
+    end for
+    m.hero.preload = preload
+    m.prefetchQueue = queue
+    if m.prefetchTask = invalid then Prefetch_Next()
+end sub
+
+sub Prefetch_Next()
+    m.prefetchTask = invalid
+    if type(m.prefetchQueue) <> "roArray" then return
+    while m.prefetchQueue.Count() > 0
+        item = m.prefetchQueue.Shift()
+        if m.metaCache[item.metaId] = invalid and m.manifests.Count() > 0
+            task = CreateObject("roSGNode", "MetaTask")
+            task.manifests = m.manifests
+            task.kind = item.itemType
+            task.metaId = item.metaId
+            task.observeField("meta", "onPrefetchMeta")
+            task.control = "RUN"
+            m.prefetchTask = task
+            return
+        end if
+    end while
+end sub
+
+sub onPrefetchMeta(event as object)
+    task = event.getRoSGNode()
+    meta = task.meta
+    if meta <> invalid
+        cacheMeta(task.metaId, meta)
+        if m.heroItem <> invalid and m.heroItem.metaId = task.metaId then m.hero.data = heroData(m.heroItem, meta)
+    end if
+    Prefetch_Next()
 end sub
 
 sub onRowSelected(event as object)
@@ -967,6 +1024,7 @@ sub onHeroTimer()
     item = m.heroItem
     if item = invalid or item.itemType = "folder" then return
     if m.metaCache[item.metaId] <> invalid then return
+    if m.prefetchTask <> invalid and m.prefetchTask.metaId = item.metaId then return
     if m.manifests.Count() = 0
         m.hero.data = heroData(item, invalid)
         return
@@ -1093,6 +1151,7 @@ sub showKeyboard(kind as string, title as string, text as string, data as object
     dlg.buttons = [L("Aceptar"), L("Cancelar")]
     dlg.observeFieldScoped("buttonSelected", "onKeyboardButton")
     dlg.observeFieldScoped("wasClosed", "onDialogClosed")
+    Gif_Hide()
     m.top.dialog = dlg
     dlg.text = text
     dlg.keyboard.textEditBox.maxTextLength = 600
@@ -1456,6 +1515,7 @@ sub onHeroImmersive()
         return
     end if
     m.immersiveOn = true
+    Gif_Hide()
     m.expandTimer.control = "stop"
     m.homeRows.opacity = 0
     m.expanded.opacity = 0
@@ -1538,6 +1598,7 @@ sub onAmbientTimer()
         m.heroTrailerOn = false
         m.hero.trailer = {}
     end if
+    Gif_Hide()
     m.ambient.slides = slides
     m.ambient.active = true
 end sub
@@ -1633,6 +1694,7 @@ sub Gif_Hide()
     m.gifTimer.control = "stop"
     m.gifWait.control = "stop"
     m.gifLayer.visible = false
+    Gif_CardArt(true)
     if m.gifArt <> invalid and m.gifArt.uri <> ""
         m.gifArt.control = "stop"
         m.gifArt.uri = ""
@@ -1659,10 +1721,7 @@ sub Gif_Show()
     m.gifRing.height = h
     m.gifRing.blendColor = m.accent
     Mask_Apply(m.top.findNode("gifMask"), w, h)
-    gifBack = m.top.findNode("gifBack")
-    gifBack.width = w
-    gifBack.height = h
-    Mask_Caps(m.top.findNode("gifCaps"), w, h, 22, "0x0C0C0FFF")
+    Mask_Caps(m.top.findNode("gifCaps"), w, h, 22, "0x0C0C0FFF", true)
     low = LCase(url)
     if Instr(1, low, "giphy.com") > 0 and Instr(1, low, ".mp4") > 0 then url = url.Replace(".mp4", ".gif")
     if Instr(1, LCase(url), ".mp4") > 0 then return
@@ -1755,4 +1814,20 @@ sub onGifArtState()
     if st <> "downloading" and st <> "init" and st <> "" then m.gifWait.control = "stop"
     playing = m.gifArt.uri <> "" and st <> "downloading" and st <> "init" and st <> "error" and st <> "" and st <> "stopped"
     m.gifLayer.visible = playing and m.global.gifCard <> invalid and not overlayOpen()
+    if m.gifLayer.visible then Gif_CardArt(false)
+end sub
+
+sub Gif_CardArt(show as boolean)
+    if show
+        if m.gifHidden <> invalid then m.gifHidden.opacity = 1
+        m.gifHidden = invalid
+        return
+    end if
+    card = m.global.gifCard
+    if card = invalid then return
+    art = card.findNode("art")
+    if art = invalid then return
+    if m.gifHidden <> invalid and not m.gifHidden.isSameNode(art) then m.gifHidden.opacity = 1
+    art.opacity = 0
+    m.gifHidden = art
 end sub
