@@ -11,7 +11,13 @@ sub Main(args as dynamic)
     end if
     screen.getGlobalNode().addFields({ uiLang: lang, i18n: table })
 
-    scene = screen.CreateScene("MainScene")
+    sceneName = "MainScene"
+    model = UCase(CreateObject("roDeviceInfo").GetModel())
+    for each old in ["5000X", "6000X", "4200X", "3600X", "3700X", "3710X", "3800X", "3810X", "3811X", "3900X", "3910X"]
+        if model = old then sceneName = "MainSceneBase"
+    end for
+    scene = screen.CreateScene(sceneName)
+    if scene = invalid then scene = screen.CreateScene("MainSceneBase")
     scene.observeField("exitApp", port)
     screen.Show()
 
