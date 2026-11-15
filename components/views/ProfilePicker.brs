@@ -17,9 +17,16 @@ sub build()
         entries.Push({ id: p.id, name: Str_Glyphs(Str_Of(p.name)), color: p.color, avatar: Str_Of(p.avatar), pin: p.pin = true })
     end for
     if entries.Count() < 8 then entries.Push({ id: "__add", name: L("Agregar"), color: "3A3A46" })
+    n = entries.Count()
     size = 220
     gap = 90
-    total = entries.Count() * size + (entries.Count() - 1) * gap
+    if n * size + (n - 1) * gap > 1760
+        gap = 56
+        size = Int((1760 - (n - 1) * gap) / n)
+        if size > 220 then size = 220
+    end if
+    k = size / 220
+    total = n * size + (n - 1) * gap
     x = Int((1920 - total) / 2)
     for each e in entries
         g = m.row.createChild("Group")
@@ -41,7 +48,7 @@ sub build()
         initial.horizAlign = "center"
         initial.vertAlign = "center"
         initial.font = "font:LargeBoldSystemFont"
-        initial.font.size = 96
+        initial.font.size = Int(96 * k)
         initial.color = "0xFFFFFFFF"
         if e.id = "__add"
             initial.text = "+"
@@ -55,31 +62,35 @@ sub build()
             pic = mask.createChild("Poster")
             pic.width = size
             pic.height = size
-            pic.loadWidth = size
-            pic.loadHeight = size
+            pic.loadWidth = 220
+            pic.loadHeight = 220
             pic.loadDisplayMode = "scaleToZoom"
-            pic.uri = Mask_Circle(e.avatar, size)
+            pic.uri = Mask_Circle(e.avatar, 220)
         end if
         if e.pin = true
             badge = g.createChild("Poster")
             badge.uri = "pkg:/images/c/d64.png"
-            badge.width = 64
-            badge.height = 64
-            badge.translation = [size - 60, size - 60]
+            b = Int(64 * k)
+            badge.width = b
+            badge.height = b
+            badge.translation = [size - Int(60 * k), size - Int(60 * k)]
             badge.blendColor = "0x0C0C0FFF"
             lock = g.createChild("Poster")
             lock.uri = "pkg:/images/s/ic_lock_32.png"
-            lock.width = 32
-            lock.height = 32
-            lock.translation = [size - 44, size - 44]
+            lock.width = Int(32 * k)
+            lock.height = Int(32 * k)
+            lock.translation = [size - Int(44 * k), size - Int(44 * k)]
             lock.blendColor = "0xFFFFFFFF"
         end if
         name = g.createChild("Label")
-        name.translation = [-40, size + 34]
-        name.width = size + 80
+        pad = Int((gap - 10) / 2)
+        if pad > 40 then pad = 40
+        name.translation = [-pad, size + 34]
+        name.width = size + pad * 2
         name.horizAlign = "center"
         name.font = "font:MediumBoldSystemFont"
         name.color = "0xB4B4C0FF"
+        if k < 1 then name.font.size = Int(34 * k + 4)
         name.text = e.name
         m.items.Push({ id: e.id, ring: ring, name: name, color: e.color })
         x = x + size + gap

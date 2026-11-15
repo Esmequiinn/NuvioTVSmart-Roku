@@ -2,6 +2,7 @@
 <component name="Hero" extends="Group">
     <interface>
         <field id="data" type="assocarray" onChange="render" />
+        <field id="preload" type="array" onChange="onPreload" />
         <field id="fullscreen" type="boolean" value="false" onChange="layout" />
         <field id="wide" type="boolean" value="false" onChange="layout" />
         <field id="bare" type="boolean" value="false" onChange="layout" />

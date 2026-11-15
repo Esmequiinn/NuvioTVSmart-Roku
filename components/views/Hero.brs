@@ -20,6 +20,28 @@ sub init()
     m.video.observeField("state", "onVideoState")
     m.title.font.size = 64
     m.logo.observeField("loadStatus", "onLogoStatus")
+    m.bgNext = m.top.createChild("Poster")
+    m.bgNext.width = 1
+    m.bgNext.height = 1
+    m.bgNext.opacity = 0.01
+    m.bgNext.loadWidth = 1280
+    m.bgNext.loadHeight = 720
+    m.bgNext.loadDisplayMode = "scaleToZoom"
+    m.bgNext.observeField("loadStatus", "onBgNext")
+    m.bgWant = ""
+    m.bgWait = m.top.createChild("Timer")
+    m.bgWait.duration = 0.7
+    m.bgWait.repeat = false
+    m.bgWait.observeField("fire", "onBgWait")
+    m.pool = []
+    for i = 0 to 5
+        p = m.top.createChild("Poster")
+        p.visible = false
+        p.width = 1
+        p.height = 1
+        p.loadDisplayMode = "scaleToZoom"
+        m.pool.Push(p)
+    end for
     m.lastLogo = ""
     m.boxTop = 120
     m.boxHeight = 180
@@ -155,7 +177,7 @@ sub render()
     d = m.top.data
     if d = invalid then return
     m.title.text = textOf(d.title)
-    logo = textOf(d.logo)
+    logo = Img_Sized(textOf(d.logo), "w500")
     if d.logoPending = true then logo = ""
     if logo <> m.lastLogo
         m.lastLogo = logo
@@ -184,8 +206,64 @@ sub render()
     m.rating.text = rating
     m.metaLine.text = textOf(d.metaLine)
     m.description.text = textOf(d.description)
-    bg = textOf(d.background)
-    if bg <> m.backdrop.uri then m.backdrop.uri = bg
+    bg = Img_Sized(textOf(d.background), "w1280")
+    if bg = m.backdrop.uri then
+        m.bgWant = ""
+    else if bg = ""
+        m.bgWant = ""
+        m.backdrop.uri = ""
+    else if bg <> m.bgWant
+        m.bgWant = bg
+        if m.backdrop.uri = "" then m.backdrop.uri = bg
+        if m.bgNext.uri = bg and m.bgNext.loadStatus = "ready"
+            m.backdrop.uri = bg
+            m.bgWant = ""
+            return
+        end if
+        m.bgNext.uri = bg
+        m.bgWait.control = "stop"
+        m.bgWait.control = "start"
+    end if
+end sub
+
+sub onBgWait()
+    if m.bgWant = "" then return
+    m.backdrop.uri = m.bgWant
+    m.bgWant = ""
+end sub
+
+sub onPreload()
+    list = m.top.preload
+    if type(list) <> "roArray" then return
+    i = 0
+    for each entry in list
+        if i >= m.pool.Count() then exit for
+        url = textOf(entry.url)
+        if url <> ""
+            p = m.pool[i]
+            if entry.kind = "logo"
+                p.loadWidth = 1240
+                p.loadHeight = 360
+                url = Img_Sized(url, "w500")
+            else
+                p.loadWidth = 1280
+                p.loadHeight = 720
+                url = Img_Sized(url, "w1280")
+            end if
+            if p.uri <> url then p.uri = url
+            i = i + 1
+        end if
+    end for
+end sub
+
+sub onBgNext()
+    status = m.bgNext.loadStatus
+    if m.bgWant = "" or m.bgNext.uri <> m.bgWant then return
+    if status = "ready" or status = "failed"
+        m.bgWait.control = "stop"
+        m.backdrop.uri = m.bgWant
+        m.bgWant = ""
+    end if
 end sub
 
 sub onLogoStatus()
