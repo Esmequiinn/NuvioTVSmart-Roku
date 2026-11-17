@@ -4,6 +4,7 @@
         <field id="urls" type="array" />
         <field id="result" type="assocarray" />
         <field id="cancel" type="boolean" value="false" />
+        <field id="quick" type="boolean" value="false" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/tasks/PosterCacheTask.brs" />
 </component>

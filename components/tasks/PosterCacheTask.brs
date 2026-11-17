@@ -4,7 +4,7 @@ end sub
 
 sub execute()
     pause = CreateObject("roTimespan")
-    while pause.TotalMilliseconds() < 4000
+    while not m.top.quick and pause.TotalMilliseconds() < 4000
         if m.top.cancel then return
         sleep(250)
     end while
