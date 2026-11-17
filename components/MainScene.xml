@@ -1,12 +1,178 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component name="MainScene" extends="MainSceneBase">
+<component name="MainScene" extends="Scene">
+    <interface>
+        <field id="externalInput" type="assocarray" alwaysNotify="true" onChange="onExternalInput" />
+        <field id="exitApp" type="boolean" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Mask.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Store.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Content.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Streams.brs" />
+    <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Pages.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Discover.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Playback.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Menus.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Party.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Sheet.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Auth.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Settings.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Debrid.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Servers.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Connected.brs" />
     <children>
+        <Rectangle width="1920" height="1080" color="0x0C0C0FFF" />
+        <Hero id="hero" />
+        <Group id="homePage">
+            <RowList
+                id="homeRows"
+                translation="[152,560]"
+                itemComponentName="PosterItem"
+                numRows="2"
+                itemSize="[1760,380]"
+                itemSpacing="[0,10]"
+                rowItemSize="[[200,300]]"
+                rowItemSpacing="[[26,0]]"
+                showRowLabel="[true]"
+                rowLabelOffset="[[8,18]]"
+                focusXOffset="[8]"
+                rowLabelColor="0xF2F2F7FF"
+                rowFocusAnimationStyle="fixedFocus"
+                vertFocusAnimationStyle="fixedFocus"
+                drawFocusFeedback="false"
+                focusBitmapBlendColor="0xFFFFFFFF" />
+            <Group id="skeleton" visible="false">
+                <Poster translation="[160,250]" width="520" height="110" uri="pkg:/images/card.9.png" blendColor="0x1C1C20FF" />
+                <Poster translation="[160,384]" width="380" height="30" uri="pkg:/images/card.9.png" blendColor="0x1C1C20FF" />
+                <Poster translation="[160,430]" width="760" height="26" uri="pkg:/images/card.9.png" blendColor="0x18181CFF" />
+                <Poster translation="[160,470]" width="640" height="26" uri="pkg:/images/card.9.png" blendColor="0x18181CFF" />
+                <Poster translation="[160,592]" width="300" height="34" uri="pkg:/images/card.9.png" blendColor="0x1C1C20FF" />
+                <Poster translation="[160,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[386,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[612,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[838,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[1064,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[1290,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[1516,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[1742,650]" width="200" height="300" uri="pkg:/images/card.9.png" blendColor="0x1A1A1EFF" />
+                <Poster translation="[160,1000]" width="260" height="34" uri="pkg:/images/card.9.png" blendColor="0x1C1C20FF" />
+            </Group>
+            <Animation id="skeletonPulse" duration="1.2" repeat="true" easeFunction="inOutQuad">
+                <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[1.0, 0.45, 1.0]" fieldToInterp="skeleton.opacity" />
+            </Animation>
+            <Group id="emptyState" visible="false">
+                <Label id="emptyTitle" translation="[160,200]" width="1100" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+                <Label id="emptyBody" translation="[160,290]" width="1100" wrap="true" maxLines="12" font="font:MediumSystemFont" color="0xC9C9D6FF" />
+                <Poster id="emptyQr" translation="[1380,200]" width="400" height="400" loadDisplayMode="scaleToFit" />
+            </Group>
+        </Group>
+        <Group id="searchPage" visible="false">
+            <Label id="searchHeading" translation="[160,70]" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" text="Buscar" />
+            <Label id="searchText" visible="false" />
+            <Group id="keyboardHolder" translation="[140,170]" />
+            <Group id="discoverButton" translation="[156,884]">
+                <Poster id="discoverButtonBg" width="552" height="72" uri="pkg:/images/pill.9.png" blendColor="0x1C1C22FF" />
+                <Poster id="discoverButtonIcon" translation="[28,18]" width="36" height="36" uri="pkg:/images/s/ic_discover_36.png" />
+                <Label id="discoverButtonText" translation="[84,0]" width="440" height="72" vertAlign="center" font="font:SmallBoldSystemFont" color="0xF2F2F7FF" />
+            </Group>
+            <Label id="searchHint" translation="[160,972]" width="580" wrap="true" font="font:SmallestSystemFont" color="0x8E8E9CFF" text="También puedes escribir desde tu celular, en la página de configuración." />
+            <RecentSearches id="recentSearches" translation="[840,90]" visible="false" />
+            <Label id="searchStatus" translation="[800,420]" width="1000" horizAlign="center" wrap="true" font="font:MediumSystemFont" color="0x9A9AAAFF" text="Escribe para buscar películas y series en tus addons." />
+            <RowList
+                id="searchRows"
+                translation="[792,80]"
+                itemComponentName="PosterItem"
+                numRows="2"
+                itemSize="[1100,440]"
+                itemSpacing="[0,10]"
+                rowItemSize="[[220,330]]"
+                rowItemSpacing="[[24,0]]"
+                showRowLabel="[true]"
+                rowLabelOffset="[[8,18]]"
+                focusXOffset="[8]"
+                rowLabelColor="0xF2F2F7FF"
+                rowFocusAnimationStyle="fixedFocus"
+                vertFocusAnimationStyle="fixedFocus"
+                drawFocusFeedback="false"
+                focusBitmapBlendColor="0xFFFFFFFF" />
+        </Group>
+        <Group id="discoverPage" visible="false">
+            <Label id="discoverHeading" translation="[160,70]" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+            <DiscoverBar id="discoverBar" translation="[160,170]" />
+            <Label id="discoverStatus" translation="[160,520]" width="1600" horizAlign="center" wrap="true" font="font:MediumSystemFont" color="0x9A9AAAFF" />
+            <RowList
+                id="discoverRows"
+                translation="[152,290]"
+                itemComponentName="PosterItem"
+                numRows="2"
+                itemSize="[1760,340]"
+                itemSpacing="[0,20]"
+                rowItemSize="[[200,300]]"
+                rowItemSpacing="[[26,0]]"
+                showRowLabel="[false]"
+                focusXOffset="[8]"
+                rowFocusAnimationStyle="floatingFocus"
+                vertFocusAnimationStyle="fixedFocus"
+                drawFocusFeedback="false"
+                focusBitmapBlendColor="0xFFFFFFFF" />
+        </Group>
+        <Group id="libraryPage" visible="false">
+            <RowList
+                id="libraryRows"
+                translation="[152,560]"
+                itemComponentName="PosterItem"
+                numRows="2"
+                itemSize="[1760,380]"
+                itemSpacing="[0,10]"
+                rowItemSize="[[200,300]]"
+                rowItemSpacing="[[26,0]]"
+                showRowLabel="[true]"
+                rowLabelOffset="[[8,18]]"
+                focusXOffset="[8]"
+                rowLabelColor="0xF2F2F7FF"
+                rowFocusAnimationStyle="fixedFocus"
+                vertFocusAnimationStyle="fixedFocus"
+                drawFocusFeedback="false"
+                focusBitmapBlendColor="0xFFFFFFFF" />
+            <Label id="libraryEmpty" visible="false" translation="[160,620]" width="1500" wrap="true" font="font:MediumSystemFont" color="0x9A9AAAFF" text="Tu biblioteca está vacía. Abre cualquier título y elige Mi lista para guardarlo aquí." />
+        </Group>
         <Group id="gifLayer" visible="false">
-            <MaskGroup id="gifMask" maskUri="pkg:/images/mask_poster.png" maskSize="[200,300]">
-                <AnimatedImage id="gifArt" loadDisplayMode="scaleToZoom" />
-            </MaskGroup>
+            <Group id="gifArt" />
             <Group id="gifCaps" />
             <Poster id="gifRing" uri="pkg:/images/iring.9.png" />
         </Group>
+        <ExpandedCard id="expanded" />
+        <SettingsScreen id="settings" visible="false" />
+        <NavRail id="nav" />
+        <DetailsScreen id="details" visible="false" />
+        <ListScreen id="list" visible="false" />
+        <StreamsScreen id="streamsScreen" visible="false" />
+        <ProfilePicker id="profiles" visible="false" />
+        <ProfilePin id="pinPad" visible="false" />
+        <AuthScreen id="auth" visible="false" />
+        <TrackAuth id="trackAuth" visible="false" />
+        <PlayerScreen id="player" visible="false" />
+        <TrailerPlayer id="trailerPlayer" visible="false" />
+        <PartyJoin id="partyJoin" visible="false" />
+        <PartyPanel id="partyPanel" visible="false" />
+        <AmbientMode id="ambient" visible="false" />
+        <UpdatePrompt id="updatePrompt" visible="false" />
+        <ActionSheet id="sheet" visible="false" />
+        <Toast id="toast" />
+        <Group id="loading" visible="false">
+            <Rectangle width="1920" height="1080" color="0x000000FF" opacity="0.7" />
+            <BusySpinner id="spinner" translation="[912,410]" spinInterval="0.9" />
+            <Label id="loadingText" translation="[0,540]" width="1920" horizAlign="center" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="loadingHint" translation="[0,600]" width="1920" horizAlign="center" font="font:SmallestSystemFont" color="0xA6A6AEFF" text="Atrás para cancelar" />
+        </Group>
+        <Timer id="heroTimer" duration="0.25" repeat="false" />
+        <Timer id="searchTimer" duration="1.0" repeat="false" />
+        <Timer id="loginTimer" duration="5" repeat="false" />
+        <Timer id="expandTimer" duration="3" repeat="false" />
+        <Timer id="autoTimer" duration="3" repeat="false" />
+        <Timer id="subsWait" duration="4" repeat="false" />
     </children>
 </component>

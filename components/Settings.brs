@@ -440,6 +440,11 @@ function Settings_Model() as object
     yes = L("Sí")
     no = L("No")
     about.rows.Push(Set_Info("device", L("Tu Roku"), Str_Of(dev.GetModelDisplayName()) + " (" + Str_Of(dev.GetModel()) + ")  ·  " + L("Modo de video: ") + Str_Of(dev.GetVideoMode()), ""))
+    gifDiag = L("No")
+    if m.top.findNode("gifArt") <> invalid then gifDiag = L("Sí")
+    gifDiag = gifDiag + "  ·  " + m.top.subtype()
+    if Str_Of(m.gifLastState) <> "" then gifDiag = gifDiag + "  ·  " + m.gifLastState
+    about.rows.Push(Set_Info("gifDiag", L("Imágenes animadas (GIF)"), gifDiag, ""))
     formats = "HEVC: " + Set_YesNo(Device_CanHevc(), yes, no) + "  ·  HDR10: " + Set_YesNo(hdr, yes, no) + "  ·  Dolby Vision: " + Set_YesNo(Device_CanDV(), yes, no) + "  ·  4K: " + Set_YesNo(Device_Can4K(), yes, no)
     trailerDiag = Str_Of(St_Get("trailerDiag", ""))
     if trailerDiag <> "" then about.rows.Push(Set_Info("trailerDiag", L("Último tráiler de YouTube"), trailerDiag, ""))

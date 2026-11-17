@@ -102,14 +102,13 @@ sub init()
     Mask_Global()
     m.global.observeField("syncDirty", "onSyncDirty")
     m.global.addField("activity", "boolean", true)
+    m.global.addField("stVer", "integer", false)
     m.global.addField("gifUrl", "string", false)
     m.global.addField("gifCard", "node", true)
     m.global.observeField("gifCard", "onGifCard")
-    m.gifLayer = m.top.findNode("gifLayer")
-    if m.gifLayer = invalid then m.gifLayer = CreateObject("roSGNode", "Group")
-    m.gifArt = m.top.findNode("gifArt")
-    if m.gifArt <> invalid then m.gifArt.observeField("state", "onGifArtState")
-    m.gifRing = m.top.findNode("gifRing")
+    m.gifLayer = CreateObject("roSGNode", "Group")
+    m.gifArt = invalid
+    Gif_Bind()
     m.gifTimer = m.top.createChild("Timer")
     m.gifTimer.duration = 0.45
     m.gifTimer.repeat = false
@@ -118,6 +117,12 @@ sub init()
     m.gifWait.duration = 7
     m.gifWait.repeat = false
     m.gifWait.observeField("fire", "onGifWait")
+    m.gifTick = m.top.createChild("Timer")
+    m.gifTick.duration = 0.1
+    m.gifTick.repeat = true
+    m.gifTick.observeField("fire", "onGifTick")
+    m.gifUrl = ""
+    m.gifPosters = []
     m.global.observeField("activity", "Ambient_Poke")
     m.ambient = m.top.findNode("ambient")
     m.ambient.observeField("closed", "Ambient_Close")
@@ -745,7 +750,7 @@ end function
 
 sub onRowsMove(event as object)
     if m.gifArt = invalid then return
-    if not m.gifLayer.visible and m.gifArt.uri = "" then return
+    if not m.gifLayer.visible and m.gifUrl = "" then return
     rows = event.getRoSGNode()
     focus = rows.rowItemFocused
     if type(focus) <> "roArray" or focus.Count() < 1 then return
@@ -1683,7 +1688,19 @@ function Ambient_Slide(item as object) as dynamic
     return { background: background, logo: logo, title: Str_Of(item.title), genres: genres.Join("  •  ") }
 end function
 
+function Gif_Bind() as boolean
+    if m.gifArt <> invalid then return true
+    art = m.top.findNode("gifArt")
+    layer = m.top.findNode("gifLayer")
+    if art = invalid or layer = invalid then return false
+    m.gifArt = art
+    m.gifLayer = layer
+    m.gifRing = m.top.findNode("gifRing")
+    return true
+end function
+
 sub onGifCard()
+    Gif_Bind()
     Gif_Hide()
     if m.gifArt = invalid or m.global.gifCard = invalid or m.global.gifUrl = "" then return
     m.gifTimer.control = "stop"
@@ -1693,15 +1710,21 @@ end sub
 sub Gif_Hide()
     m.gifTimer.control = "stop"
     m.gifWait.control = "stop"
+    m.gifTick.control = "stop"
     m.gifLayer.visible = false
     Gif_CardArt(true)
-    if m.gifArt <> invalid and m.gifArt.uri <> ""
-        m.gifArt.control = "stop"
-        m.gifArt.uri = ""
+    if m.gifUrl <> ""
+        for each p in m.gifPosters
+            p.unobserveField("loadStatus")
+            p.uri = ""
+            p.visible = false
+        end for
+        m.gifUrl = ""
     end if
 end sub
 
 sub Gif_Show()
+    Gif_Bind()
     card = m.global.gifCard
     url = m.global.gifUrl
     if m.gifArt = invalid or card = invalid or url = "" or overlayOpen() or m.top.dialog <> invalid then return
@@ -1711,57 +1734,136 @@ sub Gif_Show()
     spot = Gif_Spot(card)
     if spot = invalid then return
     m.gifLayer.translation = spot
-    m.gifStage = 0
     m.gifArt.translation = [6, 6]
-    m.gifArt.width = w - 12
-    m.gifArt.height = h - 12
-    m.gifArt.loadWidth = w - 12
-    m.gifArt.loadHeight = h - 12
     m.gifRing.width = w
     m.gifRing.height = h
     m.gifRing.blendColor = m.accent
-    Mask_Apply(m.top.findNode("gifMask"), w, h)
     Mask_Caps(m.top.findNode("gifCaps"), w, h, 22, "0x0C0C0FFF", true)
     low = LCase(url)
     if Instr(1, low, "giphy.com") > 0 and Instr(1, low, ".mp4") > 0 then url = url.Replace(".mp4", ".gif")
     if Instr(1, LCase(url), ".mp4") > 0 then return
     m.gifUrl = url
     m.gifSize = [w - 12, h - 12]
+    m.gifStage = 0
     if Instr(1, LCase(url), "postimg.cc") > 0 then m.gifStage = 1
     Gif_Load()
 end sub
 
-sub Gif_Load()
-    m.gifWait.control = "stop"
-    m.gifArt.control = "stop"
+function Gif_FrameCount() as integer
+    return 30
+end function
+
+function Gif_FrameUrl(index as integer) as string
     w = m.gifSize[0].ToStr()
     h = m.gifSize[1].ToStr()
     source = m.gifUrl
-    if m.gifStage = 1 or m.gifStage = 2 then source = "https://external-content.duckduckgo.com/iu/?u=" + m.gifUrl.EncodeUriComponent()
-    base = "https://wsrv.nl/?url=" + source.EncodeUriComponent() + "&output=webp&w=" + w + "&h=" + h + "&fit=cover"
-    if m.gifStage = 3
-        m.gifArt.mimeType = "image/gif"
-        if Instr(1, LCase(m.gifUrl), ".webp") > 0 then m.gifArt.mimeType = "video/webp"
-        m.gifArt.uri = m.gifUrl
-    else if m.gifStage = 2
-        m.gifArt.mimeType = "video/webp"
-        m.gifArt.uri = base + "&n=40&q=70"
-    else
-        m.gifArt.mimeType = "video/webp"
-        m.gifArt.uri = base + "&n=-1"
-    end if
+    if m.gifStage = 1 then source = "https://external-content.duckduckgo.com/iu/?u=" + m.gifUrl.EncodeUriComponent()
+    return "https://wsrv.nl/?url=" + source.EncodeUriComponent() + "&w=" + w + "&h=" + h + "&fit=cover&output=jpg&q=82&n=1&page=" + index.ToStr()
+end function
+
+sub Gif_Load()
+    m.gifWait.control = "stop"
+    m.gifTick.control = "stop"
+    m.gifPlayed = false
+    m.gifEnd = Gif_FrameCount()
+    m.gifShown = -1
+    m.gifState = {}
+    while m.gifPosters.Count() < Gif_FrameCount()
+        p = m.gifArt.createChild("Poster")
+        p.loadDisplayMode = "scaleToZoom"
+        p.visible = false
+        m.gifPosters.Push(p)
+    end while
+    for i = 0 to Gif_FrameCount() - 1
+        p = m.gifPosters[i]
+        p.unobserveField("loadStatus")
+        p.visible = false
+        p.uri = ""
+        p.width = m.gifSize[0]
+        p.height = m.gifSize[1]
+        p.loadWidth = m.gifSize[0]
+        p.loadHeight = m.gifSize[1]
+        if not p.hasField("frame") then p.addField("frame", "integer", false)
+        p.frame = i
+        p.observeField("loadStatus", "onGifFrame")
+        p.uri = Gif_FrameUrl(i)
+    end for
+    m.gifLastState = "0/" + Gif_FrameCount().ToStr() + " (" + m.gifStage.ToStr() + ")"
     m.gifWait.control = "start"
-    m.gifArt.control = "loop"
+end sub
+
+sub onGifFrame(event as object)
+    p = event.getRoSGNode()
+    if m.gifUrl = "" then return
+    i = p.frame
+    st = event.getData()
+    if st = "ready"
+        m.gifState[i.ToStr()] = true
+    else if st = "failed"
+        if i = 0
+            Gif_Next()
+            return
+        end if
+        if i < m.gifEnd then m.gifEnd = i
+    else
+        return
+    end if
+    ready = Gif_Ready()
+    m.gifLastState = ready.ToStr() + "/" + m.gifEnd.ToStr() + " (" + m.gifStage.ToStr() + ")"
+    if m.gifPlayed then return
+    if ready >= m.gifEnd or ready >= 8 then Gif_Start()
+end sub
+
+sub Gif_Start()
+    m.gifPlayed = true
+    m.gifWait.control = "stop"
+    m.gifLayer.visible = m.global.gifCard <> invalid and not overlayOpen()
+    if not m.gifLayer.visible then return
+    Gif_CardArt(false)
+    onGifTick()
+    if Gif_Ready() > 1 then m.gifTick.control = "start"
+end sub
+
+function Gif_Ready() as integer
+    n = 0
+    while n < m.gifEnd and m.gifState.DoesExist(n.ToStr())
+        n = n + 1
+    end while
+    return n
+end function
+
+sub onGifTick()
+    if m.gifUrl = "" then return
+    count = Gif_Ready()
+    if count < 1 then return
+    nextFrame = m.gifShown + 1
+    if nextFrame >= count then nextFrame = 0
+    if nextFrame = m.gifShown then return
+    m.gifPosters[nextFrame].visible = true
+    if m.gifShown >= 0 then m.gifPosters[m.gifShown].visible = false
+    m.gifShown = nextFrame
 end sub
 
 sub onGifWait()
-    if m.gifArt = invalid then return
-    st = m.gifArt.state
-    if st = "downloading" or st = "init" or st = "" or st = "error" then Gif_Next()
+    if m.gifArt = invalid or m.gifUrl = "" then return
+    if m.gifPlayed then return
+    if Gif_Ready() > 0
+        m.gifEnd = Gif_Ready()
+        Gif_Start()
+        return
+    end if
+    Gif_Next()
 end sub
 
 sub Gif_Next()
-    if m.gifUrl = "" or m.gifStage >= 3 then return
+    if m.gifUrl = "" then return
+    if m.gifStage >= 1
+        m.gifLastState = "error (" + m.gifStage.ToStr() + ")"
+        m.gifWait.control = "stop"
+        m.gifLayer.visible = false
+        Gif_CardArt(true)
+        return
+    end if
     m.gifStage = m.gifStage + 1
     Gif_Load()
 end sub
@@ -1804,18 +1906,6 @@ function Gif_Spot(card as object) as dynamic
     end if
     return [x, y]
 end function
-
-sub onGifArtState()
-    st = m.gifArt.state
-    if st = "error" and m.gifStage < 3
-        Gif_Next()
-        return
-    end if
-    if st <> "downloading" and st <> "init" and st <> "" then m.gifWait.control = "stop"
-    playing = m.gifArt.uri <> "" and st <> "downloading" and st <> "init" and st <> "error" and st <> "" and st <> "stopped"
-    m.gifLayer.visible = playing and m.global.gifCard <> invalid and not overlayOpen()
-    if m.gifLayer.visible then Gif_CardArt(false)
-end sub
 
 sub Gif_CardArt(show as boolean)
     if show

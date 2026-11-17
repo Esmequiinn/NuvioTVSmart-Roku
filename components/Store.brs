@@ -57,10 +57,15 @@ sub St_Migrate()
 end sub
 
 sub St_Remove(key as string)
-    fs = CreateObject("roFileSystem")
+    fs = St_Fs()
     for each path in St_FilePaths("reg_" + key)
-        if fs.Exists(path) then fs.Delete(path)
+        if fs = invalid
+            WriteAsciiFile(path, "")
+        else if fs.Exists(path)
+            fs.Delete(path)
+        end if
     end for
+    St_Bump()
     sec = St_Section()
     if sec.Exists(key)
         sec.Delete(key)
@@ -894,26 +899,53 @@ function St_FilePaths(name as string) as object
     return ["cachefs:/" + name + ".json", "tmp:/" + name + ".json"]
 end function
 
+function St_Fs() as dynamic
+    if m.stFsTried = true then return m.stFs
+    m.stFsTried = true
+    m.stFs = invalid
+    task = m.top = invalid
+    if not task then task = m.top.isSubtype("Task")
+    if task then m.stFs = CreateObject("roFileSystem")
+    return m.stFs
+end function
+
+function St_Ver() as integer
+    if m.global = invalid or not m.global.hasField("stVer") then return -1
+    return m.global.stVer
+end function
+
+sub St_Bump()
+    if m.global = invalid or not m.global.hasField("stVer") then return
+    m.global.stVer = m.global.stVer + 1
+end sub
+
 function St_ReadFile(name as string) as dynamic
-    fs = CreateObject("roFileSystem")
+    ver = St_Ver()
+    if ver >= 0
+        if m.stCache = invalid then m.stCache = {}
+        hit = m.stCache[name]
+        if hit <> invalid and hit.ver = ver then return hit.val
+    end if
+    fs = St_Fs()
+    found = invalid
     for each path in St_FilePaths(name)
-        text = ""
-        if fs = invalid
-            text = ReadAsciiFile(path)
-        else if fs.Exists(path)
-            text = ReadAsciiFile(path)
-        end if
-        if text <> ""
-            parsed = ParseJson(text)
-            if parsed <> invalid then return parsed
+        if found = invalid
+            text = ""
+            if fs = invalid
+                text = ReadAsciiFile(path)
+            else if fs.Exists(path)
+                text = ReadAsciiFile(path)
+            end if
+            if text <> "" then found = ParseJson(text)
         end if
     end for
-    return invalid
+    if ver >= 0 then m.stCache[name] = { ver: ver, val: found }
+    return found
 end function
 
 sub St_WriteFile(name as string, value as dynamic)
     text = FormatJson(value)
-    fs = CreateObject("roFileSystem")
+    fs = St_Fs()
     done = false
     for each path in St_FilePaths(name)
         if not done and WriteAsciiFile(path, text)
@@ -926,6 +958,7 @@ sub St_WriteFile(name as string, value as dynamic)
             fs.Delete(path)
         end if
     end for
+    St_Bump()
 end sub
 
 function St_LinksKey() as string
@@ -981,7 +1014,7 @@ function St_Badges(pid as string) as object
 end function
 
 sub St_ClearBadges(pid as string)
-    fs = CreateObject("roFileSystem")
+    fs = St_Fs()
     for each path in St_FilePaths("badges_" + pid)
         if fs = invalid
             WriteAsciiFile(path, "")
@@ -989,6 +1022,7 @@ sub St_ClearBadges(pid as string)
             fs.Delete(path)
         end if
     end for
+    St_Bump()
 end sub
 
 function St_Pref(name as string) as dynamic
