@@ -4,7 +4,7 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
-## [0.1.6] - 2026-11-15
+## [0.1.6] - 2026-11-16
 
 ### Agregado
 - **Ajustes → Acerca de → Imágenes animadas (GIF)** muestra cómo cargó el último GIF: cuántos de sus cuadros llegaron y por qué camino. Si los GIF no se mueven en tu Roku, esta línea ayuda a saber por qué.
