@@ -109,10 +109,14 @@ function St_RowSizes() as object
 end function
 
 function St_Settings() as object
+    ver = St_Ver()
+    if ver >= 0 and m.stSettingsCache <> invalid and m.stSettingsCache.ver = ver then return m.stSettingsCache.val
     s = St_Get("settings", invalid)
     if type(s) <> "roAssociativeArray" then s = {}
     if not IsBool(s.shared) then s.shared = true
     if not IsStr(s.active) then s.active = ""
+    ver = St_Ver()
+    if ver >= 0 then m.stSettingsCache = { ver: ver, val: s }
     return s
 end function
 
@@ -145,10 +149,15 @@ function St_ProfileIndex(profiles as object, pid as string) as integer
 end function
 
 function St_ActiveProfile() as object
+    ver = St_Ver()
+    if ver >= 0 and m.stProfileCache <> invalid and m.stProfileCache.ver = ver then return m.stProfileCache.val
     profiles = St_Profiles()
     idx = St_ProfileIndex(profiles, St_Settings().active)
     if idx < 0 then idx = 0
-    return profiles[idx]
+    res = profiles[idx]
+    ver = St_Ver()
+    if ver >= 0 then m.stProfileCache = { ver: ver, val: res }
+    return res
 end function
 
 function St_SetActiveProfile(pid as string) as boolean
@@ -288,7 +297,10 @@ function St_PrefsKey() as string
 end function
 
 function St_Prefs() as object
-    p = St_Get(St_PrefsKey(), invalid)
+    pid = St_ActiveProfile().id
+    ver = St_Ver()
+    if ver >= 0 and m.stPrefsCache <> invalid and m.stPrefsCache.ver = ver and m.stPrefsCache.pid = pid then return m.stPrefsCache.val
+    p = St_Get("prefs_" + pid, invalid)
     if type(p) <> "roAssociativeArray" then p = {}
     p = St_CaseFix(p, St_PlayerDefaults(), true)
     if not IsStr(p.accent) then p.accent = "7C5CFF"
@@ -298,6 +310,8 @@ function St_Prefs() as object
     if not IsBool(p.captions) then p.captions = false
     if type(p.order) <> "roArray" then p.order = []
     if type(p.hidden) <> "roAssociativeArray" then p.hidden = {}
+    ver = St_Ver()
+    if ver >= 0 then m.stPrefsCache = { ver: ver, pid: pid, val: p }
     return p
 end function
 
@@ -915,6 +929,10 @@ function St_Ver() as integer
 end function
 
 sub St_Bump()
+    m.stSettingsCache = invalid
+    m.stProfileCache = invalid
+    m.stPrefsCache = invalid
+    m.stSubDelayCache = invalid
     if m.global = invalid or not m.global.hasField("stVer") then return
     m.global.stVer = m.global.stVer + 1
 end sub

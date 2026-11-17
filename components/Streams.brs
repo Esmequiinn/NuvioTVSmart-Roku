@@ -283,6 +283,14 @@ function Stream_Unplayable(s as object) as boolean
 end function
 
 function Audio_Rank(s as object) as integer
+    safe = Bool_Of(St_Pref("audioSafe"), true)
+    stereoOnly = Bool_Of(St_Pref("stereoOnly"), false)
+    caps = invalid
+    if safe then caps = Device_Audio()
+    return Audio_RankWith(s, safe, stereoOnly, caps)
+end function
+
+function Audio_RankWith(s as object, safe as boolean, stereoOnly as boolean, caps as dynamic) as integer
     if m.audioRe = invalid
         m.audioRe = {
             dts: CreateObject("roRegex", "\b(dts|dts-?hd|dts-?ma|dts-?x|dtshd)\b", "i")
@@ -295,14 +303,13 @@ function Audio_Rank(s as object) as integer
     end if
     re = m.audioRe
     text = [Str_OneLine(s.name), Str_OneLine(s.desc), Str_Of(s.filename)].Join(" ")
-    if Bool_Of(St_Pref("audioSafe"), true)
-        caps = Device_Audio()
+    if safe and caps <> invalid
         if not caps.truehd and re.truehd.IsMatch(text) then return 3
         if not caps.dts and re.dts.IsMatch(text) then return 3
         if not caps.eac3 and re.eac3.IsMatch(text) then return 3
         if not caps.ac3 and re.ac3.IsMatch(text) then return 3
     end if
-    if not Bool_Of(St_Pref("stereoOnly"), false) then return 0
+    if not stereoOnly then return 0
     stereo = re.stereo.IsMatch(text)
     if re.multi.IsMatch(text)
         if stereo then return 2
@@ -320,10 +327,14 @@ end function
 
 function Streams_AudioOrder(list as object) as object
     if type(list) <> "roArray" then return list
-    if not Bool_Of(St_Pref("stereoOnly"), false) and not Bool_Of(St_Pref("audioSafe"), true) then return list
+    safe = Bool_Of(St_Pref("audioSafe"), true)
+    stereoOnly = Bool_Of(St_Pref("stereoOnly"), false)
+    if not stereoOnly and not safe then return list
+    caps = invalid
+    if safe then caps = Device_Audio()
     groups = [[], [], [], []]
     for each s in list
-        groups[Audio_Rank(s)].Push(s)
+        groups[Audio_RankWith(s, safe, stereoOnly, caps)].Push(s)
     end for
     out = []
     for each g in groups
@@ -333,9 +344,13 @@ function Streams_AudioOrder(list as object) as object
 end function
 
 function Autoplay_Prefer(streams as object, candidates as object) as object
+    safe = Bool_Of(St_Pref("audioSafe"), true)
+    stereoOnly = Bool_Of(St_Pref("stereoOnly"), false)
+    caps = invalid
+    if safe then caps = Device_Audio()
     ranked = [[], [], [], []]
     for each i in candidates
-        ranked[Audio_Rank(streams[i])].Push(i)
+        ranked[Audio_RankWith(streams[i], safe, stereoOnly, caps)].Push(i)
     end for
     for t = 0 to 2
         if ranked[t].Count() > 0

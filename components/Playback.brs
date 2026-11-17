@@ -1040,7 +1040,7 @@ sub onProbeResult(event as object)
     r = task.result
     src = s.url
     if r <> invalid and Bool_Of(r.failed, false)
-        if not nextAttempt(0) then Play_Fail(0, Str_Of(r.error))
+        if not nextAttempt(0) then Play_Fail(0, Str_Of(r.error), type(s.debrid) = "roAssociativeArray")
         return
     end if
     if r <> invalid and Str_Of(r.url) <> ""
@@ -1156,7 +1156,11 @@ sub showPlayer(index as integer)
     m.list.visible = false
     m.player.visible = true
     m.player.active = true
-    m.player.setFocus(true)
+    if m.sheet.visible or m.top.dialog <> invalid
+        focusCurrent()
+    else
+        m.player.setFocus(true)
+    end if
 end sub
 
 function subtitleTracks() as object
@@ -1344,6 +1348,7 @@ sub Player_Event()
     if kind = "close"
         closePlayer(true)
     else if kind = "crash"
+        closePlayer(false)
         showMessage(L("Error del reproductor"), Str_Of(ev.message))
     else if kind = "control"
         Party_Publish(Bool_Of(ev.paused, false), 0.0 + ev.position)
@@ -2026,9 +2031,9 @@ sub Loader_Begin()
     Load_Status(L("Buscando fuentes..."))
 end sub
 
-sub Play_Fail(position as integer, text as string)
-    if Failover_Next(position) then return
-    exhausted = Bool_Of(St_Pref("sourceFailover"), false) and ToInt(m.ctx.failovers, 0) > 0
+sub Play_Fail(position as integer, text as string, allowDebridSkip = false as boolean)
+    if Failover_Next(position, allowDebridSkip) then return
+    exhausted = (Bool_Of(St_Pref("sourceFailover"), false) or allowDebridSkip) and ToInt(m.ctx.failovers, 0) > 0
     closePlayer(false)
     if exhausted and type(m.ctx.streams) = "roArray" and m.ctx.streams.Count() > 1
         m.ctx.failovers = 0
@@ -2040,8 +2045,9 @@ sub Play_Fail(position as integer, text as string)
     showMessage(L("No se pudo reproducir"), text)
 end sub
 
-function Failover_Next(position as integer) as boolean
-    if not Bool_Of(St_Pref("sourceFailover"), false) then return false
+function Failover_Next(position as integer, forceAuto = false as boolean) as boolean
+    autoOn = forceAuto and ( (m.ctx.auto <> invalid and Bool_Of(m.ctx.auto.active, false)) or Bool_Of(m.ctx.nextAuto, false) )
+    if not Bool_Of(St_Pref("sourceFailover"), false) and not autoOn then return false
     streams = m.ctx.streams
     if type(streams) <> "roArray" or streams.Count() < 2 then return false
     limit = ToInt(St_Pref("failoverCount"), 2)

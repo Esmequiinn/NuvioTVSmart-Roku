@@ -203,6 +203,34 @@ test("Debrid TorBox alt-hash mapping & Streams audio pref hoisting", () => {
     assert.equal(singleMap["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"].name, "Movie.mkv");
 });
 
+test("Slice 1 perf & cache: St_Prefs caches across reads and Streams_AudioOrder hoists pref lookups", () => {
+    const sb = makeSandbox({
+        registry: {
+            "nuviotv:prefs_p1": JSON.stringify({ audioSafe: true, stereoOnly: true })
+        }
+    });
+    sb.loadBrs(readBrs("components/Streams.brs"), "Streams.brs");
+    let reads = 0;
+    const origStPrefs = sb.ctx.St_Prefs;
+    sb.ctx.St_Prefs = () => {
+        reads++;
+        return origStPrefs();
+    };
+    const streams = sb.evalJs(JSON.stringify([
+        { name: "5.1 DTS-HD", desc: "", filename: "a.mkv" },
+        { name: "2.0 AAC Stereo", desc: "", filename: "b.mkv" },
+        { name: "5.1 AC3", desc: "", filename: "c.mkv" },
+        { name: "Unknown track", desc: "", filename: "d.mkv" }
+    ]));
+    const ordered = sb.ctx.Streams_AudioOrder(streams);
+    assert.equal(ordered[0].filename, "b.mkv", "Stereo track must rank first when stereoOnly=true");
+    assert.ok(reads <= 3, `Expected hoisted St_Prefs reads <= 3, got ${reads}`);
+
+    // Verify Store cache invalidation when St_SetPref bumps stVer
+    sb.ctx.St_SetPref("stereoOnly", false);
+    assert.equal(origStPrefs().stereoOnly, false, "St_Prefs cache must invalidate immediately on St_SetPref");
+});
+
 let passed = 0;
 let failed = 0;
 for (const t of tests) {
