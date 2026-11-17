@@ -33,15 +33,9 @@ sub init()
     m.bgWait.duration = 0.7
     m.bgWait.repeat = false
     m.bgWait.observeField("fire", "onBgWait")
-    m.pool = []
-    for i = 0 to 5
-        p = m.top.createChild("Poster")
-        p.visible = false
-        p.width = 1
-        p.height = 1
-        p.loadDisplayMode = "scaleToZoom"
-        m.pool.Push(p)
-    end for
+    m.local = {}
+    m.pending = {}
+    m.cacheJobs = []
     m.lastLogo = ""
     m.boxTop = 120
     m.boxHeight = 180
@@ -177,7 +171,7 @@ sub render()
     d = m.top.data
     if d = invalid then return
     m.title.text = textOf(d.title)
-    logo = Img_Sized(textOf(d.logo), "w500")
+    logo = localOf(Img_Sized(textOf(d.logo), "w500"))
     if d.logoPending = true then logo = ""
     if logo <> m.lastLogo
         m.lastLogo = logo
@@ -206,7 +200,7 @@ sub render()
     m.rating.text = rating
     m.metaLine.text = textOf(d.metaLine)
     m.description.text = textOf(d.description)
-    bg = Img_Sized(textOf(d.background), "w1280")
+    bg = localOf(Img_Sized(textOf(d.background), "w1280"))
     if bg = m.backdrop.uri then
         m.bgWant = ""
     else if bg = ""
@@ -235,26 +229,53 @@ end sub
 sub onPreload()
     list = m.top.preload
     if type(list) <> "roArray" then return
-    i = 0
+    urls = []
     for each entry in list
-        if i >= m.pool.Count() then exit for
         url = textOf(entry.url)
         if url <> ""
-            p = m.pool[i]
-            if entry.kind = "logo"
-                p.loadWidth = 1240
-                p.loadHeight = 360
-                url = Img_Sized(url, "w500")
-            else
-                p.loadWidth = 1280
-                p.loadHeight = 720
-                url = Img_Sized(url, "w1280")
+            if entry.kind = "logo" then url = Img_Sized(url, "w500") else url = Img_Sized(url, "w1280")
+            if Left(url, 4) = "http" and not m.local.DoesExist(url) and not m.pending.DoesExist(url)
+                m.pending[url] = true
+                urls.Push(url)
             end if
-            if p.uri <> url then p.uri = url
-            i = i + 1
         end if
     end for
+    if urls.Count() = 0 then return
+    if m.cacheJobs.Count() >= 3
+        old = m.cacheJobs.Shift()
+        old.cancel = true
+    end if
+    task = CreateObject("roSGNode", "PosterCacheTask")
+    task.quick = true
+    task.urls = urls
+    task.observeField("result", "onCacheDone")
+    task.control = "RUN"
+    m.cacheJobs.Push(task)
 end sub
+
+sub onCacheDone(event as object)
+    task = event.getRoSGNode()
+    for i = 0 to m.cacheJobs.Count() - 1
+        if m.cacheJobs[i].isSameNode(task)
+            m.cacheJobs.Delete(i)
+            exit for
+        end if
+    end for
+    for each url in task.urls
+        m.pending.Delete(url)
+    end for
+    found = task.result
+    if type(found) <> "roAssociativeArray" then return
+    for each k in found
+        m.local[k] = found[k]
+    end for
+    if m.local.Count() > 400 then m.local = found
+end sub
+
+function localOf(url as string) as string
+    if url <> "" and m.local.DoesExist(url) then return m.local[url]
+    return url
+end function
 
 sub onBgNext()
     status = m.bgNext.loadStatus
