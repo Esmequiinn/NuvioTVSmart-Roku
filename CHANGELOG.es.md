@@ -4,6 +4,16 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.1.6] - 2026-11-15
+
+### Agregado
+- **Ajustes → Acerca de → Imágenes animadas (GIF)** muestra cómo cargó el último GIF: cuántos de sus cuadros llegaron y por qué camino. Si los GIF no se mueven en tu Roku, esta línea ayuda a saber por qué.
+
+### Corregido
+- El canal ya no se congela ni se cierra después de sincronizar una cuenta con muchos ajustes, y el inicio se mueve más fluido para todos. El canal volvía a leer tus ajustes guardados cada vez que necesitaba uno, muchas veces por segundo mientras te movías por el inicio; con un perfil grande eso se volvía tan lento que el Roku cerraba el canal. Ahora los lee una vez y solo los vuelve a leer cuando algo cambia.
+- Los GIF de las colecciones vuelven a funcionar en todos los Roku. Algunos Roku descargaban el GIF y lo reproducían, pero nunca lo dibujaban, así que la tarjeta solo mostraba la imagen de portada o se veía transparente. Ahora el canal trae los cuadros del GIF como imágenes normales y los muestra uno tras otro (hasta 30 cuadros y luego vuelve a empezar).
+- Los pósteres del inicio ya no se ponen grises cuando bajas y vuelves a subir. Desde la 0.1.5, los fondos y logos que el canal traía por adelantado se quedaban en la memoria de imágenes del Roku, lo que sacaba a los pósteres y no dejaba espacio para los GIF. Ahora se guardan en el almacenamiento del Roku, así siguen cargando rápido sin ocupar esa memoria. El logo de la portada también se carga del tamaño en que se muestra.
+
 ## [0.1.5] - 2026-11-14
 
 ### Cambiado

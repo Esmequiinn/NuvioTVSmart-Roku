@@ -4,6 +4,16 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.1.6] - 2026-11-15
+
+### Added
+- **Settings → About → Animated images (GIF)** shows how the last GIF loaded: how many of its frames arrived and through which route. If GIFs don't move on your Roku, this line helps find out why.
+
+### Fixed
+- The channel no longer freezes or closes after syncing an account with lots of settings, and the home moves more smoothly for everyone. The channel kept re-reading your saved settings from storage every time it needed one, many times per second while you moved around the home; with a big profile that got slow enough for the Roku to close the channel. Now it reads them once and only reads again when something changes.
+- Collection GIFs work on every Roku again. Some Rokus downloaded the GIF and played it but never drew it, so the card only showed the cover image or looked see-through. Now the channel gets the GIF's frames as regular images and shows them one after another (up to 30 frames, then it loops).
+- Posters on the home no longer turn gray when you scroll down and come back. Since 0.1.5, the backgrounds and logos the channel got ahead of time were kept in the Roku's image memory, which pushed out the posters and left no room for GIFs. Now they're saved to the Roku's storage instead, so they still load fast without using that memory. The hero logo also loads at the size it's shown.
+
 ## [0.1.5] - 2026-11-14
 
 ### Changed
