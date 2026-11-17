@@ -1,0 +1,15 @@
+# Nuvio Roku — Implementation & Orchestration Log
+
+- **Integration branch:** `feat/nuvio-subtitle-ux-parity` (base `main` at `c936a7bd6814ffd661bafe77f5da56af45ebff65` / `roku-v0.1.6`)
+- **Hindsight initiative page:** `kp-dd9ad86118ae4001b47fdc7877b816f5`
+
+| Step / Slice | Owner | Topic Ref / Commit | Scope | Verification Evidence | Risks / Next Actions |
+| --- | --- | --- | --- | --- | --- |
+| **Step 0 — Baseline, Parity Matrix & Verification Harness** | Orchestrator | Commit pending | Pin upstream SHAs (`NuvioTV@3ff5e2b`, `NuvioTVSmart@701fa41`), create `docs/UPSTREAM_PARITY.md`, `docs/IMPLEMENTATION_LOG.md`, `scripts/verify.mjs`, `scripts/package.sh`, `tests/*` | Static XML/BRS/Locale check PASS (70 `.brs`, 42 `.xml`, 11 locales); clean zip built at `/tmp/nuvio-roku-dev.zip` (1.5M); baseline RED test suite confirms `30`-track truncation bug and missing feature helpers | Proceed to Slice 1 |
+| **Slice 1 — Issue `#31` Autoplay Timeout/Focus Fix & Debrid Failover** | Orchestrator / Subagent | Pending | `Store.brs` cache by `stVer`, `Streams.brs` hoisted prefs, `Playback.brs` sheet focus guard & debrid failover | Pending | Hardware verify autoplay + episode transition under slow prefs |
+| **Slice 2 — Subtitle Language Normalization, Preferences & Server/Stream Subs** | Orchestrator / Subagent | Pending | `Util.brs` alias/variant normalization, `SubtitleTask` preference ranking & fair cap (240), `Streams.brs`/`Servers.brs` subtitle extraction | Pending | Test 50+ mixed `en`/`es`/`es-419`/`pt-BR`/`pt-PT` tracks |
+| **Slice 3 — SRT/WebVTT Parser Hardening & Live Reflow Fix** | Orchestrator / Subagent | Pending | `PlayerDataTask.brs` `Subs_Parse` extraction & hardening; `PlayerExtras.brs` `m.subDirty` reflow on controls/style toggle & post-play hide | Pending | Test BOM, HTML entities, ASS tags, overlapping cues, error HTML |
+| **Slice 4 — Grouped Language-First Subtitle Selector & Windowed `ActionSheet`** | Orchestrator / Subagent | Pending | `ActionSheet.brs` windowed pool (>24 items), badges, chevron, `leftAction:"back"`; `PlayerScreen.brs` 2-level Language -> Tracks UX + late subs | Pending | Verify non-player `ActionSheet` callers unaffected |
+| **Slice 5 — In-Player Timing (`delayMs` + *Sync Line*), Appearance Preview & Persistence** | Orchestrator / Subagent | Pending | `Store.brs` bounded `subdelay_<pid>` store, `PlayerScreen.xml`/`.brs`/`PlayerExtras.brs` timing bar, Sync Line picker, live appearance picker | Pending | Clearly verify embedded track guard; test on Roku hardware |
+| **Slice 6 — TorBox Alt-Hash Cache, TMDB Logo Clamping & 11-Locale Translations** | Orchestrator / Subagent | Pending | `Debrid.brs` TorBox alt-hash mapping, `MetaTask.brs`/views TMDB `Img_Sized` clamp, `locale/*.json` translations | Pending | Verify placeholder parity across all 11 locale JSONs |
+| **Slice 7 — Independent Review & Final QA Gate** | Independent Reviewer + Orchestrator | Pending | Read-only diff review, full `node scripts/verify.mjs`, clean `.zip` sideload package | Pending | Deliver Portuguese summary + hardware test checklist |
