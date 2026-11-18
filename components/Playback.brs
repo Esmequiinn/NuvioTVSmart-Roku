@@ -1437,6 +1437,8 @@ sub Player_Event()
         Alt_Audio(ToInt(ev.position, 0))
     else if kind = "subsReload"
         reloadWithSubtitle(Str_Of(ev.url), ToInt(ev.position, 0))
+    else if kind = "subError"
+        Toast_Show(Str_Of(ev.message))
     else if kind = "finished" and not playbackEnded(ToInt(ev.position, 0), ToInt(ev.duration, 0))
         position = ToInt(ev.position, 0)
         if position < 10 and Bool_Of(m.ctx.reusedPlay, false)

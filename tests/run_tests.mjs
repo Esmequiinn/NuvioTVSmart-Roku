@@ -174,13 +174,25 @@ test("PlayerDataTask Subs_Parse: handles UTF-8 BOM, WEBVTT/NOTE/STYLE, ASS/HTML 
     const badHtml = sb.ctx.Subs_Parse("<!DOCTYPE html><html><body>404 Not Found</body></html>");
     assert.equal(badHtml.cues.length, 0);
     assert.equal(badHtml.error, "invalid_subtitle");
+
+    // Out-of-order SRT cues with classic comma decimals are sorted
+    const srt = "2\r\n00:00:10,000 --> 00:00:12,500\r\nSecond sorted\r\n\r\n1\r\n00:00:02,000 --> 00:00:04,500\r\nFirst sorted\r\n";
+    const sorted = sb.ctx.Subs_Parse(srt);
+    assert.equal(sorted.error, "");
+    assert.equal(sorted.cues.length, 2);
+    assert.equal(sorted.cues[0].t, "First sorted");
+    assert.equal(sorted.cues[1].t, "Second sorted");
 });
 
 test("PlayerExtras timing & Sync Line math: signed delay (+ = later) + cue matching (-300ms compensation)", () => {
     const sb = makeSandbox();
+    sb.ctx.m.top = sb.evalJs("({ info: { customSubs: true } })");
     sb.loadBrs(readBrs("components/views/PlayerExtras.brs"), "PlayerExtras.brs");
     assert.equal(typeof sb.ctx.Ex_CueAt, "function", "Ex_CueAt pure cue lookup helper must exist");
     assert.equal(typeof sb.ctx.Ex_CalcSyncDelay, "function", "Ex_CalcSyncDelay helper must exist");
+    assert.equal(sb.ctx.Ex_UseCustom("https://subs.example/movie.srt?tok=1"), true);
+    assert.equal(sb.ctx.Ex_UseCustom("https://subs.example/movie.ass?tok=1"), false, ".ass excluded from SRT/VTT custom parser");
+    assert.equal(sb.ctx.Ex_UseCustom("mkv/3"), false, "Embedded track uses native video captions");
 
     const cues = sb.evalJs(JSON.stringify([
         { s: 10.0, e: 12.0, t: "First line" },

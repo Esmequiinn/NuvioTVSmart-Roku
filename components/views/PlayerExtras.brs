@@ -98,6 +98,10 @@ sub Ex_Reset()
     m.cueIndex = 0
     m.subUrl = ""
     m.subTask = invalid
+    m.subDelayMs = 0
+    m.subDirty = true
+    m.subPreviewText = ""
+    m.subBarOn = false
     m.top.postActive = false
     if m.skipBtn <> invalid
         m.skipBtn.visible = false
@@ -117,6 +121,7 @@ end function
 
 sub Ex_OnInfo()
     Ex_Reset()
+    m.subDelayMs = ToInt(Ex_Info("subDelayMs", 0), 0)
     m.statsBox.visible = Bool_Of(Ex_Info("stats", false), false)
     m.exTimer.control = "start"
     Ex_StyleSubs()
@@ -574,6 +579,10 @@ sub Ex_OnControls(visible as boolean)
         if visible then m.skipShownAt = CreateObject("roTimespan")
         Ex_PaintSkip()
     end if
+    m.subDirty = true
+    if Bool_Of(m.started, false) and (m.cues.Count() > 0 or Str_Of(m.subPreviewText) <> "")
+        Ex_Subs(settledPosition())
+    end if
 end sub
 
 sub Ex_OnStill_Run()
@@ -690,11 +699,21 @@ sub Ex_StyleSubs()
     m.subBg.blendColor = b
     m.subBg.visible = b <> "0x00000000"
     m.subBottom = 1000 - ToInt(style.offset, 0) * 20
+    m.subDirty = true
+    if Bool_Of(m.started, false) and (m.cues.Count() > 0 or Str_Of(m.subPreviewText) <> "")
+        Ex_Subs(settledPosition())
+    end if
 end sub
 
 function Ex_UseCustom(track as string) as boolean
     if not Bool_Of(Ex_Info("customSubs", true), true) then return false
-    return LCase(Left(track, 4)) = "http"
+    low = LCase(track.Trim())
+    if Left(low, 4) <> "http" then return false
+    q = Instr(1, low, "?")
+    pathOnly = low
+    if q > 0 then pathOnly = Left(low, q - 1)
+    if Right(pathOnly, 4) = ".ass" or Right(pathOnly, 4) = ".ssa" then return false
+    return true
 end function
 
 sub Ex_SubSelect(track as string)
@@ -705,10 +724,11 @@ sub Ex_SubSelect(track as string)
     end if
     if Ex_UseCustom(track)
         m.video.globalCaptionMode = "Off"
-        if m.subUrl = track then return
+        if m.subUrl = track and (m.cues.Count() > 0 or m.subTask <> invalid) then return
         m.subUrl = track
         m.cues = []
         m.cueIndex = 0
+        m.subDirty = true
         m.subLayer.visible = false
         task = CreateObject("roSGNode", "PlayerDataTask")
         task.mode = "subs"
@@ -727,7 +747,8 @@ sub Ex_SubOff()
     m.subUrl = ""
     m.cues = []
     m.subTask = invalid
-    m.subLayer.visible = false
+    m.subDirty = true
+    if m.subLayer <> invalid then m.subLayer.visible = false
 end sub
 
 sub Ex_OnSubsLoaded(event as object)
@@ -736,50 +757,84 @@ sub Ex_OnSubsLoaded(event as object)
     m.subTask = invalid
     r = task.result
     cues = invalid
-    if r <> invalid then cues = r.cues
+    errMsg = ""
+    if r <> invalid
+        cues = r.cues
+        errMsg = Str_Of(r.error)
+    end if
     if type(cues) <> "roArray" or cues.Count() = 0
         url = m.subUrl
         m.subUrl = ""
+        if errMsg = "invalid_subtitle"
+            m.subLayer.visible = false
+            m.top.event = { type: "subError", message: L("El archivo de subtítulos no es válido o no está disponible.") }
+            return
+        end if
         m.video.subtitleTrack = url
         m.video.globalCaptionMode = "On"
         return
     end if
     m.cues = cues
     m.cueIndex = 0
+    m.subDirty = true
+    Ex_Subs(settledPosition())
 end sub
 
 function Ex_SubActive() as string
-    return m.subUrl
+    return Str_Of(m.subUrl)
 end function
 
-sub Ex_Subs(at0 as float)
-    if m.cues.Count() = 0
-        if m.subLayer.visible then m.subLayer.visible = false
-        return
-    end if
-    i = m.cueIndex
-    if i >= m.cues.Count() then i = m.cues.Count() - 1
+function Ex_CueAt(cues as object, startIdx as integer, at0 as float, delayMs as integer) as dynamic
+    if cues = invalid or cues.Count() = 0 then return invalid
+    effectiveAt = at0 - (delayMs / 1000.0)
+    i = startIdx
+    if i >= cues.Count() then i = cues.Count() - 1
     if i < 0 then i = 0
-    if m.cues[i].s > at0
-        while i > 0 and m.cues[i].s > at0
+    if cues[i].s > effectiveAt
+        while i > 0 and cues[i].s > effectiveAt
             i = i - 1
         end while
     else
-        while i < m.cues.Count() - 1 and m.cues[i + 1].s <= at0
+        while i < cues.Count() - 1 and cues[i + 1].s <= effectiveAt
             i = i + 1
         end while
     end if
     m.cueIndex = i
-    cue = m.cues[i]
-    if at0 >= cue.s and at0 <= cue.e
-        if m.subText.text <> cue.t
-            m.subText.text = cue.t
-            m.subShadow.text = cue.t
+    cue = cues[i]
+    if effectiveAt >= cue.s and effectiveAt <= cue.e then return cue
+    return invalid
+end function
+
+function Ex_CalcSyncDelay(capturedMs as integer, cueStartSec as float) as integer
+    cueStartMs = Int(cueStartSec * 1000.0 + 0.5)
+    delayMs = capturedMs - cueStartMs - 300
+    if delayMs > 180000 then delayMs = 180000
+    if delayMs < -180000 then delayMs = -180000
+    return delayMs
+end function
+
+sub Ex_Subs(at0 as float)
+    if m.subLayer = invalid then return
+    if m.postBox <> invalid and m.postBox.visible
+        if m.subLayer.visible then m.subLayer.visible = false
+        return
+    end if
+    cue = Ex_CueAt(m.cues, ToInt(m.cueIndex, 0), at0, ToInt(m.subDelayMs, 0))
+    displayText = ""
+    if cue <> invalid
+        displayText = cue.t
+    else if Str_Of(m.subPreviewText) <> ""
+        displayText = Str_Of(m.subPreviewText)
+    end if
+    if displayText <> ""
+        if m.subText.text <> displayText or Bool_Of(m.subDirty, false) or not m.subLayer.visible
+            m.subText.text = displayText
+            m.subShadow.text = displayText
             rect = m.subText.boundingRect()
             h = Int(rect.height)
             w = Int(rect.width)
             bottom = m.subBottom
-            if m.controls.visible then bottom = 680
+            if m.controls.visible and bottom > 680 then bottom = 680
             m.subText.translation = [160, bottom - h]
             m.subText.height = h
             m.subShadow.height = h
@@ -787,11 +842,13 @@ sub Ex_Subs(at0 as float)
             m.subBg.width = w + 48
             m.subBg.height = h + 20
             m.subBg.translation = [960 - Int((w + 48) / 2), bottom - h - 10]
+            m.subDirty = false
         end if
         m.subLayer.visible = true
     else if m.subLayer.visible
         m.subLayer.visible = false
         m.subText.text = ""
+        m.subShadow.text = ""
     end if
 end sub
 
