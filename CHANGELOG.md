@@ -4,6 +4,23 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [Unreleased]
+
+Still in testing. Sideload a build from this branch; do not treat it as a release.
+
+### Added
+- Subtitles in the player are grouped by language first (with a count), then you pick a specific track. Your preferred language stays near the top. **Off**, **Subtitle sync** and **Subtitle style** sit at the top of the list.
+- While watching, you can shift subtitle timing in milliseconds (plus or minus), reset it, or use **Sync Line** to match the line you just heard. The delay is saved per title and profile.
+- Subtitle style (size, color, background, edge, bold, height) can be changed from the player with a live preview, without leaving the video.
+- Subtitles that come with a Jellyfin/Emby file or a Stremio stream now show up in the list, not only addon results.
+- Portuguese (Brazil vs Portugal) and other language variants stay separate, and a long subtitle list no longer hides your preferred language behind a 30-track cap.
+
+### Fixed
+- Auto-play no longer times out on titles with many sources, and the error sheet can be closed when a source fails. If a debrid link can't be resolved, playback tries the next source.
+- Addon subtitle files that were HTML error pages, or WebVTT with STYLE/NOTE blocks, now parse instead of showing garbage or nothing. Changing subtitle style or showing the player controls no longer leaves the current line stuck.
+- Some TorBox cached torrents were skipped because TorBox answered with a different hash. Those now match.
+- Very large TMDB logos from some addons are requested at a smaller size so low-memory Rokus are less likely to run out of image memory.
+
 ## [0.1.6] - 2026-11-16
 
 ### Added

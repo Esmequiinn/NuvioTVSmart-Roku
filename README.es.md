@@ -33,6 +33,7 @@ Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMe
 - Tarjeta de siguiente episodio con cuenta regresiva, precarga del siguiente episodio y **¿Sigues viendo?** en pantalla completa
 - Recomendaciones al terminar una película y avisos de contenido al empezar un título
 - Estilo para los subtítulos de addons, filtro de subtítulos SDH y solo subtítulos en tus idiomas preferidos
+- Selector de subtítulos agrupado por idioma, retraso de tiempo con **Sincronizar línea** y vista previa del estilo en el reproductor
 - Datos técnicos de la reproducción en pantalla
 - **Next up** en Seguir viendo al terminar un episodio
 - Búsqueda en todos tus addons, con búsquedas recientes
@@ -131,6 +132,8 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Avisos de contenido | ✅ Funciona |
 | Saltar intro, resumen y créditos | ✅ Funciona |
 | Estilo de subtítulos y filtro SDH | ⚠️ Sin probar |
+| Selector de subtítulos agrupado por idioma | ⚠️ Sin probar |
+| Sincronización de subtítulos y Sincronizar línea | ⚠️ Sin probar |
 | Datos técnicos de la reproducción | ⚠️ Sin probar |
 | Next up en Seguir viendo | ✅ Funciona |
 | Tráilers de YouTube en tu idioma | ✅ Funciona |
@@ -171,6 +174,7 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 - Roku no puede mostrar emojis. Las banderas en las descripciones de las fuentes se muestran como el nombre del idioma y los demás emojis se quitan.
 - Watch Party revisa la sala cada 2.5 segundos y manda al instante los cambios de reproducir, pausar y adelantar, así que puede haber 1 o 2 segundos de diferencia con las demás personas.
 - Los plugins de Nuvio no están disponibles, porque necesitan JavaScript y Roku no puede ejecutarlo.
+- El retraso de subtítulos y **Sincronizar línea** solo aplican a SRT/VTT de addons o externos que dibuja el canal. Los subtítulos dentro del video siguen el tiempo y el estilo del Roku en **Ajustes → Accesibilidad**. El estilo ASS/SSA (posición, karaoke) no se dibuja; esos archivos igual pueden ofrecerse como pistas nativas si el Roku los acepta.
 
 ## Instalación
 

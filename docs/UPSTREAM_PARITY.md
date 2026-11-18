@@ -1,6 +1,6 @@
 # Nuvio TV — Live Upstream Parity Matrix (Roku vs Android TV & Smart TV)
 
-> **Last reviewed:** 2026-11-17  
+> **Last reviewed:** 2026-11-18
 > **Local target branch:** `feat/nuvio-subtitle-ux-parity` (branched cleanly from untouched `main`)
 
 ## 1. Pinned Repository Snapshots

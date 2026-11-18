@@ -33,6 +33,7 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - Next episode card with countdown, next episode preloading and **Are you still watching?** on the full screen
 - Recommendations at the end of a movie and content warnings when a title starts
 - Subtitle style for addon subtitles, SDH filtering and preferred-languages-only subtitles
+- Grouped subtitle picker by language, timing delay with **Sync Line**, and live style preview in the player
 - Playback stats overlay
 - **Next up** in Continue Watching after you finish an episode
 - Search across all your addons, with recent searches
@@ -131,6 +132,8 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Content warnings | ✅ Working |
 | Skip intro, recap and credits | ✅ Working |
 | Subtitle style and SDH filtering | ⚠️ Not tested yet |
+| Grouped subtitle language selector | ⚠️ Not tested yet |
+| Subtitle timing and Sync Line | ⚠️ Not tested yet |
 | Playback stats | ⚠️ Not tested yet |
 | Next up in Continue Watching | ✅ Working |
 | YouTube trailers in your language | ✅ Working |
@@ -171,6 +174,7 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 - Roku can't show emojis. Flag emojis in source descriptions are shown as the language name and other emojis are removed.
 - Watch Party checks the room every 2.5 seconds and sends play, pause and seek changes right away, so playback can be 1 or 2 seconds apart from other people.
 - Nuvio plugins are not available, because they need JavaScript and Roku can't run it.
+- Subtitle timing and **Sync Line** only apply to addon/external SRT/VTT rendered by the channel. Subtitles inside the video keep the Roku's own timing and style from **Settings → Accessibility**. ASS/SSA styling (positioning, karaoke) is not drawn; those files can still be offered as native tracks when the Roku accepts them.
 
 ## Install
 

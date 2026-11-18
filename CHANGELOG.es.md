@@ -4,6 +4,23 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [Sin publicar]
+
+Todavía en pruebas. Instala un sideload de esta rama; no lo tomes como una versión publicada.
+
+### Agregado
+- Los subtítulos en el reproductor se agrupan primero por idioma (con un recuento) y luego eliges una pista concreta. Tu idioma preferido se queda cerca de arriba. **Desactivados**, **Sincronización de subtítulos** y **Estilo de subtítulos** están al principio de la lista.
+- Mientras ves algo, puedes adelantar o atrasar los subtítulos en milisegundos, restablecerlos o usar **Sincronizar línea** para coincidir con la frase que acabas de oír. El retraso se guarda por título y perfil.
+- El estilo de los subtítulos (tamaño, color, fondo, borde, negritas, altura) se puede cambiar desde el reproductor con una vista previa, sin salir del video.
+- Los subtítulos que vienen con un archivo de Jellyfin/Emby o con una fuente de Stremio ahora aparecen en la lista, no solo los de los addons.
+- El portugués de Brasil y el de Portugal (y otras variantes) se mantienen aparte, y una lista larga de subtítulos ya no esconde tu idioma preferido detrás de un tope de 30 pistas.
+
+### Corregido
+- La reproducción automática ya no se queda sin tiempo en títulos con muchas fuentes, y se puede cerrar el aviso de error cuando una fuente falla. Si un enlace debrid no se puede resolver, el canal prueba la siguiente fuente.
+- Los archivos de subtítulos de addons que eran páginas de error HTML, o WebVTT con bloques STYLE/NOTE, ahora se leen en vez de mostrar basura o nada. Cambiar el estilo o mostrar los controles del reproductor ya no deja la línea actual pegada.
+- Algunos torrents en caché de TorBox se saltaban porque TorBox respondía con otro hash. Ahora coinciden.
+- Los logos de TMDB muy grandes de algunos addons se piden a un tamaño más chico para que los Roku con poca memoria no se queden sin memoria de imágenes.
+
 ## [0.1.6] - 2026-11-16
 
 ### Agregado
