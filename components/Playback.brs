@@ -112,8 +112,9 @@ sub onDetailsMeta(event as object)
     end if
     if Str_Of(meta.background) <> "" then m.ctx.background = meta.background
     if Str_Of(meta.logo) <> ""
-        m.ctx.logo = meta.logo
-        if m.player.visible then m.player.logo = meta.logo
+        logoUrl = Img_Sized(Str_Of(meta.logo), "w500")
+        m.ctx.logo = logoUrl
+        if m.player.visible then m.player.logo = logoUrl
     end if
     if Str_Of(meta.description) <> "" then m.ctx.description = Str_OneLine(meta.description)
     m.ctx.metaLine = Meta_Line(m.ctx.kind, meta)

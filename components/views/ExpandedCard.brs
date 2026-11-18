@@ -34,12 +34,12 @@ sub onData()
     m.toW = d.toW
     m.top.translation = [d.x, d.y]
     m.top.h = d.h
-    m.art.uri = Str_Of(d.background)
+    m.art.uri = Img_Sized(Str_Of(d.background), "w1280")
     m.title.text = Str_Of(d.title)
     m.logoReady = false
     m.logo.visible = false
     m.title.visible = false
-    m.logo.uri = Str_Of(d.logo)
+    m.logo.uri = Img_Sized(Str_Of(d.logo), "w500")
     m.video.visible = false
     m.caps.visible = Mask_NeedCaps()
     m.video.control = "stop"

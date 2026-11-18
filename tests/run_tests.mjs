@@ -266,6 +266,30 @@ test("Debrid TorBox alt-hash mapping & Streams audio pref hoisting", () => {
     );
     assert.ok(singleMap.DoesExist("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
     assert.equal(singleMap["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"].name, "Movie.mkv");
+
+    // Full multi-hash Deb_CheckCached with canonical alias fallback probe
+    sb.setHttpMock((method, url, headers, body) => {
+        if (method === "POST") {
+            return sb.ctx.ParseJson(JSON.stringify({
+                code: 200,
+                json: { data: { "altcanonical9999999999999999999999999999": { name: "AltHash.mkv", size: 1000 } } }
+            }));
+        }
+        if (url.includes("hash=1111111111111111111111111111111111111111")) {
+            return sb.ctx.ParseJson(JSON.stringify({
+                code: 200,
+                json: { data: { "altcanonical9999999999999999999999999999": { name: "AltHash.mkv", size: 1000 } } }
+            }));
+        }
+        return sb.ctx.ParseJson(JSON.stringify({ code: 200, json: { data: {} } }));
+    });
+    const tbFound = sb.ctx.Deb_CheckCached(
+        sb.ctx.ParseJson(JSON.stringify({ id: "torbox", key: "tbk" })),
+        sb.ctx.ParseJson(JSON.stringify(["1111111111111111111111111111111111111111", "2222222222222222222222222222222222222222"]))
+    );
+    assert.ok(tbFound.DoesExist("1111111111111111111111111111111111111111"), "Multi-hash fallback must map alternative canonical hash back to requested hash");
+    assert.equal(tbFound["1111111111111111111111111111111111111111"].name, "AltHash.mkv");
+    assert.equal(tbFound.DoesExist("2222222222222222222222222222222222222222"), false);
 });
 
 test("PlayerScreen grouped subtitles: groups by language with counts, preference order, and SDH/onlyPreferred guards", () => {

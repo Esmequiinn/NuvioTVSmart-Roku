@@ -996,7 +996,7 @@ function heroData(item as object, meta as dynamic) as object
     if item.videoId <> "" and item.episodeLabel <> "" then metaLine = item.metaLine
     if item.hasField("badge") and item.badge <> "" then metaLine = Cw_HeroLine(item, meta)
     if not Bool_Of(St_Pref("homeRatings"), true) then rating = ""
-    return { title: title, logo: logo, background: background, rating: rating, metaLine: metaLine, description: description }
+    return { title: title, logo: Img_Sized(Str_Of(logo), "w500"), background: Img_Sized(Str_Of(background), "w1280"), rating: rating, metaLine: metaLine, description: description }
 end function
 
 function Cw_HeroLine(item as object, meta as dynamic) as string
@@ -1685,7 +1685,7 @@ function Ambient_Slide(item as object) as dynamic
             if IsStr(g) and genres.Count() < 3 then genres.Push(g)
         end for
     end if
-    return { background: background, logo: logo, title: Str_Of(item.title), genres: genres.Join("  •  ") }
+    return { background: Img_Sized(Str_Of(background), "w1280"), logo: Img_Sized(Str_Of(logo), "w500"), title: Str_Of(item.title), genres: genres.Join("  •  ") }
 end function
 
 function Gif_Bind() as boolean

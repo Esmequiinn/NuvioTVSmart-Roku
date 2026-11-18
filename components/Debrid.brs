@@ -65,6 +65,56 @@ function Deb_Magnet(hash as string, sources as dynamic, filename as string) as s
     return out
 end function
 
+function Deb_TorBoxMapCached(chunk as object, data as dynamic) as object
+    found = {}
+    if type(chunk) <> "roArray" or chunk.Count() = 0 or data = invalid then return found
+    reqMap = {}
+    for each h in chunk
+        lh = LCase(Str_Of(h).Trim())
+        if lh <> "" then reqMap[lh] = true
+    end for
+    if reqMap.Count() = 0 then return found
+
+    unmatched = []
+    if type(data) = "roAssociativeArray"
+        for each k in data
+            lk = LCase(Str_Of(k).Trim())
+            item = data[k]
+            name = ""
+            size = 0
+            if type(item) = "roAssociativeArray"
+                name = Str_Of(item.name)
+                size = item.size
+            end if
+            entry = { name: name, size: size }
+            if reqMap.DoesExist(lk)
+                found[lk] = entry
+            else if lk <> "" and item <> invalid
+                unmatched.Push(entry)
+            end if
+        end for
+    else if type(data) = "roArray"
+        for each item in data
+            if type(item) = "roAssociativeArray"
+                lk = LCase(Str_Of(item.hash).Trim())
+                entry = { name: Str_Of(item.name), size: item.size }
+                if lk <> "" and reqMap.DoesExist(lk)
+                    found[lk] = entry
+                else
+                    unmatched.Push(entry)
+                end if
+            end if
+        end for
+    end if
+
+    if reqMap.Count() = 1 and found.Count() = 0 and unmatched.Count() = 1
+        for each soleHash in reqMap
+            found[soleHash] = unmatched[0]
+        end for
+    end if
+    return found
+end function
+
 function Deb_CheckCached(acc as object, hashes as object) as dynamic
     clean = []
     seen = {}
@@ -92,16 +142,28 @@ function Deb_CheckCached(acc as object, hashes as object) as dynamic
             if r.code >= 200 and r.code < 300 and type(r.json) = "roAssociativeArray"
                 ok = true
                 data = r.json.data
-                if type(data) = "roAssociativeArray"
-                    for each k in data
-                        item = data[k]
-                        name = ""
-                        size = 0
-                        if type(item) = "roAssociativeArray"
-                            name = Str_Of(item.name)
-                            size = item.size
+                mapped = Deb_TorBoxMapCached(chunk, data)
+                for each hk in mapped
+                    found[hk] = mapped[hk]
+                end for
+                ' Port NuvioTVSmart@c3312ea: TorBox may return canonical alias hashes differing from requested infoHash
+                missing = []
+                for each ch in chunk
+                    if not found.DoesExist(ch) then missing.Push(ch)
+                end for
+                hasExtraAlias = (type(data) = "roAssociativeArray" and data.Count() > mapped.Count()) or (type(data) = "roArray" and data.Count() > mapped.Count())
+                if missing.Count() > 0 and chunk.Count() > 1 and hasExtraAlias
+                    probes = 0
+                    for each mh in missing
+                        if probes >= 8 then exit for
+                        probes = probes + 1
+                        sr = Http_Request("GET", "https://api.torbox.app/v1/api/torrents/checkcached?hash=" + mh.EncodeUriComponent() + "&format=object&list_files=false", Deb_Auth(acc), invalid, 6000)
+                        if sr.code >= 200 and sr.code < 300 and type(sr.json) = "roAssociativeArray"
+                            singleMapped = Deb_TorBoxMapCached([mh], sr.json.data)
+                            for each sk in singleMapped
+                                found[sk] = singleMapped[sk]
+                            end for
                         end if
-                        found[LCase(k)] = { name: name, size: size }
                     end for
                 end if
             end if

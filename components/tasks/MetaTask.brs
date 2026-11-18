@@ -40,6 +40,9 @@ sub execute()
     end if
     if Str_Of(merged.logo) = "" then merged.logo = Img_Logo(merged.imdb)
     if Str_Of(merged.background) = "" then merged.background = Img_Background(merged.imdb)
+    if Str_Of(merged.logo) <> "" then merged.logo = Img_Sized(Str_Of(merged.logo), "w500")
+    if Str_Of(merged.background) <> "" then merged.background = Img_Sized(Str_Of(merged.background), "w1280")
+    if Str_Of(merged.poster) <> "" then merged.poster = Img_Sized(Str_Of(merged.poster), "w500")
     if integ.mdbEnabled and Mdb_Ready(integ) and merged.imdb <> ""
         merged.ratings = Mdb_Ratings(integ, kind, merged.imdb)
     end if
