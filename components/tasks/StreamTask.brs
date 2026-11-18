@@ -97,7 +97,7 @@ sub execute()
     if servers.Count() > 0
         added = []
         for each x in servers
-            st = Stream_Build({ name: x.name, title: x.desc, behaviorHints: { filename: x.filename } }, x.url, { name: x.name, logo: "", order: -1 }, rules, sizeBadges)
+            st = Stream_Build({ name: x.name, title: x.desc, subtitles: x.subtitles, subSourceType: "server", behaviorHints: { filename: x.filename } }, x.url, { name: x.name, logo: "", order: -1 }, rules, sizeBadges)
             added.Push(st)
         end for
         buckets.Unshift(added)

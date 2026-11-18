@@ -688,6 +688,7 @@ sub fetchStreams()
     m.subtitleTask.manifests = m.manifests
     m.subtitleTask.kind = m.ctx.kind
     m.subtitleTask.videoIds = ids
+    m.subtitleTask.originalLang = Str_Of(m.ctx.originalLang)
     m.subtitleTask.observeField("subs", "onSubsLoaded")
     m.subtitleTask.control = "RUN"
 
@@ -770,8 +771,8 @@ sub onSubsLoaded(event as object)
         m.ctx.subsWaited = true
         m.subsWait.control = "stop"
         if m.player.visible then launchAttempt()
-    else if m.player.visible and type(subs) = "roArray" and subs.Count() > ToInt(m.ctx.loadedSubs, 0)
-        m.player.extraSubs = subs
+    else if m.player.visible
+        m.player.extraSubs = currentExternalSubs()
     end if
 end sub
 
@@ -1115,7 +1116,7 @@ sub showPlayer(index as integer)
         if m.ctx.episodeMeta <> invalid and m.ctx.episodeMeta.overview <> "" then description = m.ctx.episodeMeta.overview
     end if
     m.player.partyEnabled = true
-    m.player.extraSubs = []
+    m.player.extraSubs = currentExternalSubs()
     m.player.loadDetails = Bool_Of(St_Pref("loadDetails"), true)
     m.player.info = {
         title: title
@@ -1163,13 +1164,53 @@ sub showPlayer(index as integer)
     end if
 end sub
 
-function subtitleTracks() as object
-    tracks = []
-    if type(m.ctx.subs) = "roArray"
-        for each subItem in m.ctx.subs
-            tracks.Push({ Language: subItem.lang, TrackName: subItem.url, Description: subItem.label })
+function currentExternalSubs() as object
+    out = []
+    byUrl = {}
+    if m.ctx <> invalid and type(m.ctx.playingStream) = "roAssociativeArray" and type(m.ctx.playingStream.subtitles) = "roArray"
+        for each entry in m.ctx.playingStream.subtitles
+            if type(entry) = "roAssociativeArray" and Str_Of(entry.url) <> ""
+                key = Sub_UrlKey(entry.url)
+                if byUrl.DoesExist(key)
+                    Sub_MergeInto(byUrl[key], entry)
+                else
+                    copy = {}
+                    for each k in entry
+                        copy[k] = entry[k]
+                    end for
+                    byUrl[key] = copy
+                    out.Push(copy)
+                end if
+            end if
         end for
     end if
+    if m.ctx <> invalid and type(m.ctx.subs) = "roArray"
+        for each entry in m.ctx.subs
+            if type(entry) = "roAssociativeArray" and Str_Of(entry.url) <> ""
+                key = Sub_UrlKey(entry.url)
+                if byUrl.DoesExist(key)
+                    Sub_MergeInto(byUrl[key], entry)
+                else
+                    copy = {}
+                    for each k in entry
+                        copy[k] = entry[k]
+                    end for
+                    byUrl[key] = copy
+                    out.Push(copy)
+                end if
+            end if
+        end for
+    end if
+    return out
+end function
+
+function subtitleTracks() as object
+    tracks = []
+    all = currentExternalSubs()
+    for each subItem in all
+        if tracks.Count() >= 30 then exit for
+        tracks.Push({ Language: subItem.lang, TrackName: subItem.url, Description: subItem.label })
+    end for
     return tracks
 end function
 

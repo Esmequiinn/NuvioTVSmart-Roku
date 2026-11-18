@@ -33,7 +33,7 @@ function Stream_Build(s as object, url as string, addon as object, badgeRules as
             if line.Trim() <> "" then lines.Push(line.Trim())
         end for
     end for
-    return {
+    out = {
         url: url
         headers: headers
         name: name
@@ -47,6 +47,17 @@ function Stream_Build(s as object, url as string, addon as object, badgeRules as
         badges: Stream_Fusion(lines, badgeRules)
         label: Left(Str_OneLine(label), 120)
     }
+    if type(s.subtitles) = "roArray" and s.subtitles.Count() > 0
+        subs = []
+        stype = "stream"
+        if Str_Of(s.subSourceType) = "server" then stype = "server"
+        for each subEntry in s.subtitles
+            normSub = Sub_NormalizeTrack(subEntry, addon.name, stype)
+            if normSub <> invalid then subs.Push(normSub)
+        end for
+        if subs.Count() > 0 then out.subtitles = subs
+    end if
+    return out
 end function
 
 

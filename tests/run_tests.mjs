@@ -104,13 +104,58 @@ test("SubtitleTask discovery: 50+ mixed tracks keep preferred pt-BR, deduplicate
     assert.ok(out.length > 30, `Expected >30 retained tracks instead of flat 30 cap, got ${out.length}`);
     const ptBrTracks = out.filter((t) => t.langKey === "pt-br");
     assert.equal(ptBrTracks.length, 2, "Must retain both distinct pt-BR tracks after merging duplicate URL");
-    assert.equal(ptBrTracks[0].url, "https://subs.example/shared-pt.srt");
-    assert.equal(ptBrTracks[0].sdh, true, "Duplicate URL merge must preserve SDH flag");
-    assert.equal(ptBrTracks[1].forced, true, "Forced flag must be preserved");
+    const shared = ptBrTracks.find((t) => t.url === "https://subs.example/shared-pt.srt");
+    const forced = ptBrTracks.find((t) => t.url === "https://subs.example/pt-forced.srt");
+    assert.ok(shared, "Shared duplicate URL must exist once");
+    assert.equal(shared.sdh, true, "Duplicate URL merge must preserve SDH flag");
+    assert.equal(forced.forced, true, "Forced flag must be preserved");
     assert.equal(out[0].langKey, "pt-br", "Preferred pt-BR tracks must rank ahead of ES/EN");
     const ptPtTracks = out.filter((t) => t.langKey === "pt-pt");
     assert.equal(ptPtTracks.length, 1, "Distinct pt-PT track must remain grouped separately");
     assert.equal(ptPtTracks[0].format, "VTT");
+});
+
+test("Streams & Servers: Stremio stream subtitles and Jellyfin/Emby MediaStreams subtitles are preserved", () => {
+    const sb = makeSandbox();
+    sb.loadBrs(readBrs("components/Streams.brs"), "Streams.brs");
+    sb.loadBrs(readBrs("components/Servers.brs"), "Servers.brs");
+
+    const sv = sb.ctx.ParseJson(JSON.stringify({
+        name: "MyJellyfin",
+        url: "https://jf.example",
+        kind: "jellyfin",
+        token: "tok123",
+        userId: "u1"
+    }));
+    const info = sb.ctx.ParseJson(JSON.stringify({
+        Name: "Sample Movie",
+        MediaSources: [{
+            Id: "src1",
+            Container: "mkv",
+            Path: "/media/movie.mkv",
+            MediaStreams: [
+                { Type: "Video", Codec: "h264", Height: 1080 },
+                { Type: "Subtitle", Index: 2, Codec: "subrip", Language: "pob", DisplayTitle: "Português BR (Forced)", IsForced: true, IsTextSubtitleStream: true },
+                { Type: "Subtitle", Index: 3, Codec: "pgssub", Language: "eng", IsTextSubtitleStream: false }
+            ]
+        }]
+    }));
+    const srvStreams = sb.ctx.Srv_ItemStreams(sv, "item99", info);
+    assert.equal(srvStreams.length, 2);
+    assert.equal(srvStreams[0].subtitles.length, 1, "Bitmap pgssub ignored, text subrip kept");
+    assert.ok(srvStreams[0].subtitles[0].url.includes("/Subtitles/2/Stream.srt?api_key=tok123"));
+
+    const built = sb.ctx.Stream_Build(
+        sb.ctx.ParseJson(JSON.stringify({ name: "MyJellyfin", title: "1080p", subtitles: srvStreams[0].subtitles, subSourceType: "server" })),
+        srvStreams[0].url,
+        sb.ctx.ParseJson(JSON.stringify({ name: "MyJellyfin", logo: "", order: -1 })),
+        sb.evalJs("[]"),
+        true
+    );
+    assert.equal(built.subtitles.length, 1);
+    assert.equal(built.subtitles[0].langKey, "pt-br");
+    assert.equal(built.subtitles[0].forced, true);
+    assert.equal(built.subtitles[0].sourceType, "server");
 });
 
 test("PlayerDataTask Subs_Parse: handles UTF-8 BOM, WEBVTT/NOTE/STYLE, ASS/HTML tags, entities, simultaneous cues, and rejects HTML errors", () => {
@@ -196,8 +241,8 @@ test("Debrid TorBox alt-hash mapping & Streams audio pref hoisting", () => {
 
     // Single hash returned under an alternative canonical hash
     const singleMap = sb.ctx.Deb_TorBoxMapCached(
-        sb.evalJs(JSON.stringify(["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"])),
-        sb.evalJs(JSON.stringify({ "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": { name: "Movie.mkv", size: 4200000000 } }))
+        sb.ctx.ParseJson(JSON.stringify(["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"])),
+        sb.ctx.ParseJson(JSON.stringify({ "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": { name: "Movie.mkv", size: 4200000000 } }))
     );
     assert.ok(singleMap.DoesExist("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
     assert.equal(singleMap["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"].name, "Movie.mkv");

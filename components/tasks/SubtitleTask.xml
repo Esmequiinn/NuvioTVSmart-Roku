@@ -4,6 +4,7 @@
         <field id="manifests" type="array" />
         <field id="kind" type="string" />
         <field id="videoIds" type="array" />
+        <field id="originalLang" type="string" />
         <field id="subs" type="array" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />

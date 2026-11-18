@@ -255,6 +255,26 @@ export function transpileBrsToJs(sourceText) {
         return "";
     };
 
+    function transformInlineIf(stmtStr, isMultilineElseIf = false) {
+        let s = stmtStr.trim();
+        let prefix = "";
+        if (/^if\b/i.test(s)) {
+            const afterIf = s.slice(2).trim();
+            const { cond, rest } = splitThenInline(afterIf);
+            if (!rest) return { code: `if (__truthy(${transformExpr(cond)})) {`, closed: false };
+            const { thenStmt, elseStmt } = splitElseInline(rest);
+            const decl1 = trackLocals(thenStmt);
+            if (!elseStmt) return { code: `if (__truthy(${transformExpr(cond)})) { ${decl1}${transformSingleStmt(thenStmt)} }`, closed: true };
+            if (/^if\b/i.test(elseStmt)) {
+                const sub = transformInlineIf(elseStmt, false);
+                return { code: `if (__truthy(${transformExpr(cond)})) { ${decl1}${transformSingleStmt(thenStmt)} } else ${sub.code}`, closed: sub.closed };
+            }
+            const decl2 = trackLocals(elseStmt);
+            return { code: `if (__truthy(${transformExpr(cond)})) { ${decl1}${transformSingleStmt(thenStmt)} } else { ${decl2}${transformSingleStmt(elseStmt)} }`, closed: true };
+        }
+        return { code: `${trackLocals(s)}${transformSingleStmt(s)}`, closed: true };
+    }
+
     for (const line of lines) {
         let s = line.trim();
         if (!s) continue;
@@ -287,20 +307,7 @@ export function transpileBrsToJs(sourceText) {
         }
 
         if (/^if\b/i.test(s)) {
-            const afterIf = s.slice(2).trim();
-            const { cond, rest } = splitThenInline(afterIf);
-            if (rest) {
-                const { thenStmt, elseStmt } = splitElseInline(rest);
-                const decl1 = trackLocals(thenStmt);
-                const decl2 = elseStmt ? trackLocals(elseStmt) : "";
-                if (elseStmt) {
-                    js.push(`if (__truthy(${transformExpr(cond)})) { ${decl1}${transformSingleStmt(thenStmt)} } else { ${decl2}${transformSingleStmt(elseStmt)} }`);
-                } else {
-                    js.push(`if (__truthy(${transformExpr(cond)})) { ${decl1}${transformSingleStmt(thenStmt)} }`);
-                }
-            } else {
-                js.push(`if (__truthy(${transformExpr(cond)})) {`);
-            }
+            js.push(transformInlineIf(s).code);
             continue;
         }
 
@@ -308,11 +315,14 @@ export function transpileBrsToJs(sourceText) {
             const afterElseIf = s.replace(/^else\s+if\b/i, "").trim();
             const { cond, rest } = splitThenInline(afterElseIf);
             if (rest) {
-                const decl = trackLocals(rest);
-                js.push(`} else if (__truthy(${transformExpr(cond)})) { ${decl}${transformSingleStmt(rest)} }`);
-                // Wait: in BrightScript, does "else if cond then stmt" close the multi-line "if"? No! Only multi-line "end if" or standalone single-line if!
-                // Actually if an "if ... \n else if cond then stmt \n end if" is used, "}" should NOT close the block until "end if"!
-                js[js.length - 1] = `} else if (__truthy(${transformExpr(cond)})) { ${decl}${transformSingleStmt(rest)}`;
+                const { thenStmt, elseStmt } = splitElseInline(rest);
+                const decl = trackLocals(thenStmt);
+                let outLine = `} else if (__truthy(${transformExpr(cond)})) { ${decl}${transformSingleStmt(thenStmt)}`;
+                if (elseStmt) {
+                    const decl2 = trackLocals(elseStmt);
+                    outLine += ` } else { ${decl2}${transformSingleStmt(elseStmt)}`;
+                }
+                js.push(outLine);
             } else {
                 js.push(`} else if (__truthy(${transformExpr(cond)})) {`);
             }
@@ -486,8 +496,19 @@ export function createBrsSandbox(overrides = {}) {
         },
         FormatJson(v) { return JSON.stringify(v); },
         ParseJson(s) {
-            try { return JSON.parse(String(s)); } catch { return null; }
+            return vm.runInContext(`(() => { try { return JSON.parse(${JSON.stringify(String(s ?? ""))}); } catch { return null; } })()`, contextObj);
         },
+        lcase(s) { return contextObj.LCase(s); },
+        ucase(s) { return contextObj.UCase(s); },
+        len(s) { return contextObj.Len(s); },
+        left(s, n) { return contextObj.Left(s, n); },
+        right(s, n) { return contextObj.Right(s, n); },
+        mid(s, a, b) { return contextObj.Mid(s, a, b); },
+        instr(a, b, c) { return contextObj.Instr(a, b, c); },
+        asc(s) { return contextObj.Asc(s); },
+        chr(cp) { return contextObj.Chr(cp); },
+        formatjson(v) { return contextObj.FormatJson(v); },
+        parsejson(s) { return contextObj.ParseJson(s); },
         ReadAsciiFile(path) {
             return files.has(path) ? files.get(path) : "";
         },
@@ -523,22 +544,28 @@ export function createBrsSandbox(overrides = {}) {
                 const flags = String(args[1] || "").replace(/[^im]/g, "");
                 const reSingle = new RegExp(pattern, flags);
                 const reGlobal = new RegExp(pattern, flags.includes("g") ? flags : `${flags}g`);
+                const toVmArr = (arr) => {
+                    const out = vm.runInContext("[]", contextObj);
+                    for (const x of arr) out.Push(x);
+                    return out;
+                };
                 return {
                     __roType: "roRegex",
                     IsMatch(s) { return reSingle.test(String(s ?? "")); },
                     Match(s) {
                         const m = String(s ?? "").match(reSingle);
-                        return m ? Array.from(m) : [];
+                        return m ? toVmArr(m) : toVmArr([]);
                     },
                     MatchAll(s) {
-                        const out = [];
+                        const out = toVmArr([]);
                         for (const m of String(s ?? "").matchAll(reGlobal)) {
-                            out.push(Array.from(m));
+                            out.Push(toVmArr(m));
                         }
                         return out;
                     },
                     Replace(s, repl) { return String(s ?? "").replace(reSingle, repl); },
-                    ReplaceAll(s, repl) { return String(s ?? "").replace(reGlobal, repl); }
+                    ReplaceAll(s, repl) { return String(s ?? "").replace(reGlobal, repl); },
+                    Split(s) { return toVmArr(String(s ?? "").split(reSingle)); }
                 };
             }
             if (kind === "roByteArray") {
@@ -575,6 +602,8 @@ export function createBrsSandbox(overrides = {}) {
                     GetModelDisplayName() { return "Roku Express 4K"; },
                     GetVideoMode() { return "1080p"; },
                     GetUIResolution() { return { name: "FHD" }; },
+                    GetChannelClientId() { return "roku-test-device-id"; },
+                    GetRandomUUID() { return "00000000-0000-4000-8000-000000000001"; },
                     GetIPAddrs() { return {}; }
                 };
             }
