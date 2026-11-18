@@ -560,28 +560,48 @@ function Lang_Variant(rawLang as string, labelHint = "" as string, extraHint = "
     base = Lang_Norm(rawLang)
     combined = LCase(labelHint + " " + extraHint)
     if combined.Trim() <> ""
+        if m.langVarRe = invalid
+            m.langVarRe = {
+                ptBr: CreateObject("roRegex", "\b(pt-?br|pob|bra[zs]il(ian)?|dublado)\b", "i")
+                ptPt: CreateObject("roRegex", "\b(pt-?pt|portugal|iberian|european\s*portuguese)\b", "i")
+                es419: CreateObject("roRegex", "\b(es-?419|es-?la|latam|latin[oa]?|mexico|argentin)\b", "i")
+                esEs: CreateObject("roRegex", "\b(es-?es|castellano|spain|españa)\b", "i")
+                zhCn: CreateObject("roRegex", "\b(simplified|zh-?cn|zh-?hans|chs)\b", "i")
+                zhTw: CreateObject("roRegex", "\b(traditional|zh-?tw|zh-?hk|zh-?hant|cht)\b", "i")
+                zhCa: CreateObject("roRegex", "\b(cantonese|yue|zh-?ca)\b", "i")
+                nPt: CreateObject("roRegex", "\b(portuguese|português|portugues)\b", "i")
+                nEs: CreateObject("roRegex", "\b(spanish|español|espanol)\b", "i")
+                nEn: CreateObject("roRegex", "\b(english|inglés|ingles)\b", "i")
+                nFr: CreateObject("roRegex", "\b(french|français|francés|frances)\b", "i")
+                nDe: CreateObject("roRegex", "\b(german|deutsch|alemán|aleman)\b", "i")
+                nIt: CreateObject("roRegex", "\b(italian|italiano)\b", "i")
+                nJa: CreateObject("roRegex", "\b(japanese|japonés|japones)\b", "i")
+                nKo: CreateObject("roRegex", "\b(korean|coreano)\b", "i")
+            }
+        end if
+        re = m.langVarRe
         if base = "pt" or base = "und"
-            if CreateObject("roRegex", "\b(pt-?br|pob|bra[zs]il(ian)?|dublado)\b", "i").IsMatch(combined) then return "pt-br"
-            if CreateObject("roRegex", "\b(pt-?pt|portugal|iberian|european\s*portuguese)\b", "i").IsMatch(combined) then return "pt-pt"
+            if re.ptBr.IsMatch(combined) then return "pt-br"
+            if re.ptPt.IsMatch(combined) then return "pt-pt"
         end if
         if base = "es" or base = "und"
-            if CreateObject("roRegex", "\b(es-?419|es-?la|latam|latin[oa]?|mexico|argentin)\b", "i").IsMatch(combined) then return "es-419"
-            if CreateObject("roRegex", "\b(es-?es|castellano|spain|españa)\b", "i").IsMatch(combined) then return "es-es"
+            if re.es419.IsMatch(combined) then return "es-419"
+            if re.esEs.IsMatch(combined) then return "es-es"
         end if
         if base = "zh" or base = "und"
-            if CreateObject("roRegex", "\b(simplified|zh-?cn|zh-?hans|chs)\b", "i").IsMatch(combined) then return "zh-cn"
-            if CreateObject("roRegex", "\b(traditional|zh-?tw|zh-?hk|zh-?hant|cht)\b", "i").IsMatch(combined) then return "zh-tw"
-            if CreateObject("roRegex", "\b(cantonese|yue|zh-?ca)\b", "i").IsMatch(combined) then return "zh-ca"
+            if re.zhCn.IsMatch(combined) then return "zh-cn"
+            if re.zhTw.IsMatch(combined) then return "zh-tw"
+            if re.zhCa.IsMatch(combined) then return "zh-ca"
         end if
         if base = "und"
-            if CreateObject("roRegex", "\b(portuguese|português|portugues)\b", "i").IsMatch(combined) then return "pt"
-            if CreateObject("roRegex", "\b(spanish|español|espanol)\b", "i").IsMatch(combined) then return "es"
-            if CreateObject("roRegex", "\b(english|inglés|ingles)\b", "i").IsMatch(combined) then return "en"
-            if CreateObject("roRegex", "\b(french|français|francés|frances)\b", "i").IsMatch(combined) then return "fr"
-            if CreateObject("roRegex", "\b(german|deutsch|alemán|aleman)\b", "i").IsMatch(combined) then return "de"
-            if CreateObject("roRegex", "\b(italian|italiano)\b", "i").IsMatch(combined) then return "it"
-            if CreateObject("roRegex", "\b(japanese|japonés|japones)\b", "i").IsMatch(combined) then return "ja"
-            if CreateObject("roRegex", "\b(korean|coreano)\b", "i").IsMatch(combined) then return "ko"
+            if re.nPt.IsMatch(combined) then return "pt"
+            if re.nEs.IsMatch(combined) then return "es"
+            if re.nEn.IsMatch(combined) then return "en"
+            if re.nFr.IsMatch(combined) then return "fr"
+            if re.nDe.IsMatch(combined) then return "de"
+            if re.nIt.IsMatch(combined) then return "it"
+            if re.nJa.IsMatch(combined) then return "ja"
+            if re.nKo.IsMatch(combined) then return "ko"
         end if
     end if
     return base
@@ -707,12 +727,14 @@ end function
 
 function Sub_DetectSdh(text as string) as boolean
     if text = "" then return false
-    return CreateObject("roRegex", "(\b(sdh|sordos|closed\s*captions?)\b|[\[\(]\s*(cc|hi|sdh)\s*[\)\]]|hearing\s*imp)", "i").IsMatch(text)
+    if m.subSdhRe = invalid then m.subSdhRe = CreateObject("roRegex", "(\b(sdh|sordos|closed\s*captions?)\b|[\[\(]\s*(cc|hi|sdh)\s*[\)\]]|hearing\s*imp)", "i")
+    return m.subSdhRe.IsMatch(text)
 end function
 
 function Sub_DetectForced(text as string) as boolean
     if text = "" then return false
-    return CreateObject("roRegex", "(\b(forced|forzado|forzados)\b|[\[\(]\s*forced\s*[\)\]])", "i").IsMatch(text)
+    if m.subForcedRe = invalid then m.subForcedRe = CreateObject("roRegex", "(\b(forced|forzado|forzados)\b|[\[\(]\s*forced\s*[\)\]])", "i")
+    return m.subForcedRe.IsMatch(text)
 end function
 
 function Sub_UrlKey(url as string) as string

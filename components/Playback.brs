@@ -9,8 +9,8 @@ sub openDetails(item as object)
         videoIds: []
         title: item.title
         poster: Details_Poster(item)
-        background: item.background
-        logo: item.logo
+        background: Img_Sized(Str_Of(item.background), "w1280")
+        logo: Img_Sized(Str_Of(item.logo), "w500")
         description: item.description
         rating: item.rating
         metaLine: item.metaLine
@@ -767,13 +767,12 @@ sub onSubsLoaded(event as object)
     m.subtitleTask = invalid
     subs = task.subs
     if subs <> invalid then m.ctx.subs = subs
+    if m.player.visible then m.player.extraSubs = currentExternalSubs()
     if Bool_Of(m.ctx.waitingSubs, false)
         m.ctx.waitingSubs = false
         m.ctx.subsWaited = true
         m.subsWait.control = "stop"
         if m.player.visible then launchAttempt()
-    else if m.player.visible
-        m.player.extraSubs = currentExternalSubs()
     end if
 end sub
 
@@ -1211,9 +1210,22 @@ end function
 function subtitleTracks() as object
     tracks = []
     all = currentExternalSubs()
-    for each subItem in all
-        if tracks.Count() >= 30 then exit for
-        tracks.Push({ Language: subItem.lang, TrackName: subItem.url, Description: subItem.label })
+    seen = {}
+    ' Prioritize non-SRT/VTT external tracks (e.g. ASS/SSA) into Roku native SubtitleTracks first
+    for each pass in [0, 1]
+        for each subItem in all
+            if tracks.Count() >= 48 then exit for
+            fmt = UCase(Str_Of(subItem.format))
+            isNativeOnly = (fmt = "ASS" or fmt = "SSA")
+            if (pass = 0 and isNativeOnly) or (pass = 1 and not isNativeOnly)
+                key = Sub_UrlKey(Str_Of(subItem.url))
+                if key <> "" and not seen.DoesExist(key)
+                    seen[key] = true
+                    tracks.Push({ Language: subItem.lang, TrackName: subItem.url, Description: subItem.label })
+                end if
+            end if
+        end for
+        if tracks.Count() >= 48 then exit for
     end for
     return tracks
 end function
@@ -1327,20 +1339,15 @@ function nextAttempt(position as integer) as boolean
 end function
 
 sub refreshResume()
-    info = m.player.info
-    if info = invalid then return
-    info.resumeAt = ToInt(m.ctx.startAt, 0)
-    m.player.info = info
+    if m.player = invalid then return
+    m.player.resumeOverride = { resumeAt: ToInt(m.ctx.startAt, 0) }
 end sub
 
 sub reloadWithSubtitle(url as string, position as integer)
     if m.ctx.playingStream = invalid then return
     m.ctx.startAt = position
-    info = m.player.info
-    if info <> invalid
-        info.resumeAt = position
-        info.subLang = "url:" + url
-        m.player.info = info
+    if m.player <> invalid
+        m.player.resumeOverride = { resumeAt: position, subUrl: url }
     end if
     launchAttempt()
 end sub

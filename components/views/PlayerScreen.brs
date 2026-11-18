@@ -81,6 +81,8 @@ sub init()
     m.audioApplied = false
     m.subsApplied = false
     m.subsMatchedPref = false
+    m.subsMatchedPrimary = false
+    m.pinnedSubUrl = ""
     m.userSubChosen = false
     m.subGroupLang = ""
     m.subGroupsCache = invalid
@@ -136,6 +138,8 @@ sub onInfo()
     m.audioApplied = false
     m.subsApplied = false
     m.subsMatchedPref = false
+    m.subsMatchedPrimary = false
+    m.pinnedSubUrl = ""
     m.userSubChosen = false
     m.subGroupLang = ""
     m.subGroupsCache = invalid
@@ -153,12 +157,12 @@ sub onInfo()
     m.meta.text = Str_Of(info.metaLine)
     m.pauseMeta.text = Str_Of(info.metaLine)
     m.pauseDesc.text = Str_Of(info.description)
-    m.pauseBg.uri = Str_Of(info.background)
-    m.loadBg.uri = Str_Of(info.background)
+    m.pauseBg.uri = Img_Sized(Str_Of(info.background), "w1280")
+    m.loadBg.uri = Img_Sized(Str_Of(info.background), "w1280")
     m.loadTitle.text = Str_Of(info.title)
     m.loadTitle.visible = true
     m.loadLogo.visible = false
-    m.loadLogo.uri = Str_Of(info.logo)
+    m.loadLogo.uri = Img_Sized(Str_Of(info.logo), "w500")
     onLoadLogo()
     m.started = false
     m.loadPct.text = ""
@@ -173,6 +177,9 @@ sub onInfo()
     m.pauseTitle.visible = true
     setLogo(logo)
     buildButtons(Bool_Of(info.isSeries, false))
+    if m.panel <> invalid then m.panel.visible = false
+    Ex_SubSyncClose()
+    Ex_SetSubPreview(false)
     Ex_OnInfo()
 end sub
 
@@ -274,9 +281,10 @@ end sub
 
 sub onLogo()
     logo = m.top.logo
-    if logo = "" or logo = m.logo.uri then return
+    sized = Img_Sized(logo, "w500")
+    if logo = "" or sized = m.logo.uri then return
     if not m.started
-        m.loadLogo.uri = logo
+        m.loadLogo.uri = sized
         onLoadLogo()
     end if
     m.logo.visible = false
@@ -480,6 +488,19 @@ function currentAudioLang() as string
     return ""
 end function
 
+sub onResumeOverride()
+    ov = m.top.resumeOverride
+    if type(ov) <> "roAssociativeArray" then return
+    if ov.resumeAt <> invalid
+        m.resumeAt = ToInt(ov.resumeAt, 0)
+        m.resumeDone = m.resumeAt <= 0
+    end if
+    if Str_Of(ov.subUrl) <> ""
+        m.pinnedSubUrl = Str_Of(ov.subUrl)
+        m.subsApplied = false
+    end if
+end sub
+
 sub selectSubtitle(track as string)
     Ex_SubSelect(track)
 end sub
@@ -499,11 +520,23 @@ function Player_CollectSubs(internalTracks as dynamic, extraSubs as dynamic, inf
     if type(extraSubs) = "roArray"
         for each entry in extraSubs
             if type(entry) = "roAssociativeArray" and Str_Of(entry.url) <> ""
-                stype = Str_Of(entry.sourceType)
-                if stype = "" then stype = "addon"
-                prov = Str_Of(entry.provider)
-                if prov = "" then prov = L("Complemento")
-                copy = Sub_NormalizeTrack(entry, prov, stype)
+                copy = invalid
+                if Str_Of(entry.langKey) <> ""
+                    copy = {}
+                    for each ek in entry
+                        copy[ek] = entry[ek]
+                    end for
+                    if Str_Of(copy.sourceType) = "" then copy.sourceType = "addon"
+                    if Str_Of(copy.provider) = "" then copy.provider = L("Complemento")
+                    if Str_Of(copy.langLabel) = "" then copy.langLabel = Lang_Name(copy.langKey)
+                    if Str_Of(copy.label) = "" then copy.label = Sub_FormatLabel(copy)
+                else
+                    stype = Str_Of(entry.sourceType)
+                    if stype = "" then stype = "addon"
+                    prov = Str_Of(entry.provider)
+                    if prov = "" then prov = L("Complemento")
+                    copy = Sub_NormalizeTrack(entry, prov, stype)
+                end if
                 if copy <> invalid
                     key = Sub_UrlKey(copy.url)
                     if byUrl.DoesExist(key)
@@ -678,15 +711,16 @@ sub Player_SortTracksInGroup(tracks as object)
 end sub
 
 sub onExtraSubs()
+    m.subGroupsCache = invalid
     if not m.top.active then return
-    if not Bool_Of(m.userSubChosen, false) and not Bool_Of(m.subsMatchedPref, false)
+    if not Bool_Of(m.userSubChosen, false) and not Bool_Of(m.subsMatchedPrimary, false)
         m.subsApplied = false
         applySubtitlePreference()
     end if
     if m.panel.visible and (m.panelKind = "subs" or m.panelKind = "subsLang")
         focused = m.panel.focusIndex
         if m.panelKind = "subs"
-            openSubs(m.subGroupLang, focused)
+            openSubs(m.subGroupLang, -1)
         else
             openSubsLang(m.subGroupLang, focused)
         end if
@@ -704,12 +738,13 @@ sub applySubtitlePreference()
     m.subsApplied = true
 
     items = Player_CollectSubs(allInternal, allExtra, info, currentActiveSubUrl())
-    pinned = Str_Of(info.subLang)
-    if Left(pinned, 4) = "url:"
-        targetUrl = Mid(pinned, 5)
+    pinnedUrl = Str_Of(m.pinnedSubUrl)
+    if pinnedUrl = "" and Left(Str_Of(info.subLang), 4) = "url:" then pinnedUrl = Mid(Str_Of(info.subLang), 5)
+    if pinnedUrl <> ""
         for each t in items
-            if t.url = targetUrl or Str_Of(t.trackName) = targetUrl
+            if t.url = pinnedUrl or Str_Of(t.trackName) = pinnedUrl
                 m.subsMatchedPref = true
+                m.subsMatchedPrimary = true
                 selectSubtitle(t.url)
                 return
             end if
@@ -724,6 +759,7 @@ sub applySubtitlePreference()
             for each t in items
                 if Bool_Of(t.forced, false) and Lang_Matches(t.langKey, audio)
                     m.subsMatchedPref = true
+                    m.subsMatchedPrimary = true
                     selectSubtitle(t.url)
                     return
                 end if
@@ -733,13 +769,15 @@ sub applySubtitlePreference()
 
     if first = "" or first = "off" or first = "none"
         m.subsMatchedPref = true
+        m.subsMatchedPrimary = true
         Ex_SubSelect("")
         return
     end if
 
     original = Str_Of(info.originalLang)
-    for each code in [first, second]
-        wanted = Lang_Resolve(code, original)
+    prefCodes = [first, second]
+    for passIdx = 0 to 1
+        wanted = Lang_Resolve(prefCodes[passIdx], original)
         if wanted <> ""
             bestNormal = invalid
             bestScore = 0
@@ -764,25 +802,23 @@ sub applySubtitlePreference()
                     end if
                 end if
             end for
-            if bestNormal <> invalid
+            picked = bestNormal
+            if picked = invalid then picked = bestFallback
+            if picked <> invalid
                 m.subsMatchedPref = true
-                selectSubtitle(bestNormal.url)
-                return
-            end if
-            if bestFallback <> invalid
-                m.subsMatchedPref = true
-                selectSubtitle(bestFallback.url)
+                if passIdx = 0 then m.subsMatchedPrimary = true
+                selectSubtitle(picked.url)
                 return
             end if
         end if
     end for
-    Ex_SubSelect("")
+    if not Bool_Of(m.subsMatchedPref, false) then Ex_SubSelect("")
 end sub
 
 sub onPauseTimer()
     info = m.top.info
     if info <> invalid and not Bool_Of(info.pauseOverlay, true) then return
-    if m.video.state = "paused" and not m.panel.visible
+    if m.video.state = "paused" and not m.panel.visible and not Bool_Of(m.subBarOn, false)
         m.controls.visible = false
         m.pauseScreen.visible = true
     end if
@@ -963,7 +999,7 @@ sub openPanel(kind as string, title as string, items as object, values as object
     width = 1040
     if kind = "sources" then width = 1400
     if kind = "subSyncCue" then width = 1280
-    cfg = { title: title, subtitle: subtitle, items: items, focus: focus, style: "cards", width: width, leftAction: leftAction, compact: compact }
+    cfg = { title: title, subtitle: subtitle, items: items, focus: focus, style: "cards", width: width, leftAction: leftAction, compact: compact, previewBottom: compact }
     if panelY >= 0 then cfg.y = panelY
     m.panel.config = cfg
     m.panel.visible = true

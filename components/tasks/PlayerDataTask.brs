@@ -311,7 +311,7 @@ function Subs_Parse(raw as string) as object
 
     if rawCues.Count() = 0 then return { cues: [], error: "invalid_subtitle" }
 
-    ' Ensure ascending start time order cleanly
+    ' Sort out-of-order cues in O(N log N) via iterative bottom-up merge sort
     outOfOrder = false
     for k = 1 to rawCues.Count() - 1
         if rawCues[k].s < rawCues[k - 1].s
@@ -320,15 +320,7 @@ function Subs_Parse(raw as string) as object
         end if
     end for
     if outOfOrder
-        for k = 1 to rawCues.Count() - 1
-            item = rawCues[k]
-            j = k - 1
-            while j >= 0 and rawCues[j].s > item.s
-                rawCues[j + 1] = rawCues[j]
-                j = j - 1
-            end while
-            rawCues[j + 1] = item
-        end for
+        rawCues = Subs_SortCues(rawCues)
     end if
 
     ' Merge simultaneous cues (same start window) so dual lines render cleanly
@@ -347,6 +339,46 @@ function Subs_Parse(raw as string) as object
         end if
     end for
     return { cues: cues, error: "" }
+end function
+
+function Subs_SortCues(list as object) as object
+    n = list.Count()
+    if n < 2 then return list
+    cur = list
+    width = 1
+    while width < n
+        nxt = []
+        i = 0
+        while i < n
+            midIdx = i + width
+            if midIdx > n then midIdx = n
+            rightEnd = i + width * 2
+            if rightEnd > n then rightEnd = n
+            l = i
+            r = midIdx
+            while l < midIdx and r < rightEnd
+                if cur[l].s <= cur[r].s
+                    nxt.Push(cur[l])
+                    l = l + 1
+                else
+                    nxt.Push(cur[r])
+                    r = r + 1
+                end if
+            end while
+            while l < midIdx
+                nxt.Push(cur[l])
+                l = l + 1
+            end while
+            while r < rightEnd
+                nxt.Push(cur[r])
+                r = r + 1
+            end while
+            i = rightEnd
+        end while
+        cur = nxt
+        width = width * 2
+    end while
+    return cur
 end function
 
 function Subs_Fetch(url as string) as object

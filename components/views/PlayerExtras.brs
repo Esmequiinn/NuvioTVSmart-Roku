@@ -376,6 +376,13 @@ sub Ex_Post(at0 as float, dur as float)
 end sub
 
 sub Ex_ShowPost(recs as object)
+    Ex_SubSyncClose()
+    Ex_SetSubPreview(false)
+    if m.panel <> invalid and m.panel.visible
+        m.panel.visible = false
+        m.panel.setFocus(false)
+        if m.top.active then m.top.setFocus(true)
+    end if
     m.postShown = true
     m.postItems = recs
     m.postIndex = 0
@@ -612,6 +619,13 @@ end sub
 
 sub Ex_OnStill_Run()
     if not m.top.stillWatching then return
+    Ex_SubSyncClose()
+    Ex_SetSubPreview(false)
+    if m.panel <> invalid and m.panel.visible
+        m.panel.visible = false
+        m.panel.setFocus(false)
+        if m.top.active then m.top.setFocus(true)
+    end if
     info = m.top.info
     m.stillOn = true
     m.stillIndex = 0
@@ -621,7 +635,7 @@ sub Ex_OnStill_Run()
     m.controls.visible = false
     m.pauseScreen.visible = false
     if m.video.state = "playing" then m.video.control = "pause"
-    m.stillBg.uri = Str_Of(info.background)
+    m.stillBg.uri = Img_Sized(Str_Of(info.background), "w1280")
     m.stillShow.text = Str_Of(info.title)
     m.stillShow.visible = true
     m.stillLogo.visible = false

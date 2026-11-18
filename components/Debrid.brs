@@ -80,17 +80,19 @@ function Deb_TorBoxMapCached(chunk as object, data as dynamic) as object
         for each k in data
             lk = LCase(Str_Of(k).Trim())
             item = data[k]
-            name = ""
-            size = 0
-            if type(item) = "roAssociativeArray"
-                name = Str_Of(item.name)
-                size = item.size
-            end if
-            entry = { name: name, size: size }
-            if reqMap.DoesExist(lk)
-                found[lk] = entry
-            else if lk <> "" and item <> invalid
-                unmatched.Push(entry)
+            if type(item) = "roAssociativeArray" or (IsBool(item) and item = true)
+                name = ""
+                size = 0
+                if type(item) = "roAssociativeArray"
+                    name = Str_Of(item.name)
+                    size = item.size
+                end if
+                entry = { name: name, size: size }
+                if reqMap.DoesExist(lk)
+                    found[lk] = entry
+                else if lk <> ""
+                    unmatched.Push(entry)
+                end if
             end if
         end for
     else if type(data) = "roArray"

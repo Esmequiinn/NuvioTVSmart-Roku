@@ -111,6 +111,41 @@ for (const bf of brsFiles) {
         if (/subOffset/i.test(trimmed) && /(delay|syncLine|subTime|effectiveAt|MS)/i.test(trimmed)) {
             errors.push(`${rel}:${idx + 1} suspicious timing reference using subOffset: ${trimmed}`);
         }
+
+        // Dynamic pill template check: Ex_PillMake(parent, H) -> pkg:/images/c/hlH.png & hrH.png
+        const pillMatch = trimmed.match(/Ex_PillMake\s*\([^,]+,\s*(\d+)\s*\)/i);
+        if (pillMatch) {
+            const h = pillMatch[1];
+            for (const side of ["hl", "hr"]) {
+                const pillPath = path.join(ROOT, "images", "c", `${side}${h}.png`);
+                if (!fs.existsSync(pillPath)) {
+                    errors.push(`${rel}:${idx + 1} Ex_PillMake(..., ${h}) missing asset images/c/${side}${h}.png`);
+                }
+            }
+        }
+    }
+
+    // Validate complete literal pkg:/ URIs inside BrightScript files
+    const codeNoComments = text.replace(/^[ \t]*'.*$/gm, "");
+    const pkgLiteralRe = /"(pkg:\/[A-Za-z0-9_./-]+\.(?:png|jpg|json|xml|brs))"/g;
+    let pm;
+    while ((pm = pkgLiteralRe.exec(codeNoComments)) !== null) {
+        const uri = pm[1];
+        const diskPath = path.join(ROOT, uri.slice(5));
+        if (!fs.existsSync(diskPath)) {
+            errors.push(`${rel}: missing pkg asset "${uri}"`);
+        }
+    }
+
+    // Validate dynamic player icon suffix replacements (e.g., _36.png / _44.png)
+    const replRe = /\.Replace\(\s*"\.png"\s*,\s*"_(\d+)\.png"\s*\)/g;
+    let rm;
+    while ((rm = replRe.exec(codeNoComments)) !== null) {
+        const sz = rm[1];
+        const chevronPath = path.join(ROOT, "images", "s", `ic_subs_${sz}.png`);
+        if (!fs.existsSync(chevronPath)) {
+            errors.push(`${rel}: dynamic _${sz}.png sprite replacement missing ic_subs_${sz}.png`);
+        }
     }
 
     if (stack.length > 0) {

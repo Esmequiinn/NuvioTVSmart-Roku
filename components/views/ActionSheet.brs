@@ -1,4 +1,5 @@
 sub init()
+    m.scrim = m.top.findNode("scrim")
     m.panel = m.top.findNode("panel")
     m.bg = m.top.findNode("bg")
     m.border = m.top.findNode("border")
@@ -170,6 +171,9 @@ sub render()
     m.cards = Sheet_Str(cfg.style) = "cards" or m.tv
     m.leftAction = Sheet_Str(cfg.leftAction)
     if m.leftAction = "" then m.leftAction = "close"
+    if m.scrim <> invalid
+        if cfg.previewBottom = true then m.scrim.height = 740 else m.scrim.height = 1080
+    end if
     width = 820
     if m.tv then width = 1040
     if cfg.width <> invalid then width = cfg.width
@@ -238,7 +242,7 @@ sub render()
         poolCount = m.visibleRows + 2
         if poolCount > m.items.Count() then poolCount = m.items.Count()
         for slotIdx = 0 to poolCount - 1
-            slot = Sheet_MakeRow(not m.cards, false)
+            slot = Sheet_MakeRow(not m.cards, true)
             slot.g.translation = [0, slotIdx * m.step]
             m.nodes.Push(slot)
         end for

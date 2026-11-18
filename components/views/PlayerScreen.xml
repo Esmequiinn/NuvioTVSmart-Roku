@@ -23,6 +23,7 @@
         <field id="loadStatus" type="string" alwaysNotify="true" onChange="onLoadStatus" />
         <field id="loadNote" type="string" alwaysNotify="true" onChange="onLoadNote" />
         <field id="loadDetails" type="boolean" value="true" onChange="paintLoadText" />
+        <field id="resumeOverride" type="assocarray" onChange="onResumeOverride" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Mask.brs" />
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />

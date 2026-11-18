@@ -359,6 +359,59 @@ test("Slice 1 perf & cache: St_Prefs caches across reads and Streams_AudioOrder 
     assert.equal(origStPrefs().stereoOnly, false, "St_Prefs cache must invalidate immediately on St_SetPref");
 });
 
+test("Review regressions: regional pt-br preserved in Player_CollectSubs, TorBox null uncached ignored, Subs_SortCues 60 cues", () => {
+    const sb = makeSandbox();
+    sb.loadBrs(readBrs("components/Mask.brs"), "Mask.brs");
+    sb.loadBrs(readBrs("components/Ink.brs"), "Ink.brs");
+    sb.loadBrs(readBrs("components/views/PlayerScreen.brs"), "PlayerScreen.brs");
+    sb.loadBrs(readBrs("components/Debrid.brs"), "Debrid.brs");
+    sb.loadBrs(readBrs("components/tasks/PlayerDataTask.brs"), "PlayerDataTask.brs");
+
+    // 1. Pre-normalized "pt-br" from SubtitleTask with empty release must NOT downgrade to generic "pt"
+    const extraPreNorm = sb.ctx.ParseJson(JSON.stringify([
+        { url: "https://s/sub1.srt", lang: "pt-br", rawLang: "pob", release: "", title: "", provider: "OpenSubs", isSub: true },
+        { url: "https://s/sub2.srt", lang: "pt", rawLang: "por", release: "", title: "", provider: "OpenSubs", isSub: true }
+    ]));
+    const collected = sb.ctx.Player_CollectSubs(
+        sb.evalJs("[]"),
+        extraPreNorm,
+        sb.ctx.ParseJson(JSON.stringify({ subLang: "pt-br", stripSdh: false, onlyPreferred: false })),
+        ""
+    );
+    assert.equal(collected[0].lang, "pt-br", "Pre-normalized pt-br track with empty release must stay pt-br");
+    assert.equal(collected[1].lang, "pt", "Generic pt track stays pt");
+
+    // 2. TorBox null/false hash values must NOT be treated as cached
+    const hNull = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const hFalse = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    const hOk = "cccccccccccccccccccccccccccccccccccccccc";
+    const tbData = sb.ctx.ParseJson(JSON.stringify({
+        [hNull]: null,
+        [hFalse]: false,
+        [hOk]: { name: "Movie.mkv", size: 2048 }
+    }));
+    const tbMapped = sb.ctx.Deb_TorBoxMapCached(
+        sb.ctx.ParseJson(JSON.stringify([hNull, hFalse, hOk])),
+        tbData
+    );
+    assert.equal(tbMapped.DoesExist(hNull), false, "Null TorBox hash entry must NOT mark hash as cached");
+    assert.equal(tbMapped.DoesExist(hFalse), false, "False TorBox hash entry must NOT mark hash as cached");
+    assert.equal(tbMapped.DoesExist(hOk), true, "Object TorBox hash entry must be marked cached");
+    assert.equal(tbMapped[hOk].name, "Movie.mkv");
+
+    // 3. Subs_SortCues sorts 60 reversed + tied cues in non-decreasing start order
+    const unsorted = [];
+    for (let i = 59; i >= 0; i--) {
+        const sec = i === 15 ? 14 : i; // include a tie timestamp
+        unsorted.push({ s: sec + 0.5, e: sec + 1.5, text: `Line ${i}`, idx: i });
+    }
+    const sorted = sb.ctx.Subs_SortCues(sb.ctx.ParseJson(JSON.stringify(unsorted)));
+    assert.equal(sorted.Count(), 60, "All 60 cues preserved by merge sort");
+    for (let i = 1; i < sorted.Count(); i++) {
+        assert.ok(sorted[i - 1].s <= sorted[i].s, `Cue ${i - 1} (${sorted[i - 1].s}) must precede cue ${i} (${sorted[i].s})`);
+    }
+});
+
 let passed = 0;
 let failed = 0;
 for (const t of tests) {
