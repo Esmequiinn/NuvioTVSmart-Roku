@@ -135,6 +135,15 @@
             <Group id="stillButtons" translation="[120,740]" />
             <Label id="stillCount" translation="[120,850]" font="font:SmallSystemFont" color="0xB4B4C0FF" />
         </Group>
+        <Group id="subSyncBox" visible="false" translation="[260,56]">
+            <Poster id="subSyncBg" width="1400" height="214" uri="pkg:/images/card.9.png" blendColor="0x121216ED" />
+            <Poster id="subSyncRing" width="1400" height="214" uri="pkg:/images/iring.9.png" blendColor="0x2E2E36FF" />
+            <Label id="subSyncTitle" translation="[40,22]" width="680" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="subSyncValue" translation="[680,22]" width="680" horizAlign="right" font="font:MediumBoldSystemFont" color="0x7C4DFFFF" />
+            <Label id="subSyncNote" translation="[40,68]" width="1320" font="font:SmallestSystemFont" color="0xB8B8C4FF" />
+            <Group id="subSyncBtns" translation="[40,118]" />
+        </Group>
+        <Timer id="subSyncTimer" repeat="false" duration="20.0" />
         <ActionSheet id="panel" visible="false" />
     </children>
 </component>

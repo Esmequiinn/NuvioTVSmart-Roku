@@ -211,6 +211,14 @@ test("PlayerExtras timing & Sync Line math: signed delay (+ = later) + cue match
     // Clamped within [-180000, +180000]
     assert.equal(sb.ctx.Ex_CalcSyncDelay(500000, 10.0), 180000);
     assert.equal(sb.ctx.Ex_CalcSyncDelay(1000, 300.0), -180000);
+
+    // Sync Line window & delay formatting
+    const win = sb.ctx.Ex_SyncLineWindow(cues, 15200, 0);
+    assert.equal(win.entries.Count(), 2);
+    assert.equal(win.focus, 1, "Closest cue to 15.2s is Second line at 15.0s");
+    assert.ok(sb.ctx.Ex_FormatDelay(500, false).startsWith("+0.5 s"));
+    assert.ok(sb.ctx.Ex_FormatDelay(-1200, false).startsWith("-1.2 s"));
+    assert.equal(sb.ctx.Ex_FormatDelay(0, true), "0.0 s");
 });
 
 test("Store bounded subdelay_<pid>: saves per videoId/profile, deletes on zero, evicts oldest past 150", () => {

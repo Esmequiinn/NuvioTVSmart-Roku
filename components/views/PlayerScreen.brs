@@ -954,13 +954,16 @@ sub activate(id as string)
     end if
 end sub
 
-sub openPanel(kind as string, title as string, items as object, values as object, focus as integer, subtitle = "" as string, leftAction = "close" as string)
+sub openPanel(kind as string, title as string, items as object, values as object, focus as integer, subtitle = "" as string, leftAction = "close" as string, panelY = -1 as integer, compact = false as boolean)
     m.panelKind = kind
     m.panelValues = values
     if focus < 0 then focus = 0
     width = 1040
     if kind = "sources" then width = 1400
-    m.panel.config = { title: title, subtitle: subtitle, items: items, focus: focus, style: "cards", width: width, leftAction: leftAction }
+    if kind = "subSyncCue" then width = 1280
+    cfg = { title: title, subtitle: subtitle, items: items, focus: focus, style: "cards", width: width, leftAction: leftAction, compact: compact }
+    if panelY >= 0 then cfg.y = panelY
+    m.panel.config = cfg
     m.panel.visible = true
     m.hideTimer.control = "stop"
     m.controls.visible = false
@@ -968,6 +971,7 @@ sub openPanel(kind as string, title as string, items as object, values as object
 end sub
 
 sub closePanel()
+    Ex_SetSubPreview(false)
     m.panel.visible = false
     m.panel.setFocus(false)
     m.top.setFocus(true)
@@ -983,6 +987,14 @@ sub onPanelChosen()
     if choiceStr = "__back__"
         if m.panelKind = "subsLang"
             openSubs(m.subGroupLang, -1)
+        else if m.panelKind = "subStyle"
+            Ex_SetSubPreview(false)
+            openSubs("", 2)
+        else if m.panelKind = "subSyncCue"
+            m.panel.visible = false
+            m.panel.setFocus(false)
+            m.top.setFocus(true)
+            Ex_SubSyncOpen()
         else
             closePanel()
         end if
@@ -1023,6 +1035,10 @@ sub openSubs(focusLang = "" as string, fallbackFocus = -1 as integer)
     if groups.Count() = 0 then offLabel = L("Desactivados (no hay subtítulos)")
     items.Push({ id: "0", label: offLabel, checked: activeUrl = "" })
     values.Push("off:")
+    items.Push({ id: "1", label: L("Sincronización de subtítulos"), badge: Ex_DelayBadge(), chevron: true })
+    values.Push("timing:")
+    items.Push({ id: "2", label: L("Estilo de subtítulos"), chevron: true })
+    values.Push("style:")
     focus = 0
 
     for each grp in groups
@@ -1042,6 +1058,65 @@ sub openSubs(focusLang = "" as string, fallbackFocus = -1 as integer)
     if groups.Count() > 0 then subText = L("Elige un idioma para ver sus pistas")
     openPanel("subs", L("Subtítulos"), items, values, focus, subText, "close")
 end sub
+
+sub openSubStyle(focusIdx = 0 as integer)
+    Ex_SetSubPreview(true)
+    st = m.subStyleLocal
+    if type(st) <> "roAssociativeArray" then st = {}
+    sizeNames = { small: L("Pequeño"), normal: "Normal", large: L("Grande"), xlarge: L("Muy grande") }
+    colorNames = { white: L("Blanco"), yellow: L("Amarillo"), cyan: L("Cian"), green: L("Verde"), gray: L("Gris") }
+    bgNames = { none: L("Sin fondo"), soft: L("Semitransparente"), solid: L("Negro") }
+    edgeNames = { shadow: L("Sombra"), none: L("Ninguno") }
+
+    sz = Str_Of(st.size)
+    if sz = "" then sz = "normal"
+    cl = Str_Of(st.color)
+    if cl = "" then cl = "white"
+    bg = Str_Of(st.bg)
+    if bg = "" then bg = "none"
+    ed = Str_Of(st.edge)
+    if ed = "" then ed = "shadow"
+    bd = Bool_Of(st.bold, false)
+    off = ToInt(st.offset, 0)
+    boldBadge = L("Desactivado")
+    if bd then boldBadge = L("Activado")
+
+    items = [
+        { id: "0", label: L("Tamaño"), badge: Str_Of(sizeNames[sz]) }
+        { id: "1", label: L("Color del texto"), badge: Str_Of(colorNames[cl]) }
+        { id: "2", label: L("Fondo"), badge: Str_Of(bgNames[bg]) }
+        { id: "3", label: L("Borde"), badge: Str_Of(edgeNames[ed]) }
+        { id: "4", label: L("Negritas"), badge: boldBadge }
+        { id: "5", label: L("Altura"), badge: off.ToStr() }
+    ]
+    values = ["subSize", "subColor", "subBg", "subEdge", "subBold", "subOffset"]
+    openPanel("subStyle", L("Estilo de subtítulos"), items, values, focusIdx, L("Pulsa OK para cambiar · Atrás para volver"), "back", 32, true)
+end sub
+
+sub openSyncLinePicker(capturedMs as integer)
+    win = Ex_SyncLineWindow(m.cues, capturedMs, ToInt(m.subDelayMs, 0))
+    if win.entries.Count() = 0
+        Ex_SubSyncOpen()
+        return
+    end if
+    items = []
+    values = []
+    for each entry in win.entries
+        items.Push({ id: values.Count().ToStr(), label: entry.label })
+        values.Push("cue:" + entry.cueIdx.ToStr())
+    end for
+    secLabel = Fmt_Time(Int(capturedMs / 1000))
+    subText = L("Capturado en {t}  ·  Elige la línea que acabas de escuchar").Replace("{t}", secLabel)
+    openPanel("subSyncCue", L("Sincronizar línea"), items, values, win.focus, subText, "back")
+end sub
+
+function cycleStyleVal(list as object, cur as dynamic) as dynamic
+    idx = -1
+    for i = 0 to list.Count() - 1
+        if list[i] = cur then idx = i
+    end for
+    return list[(idx + 1) mod list.Count()]
+end function
 
 sub openSubsLang(langKey as string, fallbackFocus = -1 as integer)
     m.subGroupLang = langKey
@@ -1154,9 +1229,49 @@ sub choosePanel(index as integer)
             Ex_SubSelect("")
             closePanel()
             return
+        else if value = "timing:"
+            m.panel.visible = false
+            m.panel.setFocus(false)
+            m.top.setFocus(true)
+            Ex_SubSyncOpen()
+            return
+        else if value = "style:"
+            openSubStyle(0)
+            return
         else if Left(value, 5) = "lang:"
             openSubsLang(Mid(value, 6), -1)
             return
+        end if
+    else if m.panelKind = "subStyle"
+        st = m.subStyleLocal
+        if type(st) <> "roAssociativeArray" then st = {}
+        if value = "subSize"
+            Ex_SetSubStyleProp("subSize", cycleStyleVal(["small", "normal", "large", "xlarge"], Str_Of(st.size)))
+        else if value = "subColor"
+            Ex_SetSubStyleProp("subColor", cycleStyleVal(["white", "yellow", "cyan", "green", "gray"], Str_Of(st.color)))
+        else if value = "subBg"
+            Ex_SetSubStyleProp("subBg", cycleStyleVal(["none", "soft", "solid"], Str_Of(st.bg)))
+        else if value = "subEdge"
+            Ex_SetSubStyleProp("subEdge", cycleStyleVal(["shadow", "none"], Str_Of(st.edge)))
+        else if value = "subBold"
+            Ex_SetSubStyleProp("subBold", not Bool_Of(st.bold, false))
+        else if value = "subOffset"
+            Ex_SetSubStyleProp("subOffset", cycleStyleVal([0, 1, 2, 3, 4, 5, 6, 8, 10], ToInt(st.offset, 0)))
+        end if
+        openSubStyle(index)
+        return
+    else if m.panelKind = "subSyncCue"
+        if Left(value, 4) = "cue:"
+            cueIdx = ToInt(Mid(value, 5), -1)
+            if cueIdx >= 0 and cueIdx < m.cues.Count()
+                newDelay = Ex_CalcSyncDelay(ToInt(m.syncCapturedMs, 0), m.cues[cueIdx].s)
+                Ex_SetSubDelay(newDelay, true)
+                m.panel.visible = false
+                m.panel.setFocus(false)
+                m.top.setFocus(true)
+                Ex_SubSyncOpen()
+                return
+            end if
         end if
     else if m.panelKind = "subsLang"
         m.userSubChosen = true

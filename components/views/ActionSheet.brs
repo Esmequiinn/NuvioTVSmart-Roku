@@ -182,6 +182,11 @@ sub render()
         rowH = 92
         gap = 14
     end if
+    if cfg.compact = true and m.cards
+        pad = 48
+        rowH = 72
+        gap = 10
+    end if
     if m.tv
         pad = 52
         rowH = 84
@@ -255,7 +260,12 @@ sub render()
     m.bg.height = height
     m.border.width = width
     m.border.height = height
-    m.panel.translation = [Int((1920 - width) / 2), Int((1080 - height) / 2)]
+    panelY = Int((1080 - height) / 2)
+    if cfg.y <> invalid
+        panelY = cfg.y
+        if panelY < 20 then panelY = 20
+    end if
+    m.panel.translation = [Int((1920 - width) / 2), panelY]
     m.index = 0
     if cfg.focus <> invalid and cfg.focus >= 0 and cfg.focus < m.items.Count() then m.index = cfg.focus
     m.first = 0

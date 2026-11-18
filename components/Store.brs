@@ -203,6 +203,15 @@ function St_DeleteProfile(pid as string) as boolean
     St_Remove("prefs_" + pid)
     St_Remove("progress_" + pid)
     St_Remove("library_" + pid)
+    fs = St_Fs()
+    for each path in St_FilePaths("subdelay_" + pid)
+        if fs = invalid
+            WriteAsciiFile(path, "")
+        else if fs.Exists(path)
+            fs.Delete(path)
+        end if
+    end for
+    St_Bump()
     s = St_Settings()
     if s.active = pid
         s.active = profiles[0].id
@@ -977,6 +986,72 @@ sub St_WriteFile(name as string, value as dynamic)
         end if
     end for
     St_Bump()
+end sub
+
+function St_SubDelayKey() as string
+    return "subdelay_" + St_ActiveProfile().id
+end function
+
+function St_SubDelayClamp(delayMs as integer) as integer
+    if delayMs > 180000 then return 180000
+    if delayMs < -180000 then return -180000
+    return delayMs
+end function
+
+function St_SubDelayMap() as object
+    pid = St_ActiveProfile().id
+    ver = St_Ver()
+    if ver >= 0 and m.stSubDelayCache <> invalid and m.stSubDelayCache.ver = ver and m.stSubDelayCache.pid = pid
+        return m.stSubDelayCache.val
+    end if
+    raw = St_ReadFile("subdelay_" + pid)
+    map = {}
+    if type(raw) = "roAssociativeArray" then map = raw
+    ver = St_Ver()
+    if ver >= 0 then m.stSubDelayCache = { ver: ver, pid: pid, val: map }
+    return map
+end function
+
+function St_SubDelay(videoId as string) as integer
+    vid = videoId.Trim()
+    if vid = "" then return 0
+    map = St_SubDelayMap()
+    if not map.DoesExist(vid) then return 0
+    entry = map[vid]
+    if type(entry) = "roAssociativeArray" then return St_SubDelayClamp(ToInt(entry.d, 0))
+    return 0
+end function
+
+sub St_SaveSubDelay(videoId as string, delayMs as integer)
+    vid = videoId.Trim()
+    if vid = "" then return
+    clamped = St_SubDelayClamp(delayMs)
+    key = St_SubDelayKey()
+    raw = St_SubDelayMap()
+    map = {}
+    for each k in raw
+        map[k] = raw[k]
+    end for
+    if clamped = 0
+        if map.DoesExist(vid) then map.Delete(vid)
+    else
+        map[vid] = { d: clamped, t: St_Now() }
+        while map.Count() > 150
+            oldest = ""
+            oldestAt = 2147483647
+            for each k in map
+                at = 0
+                if type(map[k]) = "roAssociativeArray" then at = ToInt(map[k].t, 0)
+                if at < oldestAt
+                    oldestAt = at
+                    oldest = k
+                end if
+            end for
+            if oldest = "" then exit while
+            map.Delete(oldest)
+        end while
+    end if
+    St_WriteFile(key, map)
 end sub
 
 function St_LinksKey() as string
