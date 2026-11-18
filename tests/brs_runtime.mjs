@@ -725,7 +725,10 @@ export function createBrsSandbox(overrides = {}) {
         ctx,
         files,
         registry,
-        setHttpMock(fn) { httpMock = fn; },
+        setHttpMock(fn) {
+            httpMock = fn;
+            contextObj.Http_Request = (method, url, headers, body, timeout) => fn(method, url, headers, body, timeout);
+        },
         setNow(sec) { nowSeconds = sec; },
         loadBrs(code, label = "brs") {
             const js = transpileBrsToJs(code);

@@ -406,13 +406,13 @@ end sub
 
 sub Ex_PostFill()
     r = m.postItems[m.postIndex]
-    bg = Str_Of(r.background)
+    bg = Img_Sized(Str_Of(r.background), "w1280")
     if bg = "" then bg = Str_Of(r.poster)
     m.postBg.uri = bg
     m.postTitle.text = Str_Of(r.name)
     m.postTitle.visible = true
     m.postLogo.visible = false
-    m.postLogo.uri = Str_Of(r.logo)
+    m.postLogo.uri = Img_Sized(Str_Of(r.logo), "w500")
     Ex_PostLogo()
     parts = []
     if Str_Of(r.rating) <> "" then parts.Push("IMDb " + Str_Of(r.rating))
@@ -870,11 +870,11 @@ sub Ex_SubSyncOpen()
     for each d in defs
         g = m.subSyncBtns.createChild("Group")
         g.translation = [x, 0]
-        bg = Ex_PillMake(g, 58)
+        bg = Ex_PillMake(g, 64)
         t = g.createChild("Label")
         t.font = "font:SmallBoldSystemFont"
         t.font.size = 24
-        t.height = 58
+        t.height = 64
         t.vertAlign = "center"
         t.text = d.label
         w = Int(t.boundingRect().width) + 48
@@ -883,7 +883,7 @@ sub Ex_SubSyncOpen()
         t.horizAlign = "center"
         Ex_PillSet(bg, w, "0xFFFFFF24")
         m.subSyncDefs.Push({ id: d.id, bg: bg, text: t, w: w })
-        x = x + w + 16
+        x = x + w + 14
     end for
     m.subSyncBox.visible = true
     Ex_SubSyncPaint()
@@ -921,7 +921,14 @@ sub Ex_SubSyncPaint()
 end sub
 
 function Ex_SubSyncKey(key as string) as boolean
-    if key = "play" then return false
+    if key = "play"
+        togglePlay()
+        if m.subSyncTimer <> invalid
+            m.subSyncTimer.control = "stop"
+            m.subSyncTimer.control = "start"
+        end if
+        return true
+    end if
     if m.subSyncTimer <> invalid
         m.subSyncTimer.control = "stop"
         m.subSyncTimer.control = "start"

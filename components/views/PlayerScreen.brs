@@ -265,8 +265,9 @@ sub paintLoadText()
 end sub
 
 sub setLogo(logo as string)
-    m.logo.uri = logo
-    m.pauseLogo.uri = logo
+    sized = Img_Sized(logo, "w500")
+    m.logo.uri = sized
+    m.pauseLogo.uri = sized
     onLogoStatus()
     onPauseLogoStatus()
 end sub
@@ -360,6 +361,7 @@ sub paintButtons()
 end sub
 
 sub showControls(zone as string)
+    if Bool_Of(m.subBarOn, false) then Ex_SubSyncClose()
     m.zone = zone
     m.pauseScreen.visible = false
     m.controls.visible = true
