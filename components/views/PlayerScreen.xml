@@ -11,7 +11,7 @@
         <field id="partyEnabled" type="boolean" value="false" />
         <field id="partyText" type="string" onChange="onPartyText" />
         <field id="logo" type="string" onChange="onLogo" />
-        <field id="extraSubs" type="array" />
+        <field id="extraSubs" type="array" onChange="onExtraSubs" />
         <field id="altAudio" type="boolean" value="false" />
         <field id="segments" type="array" onChange="Ex_OnSegments" />
         <field id="parental" type="array" onChange="Ex_OnParental" />

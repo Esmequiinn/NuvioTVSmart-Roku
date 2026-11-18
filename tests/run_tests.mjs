@@ -260,6 +260,45 @@ test("Debrid TorBox alt-hash mapping & Streams audio pref hoisting", () => {
     assert.equal(singleMap["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"].name, "Movie.mkv");
 });
 
+test("PlayerScreen grouped subtitles: groups by language with counts, preference order, and SDH/onlyPreferred guards", () => {
+    const sb = makeSandbox();
+    sb.loadBrs(readBrs("components/Mask.brs"), "Mask.brs");
+    sb.loadBrs(readBrs("components/Ink.brs"), "Ink.brs");
+    sb.loadBrs(readBrs("components/views/PlayerScreen.brs"), "PlayerScreen.brs");
+
+    const internal = sb.ctx.ParseJson(JSON.stringify([
+        { TrackName: "mkv/1", Language: "eng", Description: "English Full" },
+        { TrackName: "mkv/2", Language: "und", Description: "Track 2" }
+    ]));
+    const extra = sb.ctx.ParseJson(JSON.stringify([
+        { url: "https://s/fr1.srt", lang: "fra", title: "French SDH", sdh: true, provider: "OpenSubs" },
+        { url: "https://s/ptbr1.srt", lang: "pob", title: "PT-BR Retail", provider: "SubDL" },
+        { url: "https://s/ptbr2.vtt", lang: "pt-br", title: "PT-BR Forced", forced: true, provider: "SubDL" },
+        { url: "https://s/es1.srt", lang: "es-419", title: "Latino", provider: "OpenSubs" }
+    ]));
+    const info = sb.ctx.ParseJson(JSON.stringify({
+        subLang: "pt-br",
+        subLang2: "es-419",
+        originalLang: "en",
+        stripSdh: true,
+        onlyPreferred: true
+    }));
+
+    // With stripSdh=true and onlyPreferred=true, active internal English track & unknown internal track must be preserved
+    const collected = sb.ctx.Player_CollectSubs(internal, extra, info, "mkv/1");
+    const urls = collected.map((x) => x.url);
+    assert.ok(urls.includes("mkv/1"), "Active track preserved even when outside preferred");
+    assert.ok(urls.includes("mkv/2"), "Unknown internal track preserved per upstream rule");
+    assert.ok(urls.includes("https://s/ptbr1.srt"), "Preferred pt-br track included");
+    assert.ok(!urls.includes("https://s/fr1.srt"), "Unpreferred SDH filtered out");
+
+    const groups = sb.ctx.Player_GroupSubs(collected, info, "mkv/1", "eng");
+    assert.equal(groups[0].langKey, "pt-br", "Preferred pt-br group ranked first");
+    assert.equal(groups[0].tracks.Count(), 2, "pt-br group has 2 tracks");
+    assert.equal(groups[0].tracks[0].forced, false, "Normal non-forced track sorted before forced");
+    assert.equal(groups[groups.length - 1].langKey, "und", "Unknown language sunk to last");
+});
+
 test("Slice 1 perf & cache: St_Prefs caches across reads and Streams_AudioOrder hoists pref lookups", () => {
     const sb = makeSandbox({
         registry: {
