@@ -1,0 +1,15 @@
+# Test de regresion: catalogo con extra requerido (Cinemeta movie|year)
+# Interprete: brs 0.45.0 (npm 'brs'); ver tests/README.md
+# Reproduce la corrida 'antes' de tests/run.sh, con el CatalogTask.brs de HEAD:
+#   git show HEAD:components/tasks/CatalogTask.brs > $TMP/CatalogTask.brs
+#   brs -r $RUNROOT components/I18n.brs components/Util.brs components/Store.brs components/Content.brs components/Addon.brs components/Http.brs components/ServerRows.brs $TMP/CatalogTask.brs tests/test_required_extra_catalog.brs
+
+FAIL: movie/year deberia seguir en la lista de catalogos y no esta
+FAIL: series/year deberia seguir en la lista de catalogos y no esta
+FAIL: series/last-videos deberia seguir en la lista de catalogos y no esta
+PASS: movie/top listado (Popular)
+PASS: movie/year sin fila en Home
+PASS: series/year sin fila en Home
+PASS: series/last-videos sin fila en Home
+PASS: movie/top con fila en Home
+RESULT: FAIL (3 comprobaciones fallidas)

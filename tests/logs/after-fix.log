@@ -1,0 +1,14 @@
+# Test de regresion: catalogo con extra requerido (Cinemeta movie|year)
+# Interprete: brs 0.45.0 (npm 'brs'); ver tests/README.md
+# Reproduce la corrida 'despues' de tests/run.sh, con el arbol de trabajo:
+#   brs -r $RUNROOT components/I18n.brs components/Util.brs components/Store.brs components/Content.brs components/Addon.brs components/Http.brs components/ServerRows.brs components/tasks/CatalogTask.brs tests/test_required_extra_catalog.brs
+
+PASS: movie/year listado (New)
+PASS: series/year listado (New)
+PASS: series/last-videos listado (Last videos)
+PASS: movie/top listado (Popular)
+PASS: movie/year sin fila en Home
+PASS: series/year sin fila en Home
+PASS: series/last-videos sin fila en Home
+PASS: movie/top con fila en Home
+RESULT: PASS (8 catalogos listados, 4 filas de Home)
