@@ -253,3 +253,4 @@ Bug reports, problems, ideas and feature requests are all very welcome. Open an 
 - Subtitle, debrid and TorBox improvements by [@BenedettiLucca](https://github.com/BenedettiLucca) ([PR #32](https://github.com/Esmequiinn/NuvioTVSmart-Roku/pull/32)).
 - Discover catalogs fix by [@JoshRob297](https://github.com/JoshRob297) ([PR #33](https://github.com/Esmequiinn/NuvioTVSmart-Roku/pull/33)).
 - Licensed under the [GNU General Public License v3.0](LICENSE).
+- Thanks to everyone who reports bugs and tests new versions.
