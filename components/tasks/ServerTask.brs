@@ -128,6 +128,10 @@ sub Srv_Route(sock as object, req as object)
         Srv_Send(sock, "200 OK", "application/vnd.apple.mpegurl", Srv_Hls())
         return
     end if
+    if req.method = "GET" and req.path = "/tsr"
+        Srv_Tsr(sock, Str_Of(req.query))
+        return
+    end if
     if req.method = "GET" and (req.path = "/" or req.path = "/index.html")
         Srv_Send(sock, "200 OK", "text/html; charset=utf-8", m.html)
     else if req.method = "GET" and req.path = "/api/state"
@@ -453,6 +457,7 @@ function Srv_Hls() as string
     h = m.top.hls
     nl = chr(10)
     if type(h) <> "roAssociativeArray" or Str_Of(h.url) = "" then return "#EXTM3U" + nl
+    if Bool_Of(h.proxy, false) and ToInt(h.duration, 0) > 0 then return Ts_Playlist(h, "http://127.0.0.1:8888/tsr?v=" + Str_Any(h.serial))
     size = h.size
     duration = ToInt(h.duration, 0)
     if duration <= 0 then duration = Int(size / 400000)
@@ -477,6 +482,24 @@ function Srv_Hls() as string
     out.Push("#EXT-X-ENDLIST")
     return out.Join(nl) + nl
 end function
+
+sub Srv_Tsr(sock as object, query as string)
+    h = m.top.hls
+    offset = Ts_Long(Srv_Query(query, "o"))
+    length = Ts_Long(Srv_Query(query, "n"))
+    body = invalid
+    if type(h) = "roAssociativeArray" and Bool_Of(h.proxy, false) and length > 0 then body = Ts_Piece(h, offset, length)
+    if body = invalid
+        Srv_Send(sock, "502 Bad Gateway", "text/plain", "")
+        return
+    end if
+    crlf = chr(13) + chr(10)
+    text = "HTTP/1.1 200 OK" + crlf + "Content-Type: video/mp2t" + crlf + "Content-Length: " + body.Count().ToStr() + crlf + "Cache-Control: no-store" + crlf + "Connection: close" + crlf + crlf
+    headBytes = CreateObject("roByteArray")
+    headBytes.FromAsciiString(text)
+    Srv_Write(sock, headBytes)
+    if body.Count() > 0 then Srv_Write(sock, body, 3000)
+end sub
 
 function Srv_Secs(v as float) as string
     ms = Int(v * 1000 + 0.5)

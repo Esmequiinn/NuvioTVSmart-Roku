@@ -5,6 +5,7 @@
         <field id="kind" type="string" />
         <field id="catalogId" type="string" />
         <field id="genre" type="string" />
+        <field id="filter" type="string" />
         <field id="skip" type="integer" />
         <field id="result" type="assocarray" alwaysNotify="true" />
     </interface>

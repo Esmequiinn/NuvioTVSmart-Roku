@@ -5,7 +5,9 @@ end sub
 sub execute()
     kind = m.top.kind
     extras = []
-    if m.top.genre <> "" then extras.Push("genre=" + m.top.genre.EncodeUriComponent())
+    name = m.top.filter
+    if name = "" then name = "genre"
+    if m.top.genre <> "" then extras.Push(name + "=" + m.top.genre.EncodeUriComponent())
     if m.top.skip > 0 then extras.Push("skip=" + m.top.skip.ToStr())
     path = "/catalog/" + kind.EncodeUriComponent() + "/" + m.top.catalogId.EncodeUriComponent()
     if extras.Count() > 0 then path = path + "/" + extras.Join("&")

@@ -14,7 +14,9 @@ sub execute()
     else if mode = "recs"
         out.items = Recs_Fetch(p)
     else if mode = "subs"
-        out.cues = Subs_Fetch(Str_Of(p.url))
+        parsed = Subs_Fetch(Str_Of(p.url))
+        out.cues = parsed.cues
+        out.error = parsed.error
         out.url = Str_Of(p.url)
     end if
     m.top.result = out
@@ -217,33 +219,164 @@ function Subs_Time(text as string) as float
     return total
 end function
 
-function Subs_Fetch(url as string) as object
-    cues = []
-    if url = "" then return cues
-    r = Http_Request("GET", url, {}, invalid, 15000)
-    body = r.body
-    if body = "" then return cues
-    body = body.Replace(chr(13), "")
-    timing = CreateObject("roRegex", "^\s*([0-9:.,]+)\s*-->\s*([0-9:.,]+)", "")
-    tags = CreateObject("roRegex", "<[^>]*>|\{\\[^}]*\}", "")
-    lines = body.Split(chr(10))
+function Subs_DecodeEntities(text as string) as string
+    s = text
+    s = s.Replace("&nbsp;", " ")
+    s = s.Replace("&#160;", " ")
+    s = s.Replace("&quot;", chr(34))
+    s = s.Replace("&#34;", chr(34))
+    s = s.Replace("&#39;", "'")
+    s = s.Replace("&#039;", "'")
+    s = s.Replace("&apos;", "'")
+    s = s.Replace("&lsquo;", "'")
+    s = s.Replace("&rsquo;", "'")
+    s = s.Replace("&ldquo;", chr(34))
+    s = s.Replace("&rdquo;", chr(34))
+    s = s.Replace("&lt;", "<")
+    s = s.Replace("&#60;", "<")
+    s = s.Replace("&gt;", ">")
+    s = s.Replace("&#62;", ">")
+    s = s.Replace("&#38;", "&")
+    s = s.Replace("&amp;", "&")
+    return s
+end function
+
+function Subs_CleanLines(rawLines as object, assRe as object, tagRe as object) as object
+    out = []
+    for each raw in rawLines
+        s = raw.Replace("\N", chr(10)).Replace("\n", chr(10))
+        s = assRe.ReplaceAll(s, "")
+        s = tagRe.ReplaceAll(s, "")
+        s = Subs_DecodeEntities(s)
+        for each part in s.Split(chr(10))
+            clean = part.Trim()
+            if clean <> "" then out.Push(clean)
+        end for
+    end for
+    return out
+end function
+
+function Subs_Parse(raw as string) as object
+    if raw = "" then return { cues: [], error: "" }
+    text = raw
+    if Left(text, 1) = chr(65279) then text = Mid(text, 2)
+    bom3 = chr(239) + chr(187) + chr(191)
+    if Left(text, 3) = bom3 then text = Mid(text, 4)
+    text = text.Replace(chr(13), "")
+    trimmed = text.Trim()
+    if trimmed = "" then return { cues: [], error: "" }
+    lowHead = LCase(Left(trimmed, 512))
+    hasArrow = Instr(1, text, "-->") > 0
+    if not hasArrow
+        if Left(lowHead, 9) = "<!doctype" or Left(lowHead, 5) = "<html" or Left(lowHead, 5) = "<?xml" or Left(lowHead, 1) = "{"
+            return { cues: [], error: "invalid_subtitle" }
+        end if
+    end if
+    timing = CreateObject("roRegex", "^\s*((?:\d+:)?\d{1,2}:\d{2}(?:[.,]\d{1,3})?)\s*-->\s*((?:\d+:)?\d{1,2}:\d{2}(?:[.,]\d{1,3})?)", "")
+    assRe = CreateObject("roRegex", "\{\\[^}]*\}", "")
+    tagRe = CreateObject("roRegex", "<[^>]*>", "")
+    lines = text.Split(chr(10))
+    rawCues = []
     i = 0
     n = lines.Count()
     while i < n
-        found = timing.Match(lines[i])
-        if found.Count() > 2
-            s = Subs_Time(found[1])
-            e = Subs_Time(found[2])
-            text = []
+        cur = lines[i].Trim()
+        upper = UCase(cur)
+        if upper = "NOTE" or upper = "STYLE" or upper = "REGION" or Left(upper, 5) = "NOTE " or Left(upper, 6) = "STYLE " or Left(upper, 7) = "REGION " or Left(upper, 6) = "WEBVTT"
             i = i + 1
             while i < n and lines[i].Trim() <> ""
-                text.Push(tags.ReplaceAll(lines[i], "").Trim())
                 i = i + 1
             end while
-            if text.Count() > 0 and e > s then cues.Push({ s: s, e: e, t: text.Join(chr(10)) })
         else
-            i = i + 1
+            found = timing.Match(lines[i])
+            if found.Count() > 2
+                s = Subs_Time(found[1])
+                e = Subs_Time(found[2])
+                block = []
+                i = i + 1
+                while i < n and lines[i].Trim() <> ""
+                    block.Push(lines[i])
+                    i = i + 1
+                end while
+                cleaned = Subs_CleanLines(block, assRe, tagRe)
+                if cleaned.Count() > 0 and e > s then rawCues.Push({ s: s, e: e, t: cleaned.Join(chr(10)) })
+            else
+                i = i + 1
+            end if
         end if
     end while
-    return cues
+    if rawCues.Count() = 0 then return { cues: [], error: "invalid_subtitle" }
+    outOfOrder = false
+    for k = 1 to rawCues.Count() - 1
+        if rawCues[k].s < rawCues[k - 1].s
+            outOfOrder = true
+            exit for
+        end if
+    end for
+    if outOfOrder
+        rawCues = Subs_SortCues(rawCues)
+    end if
+    cues = []
+    for each cur in rawCues
+        if cues.Count() > 0
+            prev = cues[cues.Count() - 1]
+            if Abs(cur.s - prev.s) < 0.05 and cur.s < prev.e
+                if cur.e > prev.e then prev.e = cur.e
+                if Instr(1, prev.t, cur.t) = 0 then prev.t = prev.t + chr(10) + cur.t
+            else
+                cues.Push(cur)
+            end if
+        else
+            cues.Push(cur)
+        end if
+    end for
+    return { cues: cues, error: "" }
+end function
+
+function Subs_SortCues(list as object) as object
+    n = list.Count()
+    if n < 2 then return list
+    cur = list
+    width = 1
+    while width < n
+        nxt = []
+        i = 0
+        while i < n
+            midIdx = i + width
+            if midIdx > n then midIdx = n
+            rightEnd = i + width * 2
+            if rightEnd > n then rightEnd = n
+            li = i
+            ri = midIdx
+            while li < midIdx and ri < rightEnd
+                if cur[li].s <= cur[ri].s
+                    nxt.Push(cur[li])
+                    li = li + 1
+                else
+                    nxt.Push(cur[ri])
+                    ri = ri + 1
+                end if
+            end while
+            while li < midIdx
+                nxt.Push(cur[li])
+                li = li + 1
+            end while
+            while ri < rightEnd
+                nxt.Push(cur[ri])
+                ri = ri + 1
+            end while
+            i = rightEnd
+        end while
+        cur = nxt
+        width = width * 2
+    end while
+    return cur
+end function
+
+function Subs_Fetch(url as string) as object
+    if url = "" then return { cues: [], error: "" }
+    r = Http_Request("GET", url, {}, invalid, 15000)
+    if r.code >= 400 then return { cues: [], error: "invalid_subtitle" }
+    if Str_Of(r.body) = "" then return { cues: [], error: "invalid_subtitle" }
+    return Subs_Parse(r.body)
 end function

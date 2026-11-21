@@ -40,9 +40,13 @@ sub execute()
     end if
     if Str_Of(merged.logo) = "" then merged.logo = Img_Logo(merged.imdb)
     if Str_Of(merged.background) = "" then merged.background = Img_Background(merged.imdb)
+    if Str_Of(merged.logo) <> "" then merged.logo = Img_Sized(Str_Of(merged.logo), "w500")
+    if Str_Of(merged.background) <> "" then merged.background = Img_Sized(Str_Of(merged.background), "w1280")
+    if Str_Of(merged.poster) <> "" then merged.poster = Img_Sized(Str_Of(merged.poster), "w500")
     if integ.mdbEnabled and Mdb_Ready(integ) and merged.imdb <> ""
         merged.ratings = Mdb_Ratings(integ, kind, merged.imdb)
     end if
+    More_Source(merged, integ, kind)
     if IsStr(merged.name) and Str_HasForeign(merged.name)
         one = [{ id: id, kind: kind, title: merged.name, original: merged.name }]
         if Str_Of(merged.imdb) <> "" then one[0].id = merged.imdb
@@ -183,6 +187,58 @@ sub Tmdb_More(merged as object, d as object, media as string, key as string, lan
     merged.companies = Tmdb_Orgs(d.production_companies)
     if media = "tv" then merged.networks = Tmdb_Orgs(d.networks)
 end sub
+
+sub More_Source(merged as object, integ as object, kind as string)
+    source = Str_Of(St_Pref("moreSource"))
+    imdb = Str_Of(merged.imdb)
+    if Left(imdb, 2) <> "tt" or (source <> "trakt" and source <> "simkl") then return
+    series = LCase(kind) <> "movie"
+    more = []
+    if source = "trakt" and Key_TraktId(integ) <> ""
+        path = "movies"
+        if series then path = "shows"
+        h = { "trakt-api-version": "2", "trakt-api-key": Key_TraktId(integ) }
+        list = Http_Request("GET", "https://api.trakt.tv/" + path + "/" + imdb + "/related?limit=15", h, invalid, 10000).json
+        if type(list) = "roArray"
+            for each r in list
+                if type(r) = "roAssociativeArray" and type(r.ids) = "roAssociativeArray" and Left(Str_Of(r.ids.imdb), 2) = "tt"
+                    more.Push(More_Card(Str_Of(r.ids.imdb), Str_Of(r.title), Str_Any(r.year), kind, ""))
+                end if
+            end for
+        end if
+    else if source = "simkl" and Key_SimklId(integ) <> ""
+        q = "client_id=" + Key_SimklId(integ)
+        found = Http_Request("GET", "https://api.simkl.com/search/id?imdb=" + imdb + "&" + q, {}, invalid, 10000).json
+        sid = ""
+        stype = "movies"
+        if series then stype = "tv"
+        if type(found) = "roArray" and found.Count() > 0 and type(found[0].ids) = "roAssociativeArray"
+            sid = Str_Any(found[0].ids.simkl)
+            if LCase(Str_Of(found[0]["type"])) = "anime" then stype = "anime"
+        end if
+        if sid <> ""
+            d = Http_Request("GET", "https://api.simkl.com/" + stype + "/" + sid + "?extended=full&" + q, {}, invalid, 10000).json
+            if type(d) = "roAssociativeArray" and type(d.users_recommendations) = "roArray"
+                for each r in d.users_recommendations
+                    if more.Count() >= 15 then exit for
+                    if type(r) = "roAssociativeArray" and type(r.ids) = "roAssociativeArray" and Left(Str_Of(r.ids.imdb), 2) = "tt"
+                        poster = ""
+                        if Str_Of(r.poster) <> "" then poster = "https://simkl.in/posters/" + Str_Of(r.poster) + "_m.jpg"
+                        more.Push(More_Card(Str_Of(r.ids.imdb), Str_Of(r.title), Str_Any(r.year), kind, poster))
+                    end if
+                end for
+            end if
+        end if
+    end if
+    if more.Count() > 0 then merged.moreLike = more
+end sub
+
+function More_Card(imdb as string, name as string, year as string, kind as string, poster as string) as object
+    if poster = "" then poster = "https://images.metahub.space/poster/medium/" + imdb + "/img"
+    k = "movie"
+    if LCase(kind) <> "movie" then k = "series"
+    return { id: imdb, kind: k, name: name, year: Left(year, 4), poster: poster, background: "https://images.metahub.space/background/medium/" + imdb + "/img" }
+end function
 
 function Tmdb_Card(r as dynamic, kind as string) as dynamic
     if type(r) <> "roAssociativeArray" or Str_Of(r.poster_path) = "" then return invalid

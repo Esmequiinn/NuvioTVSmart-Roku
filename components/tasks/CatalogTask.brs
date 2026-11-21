@@ -60,27 +60,27 @@ sub execute()
     for each entry in manifests
         if type(entry.catalogs) = "roArray"
             for each cat in entry.catalogs
-                if type(cat) = "roAssociativeArray" and IsStr(cat["type"]) and IsStr(cat.id)
-                    if not Addon_RequiresExtra(cat)
-                        key = St_CatalogKey(entry.manifest, entry.base, cat)
-                        if seen.DoesExist(key) then key = key + "|" + all.Count().ToStr()
-                        seen[key] = true
-                        name = Str_Of(cat.name).Trim()
-                        if name = "" then name = cat.id
-                        all.Push({
-                            key: key
-                            name: name
-                            kind: cat["type"]
-                            id: cat.id
-                            addon: entry.name
-                            base: entry.base
-                            hidden: prefs.hidden.DoesExist(key)
-                            status: ""
-                            count: 0
-                            genres: Disc_Genres(cat)
-                            skip: Disc_Skip(cat)
-                        })
-                    end if
+                if type(cat) = "roAssociativeArray" and IsStr(cat["type"]) and IsStr(cat.id) and Disc_Usable(cat)
+                    key = St_CatalogKey(entry.manifest, entry.base, cat)
+                    if seen.DoesExist(key) then key = key + "|" + all.Count().ToStr()
+                    seen[key] = true
+                    name = Str_Of(cat.name).Trim()
+                    if name = "" then name = cat.id
+                    all.Push({
+                        key: key
+                        name: name
+                        kind: cat["type"]
+                        id: cat.id
+                        addon: entry.name
+                        base: entry.base
+                        hidden: prefs.hidden.DoesExist(key)
+                        status: ""
+                        count: 0
+                        genres: Disc_Genres(cat)
+                        skip: Disc_Skip(cat)
+                        filter: Disc_Filter(cat)
+                        needsExtra: Addon_RequiresExtra(cat)
+                    })
                 end if
             end for
         end if
@@ -90,7 +90,7 @@ sub execute()
     visible = []
     urls = []
     for each c in ordered
-        if not c.hidden
+        if not c.hidden and not Bool_Of(c.needsExtra, false)
             visible.Push(c)
             urls.Push(Addon_ResourceUrl(c.base, "catalog", c.kind, c.id))
         end if
@@ -266,8 +266,9 @@ end sub
 
 function Home_Build(rows as object, prefs as object, withCollections as boolean) as object
     root = CreateObject("roSGNode", "ContentNode")
-    cw = Content_ContinueRow()
-    if cw <> invalid then root.appendChild(cw)
+    for each cw in Content_ContinueRows()
+        root.appendChild(cw)
+    end for
     hidden = prefs.hidden
     if type(hidden) <> "roAssociativeArray" then hidden = {}
     today = ""
@@ -578,14 +579,14 @@ sub Folder_Execute()
                     if grid then cols = Folder_GridCols(shape)
                     row = invalid
                     part = 0
-                    for i = 0 to batch.Count() - 1
-                        if i mod cols = 0
+                    for k = 0 to batch.Count() - 1
+                        if k mod cols = 0
                             row = root.createChild("ContentNode")
                             if part = 0 then row.title = title
                             row.addFields({ shape: shape, key: "all:" + title + "#" + part.ToStr(), gridPart: part })
                             part = part + 1
                         end if
-                        Content_Item(row, batch[i])
+                        Content_Item(row, batch[k])
                     end for
                 end if
             end for
@@ -885,11 +886,32 @@ function Folder_Back(folder as object) as string
     return Str_Of(folder.cover)
 end function
 
-function Disc_Genres(cat as object) as object
-    out = []
+function Disc_Filter(cat as object) as string
     if type(cat.extra) = "roArray"
         for each e in cat.extra
-            if type(e) = "roAssociativeArray" and LCase(Str_Of(e.name)) = "genre" and type(e.options) = "roArray"
+            if type(e) = "roAssociativeArray" and Bool_Of(e.isRequired, false) and type(e.options) = "roArray" and e.options.Count() > 0 then return LCase(Str_Of(e.name))
+        end for
+    end if
+    return "genre"
+end function
+
+function Disc_Usable(cat as object) as boolean
+    if not Addon_RequiresExtra(cat) then return true
+    if type(cat.extra) <> "roArray" then return false
+    for each e in cat.extra
+        if type(e) = "roAssociativeArray" and Bool_Of(e.isRequired, false)
+            if type(e.options) <> "roArray" or e.options.Count() = 0 then return false
+        end if
+    end for
+    return true
+end function
+
+function Disc_Genres(cat as object) as object
+    out = []
+    want = Disc_Filter(cat)
+    if type(cat.extra) = "roArray"
+        for each e in cat.extra
+            if type(e) = "roAssociativeArray" and LCase(Str_Of(e.name)) = want and type(e.options) = "roArray"
                 for each o in e.options
                     if IsStr(o) and o.Trim() <> "" then out.Push(o.Trim())
                 end for

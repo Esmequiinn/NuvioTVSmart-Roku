@@ -19,6 +19,12 @@ sub execute()
         result = Simkl_Pin()
     else if mode = "simklPoll"
         result = Simkl_Poll(Str_Of(p.userCode))
+    else if mode = "rateLoad"
+        result = Rate_Load(Bool_Of(p.force, false))
+    else if mode = "rateSend"
+        result = Rate_Send(p)
+    else if mode = "watchPush"
+        result = Watch_Push()
     else if mode = "scrobble"
         Scrobble_Send(Str_Of(p.action), p)
         result = { ok: true, mode: mode }

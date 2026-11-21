@@ -10,7 +10,16 @@ sub execute()
     out = { ts: false, size: 0&, type: "", code: 0, url: "", fmt: "" }
     target = m.top.url
     d = m.top.debrid
-    if type(d) = "roAssociativeArray" and Str_Of(d.hash) <> ""
+    if type(d) = "roAssociativeArray" and Str_Of(d.cloud) <> ""
+        r = Cloud_Link(Str_Of(d.cloud), d.item, d.file)
+        if not Bool_Of(r.ok, false)
+            m.top.result = { failed: true, error: Str_Of(r.error) }
+            return
+        end if
+        target = r.url
+        out.url = target
+        out.file = Str_Of(r.file)
+    else if type(d) = "roAssociativeArray" and Str_Of(d.hash) <> ""
         r = Deb_Resolve(St_Integrations(), d)
         if not Bool_Of(r.ok, false)
             m.top.result = { failed: true, error: Str_Of(r.error) }
@@ -60,6 +69,10 @@ sub execute()
             out.fmt = Probe_Format(bytes, kind, disposition)
             out.ts = Instr(1, kind, "mp2t") > 0 or Instr(1, kind, "mpegts") > 0 or (sync and Instr(1, kind, "mpegurl") = 0 and Instr(1, kind, "mp4") = 0)
             out.ranges = out.code = 206
+            if out.ts and out.ranges and out.size > 1000000
+                info = Ts_Inspect(target, m.top.headers, out.size)
+                if info <> invalid then out.tsInfo = info
+            end if
         else
             t.AsyncCancel()
         end if

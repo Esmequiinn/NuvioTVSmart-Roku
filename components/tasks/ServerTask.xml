@@ -18,5 +18,6 @@
     <script type="text/brightscript" uri="pkg:/components/Streams.brs" />
     <script type="text/brightscript" uri="pkg:/components/Account.brs" />
     <script type="text/brightscript" uri="pkg:/components/Hlsp.brs" />
+    <script type="text/brightscript" uri="pkg:/components/TsRange.brs" />
     <script type="text/brightscript" uri="pkg:/components/tasks/ServerTask.brs" />
 </component>

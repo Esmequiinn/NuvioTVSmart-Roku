@@ -13,6 +13,8 @@
     <script type="text/brightscript" uri="pkg:/components/Store.brs" />
     <script type="text/brightscript" uri="pkg:/components/Http.brs" />
     <script type="text/brightscript" uri="pkg:/components/Debrid.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Cloud.brs" />
     <script type="text/brightscript" uri="pkg:/components/Hlsp.brs" />
+    <script type="text/brightscript" uri="pkg:/components/TsRange.brs" />
     <script type="text/brightscript" uri="pkg:/components/tasks/ProbeTask.brs" />
 </component>
