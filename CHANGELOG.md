@@ -4,6 +4,53 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.1.7] - 2026-11-21
+
+### Added
+- **Cloud library**, like in Nuvio TV. If you have TorBox, Premiumize or Real-Debrid connected, open **Library → Cloud library** to browse what you already have in those accounts: filter by provider and type (torrents, Usenet, web downloads, files), search by name and refresh. Each item shows how many playable files it has, its status and size. Pick a file to play it; the channel remembers where you stopped in each file and plays the next file when one ends. You can turn it off in **Settings → Connected services**.
+- **Real-Debrid** in **Settings → Connected services**. For now it's only used for the cloud library.
+- **Ratings**, like in Nuvio TV. Pick where they're saved in **Settings → Tracking → Ratings** (Trakt, Simkl or MDBList). A **Rate** button shows up on each title's details page with your current rating, and Trakt and MDBList also let you rate episodes from the episode options.
+- **MDBList** in **Settings → Tracking**, next to Trakt and Simkl, to connect your account for tracking.
+- New **Continue Watching** options in **Settings → Layout**, like in Nuvio TV: what opens when you pick something (stream, details, or details only for upcoming), order (default, streaming style or a separate Upcoming row), episode thumbnails, blur unwatched next episodes, up next from the furthest episode you watched, and showing next episodes before they air. They sync with your Nuvio account.
+- **Mark as watched** in the Continue Watching options menu.
+- **New subtitles menu**, like in Nuvio TV: subtitles are grouped by language first, and inside each language you see every track with where it comes from (built-in, server, source or addon), plus Forced, SDH and format tags. Back or Left returns to the languages.
+- **Subtitle sync** in the subtitles menu: move them earlier or later in 0.1 s or 0.5 s steps (also with ⏪/⏩ while the bar is open), or use **Sync line**: when you hear a line, pick it from the list and the channel lines it up for you. The adjustment is saved per title.
+- **Subtitle style** inside the player, with a live preview while you change size, color, background, edge, bold and height.
+- Subtitles that come with the source (addons) and from Jellyfin/Emby show up in the menu too.
+- **.ts files you can move around in**, like in Nuvio on phones: when a direct `.ts` link (for example DeepFlix) lets the Roku ask for it in pieces, the channel reads its real length from the file itself, so the bar shows the right duration and you can rewind, fast-forward and resume. If the file has several audio tracks, **all of them show up in the audio menu** with their language, and switching keeps you at the same minute. Audio formats your Roku can't play (like DTS) are marked; picking one opens the original link so the Roku plays it.
+- **Rate with stars**, like in Nuvio TV: 5 stars that fill in half steps (1 to 10), with your score in large numbers, where it syncs and **Remove rating** / **Save** buttons.
+- **Sources inside the player** look like Nuvio TV: a side panel with filters by addon, each source as a card with its badges, and the one that's playing marked.
+- **Badges of the playing source** (the image ones, like 4K, HDR or Atmos) show under the title on the player bar and on the pause screen.
+- **More Like This source** in **Settings → Tracking** (TMDB, Trakt or Simkl), like in Nuvio TV.
+- **Mark as watched / unwatched now also goes to Trakt, Simkl and MDBList** when you have them connected, not only to your Nuvio account.
+- Catalogs that need a filter (like Cinemeta's "by year" or "last videos") now show up in **Discover**, which picks the first value for you and lets you change it; they still stay out of the home rows. Thanks to **@JoshRob297** for spotting this (PR #33).
+
+### Fixed
+- When autoplay starts the next episode, a "Player error" (Execution timeout) no longer pops up and stays stuck on screen. While sorting the sources by audio, the channel looked up your profile and settings again for every single source; with a big profile that took too long. Now they're looked up once and reused until something changes.
+- If an error does happen while a video is playing, the channel no longer shows a popup over the player that can't be closed.
+- Subtitle languages are recognized better: Brazil vs Portugal Portuguese, Latin American vs Spain Spanish, simplified vs traditional Chinese, and names written in different ways (pob, pt-BR, "Latino", "Castellano"…). Your preferred language picks the closest match first.
+- SRT/VTT subtitles that start with a hidden mark, have lines out of order, or several lines at the same time now show correctly. If a file is broken, a message tells you instead of failing silently.
+- When autoplay is on and a debrid source can't be prepared, the channel moves on to the next source instead of stopping.
+- TorBox sources that TorBox lists under a different hash are now recognized as cached.
+- Very large TMDB logos and backgrounds are requested at the size the Roku shows, so they don't run out of image memory.
+
+- **Next up** in Continue Watching now plays exactly that episode from the beginning, instead of sometimes jumping to the one after it, halfway through.
+- The episode name no longer shows up twice in Continue Watching and on the home hero.
+- **Collections** now show all their lists, not only the first one.
+- A trailer no longer keeps playing in the background if you leave right as it starts, and trailers keep working after that. On the details page, the trailer only starts when you stop moving around.
+- On the details page, when the buttons don't fit in one line (with Rate turned on), the rest go to a second line under **Continue** instead of being cut off.
+- The pause screen no longer covers the paused picture with the title's image: you see exactly where you stopped, with the logo, description and info on top.
+- When you play from Continue Watching before the details finish loading, the pause screen now fills in the description and info as soon as they arrive.
+- The logo on the loading and pause screens reuses the one already loaded on the home instead of downloading it again.
+- Subtitles that come with a source are no longer missing when a title starts very fast from Continue Watching.
+- **Very large** subtitles now show up (they used to disappear), the style preview no longer darkens the top of the picture, and the style also applies to the video's own built-in subtitles.
+- If the video stays loading after a big jump forward or back, the channel reopens it right at that minute.
+- If your Nuvio account briefly answers without data, your collections are kept instead of being erased.
+- **Skip recap / Skip intro** shows up again when the first source fails and the channel moves to another one. The skip times found while switching were thrown away and never looked up again.
+- Moving fast around the home and then jumping to the menu, Search, Settings or a collection no longer freezes for a few seconds. The home now updates the big picture and gets the next titles ready only once you stop on a title, instead of for every title you pass.
+
+Thanks to **@BenedettiLucca** for the subtitle, debrid and TorBox improvements (PR #32) and to **@JoshRob297** for the Discover catalogs fix (PR #33).
+
 ## [0.1.6] - 2026-11-16
 
 ### Added

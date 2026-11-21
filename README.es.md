@@ -16,7 +16,7 @@
 
 </div>
 
-Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.1.6**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
+Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMedia). Está en **beta**: la versión actual es la **0.1.7**. Te permite explorar y reproducir contenido de addons estilo Stremio en cualquier Roku TV o stick de Roku.
 
 > **Esta no es una app oficial de Nuvio** y no está afiliada ni respaldada por el equipo de Nuvio. No aloja, guarda ni distribuye ningún contenido. Todo lo que ves viene de los addons que instalas.
 
@@ -64,6 +64,8 @@ Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMe
 - Más como esto, colección, y productoras o cadenas en la página de detalles, como en Nuvio TV
 - Servicios conectados como en Nuvio TV: TorBox (QR o clave de API) y Premiumize (clave de API), para reproducir resultados de torrent que ya están en la caché de tu servicio
 - Servidores multimedia como en Nuvio TV: bibliotecas de Jellyfin y Emby en el inicio y como fuentes
+- Calificaciones guardadas en Trakt, Simkl o MDBList, para títulos y episodios
+- Biblioteca en la nube como en Nuvio TV: explora y reproduce lo que ya tienes en tu cuenta de TorBox, Premiumize o Real-Debrid, con filtros de proveedor y tipo, búsqueda, continuar donde te quedaste y siguiente archivo
 - Botón **Cambiar forma de abrir** en el reproductor, como el de cambiar reproductor de Nuvio: prueba la siguiente forma de abrir un enlace cuando no carga o no tiene sonido
 - Trakt o MDBList como fuente de Seguir viendo y de tu biblioteca, con tu watchlist y tus listas personales
 - Comentarios de Trakt en la página de detalles
@@ -131,6 +133,12 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Avisos de contenido | ✅ Funciona |
 | Saltar intro, resumen y créditos | ✅ Funciona |
 | Estilo de subtítulos y filtro SDH | ⚠️ Sin probar |
+| Menú de subtítulos por idioma, sincronización y Sincronizar línea | ⚠️ Sin probar |
+| Archivos .ts con adelantar y todos sus audios | ⚠️ Sin probar |
+| Panel de fuentes dentro del reproductor | ⚠️ Sin probar |
+| Calificaciones con estrellas | ⚠️ Sin probar |
+| Marcar visto que se manda a Trakt, Simkl y MDBList | ⚠️ Sin probar |
+| Fuente de Más como esto (TMDB, Trakt, Simkl) | ⚠️ Sin probar |
 | Datos técnicos de la reproducción | ⚠️ Sin probar |
 | Next up en Seguir viendo | ✅ Funciona |
 | Tráilers de YouTube en tu idioma | ✅ Funciona |
@@ -140,6 +148,9 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Más como esto y colección en detalles | ✅ Funciona |
 | TorBox y Premiumize (torrents en caché) | ✅ Funciona |
 | Jellyfin y Emby | ✅ Funciona |
+| Biblioteca en la nube (TorBox, Premiumize, Real-Debrid) | ⚠️ Sin probar |
+| Calificaciones (Trakt, Simkl, MDBList) | ⚠️ Sin probar |
+| Opciones de Seguir viendo | ⚠️ Sin probar |
 | Clave de MDBList desde tu cuenta de Nuvio | ✅ Funciona |
 | Botón Cambiar forma de abrir | ✅ Funciona |
 | Trakt o MDBList como fuente de Seguir viendo y biblioteca | ⚠️ Sin probar |
@@ -209,6 +220,7 @@ El `.zip` del release ya trae las claves de Trakt y Simkl. TMDB solo funciona co
 | Simkl | Vincula tu cuenta en el Roku en **Ajustes → Seguimiento** e ingresa el código. |
 | TorBox | Opcional. Vincúlala con el código QR en **Ajustes → Servicios conectados**, escribe ahí tu clave de API, o llega sola si está guardada en tu cuenta de Nuvio. |
 | Premiumize | Opcional. Escribe tu clave de API de premiumize.me en **Ajustes → Servicios conectados**, o llega sola si está guardada en tu cuenta de Nuvio. |
+| Real-Debrid | Opcional. Escribe tu clave de API de [real-debrid.com/apitoken](https://real-debrid.com/apitoken) en **Ajustes → Servicios conectados**. Por ahora solo se usa para la biblioteca en la nube. |
 | Jellyfin o Emby | Opcional. Inicia sesión con la dirección de tu servidor, tu usuario y tu contraseña en **Ajustes → Servidores multimedia**. |
 
 ### Cuenta de Nuvio
@@ -238,4 +250,6 @@ Los reportes de errores, problemas, ideas y sugerencias son muy bienvenidos. Abr
 ## Créditos y licencia
 
 - Basado en [Nuvio](https://github.com/NuvioMedia) del equipo de Nuvio. El nombre y los logos de Nuvio pertenecen a sus dueños.
+- Mejoras de subtítulos, debrid y TorBox por [@BenedettiLucca](https://github.com/BenedettiLucca) ([PR #32](https://github.com/Esmequiinn/NuvioTVSmart-Roku/pull/32)).
+- Arreglo de catálogos en Descubrir por [@JoshRob297](https://github.com/JoshRob297) ([PR #33](https://github.com/Esmequiinn/NuvioTVSmart-Roku/pull/33)).
 - Con licencia [GNU General Public License v3.0](LICENSE).

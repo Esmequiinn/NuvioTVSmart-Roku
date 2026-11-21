@@ -4,6 +4,53 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.1.7] - 2026-11-21
+
+### Agregado
+- **Biblioteca en la nube**, como en Nuvio TV. Si tienes conectado TorBox, Premiumize o Real-Debrid, abre **Biblioteca → Biblioteca en la nube** para ver lo que ya tienes en esas cuentas: filtra por proveedor y tipo (torrents, Usenet, descargas web, archivos), busca por nombre y actualiza. Cada elemento muestra cuántos archivos reproducibles tiene, su estado y su tamaño. Elige un archivo para reproducirlo; el canal recuerda dónde te quedaste en cada archivo y pasa al siguiente cuando termina uno. Puedes apagarla en **Ajustes → Servicios conectados**.
+- **Real-Debrid** en **Ajustes → Servicios conectados**. Por ahora solo se usa para la biblioteca en la nube.
+- **Calificaciones**, como en Nuvio TV. Elige dónde se guardan en **Ajustes → Seguimiento → Calificaciones** (Trakt, Simkl o MDBList). En la ficha de cada título aparece el botón **Calificar** con tu calificación actual, y con Trakt y MDBList también puedes calificar episodios desde sus opciones.
+- **MDBList** en **Ajustes → Seguimiento**, junto a Trakt y Simkl, para conectar tu cuenta como seguimiento.
+- Nuevas opciones de **Seguir viendo** en **Ajustes → Diseño**, como en Nuvio TV: qué se abre al elegir algo (la fuente, los detalles, o detalles solo para lo que viene), el orden (predeterminado, estilo streaming o una fila aparte de Próximamente), miniaturas de episodios, difuminar los siguientes episodios que no has visto, el siguiente desde el episodio más avanzado y mostrar episodios antes de que se estrenen. Se sincronizan con tu cuenta de Nuvio.
+- **Marcar como visto** en el menú de opciones de Seguir viendo.
+- **Nuevo menú de subtítulos**, como en Nuvio TV: los subtítulos se agrupan primero por idioma y dentro de cada idioma ves todas las pistas con su origen (integrado, servidor, fuente o complemento) y etiquetas de Forzados, SDH y formato. Atrás o Izquierda regresa a los idiomas.
+- **Sincronización de subtítulos** en el menú de subtítulos: adelántalos o atrásalos de 0.1 s o 0.5 s (también con ⏪/⏩ mientras la barra está abierta), o usa **Sincronizar línea**: cuando escuchas una frase, la eliges de la lista y el canal la acomoda solo. El ajuste se guarda por título.
+- **Estilo de subtítulos** dentro del reproductor, con vista previa en vivo mientras cambias tamaño, color, fondo, borde, negritas y altura.
+- Los subtítulos que vienen con la fuente (complementos) y los de Jellyfin/Emby también aparecen en el menú.
+- **Archivos .ts en los que sí te puedes mover**, como en Nuvio para celular: cuando un enlace `.ts` directo (por ejemplo de DeepFlix) deja que el Roku lo pida por partes, el canal lee su duración real del propio archivo, así la barra muestra el tiempo correcto y puedes adelantar, atrasar y continuar donde te quedaste. Si el archivo trae varios audios, **todos aparecen en el menú de audio** con su idioma, y al cambiar sigues en el mismo minuto. Los formatos de audio que tu Roku no puede reproducir (como DTS) se marcan; si eliges uno, se abre el enlace original para que el Roku lo reproduzca.
+- **Calificar con estrellas**, como en Nuvio TV: 5 estrellas que se llenan de media en media (del 1 al 10), con tu calificación en números grandes, dónde se sincroniza y los botones **Quitar calificación** / **Guardar**.
+- **Las fuentes dentro del reproductor** se ven como en Nuvio TV: un panel lateral con filtros por complemento, cada fuente como tarjeta con sus badges y la que se está reproduciendo marcada.
+- **Los badges de la fuente que se reproduce** (los de imagen, como 4K, HDR o Atmos) aparecen bajo el título en la barra del reproductor y en la pantalla de pausa.
+- **Fuente de Más como esto** en **Ajustes → Seguimiento** (TMDB, Trakt o Simkl), como en Nuvio TV.
+- **Marcar como visto / no visto ahora también se manda a Trakt, Simkl y MDBList** si los tienes conectados, no solo a tu cuenta de Nuvio.
+- Los catálogos que piden un filtro (como "por año" o "últimos videos" de Cinemeta) ahora aparecen en **Descubrir**, que elige el primer valor por ti y te deja cambiarlo; siguen sin salir en las filas del inicio. Gracias a **@JoshRob297** por detectarlo (PR #33).
+
+### Corregido
+- Cuando la reproducción automática pasa al siguiente episodio, ya no aparece un "Error del reproductor" (Execution timeout) que se queda pegado en pantalla. Al ordenar las fuentes por audio, el canal volvía a buscar tu perfil y tus ajustes por cada fuente; con un perfil grande eso tardaba demasiado. Ahora los busca una vez y los reutiliza hasta que algo cambia.
+- Si llega a haber un error mientras se reproduce un video, el canal ya no muestra encima del reproductor un aviso que no se puede cerrar.
+- Los idiomas de los subtítulos se reconocen mejor: portugués de Brasil o de Portugal, español latino o de España, chino simplificado o tradicional, y nombres escritos de distintas formas (pob, pt-BR, "Latino", "Castellano"…). Tu idioma preferido elige primero la coincidencia más cercana.
+- Los subtítulos SRT/VTT que empiezan con una marca oculta, tienen líneas desordenadas o varias líneas al mismo tiempo ahora se ven bien. Si un archivo está dañado, aparece un aviso en vez de fallar sin decir nada.
+- Con la reproducción automática, si una fuente de debrid no se puede preparar, el canal pasa a la siguiente fuente en vez de detenerse.
+- Las fuentes de TorBox que TorBox lista con otro hash ahora se reconocen como en caché.
+- Los logos y fondos de TMDB muy grandes se piden al tamaño que muestra el Roku, para que no se acabe la memoria de imágenes.
+
+- **Next up** en Seguir viendo ahora reproduce justo ese capítulo desde el principio, en vez de a veces saltar al siguiente y a la mitad.
+- El nombre del capítulo ya no sale repetido en Seguir viendo ni en la portada.
+- Las **colecciones** ahora muestran todas sus listas, no solo la primera.
+- El tráiler ya no se queda sonando en el fondo si sales justo cuando empieza, y los tráilers siguen funcionando después. En los detalles, el tráiler solo empieza cuando dejas de moverte.
+- En los detalles, cuando los botones no caben en una línea (con Calificar activado), los que sobran pasan a una segunda línea debajo de **Continuar** en vez de cortarse.
+- La pantalla de pausa ya no tapa la imagen pausada con la imagen del título: ves justo donde te quedaste, con el logo, la descripción y los datos encima.
+- Si reproduces desde Seguir viendo antes de que carguen los detalles, la pantalla de pausa llena la descripción y los datos en cuanto llegan.
+- El logo de la pantalla de carga y de pausa usa el que ya estaba cargado en el inicio en vez de descargarlo otra vez.
+- Ya no faltan los subtítulos que trae la fuente cuando algo empieza muy rápido desde Seguir viendo.
+- Los subtítulos **Muy grande** ya se ven (antes desaparecían), la vista previa del estilo ya no oscurece la parte de arriba de la imagen, y el estilo también se aplica a los subtítulos integrados del video.
+- Si el video se queda cargando después de adelantar o atrasar mucho, el canal lo vuelve a abrir justo en ese minuto.
+- Si tu cuenta de Nuvio responde un momento sin datos, tus colecciones se conservan en vez de borrarse.
+- **Saltar resumen / Saltar introducción** vuelve a aparecer cuando la primera fuente falla y el canal pasa a otra. Los tiempos que se encontraban durante el cambio se tiraban y ya no se volvían a buscar.
+- Moverte rápido por el inicio y luego saltar al menú, Buscar, Ajustes o una colección ya no se traba unos segundos. Ahora el inicio actualiza la imagen grande y prepara los siguientes títulos solo cuando te detienes en uno, no en cada título por el que pasas.
+
+Gracias a **@BenedettiLucca** por las mejoras de subtítulos, debrid y TorBox (PR #32) y a **@JoshRob297** por el arreglo de los catálogos en Descubrir (PR #33).
+
 ## [0.1.6] - 2026-11-16
 
 ### Agregado
