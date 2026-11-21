@@ -33,6 +33,9 @@ function Stream_Build(s as object, url as string, addon as object, badgeRules as
             if line.Trim() <> "" then lines.Push(line.Trim())
         end for
     end for
+    notWebReady = Stream_NotWebReady(hints)
+    badges = Stream_Fusion(lines, badgeRules)
+    if notWebReady then badges.Unshift({ i: "", n: L("Requiere encabezados"), c: "0xB3261EFF", t: "0xFFFFFFFF" })
     out = {
         url: url
         headers: headers
@@ -44,7 +47,8 @@ function Stream_Build(s as object, url as string, addon as object, badgeRules as
         binge: binge
         filename: filename
         chips: chips
-        badges: Stream_Fusion(lines, badgeRules)
+        badges: badges
+        notWebReady: notWebReady
         label: Left(Str_OneLine(label), 120)
     }
     if type(s.subtitles) = "roArray" and s.subtitles.Count() > 0
@@ -58,6 +62,24 @@ function Stream_Build(s as object, url as string, addon as object, badgeRules as
         if subs.Count() > 0 then out.subtitles = subs
     end if
     return out
+end function
+
+
+' Stremio marks a stream as notWebReady when it needs custom HTTP headers that
+' the device's player cannot send. Roku has no way to attach proxyHeaders to a
+' Video node, so the stream is listed (with a badge) but never played; see
+' playStream() in Playback.brs. Mirrors behaviorHints.notWebReady handling in the
+' reference client (js/ui/screens/player/playerScreenMethods-17).
+function Stream_NotWebReady(s as dynamic) as boolean
+    if type(s) <> "roAssociativeArray" then return false
+    v = s.notWebReady
+    if v = invalid then
+        hints = s.behaviorHints
+        if type(hints) = "roAssociativeArray" then v = hints.notWebReady
+    end if
+    if IsBool(v) then return v
+    if IsStr(v) then return LCase(v.Trim()) = "true"
+    return false
 end function
 
 
@@ -279,6 +301,9 @@ function Stream_SearchText(s as object) as string
 end function
 
 function Stream_Unplayable(s as object) as boolean
+    ' A notWebReady stream is blocked in playStream(), so the automatic pickers
+    ' must not choose it either.
+    if Stream_NotWebReady(s) then return true
     if m.devCaps = invalid
         m.devCaps = { k4: Device_Can4K(), hevc: Device_CanHevc(), dv: Device_CanDV() }
         m.devCaps.dvRe = CreateObject("roRegex", "\b(dv|dovi|dolby\s*vision)\b", "i")

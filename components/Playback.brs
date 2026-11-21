@@ -1046,6 +1046,10 @@ sub playStream(index as integer, startAt as integer)
     streams = m.ctx.streams
     if streams = invalid or index < 0 or index >= streams.Count() then return
     s = streams[index]
+    if Stream_NotWebReady(s)
+        Toast_Show(Stream_NotWebReadyMessage())
+        return
+    end if
     m.ctx.sourceIndex = index
     m.ctx.playingUrl = s.url
     m.ctx.playingStream = s
@@ -1091,6 +1095,13 @@ sub playStream(index as integer, startAt as integer)
     end if
     Play_Begin()
 end sub
+
+' The player refuses these sources before touching m.player, so the streams list
+' stays on screen and the toast explains why nothing was played. The message is
+' also translated in locale/en.json.
+function Stream_NotWebReadyMessage() as string
+    return L("Este enlace necesita encabezados web que Roku no puede enviar. Elige otra fuente o contacta al proveedor del addon.")
+end function
 
 function Probe_Needed(url as string) as boolean
     if Stream_Format(url) <> "" then return false
@@ -1548,7 +1559,7 @@ sub rememberStream()
     m.ctx.savedLink = true
     Fmt_Remember(Str_Of(s.url))
     if s.url <> ""
-        St_SaveLink("v:" + m.ctx.videoId, { stream: { url: s.url, headers: s.headers, name: s.name, desc: s.desc, addon: s.addon, logo: s.logo, binge: s.binge, chips: s.chips, badges: [], label: s.label, order: -1, debrid: s.debrid } })
+        St_SaveLink("v:" + m.ctx.videoId, { stream: { url: s.url, headers: s.headers, name: s.name, desc: s.desc, addon: s.addon, logo: s.logo, binge: s.binge, chips: s.chips, badges: [], label: s.label, order: -1, debrid: s.debrid, notWebReady: Stream_NotWebReady(s) } })
     end if
     if Str_Of(s.binge) <> "" and isSeries() then St_SaveLink("b:" + m.ctx.metaId, { binge: s.binge })
 end sub
