@@ -272,6 +272,12 @@ sub onCacheDone(event as object)
     if m.local.Count() > 400 then m.local = found
 end sub
 
+function Hero_Local(url as dynamic) as string
+    u = Str_Of(url)
+    if u <> "" and m.local.DoesExist(u) then return m.local[u]
+    return ""
+end function
+
 function localOf(url as string) as string
     if url <> "" and m.local.DoesExist(url) then return m.local[url]
     return url
@@ -316,12 +322,14 @@ end function
 sub onTrailer()
     t = m.top.trailer
     if t = invalid or Str_Of(t.url) = ""
-        if m.video.state <> "none" and m.video.state <> "stopped" then m.video.control = "stop"
+        m.wantVideo = false
+        m.video.control = "stop"
         m.video.visible = false
         m.backdrop.visible = not m.top.videoMode
         Hero_Immersive(false)
         return
     end if
+    m.wantVideo = true
     m.full = Bool_Of(t.full, false)
     Hero_VideoBox()
     m.video.mute = m.top.muted
@@ -331,6 +339,10 @@ end sub
 
 sub onVideoState()
     state = m.video.state
+    if state = "playing" and not Bool_Of(m.wantVideo, false)
+        m.video.control = "stop"
+        return
+    end if
     if state = "playing"
         m.video.visible = true
         m.backdrop.visible = false

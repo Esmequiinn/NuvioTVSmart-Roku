@@ -22,7 +22,7 @@
         <Video id="trailerVideo" width="1920" height="1080" enableUI="false" focusable="false" visible="false" />
         <Group id="page">
             <Hero id="hero" fullscreen="true" />
-            <LayoutGroup id="buttonRow" translation="[160,720]" layoutDirection="horiz" itemSpacings="[20]" />
+            <Group id="buttonRow" translation="[160,720]" />
             <Label id="statusLabel" translation="[160,820]" width="1200" font="font:SmallSystemFont" color="0xA9A9B8FF" />
             <Group id="lower" translation="[0,900]" />
         </Group>

@@ -47,12 +47,17 @@ end sub
 sub startTrailer()
     t = m.top.trailer
     if t = invalid or Str_Of(t.url) = "" or not m.top.visible or not m.top.isInFocusChain() then return
+    m.wantVideo = true
     m.video.content = Trailer_Content(t)
     m.video.control = "play"
 end sub
 
 sub onTrailerState()
     state = m.video.state
+    if state = "playing" and (not Bool_Of(m.wantVideo, false) or not m.top.visible)
+        m.video.control = "stop"
+        return
+    end if
     if state = "playing"
         m.video.visible = true
         m.hero.videoMode = true
@@ -69,7 +74,8 @@ end sub
 
 sub stopTrailer()
     m.trailerTimer.control = "stop"
-    if m.video.state <> "none" and m.video.state <> "stopped" then m.video.control = "stop"
+    m.wantVideo = false
+    m.video.control = "stop"
     endTrailer()
 end sub
 
@@ -586,11 +592,11 @@ sub paintLower()
     end for
     target = 0
     if m.zone = "seasons" or m.zone = "episodes"
-        target = -(900 + m.layoutInfo.seasonsY - 140)
+        target = -(Det_LowerY() + m.layoutInfo.seasonsY - 140)
     else if (m.zone = "cast" or m.zone = "tabs" or m.zone = "orgs") and m.layoutInfo.castY >= 0
-        target = -(900 + m.layoutInfo.castY - 160)
+        target = -(Det_LowerY() + m.layoutInfo.castY - 160)
     else if m.zone = "orgs"
-        target = -(900 + m.layoutInfo.orgsY - 400)
+        target = -(Det_LowerY() + m.layoutInfo.orgsY - 400)
     end if
     m.page.translation = [0, target]
     m.statusLabel.visible = m.zone = "buttons" and not m.top.trailerPlaying
@@ -758,10 +764,34 @@ sub buildButtons()
             icon.translation = [20, 20]
         end if
         pill.width = width
-        m.buttons.Push({ id: d.id, pill: pill, icon: icon, label: label })
+        m.buttons.Push({ id: d.id, pill: pill, icon: icon, label: label, group: g, width: width, line: 0 })
     end for
+    Buttons_Place()
     if m.index >= m.buttons.Count() then m.index = 0
     paint()
+end sub
+
+function Det_LowerY() as integer
+    if m.lowerY = invalid then return 900
+    return m.lowerY
+end function
+
+sub Buttons_Place()
+    limit = 1660
+    x = 0
+    line = 0
+    lineX = [0, 0]
+    for each b in m.buttons
+        if line = 0 and x > 0 and x + b.width > limit then line = 1
+        b.line = line
+        b.group.translation = [lineX[line], line * 92]
+        lineX[line] = lineX[line] + b.width + 20
+        x = lineX[0]
+    end for
+    m.lowerY = 900
+    if line = 1 then m.lowerY = 992
+    m.lower.translation = [0, m.lowerY]
+    m.statusLabel.translation = [160, m.lowerY - 80]
 end sub
 
 sub paint()
@@ -787,7 +817,26 @@ function onKeyEvent(key as string, press as boolean) as boolean
         stopTrailer()
         return true
     end if
+    t = m.top.trailer
+    if t <> invalid and Str_Of(t.url) <> ""
+        m.trailerTimer.control = "stop"
+        m.trailerTimer.control = "start"
+    end if
     if m.zone <> "buttons" then return lowerKey(key)
+    if key = "down" and m.buttons.Count() > 0 and m.buttons[m.index].line = 0
+        for i = 0 to m.buttons.Count() - 1
+            if m.buttons[i].line = 1
+                m.index = i
+                paint()
+                return true
+            end if
+        end for
+    end if
+    if key = "up" and m.buttons.Count() > 0 and m.buttons[m.index].line = 1
+        m.index = 0
+        paint()
+        return true
+    end if
     if key = "down"
         if m.seasonNodes.Count() > 0
             m.zone = "seasons"
@@ -879,6 +928,13 @@ sub Opts_Build()
         acts.Push({ id: "seasonon", icon: "ic_episodes", label: L("Marcar temporada como vista") })
     end if
     if m.epIndex > 0 then acts.Push({ id: "prev", icon: "ic_check", label: L("Marcar anteriores de esta temporada como vistos") })
+    if m.top.extra.rateEp = true
+        if ToInt(e.mine, 0) > 0
+            acts.Push({ id: "rate", icon: "ic_star", label: L("Tu calificación") + "  " + ToInt(e.mine, 0).ToStr() + "/10" })
+        else
+            acts.Push({ id: "rate", icon: "ic_star", label: L("Calificar episodio") })
+        end if
+    end if
     acts.Push({ id: "play", icon: "ic_play", label: L("Reproducir") })
     acts.Push({ id: "manual", icon: "ic_sources", label: L("Reproducir manualmente") })
     if e.progress <> invalid and e.progress > 0.01 then acts.Push({ id: "restart", icon: "ic_replay", label: L("Desde el inicio") })

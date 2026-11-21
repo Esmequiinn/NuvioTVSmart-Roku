@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="RatePanel" extends="Group">
+    <interface>
+        <field id="data" type="assocarray" onChange="onData" />
+        <field id="result" type="assocarray" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/RatePanel.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x000000B8" />
+        <Group id="card" translation="[540,190]">
+            <Poster id="cardBg" width="840" height="700" uri="pkg:/images/card.9.png" blendColor="0x17171CF7" />
+            <Label id="kicker" translation="[0,48]" width="840" horizAlign="center" font="font:SmallBoldSystemFont" color="0xA9A9B8FF" />
+            <Label id="title" translation="[60,86]" width="720" horizAlign="center" wrap="true" maxLines="2" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+            <Label id="subtitle" translation="[60,0]" width="720" horizAlign="center" font="font:SmallSystemFont" color="0xA9A9B8FF" />
+            <Group id="scoreBox">
+                <Label id="score" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+                <Label id="scoreMax" font="font:MediumBoldSystemFont" color="0x77778AFF" text="/10" />
+            </Group>
+            <Group id="starsBox">
+                <Poster id="starsPill" uri="pkg:/images/pill.9.png" height="112" />
+                <Poster id="starsRing" uri="pkg:/images/iring.9.png" height="112" visible="false" />
+                <Group id="stars" translation="[36,20]" />
+            </Group>
+            <Label id="syncs" translation="[60,0]" width="720" horizAlign="center" font="font:SmallestSystemFont" color="0x8A8A99FF" />
+            <Group id="buttons" />
+        </Group>
+    </children>
+</component>

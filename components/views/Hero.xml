@@ -11,6 +11,7 @@
         <field id="trailer" type="assocarray" onChange="onTrailer" />
         <field id="muted" type="boolean" value="true" />
         <field id="immersive" type="boolean" value="false" alwaysNotify="true" />
+            <function name="Hero_Local" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/Config.brs" />
     <script type="text/brightscript" uri="pkg:/components/I18n.brs" />

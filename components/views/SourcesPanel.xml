@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="SourcesPanel" extends="Group">
+    <interface>
+        <field id="data" type="assocarray" onChange="onData" />
+        <field id="result" type="assocarray" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/SourcesPanel.brs" />
+    <children>
+        <Rectangle width="1920" height="1080" color="0x00000066" />
+        <Group translation="[1040,0]">
+            <Poster width="920" height="1080" uri="pkg:/images/card.9.png" blendColor="0x141419F7" />
+            <Label id="heading" translation="[48,52]" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+            <Group id="closeBtn" translation="[668,48]">
+                <Poster id="closePill" width="160" height="64" uri="pkg:/images/pill.9.png" />
+                <Label id="closeLabel" width="160" height="64" horizAlign="center" vertAlign="center" font="font:SmallBoldSystemFont" />
+            </Group>
+            <Label id="info" translation="[48,132]" width="780" font="font:SmallSystemFont" color="0xA9A9B8FF" />
+            <Group id="chipsClip" translation="[48,190]">
+                <Group id="chips" />
+            </Group>
+            <Group id="list" translation="[48,280]" />
+            <Label id="empty" translation="[48,300]" width="780" font="font:SmallSystemFont" color="0xA9A9B8FF" visible="false" />
+        </Group>
+    </children>
+</component>

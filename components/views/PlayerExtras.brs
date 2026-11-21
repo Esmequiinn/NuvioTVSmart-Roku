@@ -53,6 +53,15 @@ sub Ex_Init()
     m.statsBox = m.top.findNode("statsBox")
     m.statsBg = m.top.findNode("statsBg")
     m.statsText = m.top.findNode("statsText")
+    m.subSyncBox = m.top.findNode("subSyncBox")
+    m.subSyncBg = m.top.findNode("subSyncBg")
+    m.subSyncRing = m.top.findNode("subSyncRing")
+    m.subSyncTitle = m.top.findNode("subSyncTitle")
+    m.subSyncValue = m.top.findNode("subSyncValue")
+    m.subSyncNote = m.top.findNode("subSyncNote")
+    m.subSyncBtns = m.top.findNode("subSyncBtns")
+    m.subSyncTimer = m.top.findNode("subSyncTimer")
+    if m.subSyncTimer <> invalid then m.subSyncTimer.observeField("fire", "Ex_SubSyncClose")
     m.skipPill = Ex_PillMake(m.skipBg, 64)
     m.nextPill = Ex_PillMake(m.nextPlayBg, 64)
     Ex_PillSet(m.nextPill, 220, "0xFFFFFFFF")
@@ -98,6 +107,15 @@ sub Ex_Reset()
     m.cueIndex = 0
     m.subUrl = ""
     m.subTask = invalid
+    m.subDelayMs = 0
+    m.subDirty = true
+    m.subPreviewText = ""
+    m.subPreviewOn = false
+    m.subBarOn = false
+    m.subSyncIdx = 2
+    m.subSyncDefs = []
+    m.syncCapturedMs = 0
+    m.subStyleLocal = {}
     m.top.postActive = false
     if m.skipBtn <> invalid
         m.skipBtn.visible = false
@@ -106,6 +124,8 @@ sub Ex_Reset()
         m.stillBox.visible = false
         m.parentalBox.visible = false
         m.subLayer.visible = false
+        if m.subSyncBox <> invalid then m.subSyncBox.visible = false
+        if m.subSyncTimer <> invalid then m.subSyncTimer.control = "stop"
     end if
 end sub
 
@@ -117,6 +137,15 @@ end function
 
 sub Ex_OnInfo()
     Ex_Reset()
+    m.subDelayMs = ToInt(Ex_Info("subDelayMs", 0), 0)
+    rawStyle = Ex_Info("subStyle", {})
+    localStyle = {}
+    if type(rawStyle) = "roAssociativeArray"
+        for each k in rawStyle
+            localStyle[k] = rawStyle[k]
+        end for
+    end if
+    m.subStyleLocal = localStyle
     m.statsBox.visible = Bool_Of(Ex_Info("stats", false), false)
     m.exTimer.control = "start"
     Ex_StyleSubs()
@@ -347,6 +376,13 @@ sub Ex_Post(at0 as float, dur as float)
 end sub
 
 sub Ex_ShowPost(recs as object)
+    Ex_SubSyncClose()
+    Ex_SetSubPreview(false)
+    if m.panel <> invalid and m.panel.visible
+        m.panel.visible = false
+        m.panel.setFocus(false)
+        if m.top.active then m.top.setFocus(true)
+    end if
     m.postShown = true
     m.postItems = recs
     m.postIndex = 0
@@ -377,13 +413,13 @@ end sub
 
 sub Ex_PostFill()
     r = m.postItems[m.postIndex]
-    bg = Str_Of(r.background)
+    bg = Img_Sized(Str_Of(r.background), "w1280")
     if bg = "" then bg = Str_Of(r.poster)
     m.postBg.uri = bg
     m.postTitle.text = Str_Of(r.name)
     m.postTitle.visible = true
     m.postLogo.visible = false
-    m.postLogo.uri = Str_Of(r.logo)
+    m.postLogo.uri = Img_Sized(Str_Of(r.logo), "w500")
     Ex_PostLogo()
     parts = []
     if Str_Of(r.rating) <> "" then parts.Push("IMDb " + Str_Of(r.rating))
@@ -548,6 +584,7 @@ end sub
 function Ex_OverlayKey(key as string) as boolean
     if m.stillOn then return Ex_StillKey(key)
     if Ex_PostKey(key) then return true
+    if Bool_Of(m.subBarOn, false) then return Ex_SubSyncKey(key)
     if m.controls.visible then return false
     if m.skipBtn.visible and key = "OK"
         if m.skipSeg <> invalid then Ex_DoSkip(m.skipSeg)
@@ -574,10 +611,21 @@ sub Ex_OnControls(visible as boolean)
         if visible then m.skipShownAt = CreateObject("roTimespan")
         Ex_PaintSkip()
     end if
+    m.subDirty = true
+    if Bool_Of(m.started, false) and (m.cues.Count() > 0 or Str_Of(m.subPreviewText) <> "")
+        Ex_Subs(settledPosition())
+    end if
 end sub
 
 sub Ex_OnStill_Run()
     if not m.top.stillWatching then return
+    Ex_SubSyncClose()
+    Ex_SetSubPreview(false)
+    if m.panel <> invalid and m.panel.visible
+        m.panel.visible = false
+        m.panel.setFocus(false)
+        if m.top.active then m.top.setFocus(true)
+    end if
     info = m.top.info
     m.stillOn = true
     m.stillIndex = 0
@@ -587,7 +635,7 @@ sub Ex_OnStill_Run()
     m.controls.visible = false
     m.pauseScreen.visible = false
     if m.video.state = "playing" then m.video.control = "pause"
-    m.stillBg.uri = Str_Of(info.background)
+    m.stillBg.uri = Img_Sized(Str_Of(info.background), "w1280")
     m.stillShow.text = Str_Of(info.title)
     m.stillShow.visible = true
     m.stillLogo.visible = false
@@ -667,7 +715,8 @@ sub Ex_StillChoose(yes as boolean)
 end sub
 
 sub Ex_StyleSubs()
-    style = Ex_Info("subStyle", {})
+    style = m.subStyleLocal
+    if type(style) <> "roAssociativeArray" or style.Count() = 0 then style = Ex_Info("subStyle", {})
     if type(style) <> "roAssociativeArray" then style = {}
     sizes = { small: 34, normal: 42, large: 52, xlarge: 62 }
     size = sizes[Str_Of(style.size)]
@@ -690,11 +739,301 @@ sub Ex_StyleSubs()
     m.subBg.blendColor = b
     m.subBg.visible = b <> "0x00000000"
     m.subBottom = 1000 - ToInt(style.offset, 0) * 20
+    m.subDirty = true
+    Ex_NativeCaptionStyle(style)
+    if Bool_Of(m.started, false) and (m.cues.Count() > 0 or Str_Of(m.subPreviewText) <> "")
+        Ex_Subs(settledPosition())
+    end if
+end sub
+
+sub Ex_NativeCaptionStyle(style as object)
+    if m.video = invalid then return
+    sizes = { small: "Small", normal: "Medium", large: "Large", xlarge: "Extra Large" }
+    colors = { white: "White", yellow: "Yellow", cyan: "Cyan", green: "Green", gray: "White" }
+    size = sizes[Str_Of(style.size)]
+    if size = invalid then size = "Medium"
+    color = colors[Str_Of(style.color)]
+    if color = invalid then color = "White"
+    cs = { "Text/Size": size, "Text/Color": color, "Text/Font": "Default" }
+    if Str_Of(style.color) = "gray" then cs["Text/Opacity"] = "75%" else cs["Text/Opacity"] = "100%"
+    if Str_Of(style.edge) = "none" then cs["Text/Effect"] = "None" else cs["Text/Effect"] = "Drop shadow (right)"
+    bg = Str_Of(style.bg)
+    if bg = "solid"
+        cs["Background/Color"] = "Black"
+        cs["Background/Opacity"] = "100%"
+    else if bg = "soft"
+        cs["Background/Color"] = "Black"
+        cs["Background/Opacity"] = "50%"
+    else
+        cs["Background/Opacity"] = "0%"
+    end if
+    cs["Window/Opacity"] = "0%"
+    if m.video.hasField("captionStyle") then m.video.captionStyle = cs
+end sub
+
+sub Ex_SetSubStyleProp(fieldKey as string, value as dynamic)
+    if type(m.subStyleLocal) <> "roAssociativeArray" then m.subStyleLocal = {}
+    mapField = { subSize: "size", subColor: "color", subBg: "bg", subEdge: "edge", subBold: "bold", subOffset: "offset" }
+    localKey = Str_Of(mapField[fieldKey])
+    if localKey <> ""
+        m.subStyleLocal[localKey] = value
+        Ex_StyleSubs()
+        m.top.event = { type: "subStyle", key: fieldKey, value: value }
+    end if
+end sub
+
+sub Ex_SetSubPreview(on as boolean)
+    m.subPreviewOn = on
+    if on
+        m.subPreviewText = L("Subtítulos de ejemplo · Nuvio TV")
+    else
+        m.subPreviewText = ""
+    end if
+    m.subDirty = true
+    if Bool_Of(m.started, false) and m.video <> invalid then Ex_Subs(settledPosition())
+end sub
+
+function Ex_FormatDelay(delayMs as integer, short = false as boolean) as string
+    if delayMs = 0
+        if short then return "0.0 s"
+        return "0.0 s (" + L("Sin ajuste") + ")"
+    end if
+    absMs = Abs(delayMs)
+    tenths = Int(absMs / 100.0 + 0.5)
+    whole = Int(tenths / 10)
+    remTenths = tenths - whole * 10
+    signStr = "+"
+    dirText = L("más tarde")
+    if delayMs < 0
+        signStr = "-"
+        dirText = L("antes")
+    end if
+    secStr = signStr + whole.ToStr() + "." + remTenths.ToStr() + " s"
+    if short then return secStr
+    return secStr + " (" + signStr + absMs.ToStr() + " ms · " + dirText + ")"
+end function
+
+function Ex_DelayBadge() as string
+    if Ex_SubActive() <> "" then return Ex_FormatDelay(ToInt(m.subDelayMs, 0), true)
+    if m.video <> invalid and m.video.globalCaptionMode = "On" then return L("Integrado")
+    return ""
+end function
+
+sub Ex_SetSubDelay(delayMs as integer, persist = true as boolean)
+    clamped = delayMs
+    if clamped > 180000 then clamped = 180000
+    if clamped < -180000 then clamped = -180000
+    m.subDelayMs = clamped
+    m.subDirty = true
+    if Bool_Of(m.started, false) and m.video <> invalid then Ex_Subs(settledPosition())
+    if persist
+        m.top.event = { type: "subDelay", videoId: Str_Of(Ex_Info("videoId", "")), delayMs: clamped }
+    end if
+    if Bool_Of(m.subBarOn, false) then Ex_SubSyncPaint()
+end sub
+
+function Ex_FmtCueTime(sec as float) as string
+    s = Int(sec)
+    if s < 0 then s = 0
+    tenths = Int((sec - s) * 10)
+    if tenths < 0 then tenths = 0
+    if tenths > 9 then tenths = 9
+    return Fmt_Time(s) + "." + tenths.ToStr()
+end function
+
+function Ex_SyncLineWindow(cues as object, capturedMs as integer, delayMs as integer) as object
+    if cues = invalid or cues.Count() = 0 then return { focus: 0, entries: [] }
+    targetSec = (capturedMs - delayMs) / 1000.0
+    bestIdx = 0
+    bestDist = Abs(cues[0].s - targetSec)
+    for i = 1 to cues.Count() - 1
+        d = Abs(cues[i].s - targetSec)
+        if d < bestDist
+            bestDist = d
+            bestIdx = i
+        end if
+    end for
+    fromIdx = bestIdx - 24
+    if fromIdx < 0 then fromIdx = 0
+    toIdx = bestIdx + 35
+    if toIdx >= cues.Count() then toIdx = cues.Count() - 1
+    entries = []
+    for i = fromIdx to toIdx
+        c = cues[i]
+        lineText = Str_Of(c.t).Replace(chr(13), " ").Replace(chr(10), " ").Trim()
+        if Len(lineText) > 64 then lineText = Left(lineText, 61).Trim() + "..."
+        entries.Push({
+            cueIdx: i
+            label: Ex_FmtCueTime(c.s) + "  ·  " + lineText
+        })
+    end for
+    return { focus: bestIdx - fromIdx, entries: entries }
+end function
+
+sub Ex_SubSyncOpen()
+    if m.subSyncBox = invalid then return
+    m.controls.visible = false
+    m.hideTimer.control = "stop"
+    m.subBarOn = true
+    m.subSyncTitle.text = L("Sincronización de subtítulos")
+    m.subSyncTitle.font.size = 32
+    m.subSyncValue.font.size = 30
+    m.subSyncNote.font.size = 22
+    m.subSyncBtns.removeChildrenIndex(m.subSyncBtns.getChildCount(), 0)
+    m.subSyncDefs = []
+    customOn = Ex_SubActive() <> ""
+    if customOn
+        m.subSyncNote.text = L("Positivo = subtítulos después  ·  Negativo = antes")
+        defs = [
+            { id: "-500", label: "-0.5 s" }
+            { id: "-100", label: "-0.1 s" }
+            { id: "+100", label: "+0.1 s" }
+            { id: "+500", label: "+0.5 s" }
+            { id: "sync", label: L("Sincronizar línea") }
+            { id: "reset", label: L("Restablecer") }
+            { id: "close", label: L("Cerrar") }
+        ]
+        if m.subSyncIdx < 0 or m.subSyncIdx >= defs.Count() then m.subSyncIdx = 2
+    else
+        if m.video <> invalid and m.video.globalCaptionMode = "On"
+            m.subSyncNote.text = L("Solo disponible para subtítulos externos (SRT/VTT) en Roku.")
+        else
+            m.subSyncNote.text = L("Carga un subtítulo externo (SRT/VTT) primero.")
+        end if
+        defs = [
+            { id: "subs", label: L("Subtítulos") }
+            { id: "close", label: L("Cerrar") }
+        ]
+        m.subSyncIdx = 0
+    end if
+    x = 0
+    for each d in defs
+        g = m.subSyncBtns.createChild("Group")
+        g.translation = [x, 0]
+        bg = Ex_PillMake(g, 64)
+        t = g.createChild("Label")
+        t.font = "font:SmallBoldSystemFont"
+        t.font.size = 24
+        t.height = 64
+        t.vertAlign = "center"
+        t.text = d.label
+        w = Int(t.boundingRect().width) + 48
+        if w < 116 then w = 116
+        t.width = w
+        t.horizAlign = "center"
+        Ex_PillSet(bg, w, "0xFFFFFF24")
+        m.subSyncDefs.Push({ id: d.id, bg: bg, text: t, w: w })
+        x = x + w + 14
+    end for
+    m.subSyncBox.visible = true
+    Ex_SubSyncPaint()
+    if m.subSyncTimer <> invalid
+        m.subSyncTimer.control = "stop"
+        m.subSyncTimer.control = "start"
+    end if
+end sub
+
+sub Ex_SubSyncClose()
+    m.subBarOn = false
+    if m.subSyncBox <> invalid then m.subSyncBox.visible = false
+    if m.subSyncTimer <> invalid then m.subSyncTimer.control = "stop"
+end sub
+
+sub Ex_SubSyncPaint()
+    if m.subSyncBox = invalid then return
+    if Ex_SubActive() <> ""
+        m.subSyncValue.text = Ex_FormatDelay(ToInt(m.subDelayMs, 0), false)
+    else
+        m.subSyncValue.text = L("No disponible")
+    end if
+    m.subSyncValue.color = m.top.accent
+    for i = 0 to m.subSyncDefs.Count() - 1
+        b = m.subSyncDefs[i]
+        on = i = m.subSyncIdx
+        if on
+            Ex_PillSet(b.bg, b.w, "0xFFFFFFFF")
+            b.text.color = "0x0C0C0FFF"
+        else
+            Ex_PillSet(b.bg, b.w, "0xFFFFFF24")
+            b.text.color = "0xFFFFFFFF"
+        end if
+    end for
+end sub
+
+function Ex_SubSyncKey(key as string) as boolean
+    if key = "play"
+        togglePlay()
+        if m.subSyncTimer <> invalid
+            m.subSyncTimer.control = "stop"
+            m.subSyncTimer.control = "start"
+        end if
+        return true
+    end if
+    if m.subSyncTimer <> invalid
+        m.subSyncTimer.control = "stop"
+        m.subSyncTimer.control = "start"
+    end if
+    if key = "back" or key = "options"
+        Ex_SubSyncClose()
+        return true
+    else if key = "left" and m.subSyncIdx > 0
+        m.subSyncIdx = m.subSyncIdx - 1
+        Ex_SubSyncPaint()
+        return true
+    else if key = "right" and m.subSyncIdx < m.subSyncDefs.Count() - 1
+        m.subSyncIdx = m.subSyncIdx + 1
+        Ex_SubSyncPaint()
+        return true
+    else if key = "rewind" and Ex_SubActive() <> ""
+        Ex_SetSubDelay(ToInt(m.subDelayMs, 0) - 500, true)
+        return true
+    else if key = "fastforward" and Ex_SubActive() <> ""
+        Ex_SetSubDelay(ToInt(m.subDelayMs, 0) + 500, true)
+        return true
+    else if key = "OK" and m.subSyncIdx >= 0 and m.subSyncIdx < m.subSyncDefs.Count()
+        act = m.subSyncDefs[m.subSyncIdx].id
+        if act = "-500"
+            Ex_SetSubDelay(ToInt(m.subDelayMs, 0) - 500, true)
+        else if act = "-100"
+            Ex_SetSubDelay(ToInt(m.subDelayMs, 0) - 100, true)
+        else if act = "+100"
+            Ex_SetSubDelay(ToInt(m.subDelayMs, 0) + 100, true)
+        else if act = "+500"
+            Ex_SetSubDelay(ToInt(m.subDelayMs, 0) + 500, true)
+        else if act = "reset"
+            Ex_SetSubDelay(0, true)
+        else if act = "sync"
+            Ex_StartSyncLine()
+        else if act = "subs"
+            Ex_SubSyncClose()
+            openSubs("", -1)
+        else if act = "close"
+            Ex_SubSyncClose()
+        end if
+        return true
+    end if
+    return true
+end function
+
+sub Ex_StartSyncLine()
+    if Ex_SubActive() = "" or m.cues.Count() = 0
+        m.top.event = { type: "subError", message: L("Este subtítulo no tiene líneas cargadas.") }
+        return
+    end if
+    m.syncCapturedMs = Int(settledPosition() * 1000.0)
+    Ex_SubSyncClose()
+    openSyncLinePicker(m.syncCapturedMs)
 end sub
 
 function Ex_UseCustom(track as string) as boolean
     if not Bool_Of(Ex_Info("customSubs", true), true) then return false
-    return LCase(Left(track, 4)) = "http"
+    low = LCase(track.Trim())
+    if Left(low, 4) <> "http" then return false
+    q = Instr(1, low, "?")
+    pathOnly = low
+    if q > 0 then pathOnly = Left(low, q - 1)
+    if Right(pathOnly, 4) = ".ass" or Right(pathOnly, 4) = ".ssa" then return false
+    return true
 end function
 
 sub Ex_SubSelect(track as string)
@@ -705,10 +1044,11 @@ sub Ex_SubSelect(track as string)
     end if
     if Ex_UseCustom(track)
         m.video.globalCaptionMode = "Off"
-        if m.subUrl = track then return
+        if m.subUrl = track and (m.cues.Count() > 0 or m.subTask <> invalid) then return
         m.subUrl = track
         m.cues = []
         m.cueIndex = 0
+        m.subDirty = true
         m.subLayer.visible = false
         task = CreateObject("roSGNode", "PlayerDataTask")
         task.mode = "subs"
@@ -727,7 +1067,8 @@ sub Ex_SubOff()
     m.subUrl = ""
     m.cues = []
     m.subTask = invalid
-    m.subLayer.visible = false
+    m.subDirty = true
+    if m.subLayer <> invalid then m.subLayer.visible = false
 end sub
 
 sub Ex_OnSubsLoaded(event as object)
@@ -736,50 +1077,86 @@ sub Ex_OnSubsLoaded(event as object)
     m.subTask = invalid
     r = task.result
     cues = invalid
-    if r <> invalid then cues = r.cues
+    errMsg = ""
+    if r <> invalid
+        cues = r.cues
+        errMsg = Str_Of(r.error)
+    end if
     if type(cues) <> "roArray" or cues.Count() = 0
         url = m.subUrl
         m.subUrl = ""
+        if errMsg = "invalid_subtitle"
+            m.subLayer.visible = false
+            m.top.event = { type: "subError", message: L("El archivo de subtítulos no es válido o no está disponible.") }
+            return
+        end if
         m.video.subtitleTrack = url
         m.video.globalCaptionMode = "On"
         return
     end if
     m.cues = cues
     m.cueIndex = 0
+    m.subDirty = true
+    Ex_Subs(settledPosition())
 end sub
 
 function Ex_SubActive() as string
-    return m.subUrl
+    return Str_Of(m.subUrl)
 end function
 
-sub Ex_Subs(at0 as float)
-    if m.cues.Count() = 0
-        if m.subLayer.visible then m.subLayer.visible = false
-        return
-    end if
-    i = m.cueIndex
-    if i >= m.cues.Count() then i = m.cues.Count() - 1
+function Ex_CueAt(cues as object, startIdx as integer, at0 as float, delayMs as integer) as dynamic
+    if cues = invalid or cues.Count() = 0 then return invalid
+    effectiveAt = at0 - (delayMs / 1000.0)
+    i = startIdx
+    if i >= cues.Count() then i = cues.Count() - 1
     if i < 0 then i = 0
-    if m.cues[i].s > at0
-        while i > 0 and m.cues[i].s > at0
+    if cues[i].s > effectiveAt
+        while i > 0 and cues[i].s > effectiveAt
             i = i - 1
         end while
     else
-        while i < m.cues.Count() - 1 and m.cues[i + 1].s <= at0
+        while i < cues.Count() - 1 and cues[i + 1].s <= effectiveAt
             i = i + 1
         end while
     end if
     m.cueIndex = i
-    cue = m.cues[i]
-    if at0 >= cue.s and at0 <= cue.e
-        if m.subText.text <> cue.t
-            m.subText.text = cue.t
-            m.subShadow.text = cue.t
+    cue = cues[i]
+    if effectiveAt >= cue.s and effectiveAt <= cue.e then return cue
+    return invalid
+end function
+
+function Ex_CalcSyncDelay(capturedMs as integer, cueStartSec as float) as integer
+    cueStartMs = Int(cueStartSec * 1000.0 + 0.5)
+    delayMs = capturedMs - cueStartMs - 300
+    if delayMs > 180000 then delayMs = 180000
+    if delayMs < -180000 then delayMs = -180000
+    return delayMs
+end function
+
+sub Ex_Subs(at0 as float)
+    if m.subLayer = invalid then return
+    if m.postBox <> invalid and m.postBox.visible
+        if m.subLayer.visible then m.subLayer.visible = false
+        return
+    end if
+    cue = Ex_CueAt(m.cues, ToInt(m.cueIndex, 0), at0, ToInt(m.subDelayMs, 0))
+    displayText = ""
+    if cue <> invalid
+        displayText = cue.t
+    else if Str_Of(m.subPreviewText) <> ""
+        displayText = Str_Of(m.subPreviewText)
+    end if
+    if displayText <> ""
+        if m.subText.text <> displayText or Bool_Of(m.subDirty, false) or not m.subLayer.visible
+            m.subText.height = 0
+            m.subShadow.height = 0
+            m.subText.text = displayText
+            m.subShadow.text = displayText
             rect = m.subText.boundingRect()
             h = Int(rect.height)
             w = Int(rect.width)
             bottom = m.subBottom
-            if m.controls.visible then bottom = 680
+            if m.controls.visible and bottom > 680 then bottom = 680
             m.subText.translation = [160, bottom - h]
             m.subText.height = h
             m.subShadow.height = h
@@ -787,11 +1164,13 @@ sub Ex_Subs(at0 as float)
             m.subBg.width = w + 48
             m.subBg.height = h + 20
             m.subBg.translation = [960 - Int((w + 48) / 2), bottom - h - 10]
+            m.subDirty = false
         end if
         m.subLayer.visible = true
     else if m.subLayer.visible
         m.subLayer.visible = false
         m.subText.text = ""
+        m.subShadow.text = ""
     end if
 end sub
 

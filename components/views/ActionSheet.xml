@@ -4,6 +4,7 @@
         <field id="config" type="assocarray" onChange="render" />
         <field id="chosen" type="string" alwaysNotify="true" />
         <field id="closed" type="boolean" alwaysNotify="true" />
+        <field id="focusIndex" type="integer" value="0" />
     </interface>
     <script type="text/brightscript" uri="pkg:/components/views/ActionSheet.brs" />
     <children>

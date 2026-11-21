@@ -34,12 +34,12 @@ sub onData()
     m.toW = d.toW
     m.top.translation = [d.x, d.y]
     m.top.h = d.h
-    m.art.uri = Str_Of(d.background)
+    m.art.uri = Img_Sized(Str_Of(d.background), "w1280")
     m.title.text = Str_Of(d.title)
     m.logoReady = false
     m.logo.visible = false
     m.title.visible = false
-    m.logo.uri = Str_Of(d.logo)
+    m.logo.uri = Img_Sized(Str_Of(d.logo), "w500")
     m.video.visible = false
     m.caps.visible = Mask_NeedCaps()
     m.video.control = "stop"
@@ -124,6 +124,7 @@ sub onOpen()
     if not m.top.open
         setShift(0)
         m.grow.control = "stop"
+        m.wantVideo = false
         m.video.control = "stop"
         m.video.visible = false
         m.caps.visible = false
@@ -133,7 +134,13 @@ end sub
 
 sub onTrailer()
     t = m.top.trailer
-    if t = invalid or Str_Of(t.url) = "" or not m.top.visible then return
+    if t = invalid or Str_Of(t.url) = "" or not m.top.visible
+        m.wantVideo = false
+        m.video.control = "stop"
+        m.video.visible = false
+        return
+    end if
+    m.wantVideo = true
     m.video.mute = m.top.muted
     m.video.content = Trailer_Content(t)
     m.video.control = "play"
@@ -141,6 +148,11 @@ end sub
 
 sub onVideoState()
     state = m.video.state
+    if state = "playing" and (not Bool_Of(m.wantVideo, false) or not m.top.open)
+        m.video.control = "stop"
+        m.video.visible = false
+        return
+    end if
     if state = "playing"
         m.video.visible = true
     else if state = "finished" or state = "error"
