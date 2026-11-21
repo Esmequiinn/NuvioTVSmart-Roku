@@ -23,6 +23,10 @@
     <script type="text/brightscript" uri="pkg:/components/Debrid.brs" />
     <script type="text/brightscript" uri="pkg:/components/Servers.brs" />
     <script type="text/brightscript" uri="pkg:/components/Connected.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Cloud.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Ratings.brs" />
+    <script type="text/brightscript" uri="pkg:/components/RatingsUi.brs" />
+    <script type="text/brightscript" uri="pkg:/components/CloudUi.brs" />
     <children>
         <Rectangle width="1920" height="1080" color="0x0C0C0FFF" />
         <Hero id="hero" />
@@ -161,6 +165,7 @@
         <AmbientMode id="ambient" visible="false" />
         <UpdatePrompt id="updatePrompt" visible="false" />
         <ActionSheet id="sheet" visible="false" />
+        <RatePanel id="ratePanel" visible="false" />
         <Toast id="toast" />
         <Group id="loading" visible="false">
             <Rectangle width="1920" height="1080" color="0x000000FF" opacity="0.7" />

@@ -441,8 +441,9 @@ sub Nuvio_PullCollections(pid as string, index as integer)
         row = invalid
         if resp.Count() > 0 then row = resp[0]
     end if
+    if type(row) <> "roAssociativeArray" then return
     raw = row
-    if type(row) = "roAssociativeArray" and row.collections_json <> invalid then raw = row.collections_json
+    if row.collections_json <> invalid then raw = row.collections_json
     if IsStr(raw) then raw = Json_Parse(raw)
     if type(raw) = "roAssociativeArray" and type(raw.collections) = "roArray" then raw = raw.collections
     out = []
@@ -822,7 +823,7 @@ sub Nuvio_PullSettings(pid as string, index as integer, primary as boolean)
             end if
         end if
         if m.credDebrid <> invalid
-            for each pair in [["torbox", "torboxKey", "torboxFrom"], ["premiumize", "premiumizeKey", "premiumizeFrom"]]
+            for each pair in [["torbox", "torboxKey", "torboxFrom"], ["premiumize", "premiumizeKey", "premiumizeFrom"], ["realdebrid", "realdebridKey", "realdebridFrom"]]
                 v = Str_Of(m.credDebrid[pair[0]])
                 if v <> ""
                     if Str_Of(integ[pair[1]]) = "" then integ["debridOn"] = true
@@ -954,6 +955,18 @@ sub Nuvio_MapFeatures(prefs as object, f as object, integ as object, pid as stri
         style = LCase(Str_Of(ly.continue_watching_card_style))
         if style = "poster" then prefs["cwStyle"] = "poster"
         if style = "card" or style = "wide" then prefs["cwStyle"] = "landscape"
+        Nuvio_SetBool(prefs, "cwThumbs", ly.use_episode_thumbnails_in_cw)
+        Nuvio_SetBool(prefs, "cwUnaired", ly.show_unaired_next_up)
+        Nuvio_SetBool(prefs, "cwFurthest", ly.next_up_from_furthest_episode)
+        Nuvio_SetBool(prefs, "cwBlur", ly.blur_continue_watching_next_up)
+        sortName = UCase(Str_Of(ly.continue_watching_sort_mode))
+        if sortName = "DEFAULT" then prefs["cwSort"] = "default"
+        if sortName = "STREAMING_STYLE" then prefs["cwSort"] = "streaming"
+        if sortName = "SPLIT_UPCOMING" then prefs["cwSort"] = "split"
+        clickName = UCase(Str_Of(ly.continue_watching_click_action))
+        if clickName = "STREAM" then prefs["cwOpen"] = "play"
+        if clickName = "DETAILS" then prefs["cwOpen"] = "details"
+        if clickName = "DETAILS_FOR_UPCOMING" then prefs["cwOpen"] = "upcoming"
         if IsStr(ly.custom_poster_url_pattern) then prefs["customPoster"] = ly.custom_poster_url_pattern.Trim()
         if IsStr(ly.custom_poster_enabled_screens)
             screens = ly.custom_poster_enabled_screens.Trim()
@@ -1424,7 +1437,7 @@ function Nuvio_PushSettings(pid as string, index as integer) as boolean
 end function
 
 function Nuvio_PushKeys() as object
-    return ["audioLang", "audioLang2", "subLang", "subLang2", "forcedSubs", "pauseOverlay", "clock", "autoNext", "bingeNext", "bingeReuse", "reuseLink", "reuseHours", "autoplayMode", "autoplayRegex", "autoplayTimeout", "cwStyle", "customPoster", "posterScreens", "expandPoster", "expandDelay", "expandTrailer", "expandMuted", "trailerTarget", "trailerButton", "trailerAutoplay", "trailerDelay", "tmdbLanguage", "sizeBadges", "addonLogo", "badgePlace", "accent", "skipIntro", "autoSkipIntro", "autoSkipRecap", "autoSkipOutro", "autoSkipCredits", "preloadNext", "bingeFallback", "stillWatching", "stillCount", "nextMode", "nextPct", "nextMin", "postPlay", "postPct", "parentalGuide", "stripSdh", "onlyPrefSubs", "discoverLocation"]
+    return ["audioLang", "audioLang2", "subLang", "subLang2", "forcedSubs", "pauseOverlay", "clock", "autoNext", "bingeNext", "bingeReuse", "reuseLink", "reuseHours", "autoplayMode", "autoplayRegex", "autoplayTimeout", "cwStyle", "customPoster", "posterScreens", "expandPoster", "expandDelay", "expandTrailer", "expandMuted", "trailerTarget", "trailerButton", "trailerAutoplay", "trailerDelay", "tmdbLanguage", "sizeBadges", "addonLogo", "badgePlace", "accent", "skipIntro", "autoSkipIntro", "autoSkipRecap", "autoSkipOutro", "autoSkipCredits", "preloadNext", "bingeFallback", "stillWatching", "stillCount", "nextMode", "nextPct", "nextMin", "postPlay", "postPct", "parentalGuide", "stripSdh", "onlyPrefSubs", "discoverLocation", "cwThumbs", "cwUnaired", "cwFurthest", "cwBlur", "cwSort", "cwOpen"]
 end function
 
 function Nuvio_Same(a as dynamic, b as dynamic) as boolean
@@ -1529,6 +1542,22 @@ function Nuvio_WriteSetting(f as object, k as string, p as object) as boolean
         t = ToInt(v, 3)
         if t < 0 then t = 2147483647
         Nuvio_Feature(f, "player_settings").stream_auto_play_timeout_seconds = t
+    else if k = "cwThumbs"
+        Nuvio_Feature(f, "layout_settings").use_episode_thumbnails_in_cw = Bool_Of(v, true)
+    else if k = "cwUnaired"
+        Nuvio_Feature(f, "layout_settings").show_unaired_next_up = Bool_Of(v, true)
+    else if k = "cwFurthest"
+        Nuvio_Feature(f, "layout_settings").next_up_from_furthest_episode = Bool_Of(v, true)
+    else if k = "cwBlur"
+        Nuvio_Feature(f, "layout_settings").blur_continue_watching_next_up = Bool_Of(v, false)
+    else if k = "cwSort"
+        sorts = { default: "DEFAULT", streaming: "STREAMING_STYLE", split: "SPLIT_UPCOMING" }
+        if not sorts.DoesExist(Str_Of(v)) then return false
+        Nuvio_Feature(f, "layout_settings").continue_watching_sort_mode = sorts[Str_Of(v)]
+    else if k = "cwOpen"
+        opens = { play: "STREAM", details: "DETAILS", upcoming: "DETAILS_FOR_UPCOMING" }
+        if not opens.DoesExist(Str_Of(v)) then return false
+        Nuvio_Feature(f, "layout_settings").continue_watching_click_action = opens[Str_Of(v)]
     else if k = "cwStyle"
         if Str_Of(v) = "poster" then Nuvio_Feature(f, "layout_settings").continue_watching_card_style = "POSTER" else Nuvio_Feature(f, "layout_settings").continue_watching_card_style = "CARD"
     else if k = "customPoster"
@@ -1758,7 +1787,7 @@ function Nuvio_MdbCredential(index as integer) as dynamic
     count = 0
     if type(credentials) = "roArray"
         m.credTmdb = ""
-        m.credDebrid = { torbox: "", premiumize: "" }
+        m.credDebrid = { torbox: "", premiumize: "", realdebrid: "" }
         for each c in credentials
             if type(c) = "roAssociativeArray"
                 count = count + 1
@@ -1771,6 +1800,7 @@ function Nuvio_MdbCredential(index as integer) as dynamic
                 if provider = "tmdb" then m.credTmdb = key
                 if provider = "debrid:torbox" then m.credDebrid.torbox = key
                 if provider = "debrid:premiumize" then m.credDebrid.premiumize = key
+                if provider = "debrid:realdebrid" or provider = "debrid:real-debrid" then m.credDebrid.realdebrid = key
                 if provider = "mdblist"
                     seen = true
                     if key <> "" then found = key
@@ -1788,6 +1818,8 @@ end function
 
 function NextUp_Fresh(watched as object, busy as object) as object
     now = CreateObject("roDateTime").AsSeconds()
+    furthest = Bool_Of(St_Pref("cwFurthest"), true)
+    unaired = Bool_Of(St_Pref("cwUnaired"), true)
     best = {}
     for each key in watched
         parts = key.Split(":")
@@ -1806,7 +1838,8 @@ function NextUp_Fresh(watched as object, busy as object) as object
             if s > 0 and ep > 0 and at > 0 and now - at < 2592000 and Left(id, 2) = "tt" and not busy.DoesExist(id)
                 cur = best[id]
                 better = cur = invalid
-                if not better then better = s > cur.s or (s = cur.s and ep > cur.e)
+                if not better and furthest then better = s > cur.s or (s = cur.s and ep > cur.e)
+                if not better and not furthest then better = at > cur.at
                 if better then best[id] = { id: id, s: s, e: ep, at: at }
             end if
         end if
@@ -1840,7 +1873,7 @@ function NextUp_Fresh(watched as object, busy as object) as object
                     ve = ToInt(v.episode, 0)
                     after = vs > sd.s or (vs = sd.s and ve > sd.e)
                     released = Left(Str_Of(v.released), 10)
-                    aired = released = "" or released <= today
+                    aired = released = "" or released <= today or unaired
                     seen = watched.DoesExist(St_WatchedKey(sd.id, vs, ve))
                     if vs > 0 and ve > 0 and after and aired and not seen
                         if pick = invalid
@@ -1860,7 +1893,7 @@ function NextUp_Fresh(watched as object, busy as object) as object
                 if name <> "" then label = label + "  " + name
                 vid = Str_Of(pick.id)
                 if vid = "" then vid = sd.id + ":" + ps.ToStr() + ":" + pe.ToStr()
-                fresh.Push({ metaId: sd.id, videoId: vid, kind: "series", title: Str_Of(meta.name), poster: Str_Of(meta.poster), background: Str_Of(meta.background), episode: label, thumb: Str_Of(pick.thumbnail), altIds: [vid, sd.id + ":" + ps.ToStr() + ":" + pe.ToStr()], position: 0, duration: 0, nextUp: true, season: ps, ep: pe, updated: sd.at })
+                fresh.Push({ metaId: sd.id, videoId: vid, kind: "series", title: Str_Of(meta.name), poster: Str_Of(meta.poster), background: Str_Of(meta.background), episode: label, thumb: Str_Of(pick.thumbnail), altIds: [vid, sd.id + ":" + ps.ToStr() + ":" + pe.ToStr()], position: 0, duration: 0, nextUp: true, season: ps, ep: pe, updated: sd.at, released: Left(Str_Of(pick.released), 10) })
             end if
         end if
     end for

@@ -35,6 +35,25 @@ sub onSheetChosen()
         Options_RunPoster(choice, data)
     else if handler = "party"
         Party_RunMenu(choice)
+    else if handler = "rateSource"
+        if choice <> ""
+            integ = St_Integrations()
+            integ["rateSource"] = choice
+            if choice = "off" then integ["rateSource"] = ""
+            St_SaveIntegrations(integ)
+            refreshSettings()
+            Rate_Refresh(true)
+        end if
+        focusCurrent()
+    else if handler = "moreSource"
+        if choice <> ""
+            St_SetPref("moreSource", choice)
+            m.metaCache = {}
+            refreshSettings()
+        end if
+        focusCurrent()
+    else if handler = "rate"
+        Rate_Choose(choice, data)
     else if handler = "tracking"
         if choice = "trakt" or choice = "simkl" or choice = "mdblist" then Tracking_Disconnect(choice)
         focusCurrent()
@@ -86,7 +105,7 @@ function Options_FocusedItem() as dynamic
     item = getRowItem(rows, focus)
     if item = invalid then return invalid
     row = rows.content.getChild(focus[0])
-    return { item: item, row: row, rows: rows, cw: row <> invalid and row.id = "cw" }
+    return { item: item, row: row, rows: rows, cw: Cw_IsRow(row) }
 end function
 
 function Options_Open() as boolean
@@ -98,6 +117,7 @@ function Options_Open() as boolean
         items = [{ id: "details", label: L("Ir a detalles") }]
         if Str_Of(St_Pref("autoplayMode")) <> "manual" or Bool_Of(St_Pref("reuseLink"), false) then items.Push({ id: "manual", label: L("Reproducir manualmente") })
         items.Push({ id: "restart", label: L("Empezar desde el principio") })
+        items.Push({ id: "watched", label: L("Marcar como visto") })
         items.Push({ id: "remove", label: L("Eliminar") })
         Sheet_Open({ title: item.title, subtitle: L("Elige qué hacer con este elemento."), items: items, style: "tv" }, "cw", target)
         return true
@@ -136,6 +156,8 @@ sub Options_RunContinue(choice as string, target as object)
         m.ctx.direct = true
         m.ctx.restartSame = true
         runDetailAction("restart")
+    else if choice = "watched"
+        Cw_MarkWatched(item)
     else if choice = "remove"
         St_RemoveProgress(item.metaId)
         refreshContinueRow()
@@ -160,6 +182,33 @@ sub Options_RunPoster(choice as string, target as object)
     else if choice = "watched"
         Watched_Toggle(item)
     end if
+    focusCurrent()
+end sub
+
+sub Cw_MarkWatched(item as object)
+    kind = LCase(item.itemType)
+    if kind = "tv" then kind = "series"
+    s = -1
+    e = -1
+    if item.hasField("cwSeason") then s = item.cwSeason
+    if item.hasField("cwEpisode") then e = item.cwEpisode
+    if s < 0 or e <= 0
+        found = CreateObject("roRegex", ":(\d+):(\d+)$", "").Match(Str_Of(item.videoId))
+        if found.Count() > 2
+            s = found[1].ToInt()
+            e = found[2].ToInt()
+        end if
+    end if
+    entry = { id: item.metaId, kind: kind, title: item.title, season: invalid, episode: invalid }
+    if kind = "series" and s >= 0 and e > 0
+        entry.season = s
+        entry.episode = e
+    end if
+    St_SetWatched([entry], true)
+    St_RemoveProgress(item.metaId)
+    refreshContinueRow()
+    if m.page = "library" then buildLibrary()
+    Toast_Show(L("Marcado como visto."))
     focusCurrent()
 end sub
 

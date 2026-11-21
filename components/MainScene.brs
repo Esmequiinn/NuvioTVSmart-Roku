@@ -46,6 +46,8 @@ sub init()
     m.streamsScreen = m.top.findNode("streamsScreen")
     m.trailerPlayer = m.top.findNode("trailerPlayer")
     m.sheet = m.top.findNode("sheet")
+    m.ratePanel = m.top.findNode("ratePanel")
+    m.ratePanel.observeField("result", "onRatePanel")
     m.auth = m.top.findNode("auth")
     m.auth.observeField("event", "onAuthEvent")
     m.partyJoin = m.top.findNode("partyJoin")
@@ -103,6 +105,9 @@ sub init()
     m.global.observeField("syncDirty", "onSyncDirty")
     m.global.addField("activity", "boolean", true)
     m.global.addField("stVer", "integer", false)
+    m.global.addField("trackPush", "integer", false)
+    m.global.observeField("trackPush", "onTrackPush")
+    m.global.addField("stVerBig", "integer", false)
     m.global.addField("gifUrl", "string", false)
     m.global.addField("gifCard", "node", true)
     m.global.observeField("gifCard", "onGifCard")
@@ -480,7 +485,7 @@ end sub
 
 function Home_RowKey(row as object) as string
     if row = invalid then return ""
-    if row.id = "cw" then return "cw"
+    if Cw_IsRow(row) then return row.id
     if row.hasField("key") then return row.key
     return row.title
 end function
@@ -655,7 +660,7 @@ sub showEmptyState(addonCount as integer, failed as integer)
 end sub
 
 function overlayOpen() as boolean
-    return m.ambient.active or m.sheet.visible or m.updatePrompt.visible or m.auth.visible or m.trackAuth.visible or m.partyPanel.visible or m.partyJoin.visible or m.player.visible or m.trailerOpen or m.profiles.visible or m.streamsOpen or m.stack.Count() > 0 or m.detailsOpen or m.settingsOpen
+    return m.ambient.active or m.sheet.visible or m.ratePanel.visible or m.updatePrompt.visible or m.auth.visible or m.trackAuth.visible or m.partyPanel.visible or m.partyJoin.visible or m.player.visible or m.trailerOpen or m.profiles.visible or m.streamsOpen or m.stack.Count() > 0 or m.detailsOpen or m.settingsOpen
 end function
 
 sub focusCurrent()
@@ -663,6 +668,10 @@ sub focusCurrent()
     if m.top.dialog <> invalid then return
     if m.ambient.active
         m.ambient.setFocus(true)
+        return
+    end if
+    if m.ratePanel.visible
+        m.ratePanel.setFocus(true)
         return
     end if
     if m.sheet.visible
@@ -764,8 +773,25 @@ sub onRowFocused(event as object)
     hideExpanded()
     rows = event.getRoSGNode()
     if rows.isSameNode(m.searchRows) then return
+    m.heroRows = rows
+    if m.heroDelay = invalid
+        m.heroDelay = CreateObject("roSGNode", "Timer")
+        m.heroDelay.repeat = false
+        m.heroDelay.duration = 0.12
+        m.heroDelay.observeField("fire", "onHeroDelay")
+        showHeroFor(getRowItem(rows, rows.rowItemFocused))
+        Hero_Prefetch(rows)
+        return
+    end if
+    m.heroDelay.control = "stop"
+    m.heroDelay.control = "start"
+end sub
+
+sub onHeroDelay()
+    rows = m.heroRows
+    if rows = invalid then return
     showHeroFor(getRowItem(rows, rows.rowItemFocused))
-    Hero_Prefetch(rows)
+    if m.area = "page" then Hero_Prefetch(rows)
 end sub
 
 sub Hero_Prefetch(rows as object)
@@ -841,6 +867,10 @@ sub onRowSelected(event as object)
         end try
         return
     end if
+    if Cloud_IsItem(item)
+        Cloud_Open()
+        return
+    end if
     if item.itemType = "folder"
         openFolder(item)
         return
@@ -848,17 +878,46 @@ sub onRowSelected(event as object)
     focus = rows.rowItemSelected
     row = invalid
     if type(focus) = "roArray" and rows.content <> invalid then row = rows.content.getChild(focus[0])
-    if row <> invalid and row.id = "cw"
-        Continue_Play(item, "play")
+    if Cw_IsRow(row)
+        Cw_Select(item)
         return
     end if
     openDetails(item)
+end sub
+
+sub Cw_Select(item as object)
+    mode = Str_Of(St_Pref("cwOpen"))
+    upcoming = item.hasField("released") and Cw_Upcoming(Str_Of(item.released), Cw_Today())
+    if mode = "details" or (mode = "upcoming" and upcoming)
+        openDetails(item)
+        return
+    end if
+    Continue_Play(item, "play")
+end sub
+
+sub onTrackPush()
+    if m.trackPushTimer = invalid
+        m.trackPushTimer = CreateObject("roSGNode", "Timer")
+        m.trackPushTimer.repeat = false
+        m.trackPushTimer.duration = 3
+        m.trackPushTimer.observeField("fire", "onTrackPushRun")
+    end if
+    m.trackPushTimer.control = "stop"
+    m.trackPushTimer.control = "start"
+end sub
+
+sub onTrackPushRun()
+    task = CreateObject("roSGNode", "AccountTask")
+    task.mode = "watchPush"
+    task.control = "RUN"
+    m.trackPushTask = task
 end sub
 
 sub Continue_Play(item as object, action as string)
     openDetails(item)
     m.details.visible = false
     m.ctx.direct = true
+    if action = "play" and item.hasField("cwNext") and Str_Of(item.videoId) <> "" then m.ctx.cwPick = { videoId: Str_Of(item.videoId), nextUp: item.cwNext, at: ToInt(item.cwAt, 0) }
     runDetailAction(action)
 end sub
 
@@ -996,7 +1055,7 @@ function heroData(item as object, meta as dynamic) as object
     if item.videoId <> "" and item.episodeLabel <> "" then metaLine = item.metaLine
     if item.hasField("badge") and item.badge <> "" then metaLine = Cw_HeroLine(item, meta)
     if not Bool_Of(St_Pref("homeRatings"), true) then rating = ""
-    return { title: title, logo: logo, background: background, rating: rating, metaLine: metaLine, description: description }
+    return { title: title, logo: Img_Sized(Str_Of(logo), "w500"), background: Img_Sized(Str_Of(background), "w1280"), rating: rating, metaLine: metaLine, description: description }
 end function
 
 function Cw_HeroLine(item as object, meta as dynamic) as string
@@ -1079,6 +1138,7 @@ sub hideBusy()
 end sub
 
 sub cancelBusy()
+    m.cloudTask = invalid
     m.folderTask = invalid
     m.metaTask = invalid
     m.streamTask = invalid
@@ -1170,7 +1230,7 @@ sub onKeyboardButton()
     text = Kb_Text(dlg)
     dlg.close = true
     if choice <> 0 then return
-    if text = "" and m.kbKind <> "regex" and m.kbKind <> "customPoster" and m.kbKind <> "integKey" and m.kbKind <> "srvPass" and m.kbKind <> "debKey" then return
+    if text = "" and m.kbKind <> "regex" and m.kbKind <> "customPoster" and m.kbKind <> "integKey" and m.kbKind <> "srvPass" and m.kbKind <> "debKey" and m.kbKind <> "cloudSearch" then return
     handleKeyboard(m.kbKind, text, m.kbData)
 end sub
 
@@ -1314,7 +1374,7 @@ sub onExpandTimer()
     focus = rows.rowItemFocused
     if type(focus) = "roArray" and focus.Count() > 0 and rows.content <> invalid
         row = rows.content.getChild(focus[0])
-        if row <> invalid and row.id = "cw" then return
+        if Cw_IsRow(row) then return
     end if
     meta = m.metaCache[item.metaId]
     m.cardItem = item
@@ -1622,7 +1682,7 @@ function Ambient_Slides() as object
     if root <> invalid
         for i = 0 to root.getChildCount() - 1
             row = root.getChild(i)
-            if row.id <> "cw"
+            if not Cw_IsRow(row)
                 key = Home_RowKey(row)
                 cut = Instr(1, key, "#")
                 if cut > 0 then key = Left(key, cut - 1)
@@ -1685,7 +1745,7 @@ function Ambient_Slide(item as object) as dynamic
             if IsStr(g) and genres.Count() < 3 then genres.Push(g)
         end for
     end if
-    return { background: background, logo: logo, title: Str_Of(item.title), genres: genres.Join("  •  ") }
+    return { background: Img_Sized(Str_Of(background), "w1280"), logo: Img_Sized(Str_Of(logo), "w500"), title: Str_Of(item.title), genres: genres.Join("  •  ") }
 end function
 
 function Gif_Bind() as boolean

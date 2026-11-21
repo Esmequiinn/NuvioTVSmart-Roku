@@ -109,9 +109,10 @@ sub Disc_Chips()
     chips = [{ id: "type", label: L("Tipo"), value: TypePlural(m.disc.kind) }]
     chips.Push({ id: "catalog", label: L("Catálogo"), value: Str_Glyphs(Str_Of(cat.name)) })
     if type(cat.genres) = "roArray" and cat.genres.Count() > 0
+        if Bool_Of(cat.needsExtra, false) and m.disc.genre = "" then m.disc.genre = cat.genres[0]
         g = m.disc.genre
         if g = "" then g = L("Predeterminado")
-        chips.Push({ id: "genre", label: L("Género"), value: Str_Glyphs(g) })
+        chips.Push({ id: "genre", label: Disc_FilterLabel(cat), value: Str_Glyphs(g) })
     end if
     m.discoverBar.chips = chips
 end sub
@@ -133,7 +134,9 @@ sub Disc_Load(reset as boolean)
     task.base = cat.base
     task.kind = cat.kind
     task.catalogId = cat.id
+    if Bool_Of(cat.needsExtra, false) and m.disc.genre = "" and type(cat.genres) = "roArray" and cat.genres.Count() > 0 then m.disc.genre = cat.genres[0]
     task.genre = m.disc.genre
+    task.filter = Str_Of(cat.filter)
     task.skip = m.disc.skip
     task.observeField("result", "onDiscoverResult")
     task.control = "RUN"
@@ -247,9 +250,10 @@ sub Disc_Pick(chip as string)
             end if
         end for
     else if chip = "genre"
-        title = L("Género")
         cat = Disc_Catalog()
-        items.Push({ id: "__all", label: L("Predeterminado"), checked: m.disc.genre = "" })
+        title = L("Género")
+        if cat <> invalid then title = Disc_FilterLabel(cat)
+        if cat = invalid or not Bool_Of(cat.needsExtra, false) then items.Push({ id: "__all", label: L("Predeterminado"), checked: m.disc.genre = "" })
         if cat <> invalid and type(cat.genres) = "roArray"
             for each g in cat.genres
                 if g = m.disc.genre then focus = items.Count()
@@ -260,6 +264,13 @@ sub Disc_Pick(chip as string)
     if items.Count() = 0 then return
     Sheet_Open({ title: title, items: items, focus: focus, style: "cards", width: 760 }, "discoverPick", { chip: chip })
 end sub
+
+function Disc_FilterLabel(cat as object) as string
+    name = Str_Of(cat.filter)
+    if name = "year" then return L("Año")
+    if name = "" or name = "genre" then return L("Género")
+    return UCase(Left(name, 1)) + Mid(name, 2)
+end function
 
 sub Disc_Chosen(chip as string, choice as string)
     if choice = ""

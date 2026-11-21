@@ -26,10 +26,17 @@ function St_Get(key as string, fallback as dynamic) as dynamic
         sec.Flush()
         return legacy
     end if
-    if not sec.Exists(key) then return fallback
-    raw = sec.Read(key)
-    if raw = "" then return fallback
-    data = ParseJson(raw)
+    hit = St_Memo("get_" + key)
+    if hit <> invalid
+        if hit.val = invalid then return fallback
+        return hit.val
+    end if
+    data = invalid
+    if sec.Exists(key)
+        raw = sec.Read(key)
+        if raw <> "" then data = ParseJson(raw)
+    end if
+    St_MemoSet("get_" + key, data)
     if data = invalid then return fallback
     return data
 end function
@@ -65,7 +72,7 @@ sub St_Remove(key as string)
             fs.Delete(path)
         end if
     end for
-    St_Bump()
+    St_Bump("reg_" + key)
     sec = St_Section()
     if sec.Exists(key)
         sec.Delete(key)
@@ -121,6 +128,8 @@ sub St_SaveSettings(s as object)
 end sub
 
 function St_Profiles() as object
+    hit = St_Memo("profiles")
+    if hit <> invalid then return St_CopyList(hit.val)
     list = St_Get("profiles", invalid)
     clean = []
     if type(list) = "roArray"
@@ -131,10 +140,21 @@ function St_Profiles() as object
         end for
     end if
     if clean.Count() = 0
-        clean.Push({ id: "p1", name: L("Principal") })
+        clean.Push({ id: "p1", name: L("Principal"), color: "", remote: 0, avatar: "", pin: false })
         St_Set("profiles", clean)
     end if
+    St_MemoSet("profiles", St_CopyList(clean))
     return clean
+end function
+
+function St_CopyList(list as object) as object
+    out = []
+    for each item in list
+        copy = {}
+        copy.Append(item)
+        out.Push(copy)
+    end for
+    return out
 end function
 
 function St_ProfileIndex(profiles as object, pid as string) as integer
@@ -194,6 +214,7 @@ function St_DeleteProfile(pid as string) as boolean
     St_Remove("prefs_" + pid)
     St_Remove("progress_" + pid)
     St_Remove("library_" + pid)
+    St_WriteFile("subdelay_" + pid, {})
     s = St_Settings()
     if s.active = pid
         s.active = profiles[0].id
@@ -288,6 +309,12 @@ function St_PrefsKey() as string
 end function
 
 function St_Prefs() as object
+    hit = St_Memo("prefs")
+    if hit <> invalid
+        copy = {}
+        copy.Append(hit.val)
+        return copy
+    end if
     p = St_Get(St_PrefsKey(), invalid)
     if type(p) <> "roAssociativeArray" then p = {}
     p = St_CaseFix(p, St_PlayerDefaults(), true)
@@ -298,6 +325,9 @@ function St_Prefs() as object
     if not IsBool(p.captions) then p.captions = false
     if type(p.order) <> "roArray" then p.order = []
     if type(p.hidden) <> "roAssociativeArray" then p.hidden = {}
+    keep = {}
+    keep.Append(p)
+    St_MemoSet("prefs", keep)
     return p
 end function
 
@@ -579,22 +609,36 @@ function St_IsWatched(id as string) as boolean
     return St_Watched().DoesExist(id)
 end function
 
-sub St_SetWatched(items as object, watched as boolean)
+sub St_SetWatched(items as object, watched as boolean, manual = true as boolean)
     data = St_Watched()
     pid = St_ActiveProfile().id
     ops = St_ReadFile("watchops_" + pid)
     if type(ops) <> "roArray" then ops = []
+    tops = invalid
+    if manual
+        tops = St_ReadFile("trackops_" + pid)
+        if type(tops) <> "roArray" then tops = []
+    end if
     now = St_Now()
     for each it in items
         key = St_WatchedKey(Str_Of(it.id), it.season, it.episode)
         if watched
             data[key] = { k: Str_Of(it.kind), t: Left(Str_Of(it.title), 60), at: now }
             ops.Push({ op: "add", id: Str_Of(it.id), kind: Str_Of(it.kind), title: Left(Str_Of(it.title), 80), season: it.season, episode: it.episode, at: now })
+            if tops <> invalid then tops.Push({ op: "add", id: Str_Of(it.id), kind: Str_Of(it.kind), season: it.season, episode: it.episode, at: now })
         else
             data.Delete(key)
             ops.Push({ op: "del", id: Str_Of(it.id), season: it.season, episode: it.episode })
+            if tops <> invalid then tops.Push({ op: "del", id: Str_Of(it.id), kind: Str_Of(it.kind), season: it.season, episode: it.episode })
         end if
     end for
+    if tops <> invalid
+        while tops.Count() > 400
+            tops.Shift()
+        end while
+        St_WriteFile("trackops_" + pid, tops)
+        if m.global <> invalid and m.global.hasField("trackPush") then m.global.trackPush = m.global.trackPush + 1
+    end if
     while ops.Count() > 400
         ops.Shift()
     end while
@@ -758,6 +802,10 @@ function St_Integrations() as object
         torboxFrom: ""
         premiumizeKey: ""
         premiumizeFrom: ""
+        realdebridKey: ""
+        realdebridFrom: ""
+        cloudOn: true
+        rateSource: ""
         debridOn: false
         debridPick: ""
         nuvioUrl: Config_NuvioServer()
@@ -811,6 +859,13 @@ end sub
 function St_PlayerDefaults() as object
     return {
         cwStyle: "landscape"
+        cwThumbs: true
+        cwUnaired: true
+        cwFurthest: true
+        cwBlur: false
+        cwSort: "default"
+        cwOpen: "play"
+        moreSource: "tmdb"
         audioLang: "system"
         audioLang2: "none"
         subLang: "spa"
@@ -909,18 +964,41 @@ function St_Fs() as dynamic
     return m.stFs
 end function
 
-function St_Ver() as integer
-    if m.global = invalid or not m.global.hasField("stVer") then return -1
-    return m.global.stVer
+function St_VerField(name as string) as string
+    for each prefix in ["reg_library_", "reg_progress_", "reg_libops_"]
+        if Left(name, Len(prefix)) = prefix then return "stVerBig"
+    end for
+    return "stVer"
 end function
 
-sub St_Bump()
-    if m.global = invalid or not m.global.hasField("stVer") then return
-    m.global.stVer = m.global.stVer + 1
+function St_Ver(field = "stVer" as string) as integer
+    if m.global = invalid or not m.global.hasField(field) then return -1
+    return m.global.getField(field)
+end function
+
+sub St_Bump(name = "" as string)
+    field = St_VerField(name)
+    if m.global = invalid or not m.global.hasField(field) then return
+    m.global.setField(field, m.global.getField(field) + 1)
+end sub
+
+function St_Memo(key as string) as dynamic
+    ver = St_Ver()
+    if ver < 0 or m.stMemo = invalid then return invalid
+    hit = m.stMemo[key]
+    if hit <> invalid and hit.ver = ver then return hit
+    return invalid
+end function
+
+sub St_MemoSet(key as string, value as dynamic)
+    ver = St_Ver()
+    if ver < 0 then return
+    if m.stMemo = invalid then m.stMemo = {}
+    m.stMemo[key] = { ver: ver, val: value }
 end sub
 
 function St_ReadFile(name as string) as dynamic
-    ver = St_Ver()
+    ver = St_Ver(St_VerField(name))
     if ver >= 0
         if m.stCache = invalid then m.stCache = {}
         hit = m.stCache[name]
@@ -958,7 +1036,56 @@ sub St_WriteFile(name as string, value as dynamic)
             fs.Delete(path)
         end if
     end for
-    St_Bump()
+    St_Bump(name)
+end sub
+
+function St_SubDelayClamp(ms as integer) as integer
+    if ms > 180000 then return 180000
+    if ms < -180000 then return -180000
+    return ms
+end function
+
+function St_SubDelayMap() as object
+    raw = St_ReadFile("subdelay_" + St_ActiveProfile().id)
+    map = {}
+    if type(raw) = "roAssociativeArray" then map.Append(raw)
+    return map
+end function
+
+function St_SubDelay(videoId as string) as integer
+    vid = videoId.Trim()
+    if vid = "" then return 0
+    entry = St_SubDelayMap()[vid]
+    if type(entry) = "roAssociativeArray" then return St_SubDelayClamp(ToInt(entry.d, 0))
+    return 0
+end function
+
+sub St_SaveSubDelay(videoId as string, ms as integer)
+    vid = videoId.Trim()
+    if vid = "" then return
+    ms = St_SubDelayClamp(ms)
+    map = St_SubDelayMap()
+    if ms = 0
+        if not map.DoesExist(vid) then return
+        map.Delete(vid)
+    else
+        map[vid] = { d: ms, t: St_Now() }
+        while map.Count() > 150
+            oldest = ""
+            oldestAt = 2147483647
+            for each k in map
+                at = 0
+                if type(map[k]) = "roAssociativeArray" then at = ToInt(map[k].t, 0)
+                if at < oldestAt
+                    oldestAt = at
+                    oldest = k
+                end if
+            end for
+            if oldest = "" then exit while
+            map.Delete(oldest)
+        end while
+    end if
+    St_WriteFile("subdelay_" + St_ActiveProfile().id, map)
 end sub
 
 function St_LinksKey() as string

@@ -314,12 +314,41 @@ function Srv_ItemStreams(sv as object, itemId as string, info as dynamic) as obj
         if file <> "" then file = file.Split("/")[file.Split("/").Count() - 1]
         video = ""
         height = 0
+        srvSubs = []
+        token = sv.token.EncodeUriComponent()
         streams = Srv_J(src, "MediaStreams")
         if type(streams) = "roArray"
             for each ms in streams
-                if LCase(Str_Of(Srv_J(ms, "Type"))) = "video" and video = ""
+                mType = LCase(Str_Of(Srv_J(ms, "Type")))
+                if mType = "video" and video = ""
                     video = UCase(Str_Of(Srv_J(ms, "Codec")))
                     height = ToInt(Srv_J(ms, "Height"), 0)
+                else if mType = "subtitle" and Bool_Of(Srv_J(ms, "IsTextSubtitleStream"), true)
+                    codec = LCase(Str_Of(Srv_J(ms, "Codec")))
+                    ext = ""
+                    if codec = "subrip" or codec = "srt"
+                        ext = "srt"
+                    else if codec = "webvtt" or codec = "vtt"
+                        ext = "vtt"
+                    else if codec = "ass" or codec = "ssa"
+                        ext = codec
+                    end if
+                    if ext <> ""
+                        sIdx = ToInt(Srv_J(ms, "Index"), -1)
+                        if sIdx >= 0
+                            subUrl = Srv_Root(sv) + "/Videos/" + itemId + "/" + sid.EncodeUriComponent() + "/Subtitles/" + sIdx.ToStr() + "/Stream." + ext + "?api_key=" + token
+                            subTitle = Str_Of(Srv_J(ms, "DisplayTitle"))
+                            if subTitle = "" then subTitle = Str_Of(Srv_J(ms, "Title"))
+                            srvSubs.Push({
+                                url: subUrl
+                                lang: Str_Of(Srv_J(ms, "Language"))
+                                title: subTitle
+                                SubFormat: ext
+                                forced: Bool_Of(Srv_J(ms, "IsForced"), false)
+                                hearingImpaired: Bool_Of(Srv_J(ms, "IsHearingImpaired"), false)
+                            })
+                        end if
+                    end if
                 end if
             end for
         end if
@@ -330,11 +359,10 @@ function Srv_ItemStreams(sv as object, itemId as string, info as dynamic) as obj
         if video <> "" then details.Push(video)
         if container <> "" then details.Push(UCase(container))
         if size > 0 then details.Push(Srv_Gb(size))
-        token = sv.token.EncodeUriComponent()
         direct = Srv_Root(sv) + "/Videos/" + itemId + "/stream?static=true&mediaSourceId=" + sid.EncodeUriComponent() + "&deviceId=" + Srv_DeviceId().EncodeUriComponent() + "&api_key=" + token
         hls = Srv_Root(sv) + "/Videos/" + itemId + "/master.m3u8?mediaSourceId=" + sid.EncodeUriComponent() + "&deviceId=" + Srv_DeviceId().EncodeUriComponent() + "&api_key=" + token + "&VideoCodec=h264,hevc&AudioCodec=aac,ac3,eac3,mp3&TranscodingMaxAudioChannels=6&SegmentContainer=ts&MaxStreamingBitrate=40000000&BreakOnNonKeyFrames=True"
-        out.Push({ url: direct, name: sv.name, desc: name + chr(10) + L("Original") + "  ·  " + details.Join("  ·  "), filename: file, kind: "direct" })
-        out.Push({ url: hls, name: sv.name, desc: name + chr(10) + L("Convertido por el servidor (HLS)"), filename: file, kind: "hls" })
+        out.Push({ url: direct, name: sv.name, desc: name + chr(10) + L("Original") + "  ·  " + details.Join("  ·  "), filename: file, kind: "direct", subtitles: srvSubs })
+        out.Push({ url: hls, name: sv.name, desc: name + chr(10) + L("Convertido por el servidor (HLS)"), filename: file, kind: "hls", subtitles: srvSubs })
     end for
     return out
 end function

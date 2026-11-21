@@ -56,64 +56,141 @@ function Cw_Episode(label as string) as object
     if label = "" then return { code: "", name: "" }
     cut = Instr(1, label, "  ")
     if cut = 0 then return { code: label, name: "" }
-    return { code: Left(label, cut - 1).Trim(), name: Mid(label, cut + 2).Trim() }
+    name = Mid(label, cut + 2).Trim()
+    half = Int(Len(name) / 2)
+    if half > 2 and Left(name, half).Trim() = Mid(name, half + 1).Trim() then name = Left(name, half).Trim()
+    return { code: Left(label, cut - 1).Trim(), name: name }
 end function
 
 function Content_ContinueRow() as dynamic
+    rows = Content_ContinueRows()
+    if rows.Count() = 0 then return invalid
+    return rows[0]
+end function
+
+function Cw_Today() as string
+    return Left(CreateObject("roDateTime").ToISOString(), 10)
+end function
+
+function Cw_Upcoming(released as string, today as string) as boolean
+    day = Left(released, 10)
+    return day <> "" and day > today
+end function
+
+function Cw_Day(released as string) as string
+    parts = Left(released, 10).Split("-")
+    if parts.Count() < 3 then return ""
+    return parts[2] + "/" + parts[1]
+end function
+
+function Content_ContinueRows() as object
+    out = []
     prefs = St_Prefs()
-    if not prefs.continueWatching then return invalid
+    if not prefs.continueWatching then return out
     list = St_ProgressView()
-    if list.Count() = 0 then return invalid
-    row = CreateObject("roSGNode", "ContentNode")
-    row.id = "cw"
-    row.title = L("Seguir viendo")
+    if list.Count() = 0 then return out
     landscape = St_Pref("cwStyle") <> "poster"
+    thumbs = Bool_Of(St_Pref("cwThumbs"), true)
+    blur = Bool_Of(St_Pref("cwBlur"), false)
+    showUnaired = Bool_Of(St_Pref("cwUnaired"), true)
+    sortMode = Str_Of(St_Pref("cwSort"))
+    today = Cw_Today()
     pattern = ""
     if not landscape then pattern = Poster_Pattern("continue_watching")
     live = { tv: true, channel: true, channels: true, events: true, live: true }
+    aired = []
+    upcoming = []
     for each e in list
         if not live.DoesExist(LCase(Str_Of(e.kind)))
-            elapsed = ToInt(e.position, 0)
-            dur = ToInt(e.duration, 0)
-            progress = 0.0
-            if dur > 0 then progress = elapsed / dur
-            episode = Str_Of(e.episode)
-            parts = Cw_Episode(episode)
-            altIds = ""
-            if type(e.altIds) = "roArray" then altIds = e.altIds.Join("|")
-            image = Str_Of(e.poster)
-            fallbackImage = ""
-            if landscape
-                image = Str_Of(e.thumb)
-                if image = "" then image = Str_Of(e.background)
-                if image = "" and Left(e.metaId, 2) = "tt" then image = Img_Background(e.metaId)
-                if image = "" then image = Str_Of(e.poster)
-            else if pattern <> ""
-                custom = Poster_Custom(pattern, Str_Of(e.metaId), "", Str_Of(e.kind))
-                if custom <> ""
-                    fallbackImage = image
-                    image = custom
-                end if
+            soon = Bool_Of(e.nextUp, false) and Cw_Upcoming(Str_Of(e.released), today)
+            if soon and showUnaired
+                upcoming.Push(e)
+            else if not soon
+                aired.Push(e)
             end if
-            Content_Item(row, {
-                title: Str_Of(e.title)
-                poster: image
-                description: ""
-                kind: Str_Of(e.kind)
-                metaId: e.metaId
-                videoId: e.videoId
-                background: Str_Of(e.background)
-                metaLine: ""
-                episodeLabel: episode
-                progress: progress
-                altIds: altIds
-                fallback: fallbackImage
-                badge: Cw_Status(elapsed, dur)
-                kicker: parts.code
-                subtitle: parts.name
-                portrait: Str_Of(e.poster)
-            })
         end if
+    end for
+    main = aired
+    if sortMode = "split"
+        main = aired
+    else if sortMode = "streaming"
+        main = []
+        main.Append(aired)
+        main.Append(upcoming)
+    else
+        main = []
+        for each e in list
+            soon = Bool_Of(e.nextUp, false) and Cw_Upcoming(Str_Of(e.released), today)
+            if not live.DoesExist(LCase(Str_Of(e.kind))) and (not soon or showUnaired) then main.Push(e)
+        end for
+    end if
+    row = Cw_Row("cw", L("Seguir viendo"), main, landscape, thumbs, blur, pattern, today)
+    if row <> invalid then out.Push(row)
+    if sortMode = "split" and upcoming.Count() > 0
+        up = Cw_Row("cwup", L("Próximamente"), upcoming, landscape, thumbs, blur, pattern, today)
+        if up <> invalid then out.Push(up)
+    end if
+    return out
+end function
+
+function Cw_Row(id as string, title as string, list as object, landscape as boolean, thumbs as boolean, blur as boolean, pattern as string, today as string) as dynamic
+    if list.Count() = 0 then return invalid
+    row = CreateObject("roSGNode", "ContentNode")
+    row.id = id
+    row.title = title
+    for each e in list
+        elapsed = ToInt(e.position, 0)
+        dur = ToInt(e.duration, 0)
+        progress = 0.0
+        if dur > 0 then progress = elapsed / dur
+        episode = Str_Of(e.episode)
+        parts = Cw_Episode(episode)
+        altIds = ""
+        if type(e.altIds) = "roArray" then altIds = e.altIds.Join("|")
+        image = Str_Of(e.poster)
+        fallbackImage = ""
+        released = Str_Of(e.released)
+        if landscape
+            image = ""
+            if thumbs then image = Str_Of(e.thumb)
+            if image <> "" and blur and Bool_Of(e.nextUp, false) and Left(LCase(image), 4) = "http"
+                image = "https://wsrv.nl/?url=" + image.EncodeUriComponent() + "&w=480&h=270&fit=cover&blur=24"
+            end if
+            if image = "" then image = Str_Of(e.background)
+            if image = "" and Left(e.metaId, 2) = "tt" then image = Img_Background(e.metaId)
+            if image = "" then image = Str_Of(e.poster)
+        else if pattern <> ""
+            custom = Poster_Custom(pattern, Str_Of(e.metaId), "", Str_Of(e.kind))
+            if custom <> ""
+                fallbackImage = image
+                image = custom
+            end if
+        end if
+        badge = Cw_Status(elapsed, dur)
+        if Bool_Of(e.nextUp, false) and Cw_Upcoming(released, today)
+            badge = L("Próximamente")
+            day = Cw_Day(released)
+            if day <> "" then badge = badge + "  ·  " + day
+        end if
+        item = Content_Item(row, {
+            title: Str_Of(e.title)
+            poster: image
+            description: ""
+            kind: Str_Of(e.kind)
+            metaId: e.metaId
+            videoId: e.videoId
+            background: Str_Of(e.background)
+            metaLine: ""
+            episodeLabel: episode
+            progress: progress
+            altIds: altIds
+            fallback: fallbackImage
+            badge: badge
+            kicker: parts.code
+            subtitle: parts.name
+            portrait: Str_Of(e.poster)
+        })
+        item.addFields({ released: Left(released, 10), cwSeason: ToInt(e.season, -1), cwEpisode: ToInt(e.ep, -1), cwNext: Bool_Of(e.nextUp, false), cwAt: elapsed })
     end for
     if row.getChildCount() = 0 then return invalid
     return row

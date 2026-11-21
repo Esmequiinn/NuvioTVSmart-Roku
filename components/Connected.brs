@@ -2,13 +2,14 @@ function Conn_Sections(integ as object) as object
     debrid = { id: "debrid", label: L("Servicios conectados"), subtitle: L("Conecta cuentas para obtener enlaces"), rows: [] }
     debrid.rows.Push(Set_Info("debNote", L("Experimental"), L("Estas integraciones son experimentales y podrían cambiar o quitarse más adelante."), ""))
     debrid.rows.Push(Set_Header(L("Cuentas")))
-    for each p in Deb_Providers()
+    for each p in Cloud_Providers()
         key = Deb_Key(integ, p.id)
         value = L("Sin configurar")
         if key <> "" then value = L("Conectada")
         desc = L("Conecta tu cuenta de {p}.").Replace("{p}", p.name)
         if p.id = "torbox" then desc = L("Vincula tu cuenta de TorBox en el navegador con un código QR, o escribe tu clave de API.")
         if p.id = "premiumize" then desc = L("Escribe tu clave de API de premiumize.me (Cuenta → Clave de API).")
+        if p.id = "realdebrid" then desc = L("Escribe tu clave de API de Real-Debrid (real-debrid.com/apitoken). Por ahora solo se usa para la biblioteca en la nube.")
         if Str_Of(integ[p.id + "From"]) = "account" and key <> "" then desc = desc + chr(10) + L("Viene de tu cuenta de Nuvio.")
         debrid.rows.Push(Set_Row("deb:" + p.id, p.name, desc, value))
     end for
@@ -20,6 +21,11 @@ function Conn_Sections(integ as object) as object
         name = connected[0].name
         if active <> invalid then name = active.name
         debrid.rows.Push(Set_Row("debridPick", L("Resolver con"), L("Elige qué cuenta conectada prepara los enlaces."), name))
+    end if
+
+    if Cloud_Connected(integ).Count() > 0
+        debrid.rows.Push(Set_Header(L("Biblioteca en la nube")))
+        debrid.rows.Push(Set_Toggle("cloudOn", L("Biblioteca en la nube"), L("Explora y reproduce lo que ya tienes en tus cuentas conectadas, desde la Biblioteca."), Bool_Of(integ.cloudOn, true)))
     end if
 
     servers = { id: "servers", label: L("Servidores multimedia"), subtitle: L("Conecta Jellyfin o Emby"), rows: [] }
@@ -60,6 +66,12 @@ function Conn_Row(row as string) as boolean
         end if
         items.Push({ id: "close", label: L("Cerrar") })
         Sheet_Open({ title: name, subtitle: L("Conecta tu cuenta de {p}.").Replace("{p}", name), items: items }, "debAcc", { id: id })
+        return true
+    end if
+    if row = "cloudOn"
+        integ["cloudOn"] = not Bool_Of(integ.cloudOn, true)
+        St_SaveIntegrations(integ)
+        refreshSettings()
         return true
     end if
     if row = "debridOn"

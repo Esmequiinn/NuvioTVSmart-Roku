@@ -210,6 +210,20 @@ function Settings_Model() as object
     style = L("Horizontal")
     if Set_Pref(prefs, defaults, "cwStyle") = "poster" then style = L("Póster")
     layout.rows.Push(Set_Row("cwStyle", L("Estilo de Seguir viendo"), L("Horizontal muestra una imagen del episodio o película."), style))
+    if prefs.continueWatching
+        openNames = { play: L("Abrir fuente"), details: L("Abrir detalles"), upcoming: L("Detalles solo para próximos") }
+        openMode = Str_Of(Set_Pref(prefs, defaults, "cwOpen"))
+        if not openNames.DoesExist(openMode) then openMode = "play"
+        layout.rows.Push(Set_Row("cwOpen", L("Al seleccionar"), L("Qué se abre al elegir algo de Seguir viendo."), openNames[openMode]))
+        sortNames = { default: L("Predeterminado"), streaming: L("Estilo streaming"), split: L("Fila aparte de próximos") }
+        sortMode = Str_Of(Set_Pref(prefs, defaults, "cwSort"))
+        if not sortNames.DoesExist(sortMode) then sortMode = "default"
+        layout.rows.Push(Set_Row("cwSort", L("Orden de Seguir viendo"), L("Predeterminado ordena todo por lo más reciente. Estilo streaming pone primero lo estrenado y al final lo que viene. Fila aparte mueve los próximos episodios a una fila Próximamente."), sortNames[sortMode]))
+        layout.rows.Push(Set_Toggle("cwThumbs", L("Miniaturas de episodios"), L("Usa la imagen del episodio en Seguir viendo. Si lo apagas, usa el fondo de la serie."), Bool_Of(Set_Pref(prefs, defaults, "cwThumbs"), true)))
+        layout.rows.Push(Set_Toggle("cwBlur", L("Difuminar lo no visto en Seguir viendo"), L("Difumina la imagen de los siguientes episodios que no has visto para evitar spoilers."), Bool_Of(Set_Pref(prefs, defaults, "cwBlur"), false)))
+        layout.rows.Push(Set_Toggle("cwFurthest", L("Siguiente desde el episodio más avanzado"), L("El siguiente episodio se calcula desde el más avanzado que viste. Apágalo si estás volviendo a ver una serie, para usar el último que viste."), Bool_Of(Set_Pref(prefs, defaults, "cwFurthest"), true)))
+        layout.rows.Push(Set_Toggle("cwUnaired", L("Mostrar próximos episodios sin estrenar"), L("Incluye en Seguir viendo los siguientes episodios antes de que se estrenen."), Bool_Of(Set_Pref(prefs, defaults, "cwUnaired"), true)))
+    end if
     discNames = { search: L("En Buscar"), sidebar: L("En la barra lateral"), off: L("Desactivado") }
     discLoc = Str_Of(Set_Pref(prefs, defaults, "discoverLocation"))
     if not discNames.DoesExist(discLoc) then discLoc = "search"
@@ -281,9 +295,6 @@ function Settings_Model() as object
         mdbAccount = Str_Of(integ.mdbUser)
         if mdbAccount = "" then mdbAccount = L("Conectada")
     end if
-    accDesc = L("Conecta tu cuenta con un código QR, como en Nuvio. Con la cuenta no hace falta la clave.")
-    if Str_Of(integ.mdbLast) <> "" then accDesc = accDesc + chr(10) + L("Última respuesta de MDBList: ") + integ.mdbLast
-    integration.rows.Push(Set_Row("mdbAccount", L("Cuenta de MDBList"), accDesc, mdbAccount))
     mdbDesc = L("Escríbela aquí o pégala desde el celular. Es gratis en mdblist.com.")
     if Str_Of(integ.mdbDiag) <> "" then mdbDesc = mdbDesc + chr(10) + L("Última revisión en tu cuenta: ") + integ.mdbDiag
     integration.rows.Push(Set_Row("mdbKey", L("Clave de MDBList"), mdbDesc, mdbKey))
@@ -413,10 +424,18 @@ function Settings_Model() as object
         if simklValue = "" then simklValue = L("Conectado")
     end if
     tracking.rows.Push(Set_Row("simkl", "Simkl", L("Vincula tu cuenta de Simkl con un código."), simklValue))
+    accDesc = L("Conecta tu cuenta con un código QR, como en Nuvio. Con la cuenta no hace falta la clave.")
+    if Str_Of(integ.mdbLast) <> "" then accDesc = accDesc + chr(10) + L("Última respuesta de MDBList: ") + integ.mdbLast
+    tracking.rows.Push(Set_Row("mdbAccount", "MDBList", accDesc, mdbAccount))
     tracking.rows.Push(Set_Toggle("scrobble", L("Registrar lo que veo"), L("Envía inicio, pausa y fin de cada título."), integ.scrobble))
     tracking.rows.Push(Set_Header(L("Fuentes")))
     tracking.rows.Push(Set_Row("cwSource", L("Seguir viendo desde"), L("De dónde sale la fila Seguir viendo. Trakt y MDBList aparecen cuando conectas su cuenta."), Track_SourceName(Track_Pick(integ, "cw"))))
     tracking.rows.Push(Set_Row("libSource", L("Biblioteca desde"), L("De dónde salen las listas de la biblioteca. Con Trakt o MDBList, agregar a Mi lista guarda en su watchlist."), Track_SourceName(Track_Pick(integ, "lib"))))
+    tracking.rows.Push(Set_Row("rateSource", L("Calificaciones"), L("Dónde se guardan y de dónde se muestran tus calificaciones. Califica desde la ficha de cada título."), Rate_Name(Rate_Source(integ))))
+    moreNames = { tmdb: "TMDB", trakt: "Trakt", simkl: "Simkl" }
+    moreName = moreNames[Str_Of(St_Pref("moreSource"))]
+    if moreName = invalid then moreName = "TMDB"
+    tracking.rows.Push(Set_Row("moreSource", L("Fuente de Más como esto"), L("De dónde salen las recomendaciones en la ficha y al terminar de ver algo."), moreName))
     tracking.rows.Push(Set_Toggle("traktComments", L("Comentarios de Trakt"), L("Muestra comentarios de Trakt en la ficha."), Bool_Of(integ.traktComments, true)))
     tracking.rows.Push(Set_Toggle("traktTranslate", L("Traducir comentarios"), L("Traduce al idioma del canal los comentarios que están en otro idioma."), Bool_Of(integ.traktTranslate, true)))
 
@@ -595,6 +614,17 @@ sub onSettingsEvent()
         St_SetFlag("continueWatching", not m.prefs.continueWatching)
         applyTheme()
         m.needsReload = true
+        refreshSettings()
+    else if row = "cwOpen"
+        St_SetPref("cwOpen", Set_Cycle(["play", "details", "upcoming"], Str_Of(St_Pref("cwOpen"))))
+        refreshSettings()
+    else if row = "cwSort"
+        St_SetPref("cwSort", Set_Cycle(["default", "streaming", "split"], Str_Of(St_Pref("cwSort"))))
+        refreshContinueRow()
+        refreshSettings()
+    else if row = "cwThumbs" or row = "cwBlur" or row = "cwFurthest" or row = "cwUnaired"
+        St_SetPref(row, not Bool_Of(St_Pref(row), row <> "cwBlur"))
+        refreshContinueRow()
         refreshSettings()
     else if row = "cwStyle"
         if St_Pref("cwStyle") = "poster"
@@ -783,6 +813,22 @@ sub onSettingsEvent()
             m.progressSoon.control = "stop"
             m.progressSoon.control = "start"
         end if
+    else if row = "rateSource"
+        items = [{ id: "off", label: L("Apagadas"), desc: L("Oculta el botón de calificar.") }]
+        descs = { trakt: L("Califica películas, series y episodios."), simkl: L("Califica películas y series. Si el título no está en tus listas de Simkl, se agrega."), mdblist: L("Califica películas, series y episodios.") }
+        for each src in Rate_Sources()
+            if Rate_Connected(integ, src.id) then items.Push({ id: src.id, label: src.name, desc: descs[src.id] })
+        end for
+        if items.Count() = 1
+            showMessage(L("Calificaciones"), L("Conecta Trakt, Simkl o MDBList para guardar tus calificaciones."))
+        else
+            Sheet_Open({ title: L("Calificaciones"), subtitle: L("Califica títulos desde su ficha. Tus calificaciones se guardan y se muestran desde el servicio que elijas."), items: items }, "rateSource", invalid)
+        end if
+    else if row = "moreSource"
+        cur = Str_Of(St_Pref("moreSource"))
+        if cur = "" then cur = "tmdb"
+        items = [{ id: "tmdb", label: "TMDB", desc: L("Recomendaciones de TMDB. Necesita tu clave de TMDB."), checked: cur = "tmdb" }, { id: "trakt", label: "Trakt", desc: L("Títulos relacionados de Trakt."), checked: cur = "trakt" }, { id: "simkl", label: "Simkl", desc: L("Recomendaciones de la comunidad de Simkl."), checked: cur = "simkl" }]
+        Sheet_Open({ title: L("Fuente de Más como esto"), items: items }, "moreSource", invalid)
     else if row = "traktTranslate"
         integ["traktTranslate"] = not Bool_Of(integ.traktTranslate, true)
         St_SaveIntegrations(integ)

@@ -447,20 +447,198 @@ function Lang_CatalogName(code as string) as string
     return ""
 end function
 
+function Lang_AliasMap() as object
+    if m.langAliasMap <> invalid then return m.langAliasMap
+    m.langAliasMap = {
+        pob: "pt-br", pb: "pt-br", ptbr: "pt-br", "pt-br": "pt-br", "por-br": "pt-br", brazilian: "pt-br", "portuguese (brazil)": "pt-br", "portugues (brasil)": "pt-br", "português (brasil)": "pt-br", portuguesebrazil: "pt-br"
+        "pt-pt": "pt-pt", ptpt: "pt-pt", "por-pt": "pt-pt", "portuguese (portugal)": "pt-pt", "português (portugal)": "pt-pt"
+        por: "pt", pt: "pt", portuguese: "pt", portugues: "pt", "português": "pt"
+        "es-419": "es-419", "es-la": "es-419", "es-mx": "es-419", "es-ar": "es-419", "es-cl": "es-419", "es-co": "es-419", "es-pe": "es-419", "es-ve": "es-419"
+        lat: "es-419", esl: "es-419", spl: "es-419", latam: "es-419", latino: "es-419", "latin spanish": "es-419", "latin american spanish": "es-419", "español latino": "es-419", "spanish (latin america)": "es-419", "spanish (mexico)": "es-419"
+        "es-es": "es-es", castellano: "es-es", "español (españa)": "es-es", "castilian": "es-es"
+        spa: "es", esp: "es", es: "es", spanish: "es", espanol: "es", "español": "es"
+        eng: "en", en: "en", english: "en", ingles: "en", "inglés": "en", "en-us": "en", "en-gb": "en", "en-au": "en", "en-ca": "en"
+        "zh-cn": "zh-cn", "zh-hans": "zh-cn", "zho-hans": "zh-cn", chs: "zh-cn", "chinese (simplified)": "zh-cn"
+        "zh-tw": "zh-tw", "zh-hk": "zh-tw", "zh-hant": "zh-tw", cht: "zh-tw", zht: "zh-tw", "chinese (traditional)": "zh-tw"
+        yue: "zh-ca", "zh-ca": "zh-ca", cantonese: "zh-ca"
+        chi: "zh", zho: "zh", zh: "zh", chinese: "zh", chino: "zh"
+        fre: "fr", fra: "fr", fr: "fr", "fr-fr": "fr", "fr-ca": "fr", french: "fr", frances: "fr", "francés": "fr", "français": "fr"
+        ger: "de", deu: "de", de: "de", "de-de": "de", german: "de", deutsch: "de", aleman: "de", "alemán": "de"
+        ita: "it", it: "it", "it-it": "it", italian: "it", italiano: "it"
+        jpn: "ja", ja: "ja", jap: "ja", japanese: "ja", japones: "ja", "japonés": "ja"
+        kor: "ko", ko: "ko", korean: "ko", coreano: "ko"
+        rus: "ru", ru: "ru", russian: "ru", ruso: "ru"
+        ara: "ar", ar: "ar", arabic: "ar", arabe: "ar", "árabe": "ar"
+        tur: "tr", tr: "tr", turkish: "tr", turco: "tr", "türkçe": "tr"
+        pol: "pl", pl: "pl", polish: "pl", polaco: "pl", polski: "pl"
+        dut: "nl", nld: "nl", nl: "nl", dutch: "nl", nederlands: "nl", holandes: "nl", "holandés": "nl"
+        swe: "sv", sv: "sv", swedish: "sv", sueco: "sv"
+        nor: "no", nob: "no", nno: "no", no: "no", norwegian: "no", noruego: "no"
+        dan: "da", da: "da", danish: "da", danes: "da", "danés": "da"
+        fin: "fi", fi: "fi", finnish: "fi", finlandes: "fi", "finlandés": "fi"
+        gre: "el", ell: "el", el: "el", greek: "el", griego: "el"
+        cze: "cs", ces: "cs", cs: "cs", czech: "cs", checo: "cs"
+        hun: "hu", hu: "hu", hungarian: "hu", hungaro: "hu", "húngaro": "hu"
+        rum: "ro", ron: "ro", ro: "ro", romanian: "ro", rumano: "ro"
+        tha: "th", th: "th", thai: "th", tailandes: "th", "tailandés": "th"
+        vie: "vi", vi: "vi", vietnamese: "vi", vietnamita: "vi"
+        ind: "id", id: "id", "in": "id", indonesian: "id", indonesio: "id"
+        may: "ms", msa: "ms", ms: "ms", malay: "ms", malayo: "ms"
+        hin: "hi", hi: "hi", hindi: "hi"
+        ukr: "uk", uk: "uk", ukrainian: "uk", ucraniano: "uk"
+        bul: "bg", bg: "bg", bulgarian: "bg", bulgaro: "bg", "búlgaro": "bg"
+        hrv: "hr", hr: "hr", hbs: "hr", croatian: "hr", croata: "hr"
+        srp: "sr", sr: "sr", serbian: "sr", serbio: "sr"
+        "sr-me": "sr-me", cnr: "sr-me", montenegrin: "sr-me"
+        slo: "sk", slk: "sk", sk: "sk", slovak: "sk", eslovaco: "sk"
+        slv: "sl", sl: "sl", slovenian: "sl", esloveno: "sl"
+        heb: "he", he: "he", iw: "he", hebrew: "he", hebreo: "he"
+        per: "fa", fas: "fa", fa: "fa", persian: "fa", persa: "fa"
+        cat: "ca", ca: "ca", catalan: "ca", "catalán": "ca"
+        baq: "eu", eus: "eu", eu: "eu", basque: "eu", euskera: "eu"
+        glg: "gl", gl: "gl", galician: "gl", gallego: "gl"
+        tam: "ta", ta: "ta", tamil: "ta"
+        tel: "te", te: "te", telugu: "te"
+        ben: "bn", bn: "bn", bengali: "bn"
+        mar: "mr", mr: "mr", marathi: "mr"
+        urd: "ur", ur: "ur", urdu: "ur"
+        und: "und", unknown: "und", desconocida: "und", desconocido: "und"
+    }
+    return m.langAliasMap
+end function
+
+function Lang_Norm(raw as string) as string
+    s = LCase(raw.Trim())
+    if s = "" then return "und"
+    if m.langNormCache = invalid then m.langNormCache = {}
+    if m.langNormCache.DoesExist(s) then return m.langNormCache[s]
+    c = s.Replace("_", "-")
+    if c = "system" or c = "device" or c = "none" or c = "off" or c = "original" or c = "forced" or c = "default"
+        return c
+    end if
+    aliases = Lang_AliasMap()
+    res = ""
+    if aliases.DoesExist(c)
+        res = aliases[c]
+    else if Instr(1, c, "-") > 0
+        parts = c.Split("-")
+        primary = parts[0].Trim()
+        base = primary
+        if aliases.DoesExist(primary) then base = Lang_Base(aliases[primary])
+        if parts.Count() > 1
+            reg = parts[1].Trim()
+            cand = base + "-" + reg
+            if aliases.DoesExist(cand)
+                res = aliases[cand]
+            else if base = "es" and (reg = "419" or reg = "la" or reg = "mx" or reg = "ar" or reg = "cl" or reg = "co" or reg = "pe")
+                res = "es-419"
+            else if base = "zh" and (reg = "cn" or reg = "hans")
+                res = "zh-cn"
+            else if base = "zh" and (reg = "tw" or reg = "hk" or reg = "hant")
+                res = "zh-tw"
+            else
+                res = base
+            end if
+        else
+            res = base
+        end if
+    else
+        res = c
+    end if
+    if res = "" then res = "und"
+    if m.langNormCache.Count() > 512 then m.langNormCache = {}
+    m.langNormCache[s] = res
+    return res
+end function
+
+function Lang_Variant(rawLang as string, labelHint = "" as string, extraHint = "" as string) as string
+    base = Lang_Norm(rawLang)
+    combined = LCase(labelHint + " " + extraHint)
+    if combined.Trim() <> ""
+        if m.langVarRe = invalid
+            m.langVarRe = {
+                ptBr: CreateObject("roRegex", "\b(pt-?br|pob|bra[zs]il(ian)?|dublado)\b", "i")
+                ptPt: CreateObject("roRegex", "\b(pt-?pt|portugal|iberian|european\s*portuguese)\b", "i")
+                es419: CreateObject("roRegex", "\b(es-?419|es-?la|latam|latin[oa]?|mexico|argentin)\b", "i")
+                esEs: CreateObject("roRegex", "\b(es-?es|castellano|spain|españa)\b", "i")
+                zhCn: CreateObject("roRegex", "\b(simplified|zh-?cn|zh-?hans|chs)\b", "i")
+                zhTw: CreateObject("roRegex", "\b(traditional|zh-?tw|zh-?hk|zh-?hant|cht)\b", "i")
+                zhCa: CreateObject("roRegex", "\b(cantonese|yue|zh-?ca)\b", "i")
+                nPt: CreateObject("roRegex", "\b(portuguese|português|portugues)\b", "i")
+                nEs: CreateObject("roRegex", "\b(spanish|español|espanol)\b", "i")
+                nEn: CreateObject("roRegex", "\b(english|inglés|ingles)\b", "i")
+                nFr: CreateObject("roRegex", "\b(french|français|francés|frances)\b", "i")
+                nDe: CreateObject("roRegex", "\b(german|deutsch|alemán|aleman)\b", "i")
+                nIt: CreateObject("roRegex", "\b(italian|italiano)\b", "i")
+                nJa: CreateObject("roRegex", "\b(japanese|japonés|japones)\b", "i")
+                nKo: CreateObject("roRegex", "\b(korean|coreano)\b", "i")
+            }
+        end if
+        re = m.langVarRe
+        if base = "pt" or base = "und"
+            if re.ptBr.IsMatch(combined) then return "pt-br"
+            if re.ptPt.IsMatch(combined) then return "pt-pt"
+        end if
+        if base = "es" or base = "und"
+            if re.es419.IsMatch(combined) then return "es-419"
+            if re.esEs.IsMatch(combined) then return "es-es"
+        end if
+        if base = "zh" or base = "und"
+            if re.zhCn.IsMatch(combined) then return "zh-cn"
+            if re.zhTw.IsMatch(combined) then return "zh-tw"
+            if re.zhCa.IsMatch(combined) then return "zh-ca"
+        end if
+        if base = "und"
+            if re.nPt.IsMatch(combined) then return "pt"
+            if re.nEs.IsMatch(combined) then return "es"
+            if re.nEn.IsMatch(combined) then return "en"
+            if re.nFr.IsMatch(combined) then return "fr"
+            if re.nDe.IsMatch(combined) then return "de"
+            if re.nIt.IsMatch(combined) then return "it"
+            if re.nJa.IsMatch(combined) then return "ja"
+            if re.nKo.IsMatch(combined) then return "ko"
+        end if
+    end if
+    return base
+end function
+
+function Lang_Base(code as string) as string
+    c = LCase(code.Trim()).Replace("_", "-")
+    if c = "" then return ""
+    dash = Instr(1, c, "-")
+    if dash > 0 then return Left(c, dash - 1)
+    return c
+end function
+
 function Lang_Name(code as string) as string
-    c = LCase(code)
-    names = { spa: L("Español"), es: L("Español"), "es-mx": L("Español (Latino)"), "es-419": L("Español (Latino)"), "es-es": L("Español (España)"), lat: L("Español (Latino)"), esl: L("Español (Latino)"), spl: L("Español (Latino)"), eng: L("Inglés"), en: L("Inglés"), por: L("Portugués"), pt: L("Portugués"), pob: L("Portugués (Brasil)"), "pt-br": L("Portugués (Brasil)"), fre: L("Francés"), fra: L("Francés"), fr: L("Francés"), ita: L("Italiano"), it: L("Italiano"), ger: L("Alemán"), deu: L("Alemán"), de: L("Alemán"), jpn: L("Japonés"), ja: L("Japonés"), kor: L("Coreano"), ko: L("Coreano"), chi: L("Chino"), zho: L("Chino"), zh: L("Chino"), rus: L("Ruso"), ru: L("Ruso"), ara: L("Árabe"), ar: L("Árabe"), hin: "Hindi", hi: "Hindi", tur: L("Turco"), tr: L("Turco"), pol: L("Polaco"), pl: L("Polaco") }
-    if names.DoesExist(c) then return names[c]
-    if c = "" then return L("Desconocido")
-    known = Lang_CatalogName(c)
+    norm = Lang_Norm(code)
+    if norm = "" or norm = "und" then return L("Desconocido")
+    names = {
+        es: L("Español"), "es-419": L("Español (Latino)"), "es-es": L("Español (España)")
+        en: L("Inglés")
+        pt: L("Portugués"), "pt-br": L("Portugués (Brasil)"), "pt-pt": L("Portugués (Portugal)")
+        fr: L("Francés"), it: L("Italiano"), de: L("Alemán")
+        ja: L("Japonés"), ko: L("Coreano")
+        zh: L("Chino"), "zh-cn": L("Chino (Simplificado)"), "zh-tw": L("Chino (Tradicional)"), "zh-ca": L("Chino (Cantonés)")
+        ru: L("Ruso"), ar: L("Árabe"), hi: "Hindi", tr: L("Turco"), pl: L("Polaco")
+        nl: L("Neerlandés"), sv: L("Sueco"), no: L("Noruego"), da: L("Danés"), fi: L("Finlandés")
+        el: L("Griego"), cs: L("Checo"), hu: L("Húngaro"), ro: L("Rumano")
+        th: L("Tailandés"), vi: L("Vietnamita"), id: L("Indonesio"), ms: L("Malayo"), uk: L("Ucraniano")
+        bg: L("Búlgaro"), hr: L("Croata"), sr: L("Serbio"), "sr-me": L("Serbio (Montenegro)")
+        sk: L("Eslovaco"), sl: L("Esloveno"), he: L("Hebreo"), fa: L("Persa")
+        ca: L("Catalán"), eu: L("Euskera"), gl: L("Gallego")
+    }
+    if names.DoesExist(norm) then return names[norm]
+    known = Lang_CatalogName(norm)
+    if known = "" then known = Lang_CatalogName(Lang_Base(norm))
     if known <> "" then return known
     return UCase(code)
 end function
 
 function Lang_Rank(code as string) as integer
-    c = LCase(code)
-    if c = "spa" or c = "es" or c = "lat" or c = "esl" or c = "spl" or Left(c, 3) = "es-" then return 0
-    if c = "eng" or c = "en" then return 1
+    c = Lang_Norm(code)
+    if c = "es-419" or c = "es" or c = "es-es" then return 0
+    if c = "en" then return 1
     return 2
 end function
 
@@ -477,13 +655,11 @@ function Fmt_Clock(dt as object) as string
 end function
 
 function Lang_Iso3(code as string) as string
-    c = LCase(code.Trim())
-    c = c.Replace("_", "-")
-    if c = "" or c = "system" or c = "none" or c = "off" or c = "original" or c = "forced" then return c
-    map = { es: "spa", "es-419": "spa", "es-mx": "spa", "es-es": "spa", en: "eng", "en-us": "eng", "en-gb": "eng", pt: "por", "pt-br": "por", "pt-pt": "por", pob: "por", fr: "fre", fra: "fre", it: "ita", de: "ger", deu: "ger", ja: "jpn", ko: "kor", zh: "chi", zho: "chi", ru: "rus", ar: "ara", hi: "hin", tr: "tur", pl: "pol", nl: "dut", nld: "dut" }
+    c = Lang_Base(Lang_Norm(code))
+    if c = "" or c = "system" or c = "device" or c = "none" or c = "off" or c = "original" or c = "forced" or c = "und" then return c
+    map = { es: "spa", en: "eng", pt: "por", fr: "fre", it: "ita", de: "ger", ja: "jpn", ko: "kor", zh: "chi", ru: "rus", ar: "ara", hi: "hin", tr: "tur", pl: "pol", nl: "dut" }
     if map.DoesExist(c) then return map[c]
-    if Len(c) = 3 then return c
-    return Left(c, 2)
+    return c
 end function
 
 function Lang_Device() as string
@@ -491,24 +667,156 @@ function Lang_Device() as string
     return LCase(Left(Str_Of(locale), 2))
 end function
 
+function Lang_UiCode() as string
+    if m.global <> invalid and m.global.hasField("uiLang")
+        ui = LCase(Str_Of(m.global.uiLang).Trim())
+        if ui <> "" and ui <> "auto" then return Lang_Norm(ui)
+    end if
+    return Lang_Norm(Lang_Device())
+end function
+
 function Lang_Resolve(code as string, original as string) as string
     c = LCase(code.Trim())
-    if c = "system" or c = "device" then return Lang_Device()
-    if c = "original" then return LCase(original)
-    if c = "none" or c = "default" or c = "off" or c = "forced" then return ""
-    return c
+    if c = "system" or c = "device" then return Lang_Norm(Lang_Device())
+    if c = "original" then return Lang_Norm(original)
+    if c = "none" or c = "default" or c = "off" or c = "forced" or c = "" then return ""
+    res = Lang_Norm(c)
+    if res = "und" then return ""
+    return res
+end function
+
+function Lang_MatchScore(trackLang as string, wanted as string) as integer
+    a = Lang_Norm(trackLang)
+    b = Lang_Norm(wanted)
+    if a = "" or a = "und" or b = "" or b = "und" or b = "none" or b = "off" then return 0
+    if a = b then return 3
+    ba = Lang_Base(a)
+    bb = Lang_Base(b)
+    if ba <> bb then return 0
+    if b = bb then return 2
+    if a = ba then return 1
+    return 0
 end function
 
 function Lang_Matches(trackLang as string, wanted as string) as boolean
-    a = Lang_Iso3(trackLang)
-    b = Lang_Iso3(wanted)
-    if a = b then return true
-    if b = "spa" and (a = "lat" or a = "esl" or a = "spl" or Left(LCase(trackLang), 2) = "es") then return true
-    if b = "eng" and Left(LCase(trackLang), 2) = "en" then return true
-    if b = "fre" and a = "fra" then return true
-    if b = "ger" and a = "deu" then return true
-    return false
+    return Lang_MatchScore(trackLang, wanted) > 0
 end function
+
+function Sub_DetectFormat(rawFmt as string, url as string) as string
+    f = UCase(rawFmt.Trim())
+    if f = "SUBRIP" or f = "SRT" then return "SRT"
+    if f = "WEBVTT" or f = "VTT" then return "VTT"
+    if f = "ASS" or f = "SSA" then return UCase(f)
+    low = LCase(url)
+    q = Instr(1, low, "?")
+    if q > 0 then low = Left(low, q - 1)
+    if Right(low, 4) = ".vtt" then return "VTT"
+    if Right(low, 4) = ".srt" then return "SRT"
+    if Right(low, 4) = ".ass" then return "ASS"
+    if Right(low, 4) = ".ssa" then return "SSA"
+    return ""
+end function
+
+function Sub_DetectSdh(text as string) as boolean
+    if text = "" then return false
+    if m.subSdhRe = invalid then m.subSdhRe = CreateObject("roRegex", "(\b(sdh|sordos|closed\s*captions?)\b|[\[\(]\s*(cc|hi|sdh)\s*[\)\]]|hearing\s*imp)", "i")
+    return m.subSdhRe.IsMatch(text)
+end function
+
+function Sub_DetectForced(text as string) as boolean
+    if text = "" then return false
+    if m.subForcedRe = invalid then m.subForcedRe = CreateObject("roRegex", "(\b(forced|forzado|forzados)\b|[\[\(]\s*forced\s*[\)\]])", "i")
+    return m.subForcedRe.IsMatch(text)
+end function
+
+function Sub_UrlKey(url as string) as string
+    u = url.Trim()
+    h = Instr(1, u, "#")
+    if h > 0 then u = Left(u, h - 1)
+    return u
+end function
+
+function Sub_FormatLabel(item as object) as string
+    parts = [Lang_Name(Str_Of(item.langKey))]
+    prov = Str_Of(item.provider)
+    rel = Str_Of(item.release)
+    if rel <> ""
+        parts.Push(rel)
+    else if prov <> ""
+        parts.Push(prov)
+    end if
+    tags = []
+    if item.forced = true then tags.Push(L("Forzados"))
+    if item.sdh = true then tags.Push("SDH")
+    fmt = Str_Of(item.format)
+    if fmt <> "" then tags.Push(fmt)
+    if tags.Count() > 0 then parts.Push(tags.Join(" · "))
+    return parts.Join("  ·  ")
+end function
+
+function Sub_NormalizeTrack(raw as object, defaultProvider as string, sourceType = "addon" as string) as dynamic
+    if type(raw) <> "roAssociativeArray" then return invalid
+    url = Str_Of(raw.url).Trim()
+    if url = "" then url = Str_Of(raw.TrackName).Trim()
+    if url = "" then return invalid
+    rawLang = Str_Of(raw.lang)
+    if rawLang = "" then rawLang = Str_Of(raw.language)
+    if rawLang = "" then rawLang = Str_Of(raw.Language)
+    if rawLang = "" then rawLang = Str_Of(raw.SubLanguageID)
+    title = Str_Of(raw.title)
+    if title = "" then title = Str_Of(raw.name)
+    if title = "" then title = Str_Of(raw.release)
+    if title = "" then title = Str_Of(raw.SubFileName)
+    if title = "" then title = Str_Of(raw.DisplayTitle)
+    if title = "" then title = Str_Of(raw.Description)
+    prov = Str_Of(raw.provider)
+    if prov = "" then prov = defaultProvider
+    hintText = [title, Str_Of(raw.id), url].Join(" ")
+    langKey = Lang_Variant(rawLang, title, url)
+    langLabel = Lang_Name(langKey)
+    forced = Bool_Of(raw.forced, false) or Bool_Of(raw.IsForced, false) or Sub_DetectForced(hintText)
+    sdh = Bool_Of(raw.sdh, false) or Bool_Of(raw.hearingImpaired, false) or Bool_Of(raw.IsHearingImpaired, false) or Sub_DetectSdh(hintText)
+    fmt = Sub_DetectFormat(Str_Of(raw.format) + Str_Of(raw.SubFormat), url)
+    release = title.Trim()
+    if LCase(release) = LCase(langLabel) or LCase(release) = LCase(rawLang) then release = ""
+    if Len(release) > 48 then release = Left(release, 45).Trim() + "..."
+    sid = Str_Of(raw.id)
+    if sid = "" then sid = sourceType + "|" + prov + "|" + Sub_UrlKey(url)
+    item = {
+        id: sid
+        url: url
+        lang: rawLang
+        langKey: langKey
+        langLabel: langLabel
+        provider: prov
+        sourceType: sourceType
+        forced: forced
+        sdh: sdh
+        format: fmt
+        release: release
+    }
+    item.label = Sub_FormatLabel(item)
+    return item
+end function
+
+sub Sub_MergeInto(target as object, incoming as object)
+    if type(target) <> "roAssociativeArray" or type(incoming) <> "roAssociativeArray" then return
+    tk = Str_Of(target.langKey)
+    ik = Str_Of(incoming.langKey)
+    if ik <> "" and ik <> "und"
+        if tk = "" or tk = "und" or (tk = Lang_Base(tk) and ik <> Lang_Base(ik) and Lang_Base(ik) = tk)
+            target.langKey = ik
+            target.langLabel = incoming.langLabel
+            if Str_Of(incoming.lang) <> "" then target.lang = incoming.lang
+        end if
+    end if
+    target.forced = Bool_Of(target.forced, false) or Bool_Of(incoming.forced, false)
+    target.sdh = Bool_Of(target.sdh, false) or Bool_Of(incoming.sdh, false)
+    if Str_Of(target.format) = "" and Str_Of(incoming.format) <> "" then target.format = incoming.format
+    if Str_Of(target.release) = "" and Str_Of(incoming.release) <> "" then target.release = incoming.release
+    if Str_Of(target.provider) = "" and Str_Of(incoming.provider) <> "" then target.provider = incoming.provider
+    target.label = Sub_FormatLabel(target)
+end sub
 
 function Trailer_Content(t as object) as object
     content = CreateObject("roSGNode", "ContentNode")

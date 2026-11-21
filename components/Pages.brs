@@ -99,10 +99,10 @@ sub applyRowSizes(rows as object)
             row = root.getChild(i)
             shape = "poster"
             if row.hasField("shape") then shape = row.shape
-            if row.id = "cw" and cwLandscape then shape = "card"
+            if Cw_IsRow(row) and cwLandscape then shape = "card"
             more = row.hasField("gridPart") and row.gridPart > 0
             extra = 0
-            named = names and row.id <> "cw" and shape <> "hero"
+            named = names and not Cw_IsRow(row) and shape <> "hero"
             if named then extra = 44
             if row.hasField("labels") then row.labels = named else row.addFields({ labels: named })
             labels.Push(not more and shape <> "hero")
@@ -186,7 +186,7 @@ function Hero_Row(content as object) as dynamic
     fallback = []
     for i = 0 to content.getChildCount() - 1
         row = content.getChild(i)
-        if row.id <> "cw" and row.hasField("key") and row.getChildCount() > 0
+        if not Cw_IsRow(row) and row.hasField("key") and row.getChildCount() > 0
             first = row.getChild(0)
             if first.itemType <> "folder"
                 if wanted.DoesExist(Hero_Key(row.key)) then picked.Push(row)
@@ -307,7 +307,7 @@ function Grid_Wrap(content as object, cap as boolean) as object
         rows.Push(content.getChild(i))
     end for
     for each row in rows
-        if row.id = "cw" or row.id = "herocar" or row.getChildCount() = 0
+        if Cw_IsRow(row) or row.id = "herocar" or row.getChildCount() = 0
             root.appendChild(row)
         else
             Grid_Split(root, row, cap)
@@ -369,7 +369,7 @@ function Grid_Chunk(row as object, key as string, part as integer) as object
 end function
 
 function Item_Fields() as object
-    return ["itemType", "metaId", "videoId", "background", "metaLine", "episodeLabel", "progress", "altIds", "logo", "rating", "fallback", "idx", "badge", "kicker", "subtitle", "watched", "portrait", "remote", "gif", "heroVideo", "colTitle", "hideTitle", "folder"]
+    return ["itemType", "metaId", "videoId", "background", "metaLine", "episodeLabel", "progress", "altIds", "logo", "rating", "fallback", "idx", "badge", "kicker", "subtitle", "watched", "portrait", "remote", "gif", "heroVideo", "colTitle", "hideTitle", "folder", "released", "cwSeason", "cwEpisode", "cwNext", "cwAt"]
 end function
 
 function Grid_Copy(src as object) as object
@@ -434,22 +434,22 @@ sub refreshContinueRow()
     if root = invalid then return
     at = 0
     first = root.getChild(0)
-    if first <> invalid and first.id = "herocar"
-        at = 1
-        first = root.getChild(1)
-    end if
-    hasCw = first <> invalid and first.id = "cw"
-    cw = Content_ContinueRow()
-    if hasCw and cw = invalid
+    if first <> invalid and first.id = "herocar" then at = 1
+    while root.getChildCount() > at and Cw_IsRow(root.getChild(at))
         root.removeChildIndex(at)
-    else if hasCw
-        root.replaceChild(cw, at)
-    else if cw <> invalid
-        root.insertChild(cw, at)
-    end if
+    end while
+    rows = Content_ContinueRows()
+    for i = rows.Count() - 1 to 0 step -1
+        root.insertChild(rows[i], at)
+    end for
     applyRowSizes(m.homeRows)
     if root.getChildCount() > 0 and not m.emptyState.visible then m.homeRows.visible = true
 end sub
+
+function Cw_IsRow(row as dynamic) as boolean
+    if row = invalid then return false
+    return row.id = "cw" or row.id = "cwup"
+end function
 
 sub buildLibrary()
     m.libraryGrid = false
@@ -495,6 +495,7 @@ sub buildLibrary()
             end for
         end if
     end for
+    Cloud_LibraryRow(root)
     prev = m.libraryRows.rowItemFocused
     m.libraryRows.content = root
     applyRowSizes(m.libraryRows)

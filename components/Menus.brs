@@ -97,6 +97,7 @@ function goneMenu() as object
 end function
 
 function buildMenu(id as string, data as object) as object
+    if Left(id, 5) = "cloud" then return Cloud_Menu(id, data)
     if id = "settings" then return menuSettings()
     if id = "phone" then return menuPhone()
     if id = "addons" then return menuAddons()
@@ -346,6 +347,7 @@ sub runAction(a as object)
         return
     end if
     act = Str_Of(a.act)
+    if Left(act, 5) = "cloud" and Cloud_Action(act, a) then return
     top = m.stack.Peek()
     data = top.data
 
@@ -457,6 +459,7 @@ end sub
 
 sub handleKeyboard(kind as string, text as string, data as object)
     if Conn_Keyboard(kind, text, data) then return
+    if Cloud_Keyboard(kind, text) then return
     if kind = "partyCode"
         if text.Trim() = "" then return
         Party_Join(text)
