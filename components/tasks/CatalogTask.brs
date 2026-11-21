@@ -61,26 +61,25 @@ sub execute()
         if type(entry.catalogs) = "roArray"
             for each cat in entry.catalogs
                 if type(cat) = "roAssociativeArray" and IsStr(cat["type"]) and IsStr(cat.id)
-                    if not Addon_RequiresExtra(cat)
-                        key = St_CatalogKey(entry.manifest, entry.base, cat)
-                        if seen.DoesExist(key) then key = key + "|" + all.Count().ToStr()
-                        seen[key] = true
-                        name = Str_Of(cat.name).Trim()
-                        if name = "" then name = cat.id
-                        all.Push({
-                            key: key
-                            name: name
-                            kind: cat["type"]
-                            id: cat.id
-                            addon: entry.name
-                            base: entry.base
-                            hidden: prefs.hidden.DoesExist(key)
-                            status: ""
-                            count: 0
-                            genres: Disc_Genres(cat)
-                            skip: Disc_Skip(cat)
-                        })
-                    end if
+                    key = St_CatalogKey(entry.manifest, entry.base, cat)
+                    if seen.DoesExist(key) then key = key + "|" + all.Count().ToStr()
+                    seen[key] = true
+                    name = Str_Of(cat.name).Trim()
+                    if name = "" then name = cat.id
+                    all.Push({
+                        key: key
+                        name: name
+                        kind: cat["type"]
+                        id: cat.id
+                        addon: entry.name
+                        base: entry.base
+                        hidden: prefs.hidden.DoesExist(key)
+                        status: ""
+                        count: 0
+                        needsExtra: Addon_RequiresExtra(cat)
+                        genres: Disc_Genres(cat)
+                        skip: Disc_Skip(cat)
+                    })
                 end if
             end for
         end if
@@ -90,7 +89,7 @@ sub execute()
     visible = []
     urls = []
     for each c in ordered
-        if not c.hidden
+        if not c.hidden and not Bool_Of(c.needsExtra, false)
             visible.Push(c)
             urls.Push(Addon_ResourceUrl(c.base, "catalog", c.kind, c.id))
         end if
