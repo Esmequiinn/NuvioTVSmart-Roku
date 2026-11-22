@@ -1,0 +1,14 @@
+# sh tests/run.sh /tmp/brsprobe/node_modules/.bin/brs fix/required-extra-catalog
+# base del test: fix/required-extra-catalog (ed2d2556)
+
+== despues del parche (working tree) ==
+PASS: normal notWebReady=false
+PASS: notWebReady notWebReady=true
+PASS: Fuente con encabezados 1080p marca 'Requiere encabezados' presente=true
+PASS: Fuente normal 1080p marca 'Requiere encabezados' presente=false
+PASS: proxyHeaders.request parseado (2 encabezados)
+PASS: aviso mostrado: Este enlace necesita encabezados web que Roku no puede enviar. Elige otra fuente o contacta al proveedor del addon.
+PASS: playStream no inicio la reproduccion del stream notWebReady
+PASS: el stream normal sigue el camino de reproduccion
+RESULT: PASS (campo, marca en la lista y aviso de reproduccion)
+

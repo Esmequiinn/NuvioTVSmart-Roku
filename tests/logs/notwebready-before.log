@@ -1,0 +1,14 @@
+# sh tests/run.sh /tmp/brsprobe/node_modules/.bin/brs fix/required-extra-catalog
+# base del test: fix/required-extra-catalog (ed2d2556)
+
+== antes del parche (Streams.brs y Playback.brs de fix/required-extra-catalog) ==
+FAIL: normal notWebReady no se parseo como false
+FAIL: notWebReady notWebReady no se parseo como true
+FAIL: Fuente con encabezados 1080p marca 'Requiere encabezados' presente=false
+PASS: Fuente normal 1080p marca 'Requiere encabezados' presente=false
+PASS: proxyHeaders.request parseado (2 encabezados)
+FAIL: la reproduccion no mostro el aviso (toast='')
+FAIL: playStream toco el estado de reproduccion para un stream notWebReady
+PASS: el stream normal sigue el camino de reproduccion
+RESULT: FAIL (5 comprobaciones fallidas)
+

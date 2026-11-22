@@ -1,0 +1,27 @@
+name: brs tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  catalogs:
+    name: catalog regression (required extras)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # tests/run.sh compara contra origin/main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install the BrightScript interpreter
+        run: npm install --no-save --no-fund --no-audit brs@0.45.0
+
+      - name: Run the catalog regression test
+        run: sh tests/run.sh ./node_modules/.bin/brs

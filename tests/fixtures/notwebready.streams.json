@@ -1,0 +1,28 @@
+{
+  "streams": [
+    {
+      "name": "Fuente normal 1080p",
+      "title": "Normal\nEspañol",
+      "url": "https://example.com/normal.mkv",
+      "behaviorHints": {
+        "filename": "normal.mkv",
+        "bingeGroup": "normal"
+      }
+    },
+    {
+      "name": "Fuente con encabezados 1080p",
+      "title": "Requiere headers\nEspañol",
+      "url": "https://example.com/con-encabezados.mkv",
+      "behaviorHints": {
+        "filename": "con-encabezados.mkv",
+        "notWebReady": true,
+        "proxyHeaders": {
+          "request": {
+            "Referer": "https://example.com/",
+            "User-Agent": "Nuvio"
+          }
+        }
+      }
+    }
+  ]
+}
