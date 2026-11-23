@@ -681,8 +681,6 @@ function Live_HomeRowOf(title as string, list as object) as object
             desc = L("Canal en vivo") + " — " + name + "."
         end if
         bg = Str_Of(c.backdrop)
-        if bg = "" then bg = Str_Of(c.art)
-        if bg = "" then bg = Str_Of(c.l)
         pct = ToInt(c.pct, -1)
         progress = 0.0
         if pct > 0 then progress = pct / 100.0
