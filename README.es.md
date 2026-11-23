@@ -63,7 +63,8 @@ Este es un canal de Roku no oficial basado en [Nuvio](https://github.com/NuvioMe
 - Los perfiles con PIN en tu cuenta de Nuvio piden el PIN en el Roku
 - Más como esto, colección, y productoras o cadenas en la página de detalles, como en Nuvio TV
 - Servicios conectados como en Nuvio TV: TorBox (QR o clave de API) y Premiumize (clave de API), para reproducir resultados de torrent que ya están en la caché de tu servicio
-- Servidores multimedia como en Nuvio TV: bibliotecas de Jellyfin y Emby en el inicio y como fuentes
+- Servidores multimedia como en Nuvio TV: bibliotecas de Jellyfin, Emby y Plex en el inicio y como fuentes
+- Edición con IPTV: listas M3U y cuentas Xtream por perfil con guía de programación, barra con la información del canal, Arriba/Abajo para cambiar de canal, favoritos y canales vistos recientemente
 - Calificaciones guardadas en Trakt, Simkl o MDBList, para títulos y episodios
 - Biblioteca en la nube como en Nuvio TV: explora y reproduce lo que ya tienes en tu cuenta de TorBox, Premiumize o Real-Debrid, con filtros de proveedor y tipo, búsqueda, continuar donde te quedaste y siguiente archivo
 - Botón **Cambiar forma de abrir** en el reproductor, como el de cambiar reproductor de Nuvio: prueba la siguiente forma de abrir un enlace cuando no carga o no tiene sonido
@@ -148,6 +149,9 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Más como esto y colección en detalles | ✅ Funciona |
 | TorBox y Premiumize (torrents en caché) | ✅ Funciona |
 | Jellyfin y Emby | ✅ Funciona |
+| Plex | ⚠️ Sin probar |
+| Simkl como fuente de Seguir viendo | ⚠️ Sin probar |
+| Edición con IPTV (M3U, Xtream, guía, favoritos) | ⚠️ Sin probar |
 | Biblioteca en la nube (TorBox, Premiumize, Real-Debrid) | ⚠️ Sin probar |
 | Calificaciones (Trakt, Simkl, MDBList) | ⚠️ Sin probar |
 | Opciones de Seguir viendo | ⚠️ Sin probar |
@@ -188,6 +192,7 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 El canal se instala con el Modo Desarrollador de Roku (sideload). Solo tienes que activarlo una vez.
 
 1. **Descarga el canal.** Baja el `.zip` más reciente de la página de [Releases](../../releases). No lo descomprimas.
+   Hay dos zips: `NuvioTV-Roku-<versión>-beta.zip` es el canal normal y `NuvioTV-Roku-<versión>-IPTV.zip` es el mismo canal con TV en vivo (M3U y Xtream). Instala solo uno de los dos.
 2. **Activa el Modo Desarrollador.** Con el control de tu Roku presiona: `Inicio` ×3, `Arriba` ×2, `Derecha`, `Izquierda`, `Derecha`, `Izquierda`, `Derecha`. Acepta el acuerdo, elige una contraseña y deja que el Roku se reinicie. Anota la dirección IP que aparece (por ejemplo `192.168.1.50`).
 3. **Abre el instalador.** En una computadora o celular conectado al mismo Wi-Fi, abre `http://IP_DE_TU_ROKU` en el navegador. Entra con el usuario `rokudev` y la contraseña que elegiste.
 4. **Sube el zip.** Haz clic en **Upload**, elige el `.zip` que descargaste y haz clic en **Install with zip**. El canal se abre solo cuando termina.
@@ -222,6 +227,8 @@ El `.zip` del release ya trae las claves de Trakt y Simkl. TMDB solo funciona co
 | Premiumize | Opcional. Escribe tu clave de API de premiumize.me en **Ajustes → Servicios conectados**, o llega sola si está guardada en tu cuenta de Nuvio. |
 | Real-Debrid | Opcional. Escribe tu clave de API de [real-debrid.com/apitoken](https://real-debrid.com/apitoken) en **Ajustes → Servicios conectados**. Por ahora solo se usa para la biblioteca en la nube. |
 | Jellyfin o Emby | Opcional. Inicia sesión con la dirección de tu servidor, tu usuario y tu contraseña en **Ajustes → Servidores multimedia**. |
+| Plex | Opcional. En **Ajustes → Servidores multimedia → Plex**, entra a plex.tv/link y escribe el código que aparece en la tele. |
+| IPTV (solo en la edición con IPTV) | Agrega tu lista M3U o tu cuenta Xtream en **Ajustes → TV en vivo** o en la pestaña **TV en vivo** de la página del celular. |
 
 ### Cuenta de Nuvio
 
@@ -235,6 +242,12 @@ El canal es BrightScript y SceneGraph puro, así que no hay nada que compilar. C
 
 ```
 zip -r NuvioTV-Roku.zip manifest source components images web locale LICENSE
+```
+
+Para la edición con IPTV, agrega esta línea al `manifest` antes de comprimir (también puedes cambiar `title`):
+
+```
+edition=iptv
 ```
 
 ### Traducciones

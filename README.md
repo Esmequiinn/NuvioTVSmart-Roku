@@ -63,7 +63,8 @@ This is an unofficial Roku channel based on [Nuvio](https://github.com/NuvioMedi
 - Profiles locked with a PIN in your Nuvio account ask for the PIN on the Roku
 - More like this, collection, and production companies or networks on the details page, like Nuvio TV
 - Connected services like Nuvio TV: TorBox (QR or API key) and Premiumize (API key), to play torrent results that are already cached on your service
-- Media servers like Nuvio TV: Jellyfin and Emby libraries on the home screen and as sources
+- Media servers like Nuvio TV: Jellyfin, Emby and Plex libraries on the home screen and as sources
+- IPTV edition: M3U playlists and Xtream accounts per profile with a program guide, channel info bar, Up/Down to change channels, favorites and recently watched channels
 - Ratings saved to Trakt, Simkl or MDBList, for titles and episodes
 - Cloud library like Nuvio TV: browse and play what you already have in your TorBox, Premiumize or Real-Debrid account, with provider and type filters, search, resume and next file
 - **Change how it opens** button in the player, like Nuvio's switch player button: try the next way of opening a link when it doesn't load or has no sound
@@ -148,6 +149,9 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | More like this and collection in details | ✅ Working |
 | TorBox and Premiumize (cached torrents) | ✅ Working |
 | Jellyfin and Emby | ✅ Working |
+| Plex | ⚠️ Not tested yet |
+| Simkl as Continue Watching source | ⚠️ Not tested yet |
+| IPTV edition (M3U, Xtream, guide, favorites) | ⚠️ Not tested yet |
 | Cloud library (TorBox, Premiumize, Real-Debrid) | ⚠️ Not tested yet |
 | Ratings (Trakt, Simkl, MDBList) | ⚠️ Not tested yet |
 | Continue Watching options | ⚠️ Not tested yet |
@@ -188,6 +192,7 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 The channel is installed with Roku's Developer Mode (sideloading). You only need to enable it once.
 
 1. **Download the channel.** Get the latest `.zip` from the [Releases](../../releases) page. Don't unzip it.
+   There are two zips: `NuvioTV-Roku-<version>-beta.zip` is the regular channel and `NuvioTV-Roku-<version>-IPTV.zip` is the same channel plus Live TV (M3U and Xtream). Install only one of them.
 2. **Enable Developer Mode.** With your Roku remote, press: `Home` ×3, `Up` ×2, `Right`, `Left`, `Right`, `Left`, `Right`. Accept the agreement, choose a password and let the Roku restart. Write down the IP address it shows (for example `192.168.1.50`).
 3. **Open the installer.** On a computer or phone on the same Wi-Fi, open `http://YOUR_ROKU_IP` in a browser. Sign in with the user `rokudev` and the password you chose.
 4. **Upload the zip.** Click **Upload**, pick the `.zip` you downloaded and click **Install with zip**. The channel opens by itself when it's done.
@@ -222,6 +227,8 @@ The release `.zip` already includes the Trakt and Simkl keys. TMDB only works wi
 | Premiumize | Optional. Enter your API key from premiumize.me in **Settings → Connected services**, or it comes in automatically if it's saved in your Nuvio account. |
 | Real-Debrid | Optional. Enter your API key from [real-debrid.com/apitoken](https://real-debrid.com/apitoken) in **Settings → Connected services**. For now it's only used for the cloud library. |
 | Jellyfin or Emby | Optional. Sign in with your server address, username and password in **Settings → Media servers**. |
+| Plex | Optional. In **Settings → Media servers → Plex**, go to plex.tv/link and enter the code shown on the TV. |
+| IPTV (IPTV edition only) | Add your M3U playlist or Xtream account in **Settings → Live TV** or in the **Live TV** tab of the phone page. |
 
 ### Nuvio account
 
@@ -235,6 +242,12 @@ The channel is plain BrightScript and SceneGraph, so there is nothing to compile
 
 ```
 zip -r NuvioTV-Roku.zip manifest source components images web locale LICENSE
+```
+
+For the IPTV edition, add this line to `manifest` before zipping (you can also change `title`):
+
+```
+edition=iptv
 ```
 
 ### Translations

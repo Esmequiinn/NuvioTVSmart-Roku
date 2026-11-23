@@ -4,6 +4,46 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.1.8] - 2026-11-21
+
+### Agregado
+- **Edición con IPTV**, un segundo `.zip` en el mismo release (`NuvioTV-Roku-0.1.8-IPTV.zip`). Es el mismo canal con todo lo de arriba y un nuevo lugar **En vivo** en el menú lateral:
+  - Agrega **listas M3U** o **cuentas Xtream** en **Ajustes → TV en vivo**, o desde el celular en la página de configuración (`http://IP_DE_TU_ROKU:8888`, pestaña **TV en vivo**). Cada perfil tiene sus propias listas y puede compartirlas con los otros perfiles. Si la lista trae su propia guía, se usa sola; también puedes poner la dirección de tu propia guía XMLTV en cada lista, incluidas las comprimidas `.xml.gz`.
+  - **Guía de programación estilo TiviMate**: un panel arriba con el póster del programa (de TMDB o de la guía; si no, el logo del canal), el número, nombre y grupo del canal, **EN VIVO**, el título grande, día y horario, cuánto falta, episodio y categoría, avance, descripción y una vista previa del canal con sonido. Abajo, cada canal con su número, logo y nombre, los programas con su horario, una línea roja con la hora actual y un borde rojo en el canal que está sonando. **Izquierda** abre la lista de grupos como panel lateral, igual que la lista de canales (**Favoritos**, **Vistos recientemente**, **Todos** y cada grupo con cuántos canales tiene), e **Izquierda** otra vez abre el menú lateral normal.
+  - **Viendo un canal**: la barra de abajo muestra el canal, **EN VIVO**, el formato de video y audio, el programa actual con su avance, hora de inicio y fin, y lo que sigue. **Arriba y Abajo cambian de canal**, **OK** muestra la barra del canal y **OK** otra vez abre la lista de canales encima del video con lo que dan ahora (Izquierda dentro de ella abre los grupos), **Repetición instantánea** regresa al canal anterior y Atrás vuelve a la guía.
+  - **Reproducción más estable**: si un canal se corta o se congela, se reconecta solo, y si sigue fallando pasa a la siguiente opción del canal. El audio y los subtítulos que elijas se recuerdan en cada canal.
+  - **Opciones del canal**: cuando una lista trae el mismo canal varias veces (mismo `tvg-id`), aparece una sola vez en la guía con la misma programación. Al verlo, **Izquierda y Derecha cambian entre sus opciones**, y si una no reproduce se prueba la siguiente. La vista previa de la guía siempre usa la primera opción.
+  - Las listas funcionan con cualquier dirección, aunque no terminen en `.m3u` o sean un enlace de GitHub.
+  - Apartado **Guía (EPG)** en **Ajustes → TV en vivo** y en la página del celular: muestra qué guía usa cada lista (la suya o una personalizada) y cuántos programas y canales cargó. Puedes poner varias guías en una lista, separadas por coma.
+  - **Favoritos**: presiona `*` en un canal para agregarlo o quitarlo. Aparecen primero en la guía.
+  - Filas **Canales favoritos** y **Canales recientes** en el inicio, con lo que dan ahora, su avance, cuánto falta y lo que sigue. Presiona `*` en uno para verlo, agregarlo o quitarlo de favoritos, o quitarlo de canales recientes.
+  - **Más ajustes de TV en vivo** en **Ajustes → TV en vivo**: tamaño de la guía (Compacta, Normal, Grande), mostrar u ocultar números, logos, nombres, nombres en dos líneas, horarios, la línea de la hora actual, el borde rojo y la vista previa; abrir en el último grupo; empezar en el último canal en pantalla completa; reconectar solo; cambiar a otra opción si una falla; recordar audio y subtítulos; invertir Arriba y Abajo; cuánto dura la barra del canal; cada cuánto se actualizan las listas y la guía; y ajustar la hora de la guía si sale adelantada o atrasada.
+  - **Recordatorios de programas**: en la guía, presiona **OK** en un programa que todavía no empieza y elige **Recordarme cuando empiece**. Le aparece una campanita, y un minuto antes de que empiece se desliza una tarjeta desde la esquina de arriba a la derecha con el logo del canal, el programa y la hora, estés viendo lo que estés viendo en la app (un canal, una película o una serie). Presiona **OK** en él otra vez para quitar el recordatorio.
+  - **Imágenes de películas y series**: el póster de cada programa se busca en TMDB por su título (también cuando la guía acorta el nombre, como "Bichos Una aventura"), así las películas y series muestran su póster en la guía y en el inicio. La imagen de la propia guía solo se usa cuando TMDB no tiene nada y es vertical y con buen tamaño; si no, se muestra el logo del canal. Necesita tu clave de TMDB; se puede apagar en **Ajustes → TV en vivo**.
+  - El hero del inicio para un canal se ve como los demás: **TV en vivo · grupo**, lo que dan ahora con cuánto falta y lo que sigue, y su descripción.
+  - **Manejo de canales y grupos**: presiona `*` en un canal para renombrarlo u ocultarlo, y en un grupo (en la lista de grupos) para agregarlo a **grupos favoritos** (salen primero, con estrella), ocultarlo o **bloquearlo con PIN**, que se pone en **Ajustes → TV en vivo → PIN**. Los canales y grupos ocultos se pueden volver a mostrar desde Ajustes.
+  - El aviso de actualización es el mismo que el de la edición normal.
+- **Plex** en **Ajustes → Servidores multimedia**, junto a Jellyfin y Emby, como en Nuvio TV. Vincula tu cuenta con un código en plex.tv/link y se agregan todos tus servidores, con sus bibliotecas de películas y series en el inicio y como fuentes al reproducir.
+- **Simkl** como fuente de **Seguir viendo**, junto a Nuvio, Trakt y MDBList, en **Ajustes → Seguimiento**.
+
+### Corregido
+- El tráiler en los detalles ya no arranca mientras te sigues moviendo; solo sale cuando te quedas quieto unos segundos.
+- Moverse arriba y abajo en el menú lateral (Inicio, En vivo, Buscar, Descubrir, Biblioteca, Ajustes) ya no se traba: solo se redibujan las dos opciones que cambian en vez de todo el menú en cada botón.
+- Moverse rápido por las filas del inicio es más fluido.
+- Los logos de la tarjeta expandida cargan mucho más rápido, usando el que ya estaba cargado en el inicio.
+- Las badges del reproductor y de la pantalla de pausa van en su propia fila debajo de la línea del episodio, como en Nuvio TV de Android TV.
+- Los filtros de addons en el panel de **Fuentes** del reproductor ya no se salen del panel.
+- Los subtítulos integrados toman el estilo que elegiste en el menú de subtítulos, hasta donde el Roku lo permite.
+- Enlaces `.ts` con varios audios: el canal espera más a los enlaces lentos antes de leer sus audios, y si no puede leerlos el menú de audio dice por qué. Con **Cargar todos los audios del enlace original** la barra ya se mueve a donde adelantas. Adelantar o continuar a la mitad de estos archivos ya no se queda cargando, y un archivo nuevo ya no se queda con los audios del anterior.
+- Edición IPTV: si abres **Ajustes** estando en **En vivo**, el sonido del canal se detiene, y la vista previa vuelve al cerrar Ajustes.
+- Edición IPTV: la guía ya no se queda en "Cargando guía..." para siempre. Arriba a la derecha ahora se ve qué está haciendo (descargando, abriendo o leyendo la guía, con porcentaje), los programas aparecen en cuanto la primera guía está lista, la guía anterior se sigue viendo mientras carga la nueva, y si tarda más de 10 minutos deja de esperar y te pide revisar el enlace.
+- Edición IPTV: la etiqueta **EN VIVO** se ve nítida y ya no se ve cortada de los lados.
+- Edición IPTV: el audio MP3 se muestra como **MP3** en vez de **MPG123**.
+- Edición IPTV: las guías grandes (como las de epgshare01) cargan mucho más rápido y completas. El canal se salta sin leerlos los programas de canales que no tienes, guarda la guía descomprimida en el espacio más grande del Roku, espera hasta 15 minutos por guía y muestra cuántos MB lleva descargados. Si una guía llega cortada, **Ajustes → TV en vivo** lo dice.
+- Edición IPTV: cada lista puede usar **dos guías a la vez** (**Ajustes → TV en vivo → Guía (EPG)**, o la pestaña **TV en vivo** de la página del celular), y puedes elegir si también se usa la guía que trae la lista. Cada línea muestra cuántos programas y canales cargó cada guía.
+- Los subtítulos integrados ya aparecen aunque los subtítulos del Roku estén apagados: al elegir uno en el menú de subtítulos se encienden, y la elección se vuelve a aplicar cuando el video arranca.
+- Enlaces `.ts` con varios audios (como DeepFlix): al adelantar o continuar, la imagen ya no empieza pixeleada, ya no muestra una parte anterior a la de la barra y ya no se detiene después de un rato. El canal ahora lee los tiempos reales en varios puntos del archivo, empieza cada salto en un cuadro completo de verdad (lee el video mismo en lugar de confiar en las marcas del archivo, que algunos archivos ponen en todos los cuadros, aunque el siguiente quede más adelante) y nunca manda dos veces el mismo pedazo. Si aun así se detiene, se reconecta hasta 3 veces conservando todos los audios antes de probar otra forma de abrir el enlace.
+
 ## [0.1.7] - 2026-11-21
 
 ### Agregado

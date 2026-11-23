@@ -4,6 +4,46 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.1.8] - 2026-11-21
+
+### Added
+- **IPTV edition**, a second `.zip` in the same release (`NuvioTV-Roku-0.1.8-IPTV.zip`). It's the same channel with everything above plus a new **Live** spot in the side menu:
+  - Add **M3U playlists** or **Xtream accounts** in **Settings → Live TV**, or from your phone on the setup page (`http://YOUR_ROKU_IP:8888`, **Live TV** tab). Each profile has its own playlists and can share them with the other profiles. If the playlist brings its own guide it's used by itself; you can also set your own XMLTV guide address for each playlist, including compressed `.xml.gz` guides.
+  - **TiviMate-style program guide**: a top panel with the show's poster (from TMDB or the guide, otherwise the channel logo), the channel number, name and group, **LIVE**, the big title, day and time, time left, episode and category, progress, description and a preview of the channel with sound. Below, each channel with its number, logo and name, the shows with their times, a red line for the current time and a red outline on the channel that's playing. **Left** opens the group list as a side panel like the channel list (**Favorites**, **Recently watched**, **All** and each group with how many channels it has), and **Left** again opens the regular side menu.
+  - **Watching a channel**: the bar at the bottom shows the channel, **LIVE**, video and audio format, the current show with its progress, start and end time, and what's on next. **Up and Down change the channel**, **OK** shows the channel bar and **OK** again opens the channel list over the video with what's on now (Left inside it opens the groups), **Instant Replay** goes back to the previous channel and Back goes to the guide.
+  - **Smoother playback**: if a channel drops or freezes it reconnects by itself, and if it still fails it moves to the channel's next option. The audio track and subtitles you pick are remembered for each channel.
+  - **Channel options**: when a playlist has the same channel several times (same `tvg-id`), it shows up once in the guide with one guide entry. While watching it, **Left and Right switch between its options**, and if one doesn't play the next one is tried. The preview in the guide always uses the first option.
+  - Playlists work with any address, even without a `.m3u` ending or from a GitHub link.
+  - **Guide (EPG)** section in **Settings → Live TV** and on the phone page: it shows which guide each playlist is using (its own or a custom one) and how many programs and channels loaded. You can set several guides for one playlist, separated by commas.
+  - **Favorites**: press `*` on a channel to add or remove it. They show up first in the guide.
+  - **Favorite channels** and **Recent channels** rows on the home, with what's on now, its progress, the time left and what's next. Press `*` on one to watch it, add it to or remove it from favorites, or remove it from recent channels.
+  - **More Live TV settings** in **Settings → Live TV**: guide size (Compact, Normal, Large), show or hide channel numbers, logos, names, two-line names, show times, the current time line, the red outline and the preview; open on the last group; start on the last channel in full screen; reconnect automatically; switch to another option if one fails; remember audio and subtitles; reverse Up and Down; how long the channel bar stays; how often playlists and guides update; and shifting the guide's time when it's early or late.
+  - **Program reminders**: in the guide, press **OK** on a program that hasn't started and choose **Remind me when it starts**. A bell shows on it, and a minute before it starts a card slides in from the top right with the channel logo, the program and the time, whatever you're watching in the app (a channel, a movie or a series). Press **OK** on it again to remove the reminder.
+  - **Movie and series images**: the poster of each program is looked up on TMDB by its title (also when the guide shortens the name, like "A Bug's Life" for a longer title), so movies and series show their poster in the guide and on the home. The guide's own image is only used when TMDB has nothing and it's a vertical image big enough to look sharp; otherwise the channel logo shows. Needs your TMDB key; it can be turned off in **Settings → Live TV**.
+  - The home hero for a channel looks like the other items: **Live TV · group**, what's on now with the time left and what's next, and its description.
+  - **Channel and group management**: press `*` on a channel to rename or hide it, and on a group (in the group list) to add it to **favorite groups** (they go first, with a star), hide it or **lock it with a PIN** set in **Settings → Live TV → PIN**. Hidden channels and groups can be shown again from Settings.
+  - The update notice is the same as the regular edition.
+- **Plex** in **Settings → Media servers**, next to Jellyfin and Emby, like in Nuvio TV. Link your account with a code at plex.tv/link and all your servers are added, with their movie and show libraries on the home and as sources when you play something.
+- **Simkl** as the **Continue Watching** source, next to Nuvio, Trakt and MDBList, in **Settings → Tracking**.
+
+### Fixed
+- The trailer on the details page no longer starts while you keep moving around; it only plays once you stay still for a few seconds.
+- Moving up and down the side menu (Home, Live, Search, Discover, Library, Settings) no longer stutters: it only redraws the two options that change instead of the whole menu on every press.
+- Smoother movement through the home rows when you scroll fast.
+- Logos on the expanded card load much faster, reusing the one already loaded on the home.
+- Badges in the player and on the pause screen now sit in their own row under the episode line, like Nuvio TV on Android TV.
+- The addon filters in the player's **Sources** panel no longer go outside the panel.
+- Built-in subtitles get the style you picked in the subtitles menu, as far as the Roku allows.
+- `.ts` links with several audio tracks: the channel waits longer for slow links before reading their audio tracks, and when it can't read them the audio menu says why. With **Load all audio tracks from the original link** the progress bar now moves to where you skip. Skipping ahead or resuming in the middle of these files no longer stays loading, and a new file no longer keeps the audio tracks of the previous one.
+- IPTV edition: opening **Settings** while you're on **Live** stops the channel's sound, and the preview comes back when you close Settings.
+- IPTV edition: the guide no longer stays on "Loading guide..." forever. The top right now shows what it's doing (downloading, opening or reading the guide, with a percentage), programs appear as soon as the first guide is ready, the previous guide stays visible while a new one loads, and if it takes more than 10 minutes it stops waiting and tells you to check the link.
+- IPTV edition: the **LIVE** badge is sharp and no longer looks cut on the sides.
+- IPTV edition: MP3 audio shows as **MP3** instead of **MPG123**.
+- IPTV edition: big guides (like the epgshare01 ones) load much faster and completely. The channel skips the programs of channels you don't have without reading them, keeps the unpacked guide in the Roku's larger storage, waits up to 15 minutes per guide and shows how many MB it has downloaded. If a guide arrives cut, **Settings → Live TV** says so.
+- IPTV edition: each playlist can use **two guides at once** (**Settings → Live TV → Guide (EPG)**, or the **Live TV** tab of the phone page), and you can choose to also keep the playlist's own guide. Each line shows how many programs and channels each guide loaded.
+- Built-in subtitles now show up even when the Roku's captions are turned off: choosing one in the subtitles menu turns them on, and the choice is applied again once the video starts.
+- `.ts` links with several audio tracks (like DeepFlix): when you skip ahead or resume, the picture no longer starts pixelated, it no longer shows an earlier part than the progress bar and it no longer stops after a while. The channel now reads the real timestamps at several points of the file, starts each jump on a real full frame (it reads the video itself instead of trusting the file's marks, which some files put on every frame, even when the next full frame is further ahead) and never sends the same part twice. If it stops anyway, it reconnects up to 3 times keeping all the audio tracks before trying another way to open the link.
+
 ## [0.1.7] - 2026-11-21
 
 ### Added
