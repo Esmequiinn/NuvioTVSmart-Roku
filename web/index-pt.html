@@ -84,6 +84,7 @@ li.item:first-child{border-top:0}
 
   <nav id="tabs">
     <button data-tab="addons" class="on">Addons</button>
+    <button data-tab="iptv" id="iptvTab" style="display:none">TV ao vivo</button>
     <button data-tab="catalogs">Cat&#225;logos</button>
     <button data-tab="profiles">Perfis</button>
     <button data-tab="settings">Ajustes</button>
@@ -190,6 +191,35 @@ li.item:first-child{border-top:0}
     </div>
   </section>
 
+  <section id="iptv">
+    <div class="card">
+      <h2>Adicionar lista M3U</h2>
+      <p class="hint">Endere&#231;o da sua lista .m3u ou .m3u8. O guia (XMLTV) &#233; opcional: se a lista trouxer um, ele &#233; usado automaticamente.</p>
+      <input id="m3uName" class="mt" type="text" autocomplete="off" placeholder="Nome (opcional)">
+      <input id="m3uUrl" class="mt" type="url" inputmode="url" autocomplete="off" placeholder="https://.../lista.m3u">
+      <input id="m3uEpg" class="mt" type="url" inputmode="url" autocomplete="off" placeholder="Guia XMLTV (opcional, .xml)">
+      <button class="btn mt" id="addM3u">Adicionar</button>
+    </div>
+    <div class="card">
+      <h2>Adicionar conta Xtream</h2>
+      <p class="hint">Os dados que seu provedor te deu. O guia carrega sozinho.</p>
+      <input id="xName" class="mt" type="text" autocomplete="off" placeholder="Nome (opcional)">
+      <input id="xServer" class="mt" type="url" inputmode="url" autocomplete="off" placeholder="Servidor (http://provedor.com:8080)">
+      <input id="xUser" class="mt" type="text" autocomplete="off" autocapitalize="off" placeholder="Usu&#225;rio">
+      <input id="xPass" class="mt" type="password" autocomplete="off" placeholder="Senha">
+      <button class="btn mt" id="addXtream">Adicionar</button>
+    </div>
+    <div class="card">
+      <h2>Suas listas</h2>
+      <ul id="iptvList"></ul>
+    </div>
+    <div class="card">
+      <h2 id="epgTitle"></h2>
+      <p class="hint" id="epgHint"></p>
+      <ul id="epgList"></ul>
+    </div>
+  </section>
+
   <section id="account">
     <div class="card">
       <h2>Conta do Nuvio</h2>
@@ -226,7 +256,7 @@ li.item:first-child{border-top:0}
     </div>
   </section>
 
-  <div class="foot">Nuvio TV para Roku &#183; Fork n&#227;o oficial do Nuvio</div>
+  <div class="foot">Nuvio TV para Roku &#183; Fork n&#227;o oficial do Nuvio<br><span id="ver"></span></div>
 </main>
 <div id="toast"></div>
 <script>
@@ -281,7 +311,7 @@ async function act(body, okText) {
     if (!data.ok) { toast(data.error || 'Algo deu errado.', true); return false; }
     const text = data.message || okText;
     if (text) toast(text);
-    if (data.reload && !['theme', 'search', 'nuvioLogin'].includes(data.what)) { setTimeout(() => load(true), 4000); setTimeout(() => load(true), 9000); }
+    if (data.reload && !['theme', 'search', 'nuvioLogin', 'iptv'].includes(data.what)) { setTimeout(() => load(true), 4000); setTimeout(() => load(true), 9000); }
     return true;
   } catch (e) {
     toast('N\u00e3o foi poss\u00edvel falar com o Roku. Verifique se o app est\u00e1 aberto.', true);
@@ -291,6 +321,45 @@ async function act(body, okText) {
 
 function render() {
   if (!state) return;
+  try { $('#ver').textContent = state.version || ''; } catch (e) {}
+  try {
+  const iv = state.iptv || {};
+  $('#iptvTab').style.display = iv.on ? '' : 'none';
+  const lists = iv.lists || [];
+  $('#iptvList').innerHTML = lists.length ? lists.map(l => `
+    <li class="item${l.on ? '' : ' off'}">
+      ${l.mine ? `<label class="switch" title="Ativar ou desativar"><input type="checkbox" data-iptv-toggle="${esc(l.id)}" ${l.on ? 'checked' : ''}><span></span></label>` : ''}
+      <div class="grow">
+        <div class="name">${esc(l.name)} \u00b7 ${l.type === 'xtream' ? 'Xtream' : 'M3U'}</div>
+        <div class="meta">${esc(l.type === 'xtream' ? l.server + ' \u00b7 ' + l.user : l.url)}</div>
+        ${!l.mine ? `<div class="meta">Compartilhada por ${esc(l.owner)}</div>` : ''}
+        ${l.epg ? `<div class="meta">Guia: ${esc(l.epg)}</div>` : ''}
+      </div>
+      ${l.mine ? `<div class="tools">
+        <button class="btn ghost small" data-iptv-share="${esc(l.id)}" title="Compartilhar com os outros perfis">${l.shared ? 'Compartilhada' : 'Compartilhar'}</button>
+        <button class="icon" data-iptv-epg="${esc(l.id)}" aria-label="Alterar guia">&#9998;</button>
+        <button class="icon danger" data-iptv-del="${esc(l.id)}" aria-label="Remover">&#10005;</button>
+      </div>` : ''}
+    </li>`).join('') : '<li class="empty">Voc\u00ea ainda n\u00e3o tem listas.</li>';
+  $('#epgTitle').textContent = 'Guias (EPG)';
+  $('#epgHint').textContent = 'Voc\u00ea pode usar dois guias ao mesmo tempo em cada lista. Cada canal pega a programa\u00e7\u00e3o do guia que o tiver. Se n\u00e3o colocar nenhum, \u00e9 usado o da lista.';
+  $('#epgList').innerHTML = lists.map(l => {
+    const g = l.guide || {};
+    const items = g.items || [];
+    const slots = g.slots || [];
+    const loaded = it => `${it.programs} programas \u00b7 ${it.channels} canais`;
+    let meta = '';
+    if (!items.length) meta = `<div class="meta">${g.loaded ? 'Esta lista n\u00e3o traz guia. Voc\u00ea pode colocar um abaixo.' : 'Aparece quando os canais carregarem no Roku.'}</div>`;
+    else meta = items.map((it, i) => `<div class="meta" style="white-space:normal;overflow-wrap:anywhere">${i + 1}. ${esc(it.url)}${it.fromList ? ' \u00b7 da lista' : ''}${it.state === 'ok' ? ' \u00b7 ' + loaded(it) : ''}${it.state === 'cut' ? ' \u00b7 ' + loaded(it) + ' \u00b7 chegou incompleto' : ''}${it.state === 'fail' ? ' \u00b7 N\u00e3o foi poss\u00edvel carregar este guia.' : ''}</div>`).join('');
+    const form = l.mine ? `<div data-epg-form="${esc(l.id)}">
+      <input class="mt" data-epg-slot="0" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Guia 1 (XMLTV .xml ou .xml.gz)" value="${esc(slots[0] || '')}">
+      <input class="mt" data-epg-slot="1" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Guia 2 (opcional)" value="${esc(slots[1] || '')}">
+      <div class="row mt"><label class="switch"><input type="checkbox" data-epg-add ${g.add ? 'checked' : ''}><span></span></label><span class="meta">Usar tamb\u00e9m o guia da lista</span></div>
+      <div class="row mt"><button class="btn" data-epg-save="${esc(l.id)}">Salvar guias</button></div>
+    </div>` : '';
+    return `<li class="item"><div class="grow"><div class="name">Guia de ${esc(l.name)}</div>${meta}${form}</div></li>`;
+  }).join('');
+  } catch (e) {}
   const color = /^[0-9A-Fa-f]{6}$/.test(state.prefs.accent || '') ? state.prefs.accent.toUpperCase() : '7C5CFF';
   $('#customColor').value = '#' + color.toLowerCase();
   document.documentElement.style.setProperty('--accent', '#' + color);
@@ -470,6 +539,42 @@ $('#nuvioLoginBtn').addEventListener('click', async () => {
   if (await act({action: 'nuvioLogin', email, password})) $('#nuvioPass').value = '';
 });
 $('#nuvioLogoutBtn').addEventListener('click', () => act({action: 'nuvioLogout'}, 'Sess\u00e3o encerrada.'));
+
+$('#addM3u').addEventListener('click', async () => {
+  const url = $('#m3uUrl').value.trim();
+  if (!url) return toast('Faltam dados da lista.', true);
+  if (await act({action: 'addIptv', type: 'm3u', name: $('#m3uName').value.trim(), url, epg: $('#m3uEpg').value.trim()})) ['#m3uName', '#m3uUrl', '#m3uEpg'].forEach(k => $(k).value = '');
+});
+$('#addXtream').addEventListener('click', async () => {
+  const server = $('#xServer').value.trim(), user = $('#xUser').value.trim(), pass = $('#xPass').value.trim();
+  if (!server || !user || !pass) return toast('Faltam dados da lista.', true);
+  if (await act({action: 'addIptv', type: 'xtream', name: $('#xName').value.trim(), server, user, pass})) ['#xName', '#xServer', '#xUser', '#xPass'].forEach(k => $(k).value = '');
+});
+$('#iptvList').addEventListener('change', e => {
+  const box = e.target.closest('[data-iptv-toggle]');
+  if (box) act({action: 'toggleIptv', id: box.dataset.iptvToggle});
+});
+$('#epgList').addEventListener('click', e => {
+  const save = e.target.closest('[data-epg-save]');
+  if (!save) return;
+  const box = save.closest('[data-epg-form]');
+  const urls = [...box.querySelectorAll('[data-epg-slot]')].map(x => x.value.trim()).filter(Boolean);
+  const add = !!box.querySelector('[data-epg-add]').checked;
+  act({action: 'iptvEpg', id: box.dataset.epgForm, epg: urls.join(','), add: urls.length ? add : false});
+});
+$('#iptvList').addEventListener('click', e => {
+  const sh = e.target.closest('[data-iptv-share]');
+  if (sh) return act({action: 'shareIptv', id: sh.dataset.iptvShare});
+  const ed = e.target.closest('[data-iptv-epg]');
+  if (ed) {
+    const cur = ((state.iptv || {}).lists || []).find(l => l.id === ed.dataset.iptvEpg) || {};
+    const epg = prompt('Guia XMLTV (vazio para usar o da lista)', cur.epg || '');
+    if (epg !== null) act({action: 'iptvEpg', id: ed.dataset.iptvEpg, epg: epg.trim()});
+    return;
+  }
+  const del = e.target.closest('[data-iptv-del]');
+  if (del && confirm('Remover esta lista?')) act({action: 'removeIptv', id: del.dataset.iptvDel});
+});
 
 $('#reload').addEventListener('click', () => act({action: 'reload'}));
 

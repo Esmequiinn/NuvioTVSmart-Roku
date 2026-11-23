@@ -84,6 +84,7 @@ li.item:first-child{border-top:0}
 
   <nav id="tabs">
     <button data-tab="addons" class="on">Addons</button>
+    <button data-tab="iptv" id="iptvTab" style="display:none">Live TV</button>
     <button data-tab="catalogs">Catalogs</button>
     <button data-tab="profiles">Profiles</button>
     <button data-tab="settings">Settings</button>
@@ -190,6 +191,35 @@ li.item:first-child{border-top:0}
     </div>
   </section>
 
+  <section id="iptv">
+    <div class="card">
+      <h2>Add M3U playlist</h2>
+      <p class="hint">Address of your .m3u or .m3u8 playlist. The guide (XMLTV) is optional: if the playlist brings one, it is used automatically.</p>
+      <input id="m3uName" class="mt" type="text" autocomplete="off" placeholder="Name (optional)">
+      <input id="m3uUrl" class="mt" type="url" inputmode="url" autocomplete="off" placeholder="https://.../playlist.m3u">
+      <input id="m3uEpg" class="mt" type="url" inputmode="url" autocomplete="off" placeholder="XMLTV guide (optional, .xml)">
+      <button class="btn mt" id="addM3u">Add</button>
+    </div>
+    <div class="card">
+      <h2>Add Xtream account</h2>
+      <p class="hint">The details your provider gave you. The guide loads automatically.</p>
+      <input id="xName" class="mt" type="text" autocomplete="off" placeholder="Name (optional)">
+      <input id="xServer" class="mt" type="url" inputmode="url" autocomplete="off" placeholder="Server (http://provider.com:8080)">
+      <input id="xUser" class="mt" type="text" autocomplete="off" autocapitalize="off" placeholder="Username">
+      <input id="xPass" class="mt" type="password" autocomplete="off" placeholder="Password">
+      <button class="btn mt" id="addXtream">Add</button>
+    </div>
+    <div class="card">
+      <h2>Your playlists</h2>
+      <ul id="iptvList"></ul>
+    </div>
+    <div class="card">
+      <h2 id="epgTitle"></h2>
+      <p class="hint" id="epgHint"></p>
+      <ul id="epgList"></ul>
+    </div>
+  </section>
+
   <section id="account">
     <div class="card">
       <h2>Nuvio account</h2>
@@ -226,7 +256,7 @@ li.item:first-child{border-top:0}
     </div>
   </section>
 
-  <div class="foot">Nuvio TV for Roku &#183; Unofficial Nuvio fork</div>
+  <div class="foot">Nuvio TV for Roku &#183; Unofficial Nuvio fork<br><span id="ver"></span></div>
 </main>
 <div id="toast"></div>
 <script>
@@ -281,7 +311,7 @@ async function act(body, okText) {
     if (!data.ok) { toast(data.error || 'Something went wrong.', true); return false; }
     const text = data.message || okText;
     if (text) toast(text);
-    if (data.reload && !['theme', 'search', 'nuvioLogin'].includes(data.what)) { setTimeout(() => load(true), 4000); setTimeout(() => load(true), 9000); }
+    if (data.reload && !['theme', 'search', 'nuvioLogin', 'iptv'].includes(data.what)) { setTimeout(() => load(true), 4000); setTimeout(() => load(true), 9000); }
     return true;
   } catch (e) {
     toast('Could not reach the Roku. Make sure the app is open.', true);
@@ -291,6 +321,45 @@ async function act(body, okText) {
 
 function render() {
   if (!state) return;
+  try { $('#ver').textContent = state.version || ''; } catch (e) {}
+  try {
+  const iv = state.iptv || {};
+  $('#iptvTab').style.display = iv.on ? '' : 'none';
+  const lists = iv.lists || [];
+  $('#iptvList').innerHTML = lists.length ? lists.map(l => `
+    <li class="item${l.on ? '' : ' off'}">
+      ${l.mine ? `<label class="switch" title="Turn on or off"><input type="checkbox" data-iptv-toggle="${esc(l.id)}" ${l.on ? 'checked' : ''}><span></span></label>` : ''}
+      <div class="grow">
+        <div class="name">${esc(l.name)} \u00b7 ${l.type === 'xtream' ? 'Xtream' : 'M3U'}</div>
+        <div class="meta">${esc(l.type === 'xtream' ? l.server + ' \u00b7 ' + l.user : l.url)}</div>
+        ${!l.mine ? `<div class="meta">Shared by ${esc(l.owner)}</div>` : ''}
+        ${l.epg ? `<div class="meta">Guide: ${esc(l.epg)}</div>` : ''}
+      </div>
+      ${l.mine ? `<div class="tools">
+        <button class="btn ghost small" data-iptv-share="${esc(l.id)}" title="Share with the other profiles">${l.shared ? 'Shared' : 'Share'}</button>
+        <button class="icon" data-iptv-epg="${esc(l.id)}" aria-label="Change guide">&#9998;</button>
+        <button class="icon danger" data-iptv-del="${esc(l.id)}" aria-label="Remove">&#10005;</button>
+      </div>` : ''}
+    </li>`).join('') : '<li class="empty">No playlists yet.</li>';
+  $('#epgTitle').textContent = 'Guides (EPG)';
+  $('#epgHint').textContent = 'You can use two guides at once for each playlist. Each channel takes its programs from the guide that has it. If you add none, the playlist one is used.';
+  $('#epgList').innerHTML = lists.map(l => {
+    const g = l.guide || {};
+    const items = g.items || [];
+    const slots = g.slots || [];
+    const loaded = it => `${it.programs} programs \u00b7 ${it.channels} channels`;
+    let meta = '';
+    if (!items.length) meta = `<div class="meta">${g.loaded ? 'This playlist has no guide. You can add one below.' : 'Shows up once the channels load on the Roku.'}</div>`;
+    else meta = items.map((it, i) => `<div class="meta" style="white-space:normal;overflow-wrap:anywhere">${i + 1}. ${esc(it.url)}${it.fromList ? ' \u00b7 from the playlist' : ''}${it.state === 'ok' ? ' \u00b7 ' + loaded(it) : ''}${it.state === 'cut' ? ' \u00b7 ' + loaded(it) + ' \u00b7 arrived incomplete' : ''}${it.state === 'fail' ? ' \u00b7 This guide could not be loaded.' : ''}</div>`).join('');
+    const form = l.mine ? `<div data-epg-form="${esc(l.id)}">
+      <input class="mt" data-epg-slot="0" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Guide 1 (XMLTV .xml or .xml.gz)" value="${esc(slots[0] || '')}">
+      <input class="mt" data-epg-slot="1" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Guide 2 (optional)" value="${esc(slots[1] || '')}">
+      <div class="row mt"><label class="switch"><input type="checkbox" data-epg-add ${g.add ? 'checked' : ''}><span></span></label><span class="meta">Also use the playlist guide</span></div>
+      <div class="row mt"><button class="btn" data-epg-save="${esc(l.id)}">Save guides</button></div>
+    </div>` : '';
+    return `<li class="item"><div class="grow"><div class="name">${esc(l.name)} guide</div>${meta}${form}</div></li>`;
+  }).join('');
+  } catch (e) {}
   const color = /^[0-9A-Fa-f]{6}$/.test(state.prefs.accent || '') ? state.prefs.accent.toUpperCase() : '7C5CFF';
   $('#customColor').value = '#' + color.toLowerCase();
   document.documentElement.style.setProperty('--accent', '#' + color);
@@ -470,6 +539,42 @@ $('#nuvioLoginBtn').addEventListener('click', async () => {
   if (await act({action: 'nuvioLogin', email, password})) $('#nuvioPass').value = '';
 });
 $('#nuvioLogoutBtn').addEventListener('click', () => act({action: 'nuvioLogout'}, 'Signed out.'));
+
+$('#addM3u').addEventListener('click', async () => {
+  const url = $('#m3uUrl').value.trim();
+  if (!url) return toast('Some playlist details are missing.', true);
+  if (await act({action: 'addIptv', type: 'm3u', name: $('#m3uName').value.trim(), url, epg: $('#m3uEpg').value.trim()})) ['#m3uName', '#m3uUrl', '#m3uEpg'].forEach(k => $(k).value = '');
+});
+$('#addXtream').addEventListener('click', async () => {
+  const server = $('#xServer').value.trim(), user = $('#xUser').value.trim(), pass = $('#xPass').value.trim();
+  if (!server || !user || !pass) return toast('Some playlist details are missing.', true);
+  if (await act({action: 'addIptv', type: 'xtream', name: $('#xName').value.trim(), server, user, pass})) ['#xName', '#xServer', '#xUser', '#xPass'].forEach(k => $(k).value = '');
+});
+$('#iptvList').addEventListener('change', e => {
+  const box = e.target.closest('[data-iptv-toggle]');
+  if (box) act({action: 'toggleIptv', id: box.dataset.iptvToggle});
+});
+$('#epgList').addEventListener('click', e => {
+  const save = e.target.closest('[data-epg-save]');
+  if (!save) return;
+  const box = save.closest('[data-epg-form]');
+  const urls = [...box.querySelectorAll('[data-epg-slot]')].map(x => x.value.trim()).filter(Boolean);
+  const add = !!box.querySelector('[data-epg-add]').checked;
+  act({action: 'iptvEpg', id: box.dataset.epgForm, epg: urls.join(','), add: urls.length ? add : false});
+});
+$('#iptvList').addEventListener('click', e => {
+  const sh = e.target.closest('[data-iptv-share]');
+  if (sh) return act({action: 'shareIptv', id: sh.dataset.iptvShare});
+  const ed = e.target.closest('[data-iptv-epg]');
+  if (ed) {
+    const cur = ((state.iptv || {}).lists || []).find(l => l.id === ed.dataset.iptvEpg) || {};
+    const epg = prompt('XMLTV guide (empty to use the playlist one)', cur.epg || '');
+    if (epg !== null) act({action: 'iptvEpg', id: ed.dataset.iptvEpg, epg: epg.trim()});
+    return;
+  }
+  const del = e.target.closest('[data-iptv-del]');
+  if (del && confirm('Remove this playlist?')) act({action: 'removeIptv', id: del.dataset.iptvDel});
+});
 
 $('#reload').addEventListener('click', () => act({action: 'reload'}));
 
