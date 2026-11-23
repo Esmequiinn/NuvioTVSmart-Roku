@@ -133,13 +133,13 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Recomendaciones al terminar una película | ✅ Funciona |
 | Avisos de contenido | ✅ Funciona |
 | Saltar intro, resumen y créditos | ✅ Funciona |
-| Estilo de subtítulos y filtro SDH | ⚠️ Sin probar |
-| Menú de subtítulos por idioma, sincronización y Sincronizar línea | ⚠️ Sin probar |
+| Estilo de subtítulos y filtro SDH | ✅ Funciona |
+| Menú de subtítulos por idioma, sincronización y Sincronizar línea | ✅ Funciona |
 | Archivos .ts con adelantar y todos sus audios | ⚠️ Sin probar |
-| Panel de fuentes dentro del reproductor | ⚠️ Sin probar |
-| Calificaciones con estrellas | ⚠️ Sin probar |
+| Panel de fuentes dentro del reproductor | ✅ Funciona |
+| Calificaciones con estrellas | ✅ Funciona |
 | Marcar visto que se manda a Trakt, Simkl y MDBList | ⚠️ Sin probar |
-| Fuente de Más como esto (TMDB, Trakt, Simkl) | ⚠️ Sin probar |
+| Fuente de Más como esto (TMDB, Trakt, Simkl) | ✅ Funciona |
 | Datos técnicos de la reproducción | ⚠️ Sin probar |
 | Next up en Seguir viendo | ✅ Funciona |
 | Tráilers de YouTube en tu idioma | ✅ Funciona |
@@ -151,10 +151,10 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Jellyfin y Emby | ✅ Funciona |
 | Plex | ⚠️ Sin probar |
 | Simkl como fuente de Seguir viendo | ⚠️ Sin probar |
-| Edición con IPTV (M3U, Xtream, guía, favoritos) | ⚠️ Sin probar |
+| Edición con IPTV (M3U, Xtream, guía, favoritos) | ✅ Funciona |
 | Biblioteca en la nube (TorBox, Premiumize, Real-Debrid) | ⚠️ Sin probar |
-| Calificaciones (Trakt, Simkl, MDBList) | ⚠️ Sin probar |
-| Opciones de Seguir viendo | ⚠️ Sin probar |
+| Calificaciones (Trakt, Simkl, MDBList) | ✅ Funciona |
+| Opciones de Seguir viendo | ✅ Funciona |
 | Clave de MDBList desde tu cuenta de Nuvio | ✅ Funciona |
 | Botón Cambiar forma de abrir | ✅ Funciona |
 | Trakt o MDBList como fuente de Seguir viendo y biblioteca | ⚠️ Sin probar |
@@ -163,15 +163,15 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Pantalla de carga con estado | ✅ Funciona |
 | Probar otra fuente cuando una falla | ✅ Funciona |
 | Estilos del inicio Moderno, Clásico y Cuadrícula | ✅ Funciona |
-| Opciones de diseño del inicio (portada, nombres en pósteres, estrenos, calificaciones) | ⚠️ Sin probar |
+| Opciones de diseño del inicio (portada, nombres en pósteres, estrenos, calificaciones) | ✅ Funciona |
 | Barra lateral moderna y contraída | ✅ Funciona |
 | Color de acento personalizado | ✅ Funciona |
-| Modo ambiente | ⚠️ Sin probar |
+| Modo ambiente | ✅ Funciona |
 | Recordar el último perfil | ⚠️ Sin probar |
-| Revisión del audio compatible y filtro de solo estéreo | ⚠️ Sin probar |
+| Revisión del audio compatible y filtro de solo estéreo | ✅ Funciona |
 | Ocultar spoilers en episodios no vistos | ⚠️ Sin probar |
-| Botón Aleatorio en series | ⚠️ Sin probar |
-| Calificación de cada episodio en la lista de temporadas | ⚠️ Sin probar |
+| Botón Aleatorio en series | ✅ Funciona |
+| Calificación de cada episodio en la lista de temporadas | ✅ Funciona |
 
 ### Limitaciones conocidas
 
