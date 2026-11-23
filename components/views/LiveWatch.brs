@@ -210,7 +210,6 @@ function Overlay_Key(key as string) as boolean
         Watch_ShowBar()
     else if key = "left"
         Groups_Open()
-        m.overlay.visible = true
     else if key = "right"
         Overlay_Hide()
         Watch_ShowBar()

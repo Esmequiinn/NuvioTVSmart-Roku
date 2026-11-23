@@ -299,8 +299,10 @@ sub onLogoStatus()
         bw = m.logo.bitmapWidth
         bh = m.logo.bitmapHeight
         if bw > 0 and bh > 0
+            maxH = m.boxHeight
+            if bw < bh * 1.6 then maxH = Int(m.boxHeight * 1.35)
             scale = 620 / bw
-            if bh * scale > m.boxHeight then scale = m.boxHeight / bh
+            if bh * scale > maxH then scale = maxH / bh
             m.logo.width = Int(bw * scale)
             m.logo.height = Int(bh * scale)
             m.logo.translation = [160, m.boxTop + m.boxHeight - m.logo.height]

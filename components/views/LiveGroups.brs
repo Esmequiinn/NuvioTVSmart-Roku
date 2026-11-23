@@ -159,10 +159,12 @@ sub Live_ApplyGroup(resetSel as boolean)
 end sub
 
 sub Groups_Open()
+    Live_BuildGroups()
     if m.groups.Count() = 0 then return
     m.zone = "groups"
     m.gpSel = m.groupIdx
     m.previewTimer.control = "stop"
+    if m.mode = "watch" then m.overlay.visible = false
     m.groupPanel.visible = true
     m.top.event = { action: "panel", on: true }
     Groups_Render()
