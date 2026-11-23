@@ -133,13 +133,13 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Recommendations at the end of a movie | ✅ Working |
 | Content warnings | ✅ Working |
 | Skip intro, recap and credits | ✅ Working |
-| Subtitle style and SDH filtering | ⚠️ Not tested yet |
-| Subtitles menu by language, sync and Sync line | ⚠️ Not tested yet |
+| Subtitle style and SDH filtering | ✅ Working |
+| Subtitles menu by language, sync and Sync line | ✅ Working |
 | Seekable .ts files with all their audio tracks | ⚠️ Not tested yet |
-| Sources panel inside the player | ⚠️ Not tested yet |
-| Star ratings | ⚠️ Not tested yet |
+| Sources panel inside the player | ✅ Working |
+| Star ratings | ✅ Working |
 | Mark as watched sent to Trakt, Simkl and MDBList | ⚠️ Not tested yet |
-| More Like This source (TMDB, Trakt, Simkl) | ⚠️ Not tested yet |
+| More Like This source (TMDB, Trakt, Simkl) | ✅ Working |
 | Playback stats | ⚠️ Not tested yet |
 | Next up in Continue Watching | ✅ Working |
 | YouTube trailers in your language | ✅ Working |
@@ -151,10 +151,10 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Jellyfin and Emby | ✅ Working |
 | Plex | ⚠️ Not tested yet |
 | Simkl as Continue Watching source | ⚠️ Not tested yet |
-| IPTV edition (M3U, Xtream, guide, favorites) | ⚠️ Not tested yet |
+| IPTV edition (M3U, Xtream, guide, favorites) | ✅ Working |
 | Cloud library (TorBox, Premiumize, Real-Debrid) | ⚠️ Not tested yet |
-| Ratings (Trakt, Simkl, MDBList) | ⚠️ Not tested yet |
-| Continue Watching options | ⚠️ Not tested yet |
+| Ratings (Trakt, Simkl, MDBList) | ✅ Working |
+| Continue Watching options | ✅ Working |
 | MDBList key from your Nuvio account | ✅ Working |
 | Change how it opens button | ✅ Working |
 | Trakt or MDBList as Continue Watching and library source | ⚠️ Not tested yet |
@@ -166,12 +166,12 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Home layout options (hero, poster titles, unreleased content, ratings) | ✅ Working |
 | Modern and collapsed sidebar | ✅ Working |
 | Custom accent color | ✅ Working |
-| Ambient mode | ⚠️ Not tested yet |
+| Ambient mode | ✅ Working |
 | Remember last profile | ⚠️ Not tested yet |
-| Audio support check and stereo-only filter | ⚠️ Not tested yet |
+| Audio support check and stereo-only filter | ✅ Working |
 | Hide spoilers on unwatched episodes | ⚠️ Not tested yet |
-| Shuffle button on series | ⚠️ Not tested yet |
-| Episode ratings in the season list | ⚠️ Not tested yet |
+| Shuffle button on series | ✅ Working |
+| Episode ratings in the season list | ✅ Working |
 
 ### Known limitations
 
