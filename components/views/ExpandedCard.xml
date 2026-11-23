@@ -20,7 +20,7 @@
             <Poster id="shade" uri="pkg:/images/exp_shade.png" loadDisplayMode="scaleToFill" />
         </MaskGroup>
         <Video id="video" enableUI="false" focusable="false" visible="false" />
-        <Poster id="logo" loadDisplayMode="scaleToFit" visible="false" />
+        <Poster id="logo" loadDisplayMode="scaleToFit" loadWidth="500" loadHeight="200" visible="false" />
         <Group id="caps" visible="false">
             <Poster id="capTl" width="22" height="22" uri="pkg:/images/cap_tl.png" />
             <Poster id="capTr" width="22" height="22" uri="pkg:/images/cap_tr.png" />

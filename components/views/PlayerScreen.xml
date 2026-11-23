@@ -16,6 +16,7 @@
         <field id="extraSubs" type="array" onChange="onExtraSubs" />
         <field id="altAudio" type="boolean" value="false" />
         <field id="tsAudio" type="assocarray" />
+        <field id="knownDuration" type="integer" value="0" />
         <field id="segments" type="array" onChange="Ex_OnSegments" />
         <field id="parental" type="array" onChange="Ex_OnParental" />
         <field id="recs" type="array" />

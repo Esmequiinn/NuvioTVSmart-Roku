@@ -9,6 +9,7 @@
         <field id="chosen" type="string" alwaysNotify="true" />
         <field id="leave" type="boolean" alwaysNotify="true" />
         <field id="discover" type="boolean" value="false" onChange="onDiscover" />
+        <field id="live" type="boolean" value="false" onChange="onDiscover" />
         <field id="modern" type="boolean" value="false" onChange="paint" />
         <field id="blur" type="boolean" value="false" onChange="paint" />
         <field id="collapsed" type="boolean" value="false" onChange="paint" />

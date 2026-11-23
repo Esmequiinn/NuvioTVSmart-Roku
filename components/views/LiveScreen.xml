@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="LiveScreen" extends="Group">
+    <interface>
+        <field id="active" type="boolean" value="false" onChange="onActive" />
+        <field id="reload" type="boolean" alwaysNotify="true" onChange="onReload" />
+        <field id="command" type="assocarray" alwaysNotify="true" onChange="onCommand" />
+        <field id="event" type="assocarray" alwaysNotify="true" />
+        <field id="homeItems" type="array" />
+        <function name="Live_HomeData" />
+        <function name="Live_OptionsData" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Config.brs" />
+    <script type="text/brightscript" uri="pkg:/components/I18n.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Store.brs" />
+    <script type="text/brightscript" uri="pkg:/components/IptvPrefs.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/LiveScreen.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/LiveGroups.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/LiveWatch.brs" />
+    <children>
+        <Rectangle id="bg" width="1920" height="1080" color="0x0B0B0EFF" />
+        <Group id="guide">
+            <Label id="topTitle" translation="[112,26]" height="48" vertAlign="center" color="0xFFFFFFFF" font="font:MediumBoldSystemFont" />
+            <Label id="topGroup" translation="[112,26]" width="900" height="48" vertAlign="center" maxLines="1" color="0x9A9AAAFF" font="font:MediumSystemFont" />
+            <Poster id="clockBg" translation="[1664,28]" width="160" height="44" uri="pkg:/images/pill.9.png" blendColor="0x1E1E26FF" />
+            <Label id="clock" translation="[1664,28]" width="160" height="44" horizAlign="center" vertAlign="center" color="0xF2F2F7FF" font="font:MediumBoldSystemFont" />
+            <Label id="topStatus" translation="[960,28]" width="680" height="44" horizAlign="right" vertAlign="center" maxLines="1" color="0x9A9AAAFF" font="font:MediumSystemFont" />
+            <Poster id="headPanel" translation="[96,88]" width="1728" height="336" uri="pkg:/images/card.9.png" blendColor="0x15151BFF" />
+            <Poster id="artBg" translation="[124,112]" width="192" height="288" uri="pkg:/images/card.9.png" blendColor="0x23232BFF" />
+            <Poster id="artLogo" translation="[140,206]" width="160" height="100" loadWidth="320" loadHeight="200" loadDisplayMode="scaleToFit" />
+            <Poster id="artImg" translation="[124,112]" width="192" height="288" loadWidth="384" loadHeight="576" loadDisplayMode="scaleToZoom" />
+            <Label id="chLine" translation="[348,112]" width="900" height="40" vertAlign="center" maxLines="1" color="0xA9A9B8FF" font="font:MediumBoldSystemFont" />
+            <Poster id="liveBadge" translation="[348,116]" width="112" height="32" uri="pkg:/images/live_badge_124.png" blendColor="0xE53935FF" />
+            <Label id="liveText" translation="[348,116]" width="112" height="32" horizAlign="center" vertAlign="center" color="0xFFFFFFFF" font="font:MediumBoldSystemFont" />
+            <Label id="infoTitle" translation="[348,152]" width="930" height="68" vertAlign="center" maxLines="1" color="0xFFFFFFFF" font="font:MediumBoldSystemFont" />
+            <Label id="infoLine" translation="[348,222]" width="930" height="36" vertAlign="center" maxLines="1" color="0xB4B4C2FF" font="font:MediumSystemFont" />
+            <Rectangle id="infoTrack" translation="[348,266]" width="930" height="6" color="0x34343FFF" />
+            <Rectangle id="infoBar" translation="[348,266]" width="0" height="6" color="0xFFFFFFFF" />
+            <Label id="infoDesc" translation="[348,288]" width="930" height="112" wrap="true" maxLines="3" lineSpacing="4" color="0xA9A9B8FF" font="font:MediumSystemFont" />
+            <Rectangle id="previewFrame" translation="[1302,112]" width="498" height="280" color="0x000000FF" />
+            <Label id="previewHint" translation="[1318,112]" width="466" height="280" horizAlign="center" vertAlign="center" wrap="true" color="0x6E6E7CFF" font="font:MediumSystemFont" />
+            <Label id="dayLabel" translation="[112,440]" width="440" height="44" vertAlign="center" color="0xF2F2F7FF" font="font:MediumBoldSystemFont" />
+            <Group id="times" />
+            <Group id="rows" />
+            <Rectangle id="nowLine" width="3" height="560" color="0xE53935FF" visible="false" />
+            <Poster id="nowDot" width="14" height="14" uri="pkg:/images/circle.png" blendColor="0xE53935FF" visible="false" />
+            <Label id="status" translation="[300,700]" width="1320" horizAlign="center" wrap="true" color="0x9A9AAAFF" font="font:MediumSystemFont" />
+        </Group>
+        <Video id="video" translation="[1302,112]" width="498" height="280" enableUI="false" />
+        <Group id="watch" visible="false">
+            <Poster id="watchGrad" translation="[0,560]" width="1920" height="520" uri="pkg:/images/grad_bottom.png" loadDisplayMode="scaleToFill" />
+            <Group id="bar" translation="[100,0]">
+                <Poster id="barLogoBg" translation="[0,786]" width="200" height="112" uri="pkg:/images/card.9.png" blendColor="0x1C1C22D0" />
+                <Poster id="barLogo" translation="[14,796]" width="172" height="92" loadWidth="344" loadHeight="184" loadDisplayMode="scaleToFit" />
+                <Label id="barChannel" translation="[228,780]" width="900" maxLines="1" font="font:SmallBoldSystemFont" color="0xC9C9D6FF" />
+                <Poster id="barLive" translation="[228,824]" width="124" height="34" uri="pkg:/images/live_badge_124.png" blendColor="0xE53935FF" />
+                <Label id="barLiveText" translation="[228,824]" width="124" height="34" horizAlign="center" vertAlign="center" font="font:SmallestBoldSystemFont" color="0xFFFFFFFF" />
+                <Label id="barTech" translation="[366,824]" width="900" height="34" vertAlign="center" font="font:SmallestBoldSystemFont" color="0xA9A9B8FF" />
+                <Label id="barTitle" translation="[228,872]" width="1250" maxLines="1" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+                <Label id="barNext" translation="[228,930]" width="1250" maxLines="1" font="font:SmallSystemFont" color="0xA9A9B8FF" />
+                <Label id="barStart" translation="[0,972]" width="200" height="30" horizAlign="right" vertAlign="center" font="font:SmallestSystemFont" color="0xC9C9D6FF" />
+                <Rectangle id="barTrack" translation="[228,984]" width="1350" height="6" color="0x5A5A66A0" />
+                <Rectangle id="barFill" translation="[228,984]" width="0" height="6" color="0xFFFFFFFF" />
+                <Label id="barEnd" translation="[1596,972]" width="200" height="30" vertAlign="center" font="font:SmallestSystemFont" color="0xC9C9D6FF" />
+                <Label id="barClock" translation="[1420,780]" width="300" horizAlign="right" font="font:SmallBoldSystemFont" color="0xC9C9D6FF" />
+            </Group>
+            <Group id="overlay" visible="false">
+                <Poster translation="[0,0]" width="1100" height="1080" uri="pkg:/images/grad_left.png" loadDisplayMode="scaleToFill" blendColor="0x000000FF" />
+                <Rectangle translation="[0,0]" width="760" height="1080" color="0x09090CD8" />
+                <Label id="ovGroup" translation="[72,48]" width="620" height="48" vertAlign="center" maxLines="1" color="0xFFFFFFFF" font="font:MediumBoldSystemFont" />
+                <Label id="ovHint" translation="[72,96]" width="620" height="32" vertAlign="center" maxLines="1" color="0x8E8E9CFF" font="font:MediumSystemFont" />
+                <Group id="ovRows" translation="[56,148]" />
+            </Group>
+            <Label id="watchMsg" translation="[160,440]" width="1600" horizAlign="center" wrap="true" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />
+        </Group>
+        <Group id="groupPanel" visible="false">
+            <Poster width="1100" height="1080" uri="pkg:/images/grad_left.png" loadDisplayMode="scaleToFill" blendColor="0x000000FF" />
+            <Rectangle width="760" height="1080" color="0x09090CEB" />
+            <Label id="gpTitle" translation="[72,48]" width="620" height="48" vertAlign="center" maxLines="1" color="0xFFFFFFFF" font="font:MediumBoldSystemFont" />
+            <Label id="gpHint" translation="[72,96]" width="620" height="32" vertAlign="center" maxLines="1" color="0x8E8E9CFF" font="font:MediumSystemFont" />
+            <Group id="gpRows" translation="[56,148]" />
+        </Group>
+        <Timer id="previewTimer" duration="1.2" repeat="false" />
+        <Timer id="barTimer" duration="6" repeat="false" />
+        <Timer id="zapTimer" duration="0.45" repeat="false" />
+        <Timer id="clockTimer" duration="30" repeat="true" />
+        <Timer id="watchdog" duration="4" repeat="true" />
+        <Timer id="retryTimer" duration="2" repeat="false" />
+        <Timer id="ovTimer" duration="12" repeat="false" />
+    </children>
+</component>

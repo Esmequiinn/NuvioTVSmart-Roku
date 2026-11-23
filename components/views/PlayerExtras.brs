@@ -221,7 +221,7 @@ end sub
 
 sub Ex_Tick(at0 as float)
     if not m.started then return
-    dur = m.video.duration
+    dur = totalTime()
     Ex_Subs(at0)
     Ex_Skip(at0)
     if dur > 0
@@ -292,7 +292,7 @@ end sub
 
 sub Ex_DoSkip(seg as object)
     target = seg.finish
-    dur = m.video.duration
+    dur = totalTime()
     if dur > 0 and target > dur - 2 then target = dur - 2
     m.skipBtn.visible = false
     m.skipSeg = invalid
@@ -747,8 +747,8 @@ sub Ex_StyleSubs()
 end sub
 
 sub Ex_NativeCaptionStyle(style as object)
-    if m.video = invalid then return
-    sizes = { small: "Small", normal: "Medium", large: "Large", xlarge: "Extra Large" }
+    if m.video = invalid or not m.video.hasField("captionStyle") then return
+    sizes = { small: "Small", normal: "Medium", large: "Large", xlarge: "Large" }
     colors = { white: "White", yellow: "Yellow", cyan: "Cyan", green: "Green", gray: "White" }
     size = sizes[Str_Of(style.size)]
     if size = invalid then size = "Medium"
@@ -764,11 +764,18 @@ sub Ex_NativeCaptionStyle(style as object)
     else if bg = "soft"
         cs["Background/Color"] = "Black"
         cs["Background/Opacity"] = "50%"
-    else
-        cs["Background/Opacity"] = "0%"
     end if
-    cs["Window/Opacity"] = "0%"
-    if m.video.hasField("captionStyle") then m.video.captionStyle = cs
+    m.nativeCaption = cs
+    m.video.captionStyle = cs
+end sub
+
+sub Ex_NativeCaptionApply()
+    if m.video <> invalid and Str_Of(m.nativeTrack) <> ""
+        if m.video.globalCaptionMode <> "On" then m.video.globalCaptionMode = "On"
+        if Str_Of(m.video.subtitleTrack) <> Str_Of(m.nativeTrack) then m.video.subtitleTrack = m.nativeTrack
+    end if
+    if m.video = invalid or type(m.nativeCaption) <> "roAssociativeArray" or not m.video.hasField("captionStyle") then return
+    m.video.captionStyle = m.nativeCaption
 end sub
 
 sub Ex_SetSubStyleProp(fieldKey as string, value as dynamic)
@@ -1039,11 +1046,12 @@ end function
 sub Ex_SubSelect(track as string)
     if track = ""
         Ex_SubOff()
-        m.video.globalCaptionMode = "Off"
+        Ex_CaptionMode("Off")
         return
     end if
     if Ex_UseCustom(track)
-        m.video.globalCaptionMode = "Off"
+        Ex_CaptionMode("Off")
+        m.nativeTrack = ""
         if m.subUrl = track and (m.cues.Count() > 0 or m.subTask <> invalid) then return
         m.subUrl = track
         m.cues = []
@@ -1059,11 +1067,20 @@ sub Ex_SubSelect(track as string)
         return
     end if
     Ex_SubOff()
+    Ex_CaptionMode("On")
     m.video.subtitleTrack = track
-    m.video.globalCaptionMode = "On"
+    m.nativeTrack = track
+    Ex_NativeCaptionApply()
+end sub
+
+sub Ex_CaptionMode(mode as string)
+    m.video.globalCaptionMode = mode
+    di = CreateObject("roDeviceInfo")
+    if mode = "On" or Str_Of(di.GetCaptionsMode()) = "On" then di.SetCaptionsMode(mode)
 end sub
 
 sub Ex_SubOff()
+    m.nativeTrack = ""
     m.subUrl = ""
     m.cues = []
     m.subTask = invalid
@@ -1091,7 +1108,8 @@ sub Ex_OnSubsLoaded(event as object)
             return
         end if
         m.video.subtitleTrack = url
-        m.video.globalCaptionMode = "On"
+        Ex_CaptionMode("On")
+        Ex_NativeCaptionApply()
         return
     end if
     m.cues = cues

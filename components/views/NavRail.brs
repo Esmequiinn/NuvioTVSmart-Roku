@@ -17,9 +17,12 @@ sub init()
 end sub
 
 sub Nav_Build()
+    m.put = {}
     m.entries.removeChildrenIndex(m.entries.getChildCount(), 0)
     m.defs = [{ id: "profile", label: L("Perfil"), icon: "", y: 56, my: 52 }]
-    items = [{ id: "home", label: L("Inicio"), icon: "pkg:/images/ic_home.png" }, { id: "search", label: L("Buscar"), icon: "pkg:/images/ic_search.png" }]
+    items = [{ id: "home", label: L("Inicio"), icon: "pkg:/images/ic_home.png" }]
+    if m.top.live then items.Push({ id: "live", label: L("En vivo"), icon: "pkg:/images/ic_live.png" })
+    items.Push({ id: "search", label: L("Buscar"), icon: "pkg:/images/ic_search.png" })
     if m.top.discover then items.Push({ id: "discover", label: L("Descubrir"), icon: "pkg:/images/ic_discover.png" })
     items.Push({ id: "library", label: L("Biblioteca"), icon: "pkg:/images/ic_library.png" })
     items.Push({ id: "settings", label: L("Ajustes"), icon: "pkg:/images/ic_settings.png" })
@@ -137,57 +140,109 @@ sub Nav_Pill(expanded as boolean)
     if m.top.blur then m.pillBg.blendColor = "0x2A2A33D9" else m.pillBg.blendColor = "0x1E1E24FF"
 end sub
 
+sub Nav_Put(node as object, key as string, field as string, value as dynamic)
+    if m.put = invalid then m.put = {}
+    tag = key + "." + field
+    mark = value
+    if type(value) = "roArray" then mark = FormatJson(value)
+    if type(mark) = "roInt" or type(mark) = "Integer" or type(mark) = "roFloat" or type(mark) = "Float" then mark = Str(mark)
+    if type(mark) = "roBoolean" or type(mark) = "Boolean"
+        if mark then mark = "T" else mark = "F"
+    end if
+    old = m.put[tag]
+    if old <> invalid and old = mark then return
+    m.put[tag] = mark
+    if field = "visible"
+        node.visible = value
+    else if field = "blendColor"
+        node.blendColor = value
+    else if field = "color"
+        node.color = value
+    else if field = "width"
+        node.width = value
+    else if field = "height"
+        node.height = value
+    else if field = "translation"
+        node.translation = value
+    else if field = "text"
+        node.text = value
+    end if
+end sub
+
 sub paint()
     if m.nodes = invalid then return
     expanded = m.top.isInFocusChain()
     modern = m.top.modern
     Nav_Pill(expanded)
-    m.entries.visible = expanded or not (m.top.collapsed or modern)
-    m.float.visible = expanded and modern
+    Nav_Put(m.entries, "entries", "visible", expanded or not (m.top.collapsed or modern))
+    Nav_Put(m.float, "float", "visible", expanded and modern)
     if modern
-        m.float.height = 1024
-        if m.top.blur then m.float.blendColor = "0x1F1F27E0" else m.float.blendColor = "0x141418FF"
+        Nav_Put(m.float, "float", "height", 1024.0)
+        if m.top.blur then Nav_Put(m.float, "float", "blendColor", "0x1F1F27E0") else Nav_Put(m.float, "float", "blendColor", "0x141418FF")
     end if
-    for i = 0 to m.nodes.Count() - 1
-        if modern then m.nodes[i].group.translation = [44, m.defs[i].my] else m.nodes[i].group.translation = [24, m.defs[i].y]
-    end for
-    m.panel.visible = expanded and not modern
+    Nav_Put(m.panel, "panel", "visible", expanded and not modern)
     for i = 0 to m.nodes.Count() - 1
         n = m.nodes[i]
         d = m.defs[i]
+        k = "n" + i.ToStr()
+        if modern then Nav_Put(n.group, k, "translation", [44.0, d.my + 0.0]) else Nav_Put(n.group, k, "translation", [24.0, d.y + 0.0])
         isActive = d.id = m.top.active
         isFocused = expanded and i = m.index
-        n.label.visible = expanded
-        n.pill.visible = isFocused or (isActive and d.id <> "profile")
+        Nav_Put(n.label, k + "l", "visible", expanded)
+        Nav_Put(n.pill, k + "p", "visible", isFocused or (isActive and d.id <> "profile"))
         if isFocused
-            n.pill.blendColor = "0xFFFFFFFF"
-            n.pill.width = 380
-            n.label.color = "0x0C0C0FFF"
-            if d.id <> "profile" then n.icon.blendColor = "0x0C0C0FFF"
+            Nav_Put(n.pill, k + "p", "blendColor", "0xFFFFFFFF")
+            Nav_Put(n.pill, k + "p", "width", 380.0)
+            Nav_Put(n.label, k + "l", "color", "0x0C0C0FFF")
+            if d.id <> "profile" then Nav_Put(n.icon, k + "i", "blendColor", "0x0C0C0FFF")
         else
-            n.pill.blendColor = "0x2A2A33FF"
-            n.pill.width = 76
-            n.label.color = "0xD8D8E0FF"
+            Nav_Put(n.pill, k + "p", "blendColor", "0x2A2A33FF")
+            Nav_Put(n.pill, k + "p", "width", 76.0)
+            Nav_Put(n.label, k + "l", "color", "0xD8D8E0FF")
             if d.id <> "profile"
-                if isActive
-                    n.icon.blendColor = "0xFFFFFFFF"
-                else
-                    n.icon.blendColor = "0x8E8E9CFF"
-                end if
+                if isActive then Nav_Put(n.icon, k + "i", "blendColor", "0xFFFFFFFF") else Nav_Put(n.icon, k + "i", "blendColor", "0x8E8E9CFF")
             end if
         end if
         if d.id = "profile"
             name = m.top.profileName
-            n.label.text = name
-            if name <> "" then n.initial.text = UCase(Left(name, 1))
+            Nav_Put(n.label, k + "l", "text", name)
+            if name <> "" then Nav_Put(n.initial, k + "t", "text", UCase(Left(name, 1)))
             color = m.top.profileColor
-            if color <> "" then n.icon.blendColor = "0x" + color + "FF"
-            avatar = m.top.profileAvatar
-            avatar = Mask_Circle(avatar, 120)
+            if color <> "" then Nav_Put(n.icon, k + "i", "blendColor", "0x" + color + "FF")
+            avatar = Mask_Circle(m.top.profileAvatar, 120)
             if m.avatar.uri <> avatar then m.avatar.uri = avatar
             ready = avatar <> "" and m.avatar.loadStatus = "ready"
-            m.avatar.visible = ready
-            n.initial.visible = not ready
+            Nav_Put(m.avatar, "avatar", "visible", ready)
+            Nav_Put(n.initial, k + "t", "visible", not ready)
+        end if
+    end for
+end sub
+
+sub Nav_Move(previous as integer)
+    for each i in [previous, m.index]
+        n = m.nodes[i]
+        d = m.defs[i]
+        k = "n" + i.ToStr()
+        isActive = d.id = m.top.active
+        isFocused = i = m.index
+        Nav_Put(n.pill, k + "p", "visible", isFocused or (isActive and d.id <> "profile"))
+        if isFocused
+            Nav_Put(n.pill, k + "p", "blendColor", "0xFFFFFFFF")
+            Nav_Put(n.pill, k + "p", "width", 380.0)
+            Nav_Put(n.label, k + "l", "color", "0x0C0C0FFF")
+            if d.id <> "profile" then Nav_Put(n.icon, k + "i", "blendColor", "0x0C0C0FFF")
+        else
+            Nav_Put(n.pill, k + "p", "blendColor", "0x2A2A33FF")
+            Nav_Put(n.pill, k + "p", "width", 76.0)
+            Nav_Put(n.label, k + "l", "color", "0xD8D8E0FF")
+            if d.id = "profile"
+                color = m.top.profileColor
+                if color <> "" then Nav_Put(n.icon, k + "i", "blendColor", "0x" + color + "FF")
+            else if isActive
+                Nav_Put(n.icon, k + "i", "blendColor", "0xFFFFFFFF")
+            else
+                Nav_Put(n.icon, k + "i", "blendColor", "0x8E8E9CFF")
+            end if
         end if
     end for
 end sub
@@ -196,12 +251,16 @@ function onKeyEvent(key as string, press as boolean) as boolean
     if not press then return false
     if m.global.hasField("activity") then m.global.activity = true
     if key = "up"
-        if m.index > 0 then m.index = m.index - 1
-        paint()
+        if m.index > 0
+            m.index = m.index - 1
+            Nav_Move(m.index + 1)
+        end if
         return true
     else if key = "down"
-        if m.index < m.defs.Count() - 1 then m.index = m.index + 1
-        paint()
+        if m.index < m.defs.Count() - 1
+            m.index = m.index + 1
+            Nav_Move(m.index - 1)
+        end if
         return true
     else if key = "OK"
         m.top.chosen = m.defs[m.index].id

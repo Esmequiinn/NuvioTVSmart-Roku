@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="ReminderCard" extends="Group">
+    <interface>
+        <field id="show" type="assocarray" alwaysNotify="true" onChange="onShow" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/Util.brs" />
+    <script type="text/brightscript" uri="pkg:/components/views/ReminderCard.brs" />
+    <children>
+        <Group id="box" translation="[1940,56]">
+            <Poster id="shadow" translation="[-6,-2]" width="652" height="156" uri="pkg:/images/panel.9.png" blendColor="0x00000066" />
+            <Poster id="bg" width="640" height="148" uri="pkg:/images/panel.9.png" blendColor="0x1F1F27F5" />
+            <Poster id="logoBg" translation="[22,26]" width="136" height="96" uri="pkg:/images/card.9.png" blendColor="0x2C2C36FF" />
+            <Poster id="logo" translation="[30,34]" width="120" height="80" loadWidth="240" loadHeight="160" loadDisplayMode="scaleToFit" />
+            <Poster id="bell" translation="[178,26]" width="24" height="24" uri="pkg:/images/ic_bell.png" blendColor="0xFFC94DFF" />
+            <Label id="head" translation="[212,22]" width="400" height="32" vertAlign="center" maxLines="1" color="0xFFC94DFF" font="font:SmallestBoldSystemFont" />
+            <Label id="title" translation="[178,56]" width="440" height="44" vertAlign="center" maxLines="1" color="0xFFFFFFFF" font="font:MediumBoldSystemFont" />
+            <Label id="line" translation="[178,100]" width="440" height="32" vertAlign="center" maxLines="1" color="0xB4B4C2FF" font="font:SmallestSystemFont" />
+        </Group>
+        <Animation id="slideIn" duration="0.5" easeFunction="outCubic">
+            <Vector2DFieldInterpolator id="inInterp" key="[0.0, 1.0]" keyValue="[[1940,56],[1224,56]]" fieldToInterp="box.translation" />
+        </Animation>
+        <Animation id="slideOut" duration="0.4" easeFunction="inCubic">
+            <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[1224,56],[1940,56]]" fieldToInterp="box.translation" />
+        </Animation>
+        <Timer id="stay" duration="9" repeat="false" />
+    </children>
+</component>

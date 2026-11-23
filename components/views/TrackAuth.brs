@@ -46,6 +46,11 @@ sub onInfo()
         m.logo.width = 274
         m.logo.height = 60
         m.instruction.text = L("Escanea el código o abre la página de TorBox e ingresa este código:")
+    else if service = "plex"
+        m.logo.uri = "pkg:/images/plex_wordmark.png"
+        m.logo.width = 166
+        m.logo.height = 60
+        m.instruction.text = L("Ve a plex.tv/link e ingresa este código:")
     else if service = "trakt"
         m.logo.uri = "pkg:/images/trakt_wordmark.png"
         m.logo.width = 162

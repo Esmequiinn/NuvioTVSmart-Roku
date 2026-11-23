@@ -27,6 +27,7 @@ sub init()
     m.pauseTitle = m.top.findNode("pauseTitle")
     m.pauseMeta = m.top.findNode("pauseMeta")
     m.pauseDesc = m.top.findNode("pauseDesc")
+    m.pauseHint = m.top.findNode("pauseHint")
     m.controls = m.top.findNode("controls")
     m.clock = m.top.findNode("clock")
     m.ends = m.top.findNode("ends")
@@ -289,6 +290,7 @@ sub onMetaPatch()
     if Str_Of(p.metaLine) <> "" and m.meta.text = ""
         m.meta.text = Str_Of(p.metaLine)
         m.pauseMeta.text = Str_Of(p.metaLine)
+        Badges_Show()
     end if
     if Str_Of(p.description) <> "" and m.pauseDesc.text = "" then m.pauseDesc.text = Str_Of(p.description)
     if Str_Of(p.background) <> "" and m.pauseBg.uri = ""
@@ -307,21 +309,31 @@ sub Badges_Show()
             if type(b) = "roAssociativeArray" and Str_Of(b.i) <> "" then list.Push(Str_Of(b.i))
         end for
     end if
-    Badges_Fill(m.playBadges, list, m.meta, 30)
-    Badges_Fill(m.pauseBadges, list, m.pauseMeta, 34)
+    has = list.Count() > 0
+    if has
+        m.top.findNode("logo").translation = [120, 656]
+        m.title.translation = [120, 696]
+        m.meta.translation = [120, 792]
+        m.playBadges.translation = [120, 836]
+        m.pauseDesc.translation = [120, 908]
+        m.pauseBadges.translation = [120, 860]
+        m.pauseHint.translation = [120, 1016]
+    else
+        m.top.findNode("logo").translation = [120, 700]
+        m.title.translation = [120, 740]
+        m.meta.translation = [120, 836]
+        m.pauseDesc.translation = [120, 862]
+        m.pauseHint.translation = [120, 980]
+    end if
+    Badges_Fill(m.playBadges, list, 30)
+    Badges_Fill(m.pauseBadges, list, 32)
 end sub
 
-sub Badges_Fill(group as object, list as object, anchor as object, size as integer)
+sub Badges_Fill(group as object, list as object, size as integer)
     group.removeChildrenIndex(group.getChildCount(), 0)
-    if list.Count() = 0 then return
-    w = 0
-    if anchor.text <> "" then w = Int(anchor.boundingRect().width) + 24
-    if w > 1100 then w = 1100
-    t = anchor.translation
-    group.translation = [t[0] + w, t[1] + 2]
     x = 0
     for each uri in list
-        if x > 640 then exit for
+        if x > 1500 then exit for
         p = group.createChild("Poster")
         p.height = size
         p.width = size * 3
@@ -885,8 +897,8 @@ sub updateClock()
     now = CreateObject("roDateTime")
     now.ToLocalTime()
     m.clock.text = Fmt_Clock(now)
-    remaining = Int(m.video.duration - settledPosition())
-    if m.video.duration > 0 and remaining > 0
+    remaining = Int(totalTime() - settledPosition())
+    if totalTime() > 0 and remaining > 0
         now.FromSeconds(now.AsSeconds() + remaining)
         m.ends.text = L("Termina a las ") + Fmt_Clock(now)
     else
@@ -895,6 +907,8 @@ sub updateClock()
 end sub
 
 function totalTime() as float
+    known = m.top.knownDuration
+    if known > 0 and (m.video.duration <= 0 or m.video.duration > known * 1.3 or m.video.duration < known * 0.7) then return known
     if m.video.duration > 0 then return m.video.duration
     if m.fallbackDur <> invalid and m.fallbackDur > 0 then return m.fallbackDur
     return 0
@@ -959,6 +973,11 @@ end sub
 
 sub onState_Run()
     state = m.video.state
+    if state = "playing" and not Bool_Of(m.captionApplied, false)
+        m.captionApplied = true
+        Ex_NativeCaptionApply()
+    end if
+    if state = "buffering" then m.captionApplied = false
     if (state = "playing" or state = "paused") and m.seekGuard <> invalid then m.seekGuard.control = "stop"
     m.buffering.visible = false
     if state = "buffering" and m.started and not m.loadScreen.visible then m.bufTimer.control = "start"
@@ -966,6 +985,7 @@ sub onState_Run()
     if state = "playing" and not m.resumeDone
         m.resumeDone = true
         if m.video.position < m.resumeAt - 8
+            Dbg_Log("resume seek " + Int(m.resumeAt).ToStr() + " from " + Int(m.video.position).ToStr())
             m.video.seek = m.resumeAt
             m.applied = m.resumeAt
             m.appliedClock.Mark()
@@ -1044,6 +1064,7 @@ end sub
 sub applySeek()
     if m.seekTarget >= 0
         target = m.seekTarget
+        Dbg_Log("seek " + Int(target).ToStr() + " from " + Int(m.video.position).ToStr())
         m.video.seek = target
         m.applied = target
         m.appliedClock.Mark()
@@ -1323,7 +1344,10 @@ sub openAudio()
         end for
     end if
     if items.Count() = 0
-        items.Push({ id: "0", label: L("Esta fuente tiene un solo audio"), checked: true })
+        note = ""
+        if type(ts) = "roAssociativeArray" then note = Str_Of(ts.note)
+        if note = "" then note = L("Esta fuente tiene un solo audio")
+        items.Push({ id: "0", label: note, checked: true })
         values.Push("")
     end if
     if m.top.altAudio and items.Count() <= 1

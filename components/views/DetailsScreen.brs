@@ -46,7 +46,7 @@ end sub
 
 sub startTrailer()
     t = m.top.trailer
-    if t = invalid or Str_Of(t.url) = "" or not m.top.visible or not m.top.isInFocusChain() then return
+    if t = invalid or Str_Of(t.url) = "" or not m.top.visible or not m.top.isInFocusChain() or m.opts.visible then return
     m.wantVideo = true
     m.video.content = Trailer_Content(t)
     m.video.control = "play"
@@ -817,6 +817,7 @@ function onKeyEvent(key as string, press as boolean) as boolean
         stopTrailer()
         return true
     end if
+    if Bool_Of(m.wantVideo, false) then stopTrailer()
     t = m.top.trailer
     if t <> invalid and Str_Of(t.url) <> ""
         m.trailerTimer.control = "stop"

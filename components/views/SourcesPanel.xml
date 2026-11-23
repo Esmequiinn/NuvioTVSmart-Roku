@@ -18,7 +18,7 @@
                 <Label id="closeLabel" width="160" height="64" horizAlign="center" vertAlign="center" font="font:SmallBoldSystemFont" />
             </Group>
             <Label id="info" translation="[48,132]" width="780" font="font:SmallSystemFont" color="0xA9A9B8FF" />
-            <Group id="chipsClip" translation="[48,190]">
+            <Group id="chipsClip" translation="[48,190]" clippingRect="[-4,-8,816,90]">
                 <Group id="chips" />
             </Group>
             <Group id="list" translation="[48,280]" />

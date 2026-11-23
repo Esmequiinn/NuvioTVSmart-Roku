@@ -66,6 +66,7 @@ end function
 
 sub applyShift()
     shift = m.global.expandShift
+    if shift <= 0 and m.shifted <> true then return
     dx = 0
     if shift > 0
         item = m.top.itemContent
@@ -78,6 +79,7 @@ sub applyShift()
         end if
     end if
     m.body.translation = [dx, 0]
+    m.shifted = dx <> 0
 end sub
 
 function itemIndex(item as object, parent as object) as integer
@@ -107,6 +109,7 @@ sub onContent()
     onWatched()
     m.name.text = item.title
     m.retried = false
+    if item.hasField("channelKey") then m.art.loadDisplayMode = "scaleToFit" else m.art.loadDisplayMode = "scaleToZoom"
     m.art.uri = item.HDPosterUrl
     isFolder = fieldOf(item, "itemType") = "folder"
     m.body.visible = not item.hasField("heroCard")
@@ -150,6 +153,21 @@ sub onContent()
         m.name.height = m.top.height - 28
         m.shade.visible = false
         m.cw.visible = false
+    end if
+    if item.hasField("channelKey") and m.top.width > 0
+        m.art.translation = [40, 16]
+        m.art.width = m.top.width - 80
+        m.art.height = m.top.height - 78
+        m.frame.visible = true
+        m.shade.visible = false
+        m.name.visible = true
+        m.name.color = "0xF2F2F7FF"
+        m.name.translation = [14, m.top.height - 58]
+        m.name.height = 48
+    else if m.top.width > 0
+        m.art.translation = [0, 0]
+        m.art.width = m.top.width
+        m.art.height = m.top.height
     end if
     progress = 0.0
     if item.hasField("progress") then progress = item.progress
