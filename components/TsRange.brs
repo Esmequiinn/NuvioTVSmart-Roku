@@ -60,13 +60,16 @@ function Ts_Program(b as object, start as integer) as dynamic
             else if s >= 0 and pid = pmt and b[s] = 2
                 last = s + 3 + (b[s + 1] and 15) * 256 + b[s + 2] - 4
                 if last <= o + 188
-                    out = { pmtPid: pmt, videoPid: -1, audio: [] }
+                    out = { pmtPid: pmt, videoPid: -1, videoKind: 0, audio: [] }
                     e = s + 12 + (b[s + 10] and 15) * 256 + b[s + 11]
                     while e + 5 <= last
                         kind = b[e]
                         epid = (b[e + 1] and 31) * 256 + b[e + 2]
                         size = (b[e + 3] and 15) * 256 + b[e + 4]
-                        if (kind = 27 or kind = 36 or kind = 2) and out.videoPid < 0 then out.videoPid = epid
+                        if (kind = 27 or kind = 36 or kind = 2) and out.videoPid < 0
+                            out.videoPid = epid
+                            out.videoKind = kind
+                        end if
                         tags = {}
                         lang = ""
                         c = e + 5
@@ -142,7 +145,157 @@ function Ts_Inspect(url as string, headers as dynamic, size as longinteger) as d
     tail = Ts_Fetch(url, headers, size - tailLen, tailLen)
     duration = 0
     if tail <> invalid then duration = Ts_Duration(head, start, tail, program.videoPid)
-    return { start: start, duration: duration, pmtPid: program.pmtPid, videoPid: program.videoPid, audio: program.audio }
+    marks = []
+    if duration > 0
+        try
+            marks = Ts_Marks(url, headers, size, start, program.videoPid, Ts_FirstPts(head, start, program.videoPid), duration)
+        catch e
+            marks = []
+        end try
+    end if
+    return { start: start, duration: duration, marks: marks, pmtPid: program.pmtPid, videoPid: program.videoPid, videoKind: program.videoKind, audio: program.audio, pat: Ts_Packet(head, start, 0), pmt: Ts_Packet(head, start, program.pmtPid) }
+end function
+
+function Ts_FirstPts(b as object, start as integer, pid as integer) as double
+    n = b.Count() - 188
+    o = start
+    while o <= n
+        v = Ts_Pts(b, o, pid)
+        if v >= 0 then return v
+        o = o + 188
+    end while
+    return -1
+end function
+
+function Ts_Marks(url as string, headers as dynamic, size as longinteger, start as integer, pid as integer, first as double, duration as integer) as object
+    marks = []
+    if first < 0 then return marks
+    count = 8
+    sample = 188 * 200
+    usable = size - start
+    gap = usable \ (count + 1)
+    wrap = CDbl(65536) * 131072
+    clock = CreateObject("roTimespan")
+    for k = 1 to count
+        if clock.TotalMilliseconds() > 7000 then exit for
+        off = start + gap * k
+        off = off - ((off - start) mod 188)
+        b = invalid
+        try
+            b = Ts_Fetch(url, headers, off, sample)
+        catch e
+            b = invalid
+        end try
+        if b = invalid then exit for
+        at = Hlsp_Sync(b)
+        if at >= 0
+            v = Ts_FirstPts(b, at, pid)
+            if v >= 0
+                diff = v - first
+                if diff < 0 then diff = diff + wrap
+                secs = diff / 90000
+                if secs > 0 and secs < duration and (marks.Count() = 0 or secs > marks[marks.Count() - 1].s) then marks.Push({ o: CDbl(off + at), s: secs })
+            end if
+        end if
+    end for
+    return marks
+end function
+
+function Ts_TimeAt(h as object, offset as double) as double
+    start = CDbl(ToInt(h.start, 0))
+    size = CDbl(h.size)
+    duration = CDbl(ToInt(h.duration, 0))
+    prevO = start
+    prevS = 0.0
+    marks = h.marks
+    if type(marks) = "roArray"
+        for each mk in marks
+            mo = CDbl(mk.o)
+            ms = CDbl(mk.s)
+            if offset <= mo
+                if mo <= prevO then return ms
+                return prevS + (ms - prevS) * (offset - prevO) / (mo - prevO)
+            end if
+            prevO = mo
+            prevS = ms
+        end for
+    end if
+    if size <= prevO then return duration
+    v = prevS + (duration - prevS) * (offset - prevO) / (size - prevO)
+    if v > duration then v = duration
+    return v
+end function
+
+function Ts_Packet(b as object, start as integer, pid as integer) as string
+    n = b.Count() - 188
+    o = start
+    while o <= n
+        if b[o] = 71 and Ts_Pid(b, o) = pid and Ts_Unit(b, o)
+            one = CreateObject("roByteArray")
+            for i = 0 to 187
+                one.Push(b[o + i])
+            end for
+            return one.ToHexString()
+        end if
+        o = o + 188
+    end while
+    return ""
+end function
+
+function Ts_KeyStart(b as object, o as integer, pid as integer, kind = 27 as integer) as boolean
+    if not Ts_VideoStart(b, o, pid) then return false
+    if kind <> 27 and kind <> 36 and kind <> 2
+        return (b[o + 3] and 32) <> 0 and b[o + 4] > 0 and (b[o + 5] and 64) <> 0
+    end if
+    n = b.Count()
+    pk = o
+    first = true
+    zeros = 0
+    hops = 0
+    while pk + 188 <= n and hops < 24
+        if b[pk] <> 71 then return false
+        if Ts_Pid(b, pk) = pid
+            if not first and Ts_Unit(b, pk) then return false
+            p = Ts_Payload(b, pk)
+            if p >= 0
+                if first
+                    if p + 9 > pk + 188 or b[p] <> 0 or b[p + 1] <> 0 or b[p + 2] <> 1 then return false
+                    p = p + 9 + b[p + 8]
+                    first = false
+                end if
+                last = pk + 188
+                while p < last
+                    v = b[p]
+                    if zeros >= 2 and v = 1
+                        if p + 1 < last
+                            nb = b[p + 1]
+                            if kind = 36
+                                t = (nb \ 2) and 63
+                                if t >= 16 and t <= 21 then return true
+                                if t <= 9 then return false
+                            else if kind = 2
+                                if nb = 179 then return true
+                                if nb = 0 then return false
+                            else
+                                t = nb and 31
+                                if t = 5 then return true
+                                if t = 1 then return false
+                            end if
+                        end if
+                        zeros = 0
+                    else if v = 0
+                        zeros = zeros + 1
+                    else
+                        zeros = 0
+                    end if
+                    p = p + 1
+                end while
+            end if
+            hops = hops + 1
+        end if
+        pk = pk + 188
+    end while
+    return false
 end function
 
 function Ts_Fetch(url as string, headers as dynamic, offset as longinteger, length as longinteger) as dynamic
@@ -171,7 +324,7 @@ function Ts_Playlist(h as object, base as string) as string
     while offset < size
         length = seg
         if offset + length > size then length = size - offset
-        part = duration * (length * 1.0 / usable)
+        part = Ts_TimeAt(h, CDbl(offset + length)) - Ts_TimeAt(h, CDbl(offset))
         if part < 0.1 then part = 0.1
         if part > longest then longest = part
         out.Push("#EXTINF:" + Ts_Secs(part) + ",")
@@ -213,10 +366,18 @@ end function
 
 function Ts_Piece(h as object, offset as longinteger, length as longinteger) as dynamic
     size = h.size
+    lastEnd = -1&
+    if m.tsLastEnd <> invalid then lastEnd = m.tsLastEnd
+    servedEnd = -1&
+    if m.tsServedEnd <> invalid then servedEnd = m.tsServedEnd
+    jump = offset > ToInt(h.start, 0) and offset <> lastEnd
     margin = 188 * 6000
+    if jump then margin = 188 * 14000
     want = length + margin
     if offset + want > size then want = size - offset
+    clock = CreateObject("roTimespan")
     got = Hlsp_File(h.url, h.headers, "bytes=" + Str_Any(offset) + "-" + Str_Any(offset + want - 1), 60000)
+    Dbg_Log("tsr fetch o=" + Str_Any(offset) + " want=" + Str_Any(want) + " code=" + ToInt(got.code, 0).ToStr() + " ms=" + clock.TotalMilliseconds().ToStr())
     if got.file = "" then return invalid
     if got.code <> 206
         DeleteFile(got.file)
@@ -231,14 +392,43 @@ function Ts_Piece(h as object, offset as longinteger, length as longinteger) as 
     video = ToInt(h.videoPid, -1)
     keep = ToInt(h.keep, -1)
     begin = 0
-    if offset > ToInt(h.start, 0)
+    skip = 0
+    found = -2
+    if offset > ToInt(h.start, 0) and not jump and servedEnd > offset then skip = Int(CDbl(servedEnd - offset))
+    if skip >= total
+        DeleteFile(got.file)
+        m.tsLastEnd = offset + length
+        body = CreateObject("roByteArray")
+        if Str_Of(h.pat) <> "" and Str_Of(h.pmt) <> "" then body.FromHexString(Str_Of(h.pat) + Str_Of(h.pmt))
+        return body
+    end if
+    if skip > 0
+        begin = skip - (skip mod 188)
         while begin < total and not Ts_VideoStart(full, begin, video)
             begin = begin + 188
         end while
-        if begin >= total then begin = 0
+        if begin >= total then begin = skip - (skip mod 188)
+    else if offset > ToInt(h.start, 0)
+        found = -1
+        if jump
+            probe = 0
+            while probe < total and found < 0
+                if Ts_KeyStart(full, probe, video, ToInt(h.videoKind, 27)) then found = probe
+                probe = probe + 188
+            end while
+        end if
+        if found >= 0
+            begin = found
+        else
+            while begin < total and not Ts_VideoStart(full, begin, video)
+                begin = begin + 188
+            end while
+            if begin >= total then begin = 0
+        end if
     end if
+    m.tsLastEnd = offset + length
     cut = length - (length mod 188)
-    if cut < begin then cut = begin
+    if cut <= begin then cut = begin + 188
     if offset + length >= size
         cut = total
     else
@@ -246,6 +436,7 @@ function Ts_Piece(h as object, offset as longinteger, length as longinteger) as 
             cut = cut + 188
         end while
     end if
+    m.tsServedEnd = offset + cut
     tails = []
     o = cut
     while o < total and keep >= 0
@@ -257,7 +448,14 @@ function Ts_Piece(h as object, offset as longinteger, length as longinteger) as 
     end while
     full = invalid
     body = CreateObject("roByteArray")
-    if cut > begin then body.ReadFile(got.file, begin, cut - begin)
+    if offset > ToInt(h.start, 0) and Str_Of(h.pat) <> "" and Str_Of(h.pmt) <> ""
+        body.FromHexString(Str_Of(h.pat) + Str_Of(h.pmt))
+    end if
+    if cut > begin
+        chunk = CreateObject("roByteArray")
+        chunk.ReadFile(got.file, begin, cut - begin)
+        body.Append(chunk)
+    end if
     one = CreateObject("roByteArray")
     for each t in tails
         one.ReadFile(got.file, t, 188)
@@ -265,6 +463,7 @@ function Ts_Piece(h as object, offset as longinteger, length as longinteger) as 
     end for
     DeleteFile(got.file)
     Ts_KeepAudio(body, h)
+    Dbg_Log("tsr o=" + Str_Any(offset) + " n=" + Str_Any(length) + " jump=" + jump.ToStr() + " key=" + found.ToStr() + " skip=" + skip.ToStr() + " begin=" + begin.ToStr() + " cut=" + cut.ToStr() + " got=" + total.ToStr() + " out=" + body.Count().ToStr())
     return body
 end function
 

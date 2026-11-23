@@ -1,9 +1,10 @@
 function Srv_Kinds() as object
-    return [{ id: "jellyfin", name: "Jellyfin" }, { id: "emby", name: "Emby" }]
+    return [{ id: "jellyfin", name: "Jellyfin" }, { id: "emby", name: "Emby" }, { id: "plex", name: "Plex" }]
 end function
 
 function Srv_KindName(kind as string) as string
     if kind = "emby" then return "Emby"
+    if kind = "plex" then return "Plex"
     return "Jellyfin"
 end function
 
@@ -170,7 +171,7 @@ end function
 sub Srv_Refresh(id as string)
     sv = Srv_Find(id)
     if sv = invalid then return
-    libs = Srv_Libraries(sv)
+    if Str_Of(sv.kind) = "plex" then libs = Plex_Libraries(sv) else libs = Srv_Libraries(sv)
     if libs.Count() = 0 then return
     offs = {}
     if type(sv.libs) = "roArray"
@@ -281,13 +282,24 @@ function Srv_Streams(title as string, kind as string, ids as object) as object
     for each sv in servers
         if sv.on <> false and type(sv.libs) = "roArray"
             found = ""
+            plex = Str_Of(sv.kind) = "plex"
             for each lib in sv.libs
-                if found = "" and lib.on <> false and (lib.kind = "series") = series then found = Srv_Match(sv, lib, imdb, tmdb, title)
+                if found = "" and lib.on <> false and (lib.kind = "series") = series
+                    if plex then found = Plex_Match(sv, lib, imdb, tmdb, title) else found = Srv_Match(sv, lib, imdb, tmdb, title)
+                end if
             end for
             if found <> "" and series
-                if season >= 0 and episode > 0 then found = Srv_Episode(sv, found, season, episode) else found = ""
+                if season >= 0 and episode > 0
+                    if plex then found = Plex_Episode(sv, found, season, episode) else found = Srv_Episode(sv, found, season, episode)
+                else
+                    found = ""
+                end if
             end if
-            if found <> ""
+            if found <> "" and plex
+                for each s in Plex_ItemStreams(sv, found)
+                    out.Push(s)
+                end for
+            else if found <> ""
                 info = Srv_Info(sv, found)
                 for each s in Srv_ItemStreams(sv, found, info)
                     out.Push(s)

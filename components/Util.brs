@@ -224,6 +224,13 @@ function Img_Fix(url as string) as string
     return "https://raw.githubusercontent.com/" + parts[0] + "/" + parts[1] + "/" + rest.Join("/")
 end function
 
+function App_Edition() as string
+    info = CreateObject("roAppInfo")
+    edition = LCase(Str_Of(info.GetValue("edition")).Trim())
+    if edition = "" and Instr(1, UCase(Str_Of(info.GetTitle())), "IPTV") > 0 then edition = "iptv"
+    return edition
+end function
+
 function App_Version() as string
     return CreateObject("roAppInfo").GetVersion() + " beta"
 end function
@@ -950,3 +957,19 @@ function Str_CleanDeep(v as dynamic) as dynamic
     end if
     return v
 end function
+
+sub Dbg_Log(text as string)
+    path = "tmp:/nuvio_debug.log"
+    fs = CreateObject("roFileSystem")
+    st = fs.Stat(path)
+    if st <> invalid and st.size <> invalid and st.size > 262144
+        old = ReadAsciiFile(path)
+        WriteAsciiFile(path, Right(old, 131072))
+    end if
+    d = CreateObject("roDateTime")
+    d.ToLocalTime()
+    line = Right("0" + d.GetHours().ToStr(), 2) + ":" + Right("0" + d.GetMinutes().ToStr(), 2) + ":" + Right("0" + d.GetSeconds().ToStr(), 2) + " " + text + Chr(10)
+    ba = CreateObject("roByteArray")
+    ba.FromAsciiString(line)
+    if fs.Exists(path) then ba.AppendFile(path) else ba.WriteFile(path)
+end sub

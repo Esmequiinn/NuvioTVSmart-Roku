@@ -8,6 +8,7 @@ sub showPage(name as string)
     m.searchPage.visible = name = "search"
     m.discoverPage.visible = name = "discover"
     m.libraryPage.visible = name = "library" or name = "folder"
+    Live_ShowPage(name = "live")
     m.hero.visible = false
     if name <> "folder" and Bool_Of(m.libraryGrid, false)
         m.libraryGrid = false
@@ -78,6 +79,8 @@ sub focusPage()
             m.searchFocus = "keyboard"
             m.keyboard.setFocus(true)
         end if
+    else if m.page = "live" and m.livePage <> invalid
+        m.livePage.setFocus(true)
     else if m.page = "library" or m.page = "folder"
         if m.libraryRows.visible
             m.libraryRows.setFocus(true)
@@ -514,6 +517,7 @@ sub buildLibrary()
     end if
     hasItems = root.getChildCount() > 0
     m.libraryRows.visible = hasItems
+    m.libraryEmpty.text = L("Tu biblioteca está vacía. Abre cualquier título y elige Mi lista para guardarlo aquí.")
     m.libraryEmpty.visible = not hasItems
     m.hero.visible = hasItems
     if hasItems then showHeroFor(getRowItem(m.libraryRows, m.libraryRows.jumpToRowItem))

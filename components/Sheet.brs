@@ -29,6 +29,7 @@ sub onSheetChosen()
     m.sheet.setFocus(false)
     m.sheetHandler = ""
     if Conn_Sheet(handler, choice, data) then return
+    if Live_Sheet(handler, choice, data) then return
     if handler = "cw"
         Options_RunContinue(choice, data)
     else if handler = "poster"
@@ -112,6 +113,7 @@ function Options_Open() as boolean
     target = Options_FocusedItem()
     if target = invalid then return false
     item = target.item
+    if item.itemType = "folder" and item.hasField("channelKey") and Str_Of(item.channelKey) <> "" then return Live_HomeSheet(item)
     if item.itemType = "folder" or item.itemType = "seeall" then return false
     if target.cw
         items = [{ id: "details", label: L("Ir a detalles") }]

@@ -4,7 +4,7 @@ function Srv_HomeRows(limit as integer) as object
         if sv.on <> false and type(sv.libs) = "roArray"
             for each lib in sv.libs
                 if lib.on <> false
-                    row = Srv_LibraryRow(sv, lib, limit)
+                    if Str_Of(sv.kind) = "plex" then row = Plex_LibraryRow(sv, lib, limit) else row = Srv_LibraryRow(sv, lib, limit)
                     if row <> invalid then rows.Push(row)
                 end if
             end for

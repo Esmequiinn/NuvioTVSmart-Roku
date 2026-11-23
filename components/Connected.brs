@@ -28,10 +28,10 @@ function Conn_Sections(integ as object) as object
         debrid.rows.Push(Set_Toggle("cloudOn", L("Biblioteca en la nube"), L("Explora y reproduce lo que ya tienes en tus cuentas conectadas, desde la Biblioteca."), Bool_Of(integ.cloudOn, true)))
     end if
 
-    servers = { id: "servers", label: L("Servidores multimedia"), subtitle: L("Conecta Jellyfin o Emby"), rows: [] }
+    servers = { id: "servers", label: L("Servidores multimedia"), subtitle: L("Conecta Jellyfin, Emby o Plex"), rows: [] }
     servers.rows.Push(Set_Header(L("Servidores")))
     list = Srv_List()
-    if list.Count() = 0 then servers.rows.Push(Set_Info("srvNone", L("Todavía no hay servidores conectados."), L("Conecta Jellyfin o Emby para ver tu propia biblioteca en el inicio y como fuente al reproducir."), ""))
+    if list.Count() = 0 then servers.rows.Push(Set_Info("srvNone", L("Todavía no hay servidores conectados."), L("Conecta Jellyfin, Emby o Plex para ver tu propia biblioteca en el inicio y como fuente al reproducir."), ""))
     for each sv in list
         on = 0
         if type(sv.libs) = "roArray"
@@ -46,7 +46,9 @@ function Conn_Sections(integ as object) as object
     end for
     servers.rows.Push(Set_Header(L("Agregar servidor")))
     for each k in Srv_Kinds()
-        servers.rows.Push(Set_Row("srvAdd:" + k.id, k.name, L("Inicia sesión con la dirección de tu servidor y un usuario de {p}.").Replace("{p}", k.name), ""))
+        desc = L("Inicia sesión con la dirección de tu servidor y un usuario de {p}.").Replace("{p}", k.name)
+        if k.id = "plex" then desc = L("Vincula tu cuenta de Plex con un código en plex.tv/link. Se agregan todos tus servidores.")
+        servers.rows.Push(Set_Row("srvAdd:" + k.id, k.name, desc, ""))
     end for
     return [debrid, servers]
 end function
@@ -90,6 +92,10 @@ function Conn_Row(row as string) as boolean
             items.Push({ id: c.id, label: c.name })
         end for
         Sheet_Open({ title: L("Resolver con"), items: items }, "debPick", invalid)
+        return true
+    end if
+    if row = "srvAdd:plex"
+        startLogin("plex")
         return true
     end if
     if Left(row, 7) = "srvAdd:"
@@ -177,6 +183,8 @@ function Conn_Sheet(handler as string, choice as string, data as dynamic) as boo
             Conn_LibMenu(id)
         else if choice = "refresh"
             Conn_Run("srvRefresh", { id: id }, L("Actualizando bibliotecas..."))
+        else if choice = "again" and Str_Of(sv.kind) = "plex"
+            startLogin("plex")
         else if choice = "again"
             m.srvForm = { kind: Str_Of(sv.kind), address: Str_Of(sv.address), user: Str_Of(sv.userName) }
             showKeyboard("srvPass", L("Contraseña de {u}").Replace("{u}", Str_Of(sv.userName)), "", { kind: Str_Of(sv.kind) })

@@ -429,7 +429,7 @@ function Settings_Model() as object
     tracking.rows.Push(Set_Row("mdbAccount", "MDBList", accDesc, mdbAccount))
     tracking.rows.Push(Set_Toggle("scrobble", L("Registrar lo que veo"), L("Envía inicio, pausa y fin de cada título."), integ.scrobble))
     tracking.rows.Push(Set_Header(L("Fuentes")))
-    tracking.rows.Push(Set_Row("cwSource", L("Seguir viendo desde"), L("De dónde sale la fila Seguir viendo. Trakt y MDBList aparecen cuando conectas su cuenta."), Track_SourceName(Track_Pick(integ, "cw"))))
+    tracking.rows.Push(Set_Row("cwSource", L("Seguir viendo desde"), L("De dónde sale la fila Seguir viendo. Trakt, MDBList y Simkl aparecen cuando conectas su cuenta."), Track_SourceName(Track_Pick(integ, "cw"))))
     tracking.rows.Push(Set_Row("libSource", L("Biblioteca desde"), L("De dónde salen las listas de la biblioteca. Con Trakt o MDBList, agregar a Mi lista guarda en su watchlist."), Track_SourceName(Track_Pick(integ, "lib"))))
     tracking.rows.Push(Set_Row("rateSource", L("Calificaciones"), L("Dónde se guardan y de dónde se muestran tus calificaciones. Califica desde la ficha de cada título."), Rate_Name(Rate_Source(integ))))
     moreNames = { tmdb: "TMDB", trakt: "Trakt", simkl: "Simkl" }
@@ -470,7 +470,10 @@ function Settings_Model() as object
     about.rows.Push(Set_Info("formats", L("Formatos compatibles"), formats + chr(10) + L("Según tu Roku y tu tele. La reproducción automática evita lo que no es compatible."), ""))
 
     conn = Conn_Sections(integ)
-    return { sections: [account, profilesSection, party, appearance, layout, content, integration, conn[0], conn[1], fusion, playback, tracking, advanced, about] }
+    sections = [account, profilesSection, party, appearance, layout, content, integration, conn[0], conn[1]]
+    if Live_On() then sections.Push(Live_Sections())
+    sections.Append([fusion, playback, tracking, advanced, about])
+    return { sections: sections }
 end function
 
 sub openSettings()
@@ -487,6 +490,7 @@ sub openSettings()
         return
     end if
     m.settingsOpen = true
+    Live_ShowPage(false)
     m.nav.active = "settings"
     m.settings.visible = true
     m.settings.reset = true
@@ -512,6 +516,7 @@ sub closeSettings()
         showPage("home")
         return
     end if
+    if m.page = "live" then Live_ShowPage(true)
     m.area = "nav"
     focusCurrent()
 end sub
@@ -539,6 +544,7 @@ sub onSettingsEvent()
         return
     end if
     if Conn_Row(row) then return
+    if Live_Row(row) then return
     if Left(row, 4) = "mdb:"
         k = Mid(row, 5)
         integ.mdbShow[k] = not Bool_Of(integ.mdbShow[k], false)
@@ -799,7 +805,7 @@ sub onSettingsEvent()
         if row = "libSource" then which = "lib"
         opts = Track_Options(integ, which)
         if opts.Count() < 2
-            showMessage(L("Fuentes"), L("Conecta Trakt o MDBList para elegir otra fuente."))
+            showMessage(L("Fuentes"), L("Conecta Trakt, MDBList o Simkl para elegir otra fuente."))
         else
             cur = Track_Pick(integ, which)
             nxt = opts[0]
@@ -851,8 +857,9 @@ sub startLogin(service as string)
     if service = "simkl" then mode = "simklPin"
     if service = "mdblist" then mode = "mdbCode"
     if service = "torbox" then mode = "debTbStart"
-    if service = "trakt" or service = "simkl" or service = "mdblist" or service = "torbox"
-        names = { trakt: "Trakt", simkl: "Simkl", mdblist: "MDBList", torbox: "TorBox" }
+    if service = "plex" then mode = "plexPin"
+    if service = "trakt" or service = "simkl" or service = "mdblist" or service = "torbox" or service = "plex"
+        names = { trakt: "Trakt", simkl: "Simkl", mdblist: "MDBList", torbox: "TorBox", plex: "Plex" }
         m.login.dialog = true
         m.trackAuth.info = { service: service }
         m.trackAuth.status = L("Iniciando la conexión con {p}...").Replace("{p}", names[service])
@@ -925,6 +932,7 @@ sub onLoginTimer()
     if m.login.service = "simkl" then mode = "simklPoll"
     if m.login.service = "mdblist" then mode = "mdbPoll"
     if m.login.service = "torbox" then mode = "debTbPoll"
+    if m.login.service = "plex" then mode = "plexPoll"
     m.loginPoll = CreateObject("roSGNode", "AccountTask")
     m.loginPoll.mode = mode
     m.loginPoll.params = { code: m.login.code, nonce: m.login.nonce, anon: m.login.anon, deviceCode: m.login.deviceCode, userCode: m.login.userCode }
@@ -968,6 +976,10 @@ sub onLoginPolled(event as object)
         else if service = "torbox"
             refreshSettings()
             Toast_Show(L("Tu cuenta quedó conectada."))
+        else if service = "plex"
+            m.needsReload = true
+            refreshSettings()
+            Toast_Show(L("Servidor conectado."))
         else
             Toast_Show(L("Tu cuenta quedó conectada."))
         end if
@@ -1129,6 +1141,7 @@ function Track_Options(integ as object, which as string) as object
     if which = "lib" then out = ["local"]
     if Str_Of(integ.traktToken) <> "" then out.Push("trakt")
     if Str_Of(integ.mdbAccess) <> "" or Str_Of(integ.mdbRefresh) <> "" then out.Push("mdblist")
+    if which = "cw" and Str_Of(integ.simklToken) <> "" then out.Push("simkl")
     return out
 end function
 
@@ -1146,6 +1159,7 @@ end function
 function Track_SourceName(v as string) as string
     if v = "trakt" then return "Trakt"
     if v = "mdblist" then return "MDBList"
+    if v = "simkl" then return "Simkl"
     if v = "local" then return L("Mi lista")
     return "Nuvio"
 end function

@@ -1211,6 +1211,7 @@ function Track_CwSource(integ as object) as string
     v = LCase(Str_Of(integ.cwSource))
     if v = "trakt" and Str_Of(integ.traktToken) <> "" then return "trakt"
     if v = "mdblist" and (Str_Of(integ.mdbAccess) <> "" or Str_Of(integ.mdbRefresh) <> "") then return "mdblist"
+    if v = "simkl" and Str_Of(integ.simklToken) <> "" then return "simkl"
     return ""
 end function
 

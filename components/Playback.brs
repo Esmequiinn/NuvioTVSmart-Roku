@@ -1046,6 +1046,9 @@ sub playStream(index as integer, startAt as integer)
     streams = m.ctx.streams
     if streams = invalid or index < 0 or index >= streams.Count() then return
     s = streams[index]
+    m.ctx.tsAudio = invalid
+    m.ctx.tsNote = ""
+    m.ctx.tsDuration = 0
     m.ctx.sourceIndex = index
     m.ctx.playingUrl = s.url
     m.ctx.playingStream = s
@@ -1130,6 +1133,19 @@ sub onProbeResult(event as object)
         m.ctx.attempts = wrapped
     end if
     m.ctx.tsAudio = invalid
+    m.ctx.tsNote = ""
+    m.ctx.tsDuration = 0
+    m.ctx.tsRetries = 0
+    if r <> invalid and Bool_Of(r.ts, false)
+        if not Bool_Of(r.ranges, false)
+            m.ctx.tsNote = L("El servidor de este enlace no deja leer sus audios.")
+        else if type(r.tsInfo) <> "roAssociativeArray"
+            m.ctx.tsNote = L("No se pudieron leer los audios de este archivo.")
+        else
+            m.ctx.tsDuration = ToInt(r.tsInfo.duration, 0)
+        end if
+    end if
+    if m.ctx.tsDuration <= 0 and r <> invalid and Bool_Of(r.ts, false) then m.ctx.tsDuration = Probe_Duration()
     if m.server <> invalid and r <> invalid and Bool_Of(r.ts, false) and Bool_Of(r.ranges, false) and r.size > 1000000
         m.server.hls = Ts_Session(s, src, r)
         m.hlsSerial = ToInt(m.hlsSerial, 0) + 1
@@ -1140,13 +1156,37 @@ sub onProbeResult(event as object)
     Play_Begin()
 end sub
 
+function Ts_Retry(position as integer) as boolean
+    if m.ctx = invalid or m.server = invalid then return false
+    attempts = m.ctx.attempts
+    cur = ToInt(m.ctx.attempt, 0)
+    if type(attempts) <> "roArray" or cur >= attempts.Count() then return false
+    if Left(Str_Of(attempts[cur].url), 33) <> "http://127.0.0.1:8888/hls.m3u8?v=" then return false
+    tries = ToInt(m.ctx.tsRetries, 0)
+    if tries >= 3 then return false
+    m.ctx.tsRetries = tries + 1
+    Dbg_Log("ts retry " + m.ctx.tsRetries.ToStr() + " at " + position.ToStr())
+    h = m.server.hls
+    if type(h) <> "roAssociativeArray" then return false
+    m.hlsSerial = ToInt(m.hlsSerial, 0) + 1
+    h.serial = m.hlsSerial
+    m.server.hls = h
+    attempts[cur].url = "http://127.0.0.1:8888/hls.m3u8?v=" + m.hlsSerial.ToStr()
+    m.ctx.attempts = attempts
+    if position > 5 then m.ctx.startAt = position
+    refreshResume()
+    Load_Note(L("Reconectando..."))
+    launchAttempt()
+    return true
+end function
+
 function Ts_Session(s as object, src as string, r as object) as object
     info = r.tsInfo
     h = { url: src, size: r.size, duration: Probe_Duration(), serial: ToInt(m.hlsSerial, 0) + 1 }
     if type(info) <> "roAssociativeArray" then return h
     if ToInt(info.duration, 0) > 0 then h.duration = ToInt(info.duration, 0)
     audio = info.audio
-    if type(audio) <> "roArray" or audio.Count() < 2 or ToInt(info.duration, 0) <= 0 then return h
+    if type(audio) <> "roArray" or audio.Count() < 2 or ToInt(h.duration, 0) <= 0 then return h
     caps = Device_Audio()
     tracks = []
     for each a in audio
@@ -1160,6 +1200,10 @@ function Ts_Session(s as object, src as string, r as object) as object
     h.start = ToInt(info.start, 0)
     h.pmtPid = ToInt(info.pmtPid, -1)
     h.videoPid = ToInt(info.videoPid, -1)
+    h.videoKind = ToInt(info.videoKind, 27)
+    if type(info.marks) = "roArray" then h.marks = info.marks
+    h.pat = Str_Of(info.pat)
+    h.pmt = Str_Of(info.pmt)
     h.headers = Stream_Heads(s, src)
     Ts_Keep(h, tracks, pick)
     m.ctx.tsAudio = { tracks: tracks, selected: pick }
@@ -1424,6 +1468,7 @@ sub launchAttempt()
     m.ctx.loadedSubs = tracks.Count()
     resume = ToInt(m.ctx.startAt, 0)
     if resume > 0 and Str_Of(m.ctx.resumeMode) = "" then content.PlayStart = resume
+    if type(m.ctx.tsAudio) = "roArray" then Dbg_Log("launch " + Left(attempt.url, 48) + " fmt=" + Str_Of(attempt.fmt) + " start=" + resume.ToStr() + " mode=" + Str_Of(m.ctx.resumeMode))
     video = m.playerVideo
     video.control = "stop"
     video.EnableCookies()
@@ -1448,7 +1493,10 @@ sub launchAttempt()
     if q > 0 then lowered = Left(lowered, q - 1)
     isLocal = Instr(1, attempt.url, "127.0.0.1:8888/hls.m3u8") > 0
     m.player.altAudio = attempt.fmt = "hls" and (Right(lowered, 3) = ".ts" or isLocal)
-    if isLocal and type(m.ctx.tsAudio) = "roAssociativeArray" then m.player.tsAudio = m.ctx.tsAudio else m.player.tsAudio = {}
+    if isLocal and type(m.ctx.tsAudio) = "roAssociativeArray" then m.player.tsAudio = m.ctx.tsAudio else m.player.tsAudio = { note: Str_Of(m.ctx.tsNote) }
+    known = 0
+    if attempt.fmt = "" and ToInt(m.ctx.tsDuration, 0) > 0 then known = ToInt(m.ctx.tsDuration, 0)
+    m.player.knownDuration = known
 end sub
 
 sub Alt_Audio(position as integer)
@@ -1648,6 +1696,7 @@ sub Player_Event()
         if position < 10 and Bool_Of(m.ctx.reusedPlay, false)
             fallbackFromReuse()
         else if Resume_Retry(position)
+        else if Ts_Retry(position)
         else if position > 30 and not Bool_Of(m.ctx.retriedDrop, false)
             m.ctx.retriedDrop = true
             m.ctx.startAt = position
@@ -1677,6 +1726,7 @@ sub Player_Event()
         if Alt_Restore(ToInt(m.ctx.startAt, 0))
         else if position < 10 and Bool_Of(m.ctx.reusedPlay, false)
             fallbackFromReuse()
+        else if Ts_Retry(position)
         else if not nextAttempt(position)
             if position > 10 then saveProgress()
             Play_Fail(position, playbackFailureText(Str_Of(ev.message)))
@@ -1864,6 +1914,11 @@ end sub
 sub onPlayerVideoState()
     if not m.player.visible then return
     state = m.playerVideo.state
+    if m.ctx <> invalid and type(m.ctx.tsAudio) = "roArray"
+        msg = "video " + state + " pos=" + Int(m.playerVideo.position).ToStr() + " attempt=" + ToInt(m.ctx.attempt, 0).ToStr()
+        if state = "error" then msg = msg + " code=" + Str_Any(m.playerVideo.errorCode) + " " + Str_Of(m.playerVideo.errorMsg) + " " + Str_Of(m.playerVideo.errorStr)
+        Dbg_Log(msg)
+    end if
     if state = "playing"
         rememberStream()
         m.ctx.reusedPlay = false

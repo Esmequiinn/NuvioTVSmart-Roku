@@ -22,11 +22,15 @@
     <script type="text/brightscript" uri="pkg:/components/Settings.brs" />
     <script type="text/brightscript" uri="pkg:/components/Debrid.brs" />
     <script type="text/brightscript" uri="pkg:/components/Servers.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Plex.brs" />
     <script type="text/brightscript" uri="pkg:/components/Connected.brs" />
     <script type="text/brightscript" uri="pkg:/components/Cloud.brs" />
     <script type="text/brightscript" uri="pkg:/components/Ratings.brs" />
     <script type="text/brightscript" uri="pkg:/components/RatingsUi.brs" />
     <script type="text/brightscript" uri="pkg:/components/CloudUi.brs" />
+    <script type="text/brightscript" uri="pkg:/components/IptvLists.brs" />
+    <script type="text/brightscript" uri="pkg:/components/IptvPrefs.brs" />
+    <script type="text/brightscript" uri="pkg:/components/LiveUi.brs" />
     <children>
         <Rectangle width="1920" height="1080" color="0x0C0C0FFF" />
         <Hero id="hero" />
@@ -149,6 +153,7 @@
             <Poster id="gifRing" uri="pkg:/images/iring.9.png" />
         </Group>
         <ExpandedCard id="expanded" />
+        <LiveScreen id="livePage" visible="false" />
         <SettingsScreen id="settings" visible="false" />
         <NavRail id="nav" />
         <DetailsScreen id="details" visible="false" />
@@ -167,6 +172,7 @@
         <ActionSheet id="sheet" visible="false" />
         <RatePanel id="ratePanel" visible="false" />
         <Toast id="toast" />
+        <ReminderCard id="reminderCard" />
         <Group id="loading" visible="false">
             <Rectangle width="1920" height="1080" color="0x000000FF" opacity="0.7" />
             <BusySpinner id="spinner" translation="[912,410]" spinInterval="0.9" />
@@ -179,5 +185,6 @@
         <Timer id="expandTimer" duration="3" repeat="false" />
         <Timer id="autoTimer" duration="3" repeat="false" />
         <Timer id="subsWait" duration="4" repeat="false" />
+        <Timer id="remindTimer" duration="15" repeat="true" />
     </children>
 </component>

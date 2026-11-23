@@ -172,6 +172,7 @@ sub init()
 
     m.nav.observeField("chosen", "onNavChosen")
     m.nav.observeField("leave", "onNavLeave")
+    Live_Setup()
     m.details.observeField("selected", "onDetailsSelected")
     m.details.observeField("back", "onDetailsBack")
     m.list.observeField("selected", "onListSelected")
@@ -338,10 +339,12 @@ sub Pin_Close()
 end sub
 
 sub onPinCancel()
+    if Live_PinCancel() then return
     Pin_Close()
 end sub
 
 sub onPinEntered()
+    if Live_PinEntered() then return
     if m.pinProfile = invalid or m.pinPad.pin = "" then return
     m.pinPad.working = true
     m.pinTask = CreateObject("roSGNode", "AccountTask")
@@ -566,6 +569,7 @@ end sub
 sub Home_Show(content as object)
     Poster_Localize(content)
     content = Home_Decorate(content)
+    Live_HomeInsert(content)
     m.skeleton.visible = false
     m.emptyState.visible = false
     old = m.homeRows.content
@@ -630,6 +634,7 @@ sub Home_Refocus()
 end sub
 
 sub showEmptyState(addonCount as integer, failed as integer)
+    if Live_HomeOnly() then return
     url = Net_ServerUrl()
     if addonCount = 0
         m.emptyTitle.text = L("Aún no tienes addons")
@@ -777,7 +782,7 @@ sub onRowFocused(event as object)
     if m.heroDelay = invalid
         m.heroDelay = CreateObject("roSGNode", "Timer")
         m.heroDelay.repeat = false
-        m.heroDelay.duration = 0.12
+        m.heroDelay.duration = 0.2
         m.heroDelay.observeField("fire", "onHeroDelay")
         showHeroFor(getRowItem(rows, rows.rowItemFocused))
         Hero_Prefetch(rows)
@@ -871,6 +876,7 @@ sub onRowSelected(event as object)
         Cloud_Open()
         return
     end if
+    if Live_Select(item) then return
     if item.itemType = "folder"
         openFolder(item)
         return
@@ -996,7 +1002,9 @@ sub showHeroFor(item as dynamic)
         end if
         logo = ""
         if item.hasField("logo") then logo = item.logo
-        m.hero.data = { title: title, logo: logo, background: item.background, rating: "", metaLine: line, description: "" }
+        desc = ""
+        if item.hasField("heroDescription") then desc = Str_Of(item.heroDescription)
+        m.hero.data = { title: title, logo: logo, background: item.background, rating: "", metaLine: line, description: desc }
         video = ""
         if item.hasField("heroVideo") then video = item.heroVideo
         hasGif = item.hasField("gif") and item.gif <> ""
@@ -1199,6 +1207,11 @@ sub onServerChanged()
         startQuietSync()
         return
     end if
+    if what = "iptv"
+        if m.livePage <> invalid then m.livePage.reload = true
+        if m.settingsOpen then refreshSettings()
+        return
+    end if
     if what = "theme"
         applyTheme()
         refreshSettings()
@@ -1288,6 +1301,16 @@ function onKeyEvent(key as string, press as boolean) as boolean
         return true
     end if
     if not press then return false
+    if key = "options" then Dbg_Log("scene key options focus=" + Focus_Path(m.top) + " watch=" + Bool_Of(m.liveWatchOn, false).ToStr())
+    if key = "options" and m.livePage <> invalid and Bool_Of(m.liveWatchOn, false) and m.livePage.visible and not Bool_Of(m.settingsOpen, false) and m.top.dialog = invalid and not m.pinPad.visible and not overlayOpen()
+        data = m.livePage.callFunc("Live_OptionsData", invalid)
+        if type(data) = "roAssociativeArray" then Live_OptionsSheet(data)
+        return true
+    end if
+    if m.livePage <> invalid and Bool_Of(m.liveWatchOn, false) and m.livePage.visible and not Bool_Of(m.settingsOpen, false) and m.top.dialog = invalid and not m.pinPad.visible and not overlayOpen() and not m.livePage.isInFocusChain()
+        m.livePage.setFocus(true)
+        return true
+    end if
     if m.busy
         if key = "back" then cancelBusy()
         return true
@@ -1406,7 +1429,7 @@ sub openExpanded(rows as object, item as object, meta as dynamic)
         end for
     end if
     m.global.expandIndex = idx
-    m.expanded.data = { x: x, y: rect.y, h: h, fromW: rect.w, toW: toW, background: background, logo: hd.logo, title: hd.title }
+    m.expanded.data = { x: x, y: rect.y, h: h, fromW: rect.w, toW: toW, background: background, logo: Logo_Local(Img_Sized(Str_Of(hd.logo), "w500")), title: hd.title }
     m.expanded.open = true
     m.expandRows = rows
     rows.focusBitmapBlendColor = "0xFFFFFF00"
@@ -1981,3 +2004,20 @@ sub Gif_CardArt(show as boolean)
     art.opacity = 0
     m.gifHidden = art
 end sub
+
+function Focus_Path(node as object) as string
+    out = []
+    cur = node.focusedChild
+    depth = 0
+    while cur <> invalid and depth < 12
+        id = cur.id
+        if id = "" then id = cur.subtype()
+        out.Push(id)
+        if cur.isSameNode(cur.focusedChild) then exit while
+        cur = cur.focusedChild
+        depth = depth + 1
+    end while
+    if out.Count() = 0 then return "none"
+    return out.Join(">")
+end function
+

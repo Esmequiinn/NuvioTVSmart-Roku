@@ -46,6 +46,10 @@ function Mdb_Read(path as string, integ as object) as object
     return Mdb_Get(path, integ, 20000)
 end function
 
+function Simkl_Get(path as string, integ as object) as object
+    return Http_Request("GET", Simkl_Url(path, integ), { Authorization: "Bearer " + Str_Of(integ.simklToken) }, invalid, 20000)
+end function
+
 function Track_Time(text as string) as integer
     if text = "" then return 0
     dt = CreateObject("roDateTime")
@@ -79,6 +83,7 @@ function Track_Playback(source as string, integ as object) as object
     r = invalid
     if source = "trakt" then r = Trakt_Get("/sync/playback?extended=full,images", integ)
     if source = "mdblist" then r = Mdb_Read("/sync/playback", integ)
+    if source = "simkl" then r = Simkl_Get("/sync/playback", integ)
     out = []
     if r = invalid or type(r.json) <> "roArray" then return invalid
     for each row in r.json
@@ -107,11 +112,13 @@ function Track_PlaybackEntry(row as dynamic, source as string) as dynamic
     end if
     if kind = "episode"
         show = row.show
+        if type(show) <> "roAssociativeArray" then show = row.anime
         ep = row.episode
         if type(show) <> "roAssociativeArray" or type(ep) <> "roAssociativeArray" then return invalid
         id = Track_Id(show.ids)
         s = ToInt(ep.season, -1)
         n = ToInt(ep.number, ToInt(ep.episode, -1))
+        if s < 0 and source = "simkl" then s = 1
         if id = "" or s < 0 or n < 1 then return invalid
         dur = ToInt(ep.runtime, ToInt(show.runtime, 0)) * 60
         if dur <= 0 then dur = 2700
@@ -136,6 +143,29 @@ function Track_History(source as string, integ as object) as object
                 end if
             end for
         end if
+    else if source = "simkl"
+        for each kind in ["shows", "anime"]
+            r = Simkl_Get("/sync/all-items/" + kind + "/watching?episode_watched_at=yes", integ)
+            j = r.json
+            if type(j) = "roAssociativeArray" and type(j[kind]) = "roArray"
+                for each row in j[kind]
+                    if type(row) = "roAssociativeArray" and type(row.show) = "roAssociativeArray" and type(row.seasons) = "roArray"
+                        id = Track_Id(row.show.ids)
+                        for each season in row.seasons
+                            if type(season) = "roAssociativeArray" and type(season.episodes) = "roArray"
+                                for each ep in season.episodes
+                                    if type(ep) = "roAssociativeArray"
+                                        at = Track_Time(Str_Of(ep.watched_at))
+                                        if at = 0 then at = Track_Time(Str_Of(row.last_watched_at))
+                                        Track_MarkSeen(watched, id, ToInt(season.number, 1), ToInt(ep.number, -1), at)
+                                    end if
+                                end for
+                            end if
+                        end for
+                    end if
+                end for
+            end if
+        end for
     else if source = "mdblist"
         r = Mdb_Read("/sync/watched?limit=100", integ)
         j = r.json
@@ -338,6 +368,7 @@ sub Track_ApplyOps(source as string, integ as object, pid as string)
                 r = invalid
                 if source = "trakt" then r = Trakt_Send("POST", path, integ, body)
                 if source = "mdblist" then r = Mdb_Send("POST", path, integ, body)
+                if r = invalid then r = { code: 400 }
                 done = r.code >= 200 and r.code < 300
                 if r.code >= 400 and r.code < 500 and r.code <> 401 and r.code <> 429 then done = true
             else if Str_Of(op.op) = "dropProgress"
@@ -348,6 +379,8 @@ sub Track_ApplyOps(source as string, integ as object, pid as string)
                     r = invalid
                     if source = "trakt" then r = Trakt_Send("DELETE", "/sync/playback/" + rid, integ, invalid)
                     if source = "mdblist" then r = Mdb_Send("DELETE", "/sync/playback/" + rid, integ, invalid)
+                    if source = "simkl" then r = Http_Request("DELETE", Simkl_Url("/sync/playback/" + rid, integ), { Authorization: "Bearer " + Str_Of(integ.simklToken) }, invalid, 15000)
+                    if r = invalid then r = { code: 404 }
                     done = (r.code >= 200 and r.code < 300) or r.code = 404
                 end if
             end if
