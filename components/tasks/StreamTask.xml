@@ -19,5 +19,6 @@
     <script type="text/brightscript" uri="pkg:/components/Debrid.brs" />
     <script type="text/brightscript" uri="pkg:/components/Cloud.brs" />
     <script type="text/brightscript" uri="pkg:/components/Servers.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Plex.brs" />
     <script type="text/brightscript" uri="pkg:/components/tasks/StreamTask.brs" />
 </component>

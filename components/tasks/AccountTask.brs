@@ -61,6 +61,10 @@ sub execute()
         end if
     else if mode = "srvSignIn"
         result = Srv_SignIn(Str_Of(p.kind), Str_Of(p.address), Str_Of(p.user), Str_Of(p.pass))
+    else if mode = "plexPin"
+        result = Plex_Pin()
+    else if mode = "plexPoll"
+        result = Plex_Poll(Str_Of(p.deviceCode))
     else if mode = "srvRefresh"
         Srv_Refresh(Str_Of(p.id))
         result = { ok: true }

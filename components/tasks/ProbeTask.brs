@@ -41,7 +41,7 @@ sub execute()
     end if
     file = "tmp:/probe_" + CreateObject("roDeviceInfo").GetRandomUUID() + ".bin"
     if t.AsyncGetToFile(file)
-        msg = wait(5000, port)
+        msg = wait(10000, port)
         if type(msg) = "roUrlEvent"
             out.code = msg.GetResponseCode()
             heads = msg.GetResponseHeaders()
@@ -70,13 +70,24 @@ sub execute()
             out.ts = Instr(1, kind, "mp2t") > 0 or Instr(1, kind, "mpegts") > 0 or (sync and Instr(1, kind, "mpegurl") = 0 and Instr(1, kind, "mp4") = 0)
             out.ranges = out.code = 206
             if out.ts and out.ranges and out.size > 1000000
+                clock = CreateObject("roTimespan")
                 info = Ts_Inspect(target, m.top.headers, out.size)
                 if info <> invalid then out.tsInfo = info
+                if info = invalid
+                    Dbg_Log("probe ts size=" + Str_Any(out.size) + " inspect=fail ms=" + clock.TotalMilliseconds().ToStr())
+                else
+                    na = 0
+                    if type(info.audio) = "roArray" then na = info.audio.Count()
+                    nm = 0
+                    if type(info.marks) = "roArray" then nm = info.marks.Count()
+                    Dbg_Log("probe ts size=" + Str_Any(out.size) + " dur=" + ToInt(info.duration, 0).ToStr() + " kind=" + ToInt(info.videoKind, 0).ToStr() + " audio=" + na.ToStr() + " marks=" + nm.ToStr() + " ms=" + clock.TotalMilliseconds().ToStr())
+                end if
             end if
         else
             t.AsyncCancel()
         end if
     end if
+    if out.ts = true and out.tsInfo = invalid then Dbg_Log("probe ts code=" + ToInt(out.code, 0).ToStr() + " ranges=" + Bool_Of(out.ranges, false).ToStr() + " size=" + Str_Any(out.size))
     m.top.result = out
 end sub
 

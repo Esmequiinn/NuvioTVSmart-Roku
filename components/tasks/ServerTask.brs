@@ -128,6 +128,17 @@ sub Srv_Route(sock as object, req as object)
         Srv_Send(sock, "200 OK", "application/vnd.apple.mpegurl", Srv_Hls())
         return
     end if
+    if req.method = "GET" and req.path = "/gz"
+        Srv_Gz(sock, Srv_Query(Str_Of(req.query), "f"))
+        return
+    end if
+    if req.method = "GET" and req.path = "/log"
+        if Srv_Query(Str_Of(req.query), "clear") = "1" then DeleteFile("tmp:/nuvio_debug.log")
+        txt = ReadAsciiFile("tmp:/nuvio_debug.log")
+        if txt = "" then txt = "-"
+        Srv_Send(sock, "200 OK", "text/plain; charset=utf-8", txt)
+        return
+    end if
     if req.method = "GET" and req.path = "/tsr"
         Srv_Tsr(sock, Str_Of(req.query))
         return
@@ -219,6 +230,8 @@ function Srv_State() as object
         presets: Autoplay_Presets()
         history: St_Progress().Count()
         integrations: Srv_Integrations()
+        iptv: Srv_IptvState()
+        version: Srv_Version()
     }
 end function
 
@@ -375,6 +388,8 @@ function Srv_Apply(body as dynamic) as object
         integ.nuvioEmail = ""
         St_SaveIntegrations(integ)
         res.what = "theme"
+    else if act = "addIptv" or act = "removeIptv" or act = "toggleIptv" or act = "iptvEpg" or act = "shareIptv"
+        return Srv_IptvApply(act, body, res)
     else if act = "reload"
         res.message = L("Recargando catálogos en el Roku.")
     else
@@ -567,3 +582,149 @@ sub Srv_Hlsp(sock as object, kind as string, url as string)
     Srv_Write(sock, headBytes)
     if body.Count() > 0 then Srv_Write(sock, body, 3000)
 end sub
+
+function Srv_IptvState() as object
+    out = []
+    epgs = ParseJson(ReadAsciiFile("cachefs:/iptv_epgs_" + Iptv_Pid() + ".json"))
+    if type(epgs) <> "roAssociativeArray" then epgs = {}
+    stat = ParseJson(ReadAsciiFile("cachefs:/iptv_epgstat_" + Iptv_Pid() + ".json"))
+    stats = {}
+    if type(stat) = "roAssociativeArray" and type(stat.stats) = "roAssociativeArray" then stats = stat.stats
+    for each lst in Iptv_Lists()
+        guide = Srv_IptvGuide(lst, epgs, stats)
+        out.Push({ id: Str_Of(lst.id), name: Str_Of(lst.name), type: Str_Of(lst.type), url: Str_Of(lst.url), server: Str_Of(lst.server), user: Str_Of(lst.user), epg: Str_Of(lst.epg), on: lst.on <> false, mine: Iptv_Mine(lst), shared: Bool_Of(lst.shared, false), owner: Iptv_OwnerName(lst), guide: guide })
+    end for
+    return { on: App_Edition() = "iptv" or Iptv_All().Count() > 0, lists: out }
+end function
+
+function Srv_IptvApply(act as string, body as object, res as object) as object
+    res.what = "iptv"
+    lists = Iptv_Lists()
+    if act = "addIptv"
+        kind = Str_Of(body.type)
+        entry = { id: CreateObject("roDeviceInfo").GetRandomUUID(), type: "m3u", name: Str_Of(body.name).Trim(), url: "", server: "", user: "", pass: "", epg: Str_Of(body.epg).Trim(), on: true, owner: Iptv_Pid(), shared: Bool_Of(body.shared, false) }
+        if kind = "xtream"
+            entry.type = "xtream"
+            entry.server = Iptv_Server(Str_Of(body.server))
+            entry.user = Str_Of(body.user).Trim()
+            entry.pass = Str_Of(body.pass).Trim()
+            if entry.server = "" or entry.user = "" or entry.pass = "" then return Srv_Fail(res, L("Faltan datos de la lista."))
+        else
+            entry.url = Str_Of(body.url).Trim()
+            if entry.url = "" then return Srv_Fail(res, L("Faltan datos de la lista."))
+            if Instr(1, entry.url, "://") = 0 then entry.url = "http://" + entry.url
+        end if
+        if entry.name = ""
+            src = entry.url
+            if entry.type = "xtream" then src = entry.server
+            p = Instr(1, src, "://")
+            if p > 0 then src = Mid(src, p + 3)
+            q = Instr(1, src, "/")
+            if q > 0 then src = Left(src, q - 1)
+            entry.name = src
+        end if
+        lists.Push(entry)
+        res.message = L("Lista agregada. Cargando canales...")
+    else
+        id = Str_Of(body.id)
+        out = []
+        found = false
+        for each lst in lists
+            if lst.id = id
+                found = true
+                if not Iptv_Mine(lst) then return Srv_Fail(res, L("Solo ese perfil puede cambiarla."))
+                if act = "shareIptv"
+                    lst.shared = not Bool_Of(lst.shared, false)
+                    out.Push(lst)
+                else if act = "toggleIptv"
+                    lst.on = lst.on = false
+                    out.Push(lst)
+                else if act = "iptvEpg"
+                    lst.epg = Str_Of(body.epg).Trim()
+                    if body.DoesExist("add") then lst.epgAdd = Bool_Of(body.add, false)
+                    out.Push(lst)
+                end if
+            else
+                out.Push(lst)
+            end if
+        end for
+        if not found then return Srv_Fail(res, L("No se encontró esa lista."))
+        lists = out
+        if act = "removeIptv" then res.message = L("Lista eliminada.") else res.message = L("Guardado.")
+    end if
+    Iptv_SaveLists(lists)
+    return res
+end function
+
+sub Srv_Gz(sock as object, path as string)
+    fs = CreateObject("roFileSystem")
+    if (Left(path, 10) <> "tmp:/iptv_" and Left(path, 14) <> "cachefs:/iptv_") or Instr(1, path, "..") > 0 or not fs.Exists(path)
+        Srv_Send(sock, "404 Not Found", "text/plain", "")
+        return
+    end if
+    info = fs.Stat(path)
+    size = 0
+    if info <> invalid and info.size <> invalid then size = info.size
+    crlf = chr(13) + chr(10)
+    text = "HTTP/1.1 200 OK" + crlf + "Content-Type: application/xml" + crlf + "Content-Encoding: gzip" + crlf + "Content-Length: " + size.ToStr() + crlf + "Cache-Control: no-store" + crlf + "Connection: close" + crlf + crlf
+    headBytes = CreateObject("roByteArray")
+    headBytes.FromAsciiString(text)
+    Srv_Write(sock, headBytes)
+    offset = 0
+    ba = CreateObject("roByteArray")
+    while offset < size
+        want = 262144
+        if offset + want > size then want = size - offset
+        ba.ReadFile(path, offset, want)
+        if ba.Count() = 0 then exit while
+        Srv_Write(sock, ba, 3000)
+        offset = offset + ba.Count()
+    end while
+end sub
+
+function Srv_Version() as string
+    v = App_Version()
+    if App_Edition() = "iptv" then v = v + " · IPTV"
+    return v
+end function
+
+function Srv_IptvGuide(lst as object, epgs as object, stats as object) as object
+    slots = Iptv_EpgList(Str_Of(lst.epg))
+    custom = slots.Count() > 0
+    known = false
+    info = epgs[Str_Of(lst.id)]
+    urls = Iptv_GuideUrls(lst, info)
+    if type(info) = "roAssociativeArray" then known = true
+    listed = []
+    if type(info) = "roAssociativeArray" and type(info.list) = "roArray" then listed = info.list
+    total = -1
+    chans = 0
+    items = []
+    for each u in urls
+        st = stats[u]
+        item = { url: u, state: "wait", programs: 0, channels: 0, fromList: not Srv_InList(slots, u) }
+        if type(st) = "roAssociativeArray"
+            if total < 0 then total = 0
+            if ToInt(st.n, -1) > 0 then total = total + ToInt(st.n, 0)
+            chans = chans + ToInt(st.ch, 0)
+            item.programs = ToInt(st.n, -1)
+            item.channels = ToInt(st.ch, 0)
+            if item.programs < 0
+                item.state = "fail"
+            else if Bool_Of(st.cut, false)
+                item.state = "cut"
+            else
+                item.state = "ok"
+            end if
+        end if
+        items.Push(item)
+    end for
+    return { urls: urls, items: items, slots: slots, add: Bool_Of(lst.epgAdd, false), listGuides: listed, custom: custom, loaded: known, programs: total, channels: chans }
+end function
+
+function Srv_InList(arr as object, v as string) as boolean
+    for each x in arr
+        if x = v then return true
+    end for
+    return false
+end function
