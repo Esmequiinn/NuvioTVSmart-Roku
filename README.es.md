@@ -152,6 +152,9 @@ Algunas funciones todavía no se han probado. Si pruebas alguna de las marcadas 
 | Plex | ⚠️ Sin probar |
 | Simkl como fuente de Seguir viendo | ⚠️ Sin probar |
 | Edición con IPTV (M3U, Xtream, guía, favoritos) | ✅ Funciona |
+| Películas y series de IPTV (filas en el inicio, Ver todo, búsqueda, detalles y Corregir coincidencia) | ⚠️ Sin probar |
+| Recorrer la guía desde la barra del canal de IPTV | ⚠️ Sin probar |
+| Zoom de pantalla en el reproductor y en IPTV | ⚠️ Sin probar |
 | Biblioteca en la nube (TorBox, Premiumize, Real-Debrid) | ⚠️ Sin probar |
 | Calificaciones (Trakt, Simkl, MDBList) | ✅ Funciona |
 | Opciones de Seguir viendo | ✅ Funciona |

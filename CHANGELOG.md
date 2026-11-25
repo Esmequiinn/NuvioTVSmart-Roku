@@ -4,6 +4,30 @@ All notable changes to Nuvio TV for Roku are listed here. This changelog only co
 
 **English** · [Español](CHANGELOG.es.md)
 
+## [0.1.9] - 2026-11-23
+
+### Added
+- **IPTV edition: movies and series from your playlists.** The movies and series that come in your M3U playlists or Xtream accounts now show up on the home as rows called **IPTV - group name**, using the playlist's own posters, and they also show up in **Search** by name.
+  - **See all**: when a group has more titles than fit in the row, the last card is **See all**, which opens the whole group in **Discover**, loading more as you scroll. Every group also shows up in **Discover** as a catalog.
+  - The IPTV rows are listed in **Settings → Catalogs** like any other catalog, so you can hide them or move them up or down. Up to 40 IPTV rows show on the home at once; the rest are in Discover and Search.
+  - **Right details**: when you open a title, the channel uses the TMDB id your Xtream provider sends when there is one. If there isn't, it looks up the title on TMDB (with your TMDB key, or Cinemeta if you don't have one), only for that title. That way it gets the right details, description, images and episodes like any other movie or series. If the title can't be found, it still opens with the playlist's name, poster and episodes so you can play it.
+  - **Fix match**: if a title is matched to the wrong movie or series, press `*` on it and pick **Fix match**, type the name (and year if you want), and choose the right one from the list. Leave it empty or pick **Back to automatic** to undo it.
+  - **Copies as sources**: when your playlists have the same movie more than once (4K, 1080p, Latino, subtitled, in different groups), it shows once in the rows and every copy shows up as its own **IPTV** source with its quality and language. Movies from your playlists also show up as **IPTV** sources when you open the same movie from any other catalog.
+  - **Series episodes** are recognized however the playlist names them: S02E01, S2 E1, T2 E1, T02C01, 2x01, "Temporada 2 Capítulo 1" or "Season 2 Episode 1", so each episode shows up as an **IPTV** source on the right season and episode.
+  - To keep the Roku from running out of space or freezing, up to 25,000 movies and episodes are kept per profile in small files (about 2 MB for a big playlist), and they're updated in the background together with your channels.
+
+- **Screen zoom (both editions).** The player has a new **Screen** button next to Sources and Audio with **Original**, **Light zoom** and **Zoom (fill screen)**. Zoom makes the picture bigger to get rid of black bars, cutting a bit of the edges. In the IPTV edition it's in the `*` menu while you watch a channel. Each player remembers your choice. Roku doesn't let channels stretch (deform) the picture, so there's no stretch option.
+- **IPTV edition: browse the guide from the channel bar.** While watching a channel, **Left** and **Right** move through the guide on the bottom bar: what was on before and what's coming next, with its day, time and description. Press **OK** on a show that hasn't started yet to set a reminder for it. It goes back to what's on now when the bar hides or you change channels. To switch between a channel's options, use **<<** and **>>** (rewind and fast-forward).
+
+### Fixed
+- **IPTV edition: channel menu while watching.** Roku TVs keep `*` for their own settings while a video fills the screen, so `*` only opened the channel's menu while the channel was loading. Now **Play/Pause** opens the channel's menu while you watch, also with the channel list open. `*` still works in the guide.
+- **IPTV edition: guide after changing groups.** If you opened a group before the guide finished loading, the other groups could stay without guide until you restarted the channel. Now channels without guide are asked again by themselves, and a guide request that gets stuck is retried.
+- **Continue Watching (IPTV edition)**: big playlists and guides can fill the Roku's storage, and the Roku then deletes other saved files, like your Continue Watching. That made the row disappear or take a long time to show up until you synced by hand. Now the row stays on the home, it syncs again by itself after your playlists and guide load, and it retries if the sync fails.
+- **`*` button and starting playback (both editions)**: removed the diagnostic log that ran on every `*` press, the link check before playing waits 5 seconds again like in 0.1.7 instead of 10, and choosing a built-in subtitle no longer leaves the Roku's own captions setting changed: it goes back to how you had it when you close the player.
+- **Resuming a movie or episode (both editions)**: on some Rokus, continuing where you left off showed a "Player error" ('Dot' Operator attempted with invalid BrightScript Component). It came from a diagnostic log added in 0.1.8; it's no longer written when resuming, and it can no longer stop playback on any Roku.
+- **IPTV edition**: big M3U playlists no longer freeze the channel or send you back to the Roku home. The playlist is now saved and read in small pieces instead of all at once, and up to 20,000 live channels are loaded per playlist.
+- **Plex**: after you enter the code, the screen now says it's looking for your servers instead of staying on "Waiting for approval". If your Plex account has no Plex Media Server, it tells you so (Nuvio connects to your own Plex Media Server, not to Plex's free movies and live TV).
+
 ## [0.1.8] - 2026-11-21
 
 ### Added

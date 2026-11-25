@@ -4,6 +4,30 @@ Aquí están todos los cambios importantes de Nuvio TV para Roku. Este registro 
 
 [English](CHANGELOG.md) · **Español**
 
+## [0.1.9] - 2026-11-23
+
+### Agregado
+- **Edición con IPTV: películas y series de tus listas.** Las películas y series que vienen en tus listas M3U o cuentas Xtream ahora aparecen en el inicio como filas llamadas **IPTV - nombre del grupo**, con los pósters de la propia lista, y también salen en **Buscar** por nombre.
+  - **Ver todo**: cuando un grupo tiene más títulos de los que caben en la fila, la última tarjeta es **Ver todo**, que abre el grupo completo en **Descubrir** y carga más conforme bajas. Cada grupo también aparece en **Descubrir** como catálogo.
+  - Las filas de IPTV aparecen en **Ajustes → Catálogos** como cualquier otro catálogo, así que puedes ocultarlas o subirlas y bajarlas. En el inicio se muestran hasta 40 filas de IPTV a la vez; el resto está en Descubrir y en Buscar.
+  - **Detalles correctos**: cuando abres un título, el canal usa el id de TMDB que manda tu proveedor Xtream cuando lo trae. Si no lo trae, busca el título en TMDB (con tu clave de TMDB, o en Cinemeta si no tienes) solo para ese título. Así tiene los detalles, la descripción, las imágenes y los episodios correctos como cualquier otra película o serie. Si no se encuentra el título, igual se abre con el nombre, el póster y los episodios de la lista para que puedas reproducirlo.
+  - **Corregir coincidencia**: si un título se emparejó con la película o serie equivocada, presiona `*` sobre él y elige **Corregir coincidencia**, escribe el nombre (y el año si quieres) y elige el correcto de la lista. Déjalo vacío o elige **Volver a automático** para deshacerlo.
+  - **Copias como fuentes**: cuando tus listas tienen la misma película varias veces (4K, 1080p, latino, subtitulada, en distintos grupos), aparece una sola vez en las filas y cada copia sale como su propia fuente **IPTV** con su calidad e idioma. Las películas de tus listas también salen como fuentes **IPTV** cuando abres la misma película desde cualquier otro catálogo.
+  - **Episodios de series**: se reconocen sin importar cómo los nombre la lista: S02E01, S2 E1, T2 E1, T02C01, 2x01, "Temporada 2 Capítulo 1" o "Season 2 Episode 1", así cada episodio sale como fuente **IPTV** en la temporada y el episodio correctos.
+  - Para que el Roku no se quede sin espacio ni se congele, se guardan hasta 25,000 películas y episodios por perfil en archivos chicos (unos 2 MB para una lista grande), y se actualizan en segundo plano junto con tus canales.
+
+- **Zoom de pantalla (las dos ediciones).** El reproductor tiene un botón nuevo, **Pantalla**, junto a Fuentes y Audio, con **Original**, **Zoom ligero** y **Zoom (llenar pantalla)**. El zoom agranda la imagen para quitar las barras negras, recortando un poco las orillas. En la edición con IPTV está en el menú de `*` mientras ves un canal. Cada reproductor recuerda lo que elegiste. Roku no deja que los canales estiren (deformen) la imagen, por eso no hay opción de estirar.
+- **Edición con IPTV: recorre la guía desde la barra del canal.** Viendo un canal, **Izquierda** y **Derecha** se mueven por la guía en la barra de abajo: lo que pasaron antes y lo que sigue, con su día, horario y descripción. Presiona **OK** en un programa que todavía no empieza para ponerle un recordatorio. Vuelve a lo que está pasando ahora cuando la barra se oculta o cambias de canal. Para cambiar entre las opciones de un canal, usa **<<** y **>>** (retroceder y adelantar).
+
+### Corregido
+- **Edición con IPTV: menú del canal mientras lo ves.** Las TV Roku se quedan con el `*` para su propia configuración mientras un video ocupa toda la pantalla, por eso el `*` solo abría el menú del canal mientras el canal cargaba. Ahora **Play/Pausa** abre el menú del canal mientras lo ves, también con la lista de canales abierta. El `*` sigue funcionando en la guía.
+- **Edición con IPTV: guía al cambiar de grupo.** Si entrabas a un grupo antes de que terminara de cargar la guía, los demás grupos se podían quedar sin guía hasta volver a abrir el canal. Ahora los canales sin guía se vuelven a pedir solos, y si una petición de la guía se atora, se reintenta.
+- **Seguir viendo (edición con IPTV)**: las listas y guías grandes pueden llenar el almacenamiento del Roku, y entonces el Roku borra otros archivos guardados, como tu Seguir viendo. Por eso la fila desaparecía o tardaba mucho en salir hasta que sincronizabas a mano. Ahora la fila se queda en el inicio, se vuelve a sincronizar sola cuando terminan de cargar tus listas y tu guía, y lo reintenta si la sincronización falla.
+- **Botón `*` y arranque de la reproducción (las dos ediciones)**: se quitó el registro de diagnóstico que corría cada vez que presionabas `*`, la revisión del enlace antes de reproducir vuelve a esperar 5 segundos como en 0.1.7 en lugar de 10, y elegir un subtítulo integrado ya no deja cambiada la configuración de subtítulos del propio Roku: vuelve a como la tenías al cerrar el reproductor.
+- **Continuar una película o episodio (las dos ediciones)**: en algunos Roku, continuar donde te quedaste mostraba un "Error del reproductor" ('Dot' Operator attempted with invalid BrightScript Component). Venía de un registro de diagnóstico agregado en 0.1.8; ya no se escribe al continuar y ya no puede detener la reproducción en ningún Roku.
+- **Edición con IPTV**: las listas M3U grandes ya no congelan el canal ni te regresan al inicio del Roku. Ahora la lista se guarda y se lee por partes en lugar de toda de una vez, y se cargan hasta 20,000 canales en vivo por lista.
+- **Plex**: después de poner el código, la pantalla ahora dice que está buscando tus servidores en lugar de quedarse en "Esperando aprobación". Si tu cuenta de Plex no tiene un Plex Media Server, te lo dice (Nuvio se conecta a tu propio Plex Media Server, no a las películas y TV en vivo gratis de Plex).
+
 ## [0.1.8] - 2026-11-21
 
 ### Agregado

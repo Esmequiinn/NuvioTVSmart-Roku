@@ -152,6 +152,9 @@ Some features haven't been tried yet. If you test any of the **Not tested yet** 
 | Plex | ⚠️ Not tested yet |
 | Simkl as Continue Watching source | ⚠️ Not tested yet |
 | IPTV edition (M3U, Xtream, guide, favorites) | ✅ Working |
+| IPTV movies and series (home rows, See all, search, details and Fix match) | ⚠️ Not tested yet |
+| Browse the guide from the IPTV channel bar | ⚠️ Not tested yet |
+| Screen zoom in the player and in IPTV | ⚠️ Not tested yet |
 | Cloud library (TorBox, Premiumize, Real-Debrid) | ⚠️ Not tested yet |
 | Ratings (Trakt, Simkl, MDBList) | ✅ Working |
 | Continue Watching options | ✅ Working |
