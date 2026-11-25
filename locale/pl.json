@@ -1266,5 +1266,19 @@
  "Ver el canal ahora": "Ogl\u0105daj kana\u0142 teraz",
  "Im\u00e1genes de pel\u00edculas y series": "Obrazy film\u00f3w i seriali",
  "Quitado de canales recientes.": "Usuni\u0119to z ostatnich kana\u0142\u00f3w.",
- "Quitar de canales recientes": "Usu\u0144 z ostatnich kana\u0142\u00f3w"
+ "Quitar de canales recientes": "Usu\u0144 z ostatnich kana\u0142\u00f3w",
+ "Buscando tus servidores de Plex...": "Szukanie twoich serwer\u00f3w Plex...",
+ "Tu cuenta de Plex no tiene ning\u00fan servidor. Nuvio se conecta a un Plex Media Server con tu propia biblioteca.": "Twoje konto Plex nie ma \u017cadnego serwera. Nuvio \u0142\u0105czy si\u0119 z Plex Media Server z twoj\u0105 w\u0142asn\u0105 bibliotek\u0105.",
+ "Corregir coincidencia": "Popraw dopasowanie",
+ "Escribe el nombre como aparece en TMDB (puedes agregar el a\u00f1o). D\u00e9jalo vac\u00edo para volver a autom\u00e1tico.": "Wpisz nazw\u0119 tak, jak jest na TMDB (mo\u017cesz doda\u0107 rok). Zostaw puste, aby wr\u00f3ci\u0107 do automatycznego.",
+ "Buscando...": "Wyszukiwanie...",
+ "No se encontr\u00f3 ning\u00fan t\u00edtulo con ese nombre.": "Nie znaleziono tytu\u0142u o tej nazwie.",
+ "Volver a autom\u00e1tico": "Wr\u00f3\u0107 do automatycznego",
+ "Volvi\u00f3 a la coincidencia autom\u00e1tica.": "Przywr\u00f3cono automatyczne dopasowanie.",
+ "Listo. Desde ahora se usar\u00e1 ese t\u00edtulo.": "Gotowe. Od teraz b\u0119dzie u\u017cywany ten tytu\u0142.",
+ "Pantalla": "Obraz",
+ "Zoom ligero": "Lekkie powi\u0119kszenie",
+ "Zoom (llenar pantalla)": "Powi\u0119kszenie (wype\u0142nij ekran)",
+ "OK: canal  \u00b7  Izquierda: grupos  \u00b7  Play/Pausa: opciones": "OK: kana\u0142  \u00b7  Lewo: grupy  \u00b7  Odtw\u00f3rz/Pauza: opcje",
+ "Con recordatorio": "Przypomnienie ustawione"
 }

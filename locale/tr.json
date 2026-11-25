@@ -1266,5 +1266,19 @@
  "Ver el canal ahora": "Kanal\u0131 \u015fimdi izle",
  "Im\u00e1genes de pel\u00edculas y series": "Film ve dizi g\u00f6rselleri",
  "Quitado de canales recientes.": "Son kanallardan kald\u0131r\u0131ld\u0131.",
- "Quitar de canales recientes": "Son kanallardan kald\u0131r"
+ "Quitar de canales recientes": "Son kanallardan kald\u0131r",
+ "Buscando tus servidores de Plex...": "Plex sunucular\u0131n aran\u0131yor...",
+ "Tu cuenta de Plex no tiene ning\u00fan servidor. Nuvio se conecta a un Plex Media Server con tu propia biblioteca.": "Plex hesab\u0131nda hi\u00e7 sunucu yok. Nuvio, kendi kitapl\u0131\u011f\u0131n\u0131n oldu\u011fu bir Plex Media Server'a ba\u011flan\u0131r.",
+ "Corregir coincidencia": "E\u015fle\u015fmeyi d\u00fczelt",
+ "Escribe el nombre como aparece en TMDB (puedes agregar el a\u00f1o). D\u00e9jalo vac\u00edo para volver a autom\u00e1tico.": "Ad\u0131 TMDB'de g\u00f6r\u00fcnd\u00fc\u011f\u00fc gibi yaz (y\u0131l\u0131 ekleyebilirsin). Otomati\u011fe d\u00f6nmek i\u00e7in bo\u015f b\u0131rak.",
+ "Buscando...": "Aran\u0131yor...",
+ "No se encontr\u00f3 ning\u00fan t\u00edtulo con ese nombre.": "Bu adla bir ba\u015fl\u0131k bulunamad\u0131.",
+ "Volver a autom\u00e1tico": "Otomati\u011fe d\u00f6n",
+ "Volvi\u00f3 a la coincidencia autom\u00e1tica.": "Otomatik e\u015fle\u015fmeye d\u00f6n\u00fcld\u00fc.",
+ "Listo. Desde ahora se usar\u00e1 ese t\u00edtulo.": "Tamam. Bundan sonra bu ba\u015fl\u0131k kullan\u0131lacak.",
+ "Pantalla": "Ekran",
+ "Zoom ligero": "Hafif yak\u0131nla\u015ft\u0131rma",
+ "Zoom (llenar pantalla)": "Yak\u0131nla\u015ft\u0131r (ekran\u0131 doldur)",
+ "OK: canal  \u00b7  Izquierda: grupos  \u00b7  Play/Pausa: opciones": "OK: kanal  \u00b7  Sol: gruplar  \u00b7  Oynat/Duraklat: se\u00e7enekler",
+ "Con recordatorio": "Hat\u0131rlat\u0131c\u0131 kuruldu"
 }

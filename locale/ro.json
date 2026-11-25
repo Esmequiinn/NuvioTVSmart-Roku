@@ -1266,5 +1266,19 @@
  "Ver el canal ahora": "Vezi canalul acum",
  "Im\u00e1genes de pel\u00edculas y series": "Imagini pentru filme \u0219i seriale",
  "Quitado de canales recientes.": "Eliminat din canalele recente.",
- "Quitar de canales recientes": "Elimin\u0103 din canalele recente"
+ "Quitar de canales recientes": "Elimin\u0103 din canalele recente",
+ "Buscando tus servidores de Plex...": "Se caut\u0103 serverele tale Plex...",
+ "Tu cuenta de Plex no tiene ning\u00fan servidor. Nuvio se conecta a un Plex Media Server con tu propia biblioteca.": "Contul t\u0103u Plex nu are niciun server. Nuvio se conecteaz\u0103 la un Plex Media Server cu propria ta bibliotec\u0103.",
+ "Corregir coincidencia": "Corecteaz\u0103 potrivirea",
+ "Escribe el nombre como aparece en TMDB (puedes agregar el a\u00f1o). D\u00e9jalo vac\u00edo para volver a autom\u00e1tico.": "Scrie numele a\u0219a cum apare pe TMDB (po\u021bi ad\u0103uga anul). Las\u0103 gol pentru a reveni la automat.",
+ "Buscando...": "Se caut\u0103...",
+ "No se encontr\u00f3 ning\u00fan t\u00edtulo con ese nombre.": "Nu s-a g\u0103sit niciun titlu cu acest nume.",
+ "Volver a autom\u00e1tico": "Revino la automat",
+ "Volvi\u00f3 a la coincidencia autom\u00e1tica.": "S-a revenit la potrivirea automat\u0103.",
+ "Listo. Desde ahora se usar\u00e1 ese t\u00edtulo.": "Gata. De acum se va folosi acel titlu.",
+ "Pantalla": "Ecran",
+ "Zoom ligero": "Zoom u\u0219or",
+ "Zoom (llenar pantalla)": "Zoom (umple ecranul)",
+ "OK: canal  \u00b7  Izquierda: grupos  \u00b7  Play/Pausa: opciones": "OK: canal  \u00b7  St\u00e2nga: grupuri  \u00b7  Redare/Pauz\u0103: op\u021biuni",
+ "Con recordatorio": "Memento setat"
 }

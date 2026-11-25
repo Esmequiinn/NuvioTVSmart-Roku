@@ -1266,5 +1266,19 @@
  "Ver el canal ahora": "Zender nu bekijken",
  "Im\u00e1genes de pel\u00edculas y series": "Afbeeldingen van films en series",
  "Quitado de canales recientes.": "Verwijderd uit recente zenders.",
- "Quitar de canales recientes": "Verwijderen uit recente zenders"
+ "Quitar de canales recientes": "Verwijderen uit recente zenders",
+ "Buscando tus servidores de Plex...": "Je Plex-servers worden gezocht...",
+ "Tu cuenta de Plex no tiene ning\u00fan servidor. Nuvio se conecta a un Plex Media Server con tu propia biblioteca.": "Je Plex-account heeft geen servers. Nuvio maakt verbinding met een Plex Media Server met je eigen bibliotheek.",
+ "Corregir coincidencia": "Koppeling corrigeren",
+ "Escribe el nombre como aparece en TMDB (puedes agregar el a\u00f1o). D\u00e9jalo vac\u00edo para volver a autom\u00e1tico.": "Typ de naam zoals op TMDB (je kunt het jaar toevoegen). Laat leeg om terug te gaan naar automatisch.",
+ "Buscando...": "Zoeken...",
+ "No se encontr\u00f3 ning\u00fan t\u00edtulo con ese nombre.": "Geen titel gevonden met die naam.",
+ "Volver a autom\u00e1tico": "Terug naar automatisch",
+ "Volvi\u00f3 a la coincidencia autom\u00e1tica.": "Terug naar de automatische koppeling.",
+ "Listo. Desde ahora se usar\u00e1 ese t\u00edtulo.": "Klaar. Die titel wordt vanaf nu gebruikt.",
+ "Pantalla": "Beeld",
+ "Zoom ligero": "Lichte zoom",
+ "Zoom (llenar pantalla)": "Zoom (scherm vullen)",
+ "OK: canal  \u00b7  Izquierda: grupos  \u00b7  Play/Pausa: opciones": "OK: zender  \u00b7  Links: groepen  \u00b7  Afspelen/Pauze: opties",
+ "Con recordatorio": "Herinnering ingesteld"
 }

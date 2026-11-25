@@ -1266,5 +1266,19 @@
  "Ver el canal ahora": "Watch the channel now",
  "Im\u00e1genes de pel\u00edculas y series": "Movie and series images",
  "Quitado de canales recientes.": "Removed from recent channels.",
- "Quitar de canales recientes": "Remove from recent channels"
+ "Quitar de canales recientes": "Remove from recent channels",
+ "Buscando tus servidores de Plex...": "Looking for your Plex servers...",
+ "Tu cuenta de Plex no tiene ning\u00fan servidor. Nuvio se conecta a un Plex Media Server con tu propia biblioteca.": "Your Plex account has no servers. Nuvio connects to a Plex Media Server with your own library.",
+ "Corregir coincidencia": "Fix match",
+ "Escribe el nombre como aparece en TMDB (puedes agregar el a\u00f1o). D\u00e9jalo vac\u00edo para volver a autom\u00e1tico.": "Type the name as it appears on TMDB (you can add the year). Leave it empty to go back to automatic.",
+ "Buscando...": "Searching...",
+ "No se encontr\u00f3 ning\u00fan t\u00edtulo con ese nombre.": "No title was found with that name.",
+ "Volver a autom\u00e1tico": "Back to automatic",
+ "Volvi\u00f3 a la coincidencia autom\u00e1tica.": "Back to the automatic match.",
+ "Listo. Desde ahora se usar\u00e1 ese t\u00edtulo.": "Done. That title will be used from now on.",
+ "Pantalla": "Screen",
+ "Zoom ligero": "Light zoom",
+ "Zoom (llenar pantalla)": "Zoom (fill screen)",
+ "OK: canal  \u00b7  Izquierda: grupos  \u00b7  Play/Pausa: opciones": "OK: channel  \u00b7  Left: groups  \u00b7  Play/Pause: options",
+ "Con recordatorio": "Reminder set"
 }

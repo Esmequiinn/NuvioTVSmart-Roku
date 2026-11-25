@@ -1266,5 +1266,19 @@
  "Ver el canal ahora": "Csatorna megn\u00e9z\u00e9se most",
  "Im\u00e1genes de pel\u00edculas y series": "Filmek \u00e9s sorozatok k\u00e9pei",
  "Quitado de canales recientes.": "Elt\u00e1vol\u00edtva a legut\u00f3bbi csatorn\u00e1k k\u00f6z\u00fcl.",
- "Quitar de canales recientes": "Elt\u00e1vol\u00edt\u00e1s a legut\u00f3bbi csatorn\u00e1k k\u00f6z\u00fcl"
+ "Quitar de canales recientes": "Elt\u00e1vol\u00edt\u00e1s a legut\u00f3bbi csatorn\u00e1k k\u00f6z\u00fcl",
+ "Buscando tus servidores de Plex...": "Plex szervereid keres\u00e9se...",
+ "Tu cuenta de Plex no tiene ning\u00fan servidor. Nuvio se conecta a un Plex Media Server con tu propia biblioteca.": "A Plex-fi\u00f3kodhoz nem tartozik szerver. A Nuvio egy saj\u00e1t k\u00f6nyvt\u00e1rral rendelkez\u0151 Plex Media Serverhez csatlakozik.",
+ "Corregir coincidencia": "Egyez\u00e9s jav\u00edt\u00e1sa",
+ "Escribe el nombre como aparece en TMDB (puedes agregar el a\u00f1o). D\u00e9jalo vac\u00edo para volver a autom\u00e1tico.": "\u00cdrd be a nevet \u00fagy, ahogy a TMDB-n szerepel (az \u00e9vet is hozz\u00e1adhatod). Hagyd \u00fcresen az automatikushoz val\u00f3 visszat\u00e9r\u00e9shez.",
+ "Buscando...": "Keres\u00e9s...",
+ "No se encontr\u00f3 ning\u00fan t\u00edtulo con ese nombre.": "Nem tal\u00e1lhat\u00f3 c\u00edm ezzel a n\u00e9vvel.",
+ "Volver a autom\u00e1tico": "Vissza az automatikushoz",
+ "Volvi\u00f3 a la coincidencia autom\u00e1tica.": "Vissza\u00e1llt az automatikus egyez\u00e9s.",
+ "Listo. Desde ahora se usar\u00e1 ese t\u00edtulo.": "K\u00e9sz. Mostant\u00f3l ez a c\u00edm lesz haszn\u00e1lva.",
+ "Pantalla": "K\u00e9p",
+ "Zoom ligero": "Enyhe nagy\u00edt\u00e1s",
+ "Zoom (llenar pantalla)": "Nagy\u00edt\u00e1s (k\u00e9perny\u0151 kit\u00f6lt\u00e9se)",
+ "OK: canal  \u00b7  Izquierda: grupos  \u00b7  Play/Pausa: opciones": "OK: csatorna  \u00b7  Balra: csoportok  \u00b7  Lej\u00e1tsz\u00e1s/Sz\u00fcnet: be\u00e1ll\u00edt\u00e1sok",
+ "Con recordatorio": "Eml\u00e9keztet\u0151 be\u00e1ll\u00edtva"
 }

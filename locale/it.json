@@ -1266,5 +1266,19 @@
  "Ver el canal ahora": "Guarda il canale ora",
  "Im\u00e1genes de pel\u00edculas y series": "Immagini di film e serie",
  "Quitado de canales recientes.": "Rimosso dai canali recenti.",
- "Quitar de canales recientes": "Rimuovi dai canali recenti"
+ "Quitar de canales recientes": "Rimuovi dai canali recenti",
+ "Buscando tus servidores de Plex...": "Ricerca dei tuoi server Plex...",
+ "Tu cuenta de Plex no tiene ning\u00fan servidor. Nuvio se conecta a un Plex Media Server con tu propia biblioteca.": "Il tuo account Plex non ha nessun server. Nuvio si collega a un Plex Media Server con la tua libreria.",
+ "Corregir coincidencia": "Correggi corrispondenza",
+ "Escribe el nombre como aparece en TMDB (puedes agregar el a\u00f1o). D\u00e9jalo vac\u00edo para volver a autom\u00e1tico.": "Scrivi il nome come appare su TMDB (puoi aggiungere l'anno). Lascia vuoto per tornare all'automatico.",
+ "Buscando...": "Ricerca...",
+ "No se encontr\u00f3 ning\u00fan t\u00edtulo con ese nombre.": "Nessun titolo trovato con questo nome.",
+ "Volver a autom\u00e1tico": "Torna all'automatico",
+ "Volvi\u00f3 a la coincidencia autom\u00e1tica.": "Tornato alla corrispondenza automatica.",
+ "Listo. Desde ahora se usar\u00e1 ese t\u00edtulo.": "Fatto. D'ora in poi verr\u00e0 usato quel titolo.",
+ "Pantalla": "Schermo",
+ "Zoom ligero": "Zoom leggero",
+ "Zoom (llenar pantalla)": "Zoom (riempi lo schermo)",
+ "OK: canal  \u00b7  Izquierda: grupos  \u00b7  Play/Pausa: opciones": "OK: canale  \u00b7  Sinistra: gruppi  \u00b7  Play/Pausa: opzioni",
+ "Con recordatorio": "Promemoria impostato"
 }

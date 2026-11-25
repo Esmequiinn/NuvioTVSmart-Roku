@@ -1266,5 +1266,19 @@
  "Ver el canal ahora": "Ver o canal agora",
  "Im\u00e1genes de pel\u00edculas y series": "Imagens de filmes e s\u00e9ries",
  "Quitado de canales recientes.": "Removido dos canais recentes.",
- "Quitar de canales recientes": "Remover dos canais recentes"
+ "Quitar de canales recientes": "Remover dos canais recentes",
+ "Buscando tus servidores de Plex...": "Procurando seus servidores Plex...",
+ "Tu cuenta de Plex no tiene ning\u00fan servidor. Nuvio se conecta a un Plex Media Server con tu propia biblioteca.": "Sua conta do Plex n\u00e3o tem nenhum servidor. O Nuvio se conecta a um Plex Media Server com a sua pr\u00f3pria biblioteca.",
+ "Corregir coincidencia": "Corrigir correspond\u00eancia",
+ "Escribe el nombre como aparece en TMDB (puedes agregar el a\u00f1o). D\u00e9jalo vac\u00edo para volver a autom\u00e1tico.": "Digite o nome como aparece no TMDB (voc\u00ea pode adicionar o ano). Deixe vazio para voltar ao autom\u00e1tico.",
+ "Buscando...": "Procurando...",
+ "No se encontr\u00f3 ning\u00fan t\u00edtulo con ese nombre.": "Nenhum t\u00edtulo foi encontrado com esse nome.",
+ "Volver a autom\u00e1tico": "Voltar ao autom\u00e1tico",
+ "Volvi\u00f3 a la coincidencia autom\u00e1tica.": "Voltou \u00e0 correspond\u00eancia autom\u00e1tica.",
+ "Listo. Desde ahora se usar\u00e1 ese t\u00edtulo.": "Pronto. Esse t\u00edtulo ser\u00e1 usado a partir de agora.",
+ "Pantalla": "Tela",
+ "Zoom ligero": "Zoom leve",
+ "Zoom (llenar pantalla)": "Zoom (preencher a tela)",
+ "OK: canal  \u00b7  Izquierda: grupos  \u00b7  Play/Pausa: opciones": "OK: canal  \u00b7  Esquerda: grupos  \u00b7  Play/Pausa: op\u00e7\u00f5es",
+ "Con recordatorio": "Com lembrete"
 }

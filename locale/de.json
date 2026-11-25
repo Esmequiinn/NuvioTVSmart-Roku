@@ -1266,5 +1266,19 @@
  "Ver el canal ahora": "Sender jetzt ansehen",
  "Im\u00e1genes de pel\u00edculas y series": "Bilder f\u00fcr Filme und Serien",
  "Quitado de canales recientes.": "Aus den letzten Sendern entfernt.",
- "Quitar de canales recientes": "Aus den letzten Sendern entfernen"
+ "Quitar de canales recientes": "Aus den letzten Sendern entfernen",
+ "Buscando tus servidores de Plex...": "Deine Plex-Server werden gesucht...",
+ "Tu cuenta de Plex no tiene ning\u00fan servidor. Nuvio se conecta a un Plex Media Server con tu propia biblioteca.": "Dein Plex-Konto hat keinen Server. Nuvio verbindet sich mit einem Plex Media Server mit deiner eigenen Mediathek.",
+ "Corregir coincidencia": "Zuordnung korrigieren",
+ "Escribe el nombre como aparece en TMDB (puedes agregar el a\u00f1o). D\u00e9jalo vac\u00edo para volver a autom\u00e1tico.": "Gib den Namen so ein, wie er auf TMDB steht (du kannst das Jahr hinzuf\u00fcgen). Leer lassen, um zu automatisch zur\u00fcckzukehren.",
+ "Buscando...": "Suche...",
+ "No se encontr\u00f3 ning\u00fan t\u00edtulo con ese nombre.": "Kein Titel mit diesem Namen gefunden.",
+ "Volver a autom\u00e1tico": "Zur\u00fcck zu automatisch",
+ "Volvi\u00f3 a la coincidencia autom\u00e1tica.": "Zur\u00fcck zur automatischen Zuordnung.",
+ "Listo. Desde ahora se usar\u00e1 ese t\u00edtulo.": "Fertig. Dieser Titel wird ab jetzt verwendet.",
+ "Pantalla": "Bild",
+ "Zoom ligero": "Leichter Zoom",
+ "Zoom (llenar pantalla)": "Zoom (Bildschirm f\u00fcllen)",
+ "OK: canal  \u00b7  Izquierda: grupos  \u00b7  Play/Pausa: opciones": "OK: Sender  \u00b7  Links: Gruppen  \u00b7  Play/Pause: Optionen",
+ "Con recordatorio": "Mit Erinnerung"
 }

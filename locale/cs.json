@@ -1266,5 +1266,19 @@
  "Ver el canal ahora": "Sledovat kan\u00e1l te\u010f",
  "Im\u00e1genes de pel\u00edculas y series": "Obr\u00e1zky film\u016f a seri\u00e1l\u016f",
  "Quitado de canales recientes.": "Odebr\u00e1no z ned\u00e1vn\u00fdch kan\u00e1l\u016f.",
- "Quitar de canales recientes": "Odebrat z ned\u00e1vn\u00fdch kan\u00e1l\u016f"
+ "Quitar de canales recientes": "Odebrat z ned\u00e1vn\u00fdch kan\u00e1l\u016f",
+ "Buscando tus servidores de Plex...": "Hled\u00e1m tvoje servery Plex...",
+ "Tu cuenta de Plex no tiene ning\u00fan servidor. Nuvio se conecta a un Plex Media Server con tu propia biblioteca.": "Tv\u016fj \u00fa\u010det Plex nem\u00e1 \u017e\u00e1dn\u00fd server. Nuvio se p\u0159ipojuje k Plex Media Serveru s tvou vlastn\u00ed knihovnou.",
+ "Corregir coincidencia": "Opravit shodu",
+ "Escribe el nombre como aparece en TMDB (puedes agregar el a\u00f1o). D\u00e9jalo vac\u00edo para volver a autom\u00e1tico.": "Napi\u0161 n\u00e1zev tak, jak je na TMDB (m\u016f\u017ee\u0161 p\u0159idat rok). Nech pr\u00e1zdn\u00e9 pro n\u00e1vrat k automatice.",
+ "Buscando...": "Hled\u00e1m...",
+ "No se encontr\u00f3 ning\u00fan t\u00edtulo con ese nombre.": "\u017d\u00e1dn\u00fd titul s t\u00edmto n\u00e1zvem nebyl nalezen.",
+ "Volver a autom\u00e1tico": "Zp\u011bt na automatiku",
+ "Volvi\u00f3 a la coincidencia autom\u00e1tica.": "Vr\u00e1ceno na automatickou shodu.",
+ "Listo. Desde ahora se usar\u00e1 ese t\u00edtulo.": "Hotovo. Od te\u010f se bude pou\u017e\u00edvat tento titul.",
+ "Pantalla": "Obraz",
+ "Zoom ligero": "M\u00edrn\u00e9 p\u0159ibl\u00ed\u017een\u00ed",
+ "Zoom (llenar pantalla)": "P\u0159ibl\u00ed\u017eit (vyplnit obrazovku)",
+ "OK: canal  \u00b7  Izquierda: grupos  \u00b7  Play/Pausa: opciones": "OK: kan\u00e1l  \u00b7  Vlevo: skupiny  \u00b7  Play/Pauza: mo\u017enosti",
+ "Con recordatorio": "S p\u0159ipom\u00ednkou"
 }

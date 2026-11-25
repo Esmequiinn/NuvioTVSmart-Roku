@@ -1266,5 +1266,19 @@
  "Ver el canal ahora": "Regarder la cha\u00eene maintenant",
  "Im\u00e1genes de pel\u00edculas y series": "Images des films et s\u00e9ries",
  "Quitado de canales recientes.": "Retir\u00e9e des cha\u00eenes r\u00e9centes.",
- "Quitar de canales recientes": "Retirer des cha\u00eenes r\u00e9centes"
+ "Quitar de canales recientes": "Retirer des cha\u00eenes r\u00e9centes",
+ "Buscando tus servidores de Plex...": "Recherche de vos serveurs Plex...",
+ "Tu cuenta de Plex no tiene ning\u00fan servidor. Nuvio se conecta a un Plex Media Server con tu propia biblioteca.": "Votre compte Plex n'a aucun serveur. Nuvio se connecte \u00e0 un Plex Media Server avec votre propre biblioth\u00e8que.",
+ "Corregir coincidencia": "Corriger la correspondance",
+ "Escribe el nombre como aparece en TMDB (puedes agregar el a\u00f1o). D\u00e9jalo vac\u00edo para volver a autom\u00e1tico.": "\u00c9crivez le nom tel qu'il appara\u00eet sur TMDB (vous pouvez ajouter l'ann\u00e9e). Laissez vide pour revenir \u00e0 l'automatique.",
+ "Buscando...": "Recherche...",
+ "No se encontr\u00f3 ning\u00fan t\u00edtulo con ese nombre.": "Aucun titre trouv\u00e9 avec ce nom.",
+ "Volver a autom\u00e1tico": "Revenir \u00e0 l'automatique",
+ "Volvi\u00f3 a la coincidencia autom\u00e1tica.": "Retour \u00e0 la correspondance automatique.",
+ "Listo. Desde ahora se usar\u00e1 ese t\u00edtulo.": "C'est fait. Ce titre sera utilis\u00e9 d\u00e9sormais.",
+ "Pantalla": "\u00c9cran",
+ "Zoom ligero": "Zoom l\u00e9ger",
+ "Zoom (llenar pantalla)": "Zoom (remplir l'\u00e9cran)",
+ "OK: canal  \u00b7  Izquierda: grupos  \u00b7  Play/Pausa: opciones": "OK : cha\u00eene  \u00b7  Gauche : groupes  \u00b7  Lecture/Pause : options",
+ "Con recordatorio": "Rappel activ\u00e9"
 }
