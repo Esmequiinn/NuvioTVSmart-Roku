@@ -116,6 +116,7 @@ sub onActive()
         m.clockTimer.control = "start"
         m.panel.setFocus(false)
         m.top.setFocus(true)
+        Screen_Apply(m.video, Screen_Mode("player"), false)
     else
         m.hideTimer.control = "stop"
         m.pauseTimer.control = "stop"
@@ -124,6 +125,7 @@ sub onActive()
         hideLoadScreen()
         m.exTimer.control = "stop"
         Ex_Reset()
+        Ex_CaptionRestore()
     end if
 end sub
 
@@ -395,6 +397,7 @@ sub buildButtons(isSeries as boolean)
         { id: "subs", icon: "pkg:/images/ic_subs.png", hint: L("Subtítulos") }
         { id: "audio", icon: "pkg:/images/ic_audio.png", hint: "Audio" }
         { id: "sources", icon: "pkg:/images/ic_sources.png", hint: L("Fuentes") }
+        { id: "screen", icon: "pkg:/images/ic_aspect.png", hint: L("Pantalla") }
         { id: "switch", icon: "pkg:/images/ic_switch.png", hint: L("Cambiar forma de abrir") }
     ]
     if isSeries
@@ -906,6 +909,11 @@ sub updateClock()
     end if
 end sub
 
+function Ts_Logging() as boolean
+    ts = m.top.tsAudio
+    return type(ts) = "roAssociativeArray" and type(ts.tracks) = "roArray"
+end function
+
 function totalTime() as float
     known = m.top.knownDuration
     if known > 0 and (m.video.duration <= 0 or m.video.duration > known * 1.3 or m.video.duration < known * 0.7) then return known
@@ -985,7 +993,7 @@ sub onState_Run()
     if state = "playing" and not m.resumeDone
         m.resumeDone = true
         if m.video.position < m.resumeAt - 8
-            Dbg_Log("resume seek " + Int(m.resumeAt).ToStr() + " from " + Int(m.video.position).ToStr())
+            if Ts_Logging() then Dbg_Log("resume seek " + Int(m.resumeAt).ToStr() + " from " + Int(m.video.position).ToStr())
             m.video.seek = m.resumeAt
             m.applied = m.resumeAt
             m.appliedClock.Mark()
@@ -1064,7 +1072,7 @@ end sub
 sub applySeek()
     if m.seekTarget >= 0
         target = m.seekTarget
-        Dbg_Log("seek " + Int(target).ToStr() + " from " + Int(m.video.position).ToStr())
+        if Ts_Logging() then Dbg_Log("seek " + Int(target).ToStr() + " from " + Int(m.video.position).ToStr())
         m.video.seek = target
         m.applied = target
         m.appliedClock.Mark()
@@ -1083,6 +1091,8 @@ sub activate(id as string)
         openAudio()
     else if id = "sources"
         openSources()
+    else if id = "screen"
+        openScreen()
     else if id = "next"
         m.top.event = { type: "next" }
     else if id = "episodes"
@@ -1357,6 +1367,19 @@ sub openAudio()
     openPanel("audio", L("Pistas de audio"), items, values, focus)
 end sub
 
+sub openScreen()
+    cur = Screen_Mode("player")
+    items = []
+    values = []
+    focus = 0
+    for each md in [{ id: "original", label: L("Original") }, { id: "zoom1", label: L("Zoom ligero") }, { id: "zoom", label: L("Zoom (llenar pantalla)") }]
+        if md.id = cur then focus = items.Count()
+        items.Push({ id: values.Count().ToStr(), label: md.label, checked: md.id = cur })
+        values.Push(md.id)
+    end for
+    openPanel("screen", L("Pantalla"), items, values, focus)
+end sub
+
 sub onSrcPanel()
     r = m.srcPanel.result
     m.srcPanel.visible = false
@@ -1482,6 +1505,11 @@ sub choosePanel(index as integer)
             m.audioFixes = 0
             m.audioApplied = true
             m.video.audioTrack = value
+        end if
+    else if m.panelKind = "screen"
+        if value <> ""
+            Screen_Save("player", value)
+            Screen_Apply(m.video, value, false)
         end if
     else if m.panelKind = "sources"
         if value <> "" and index <> m.top.sourceIndex

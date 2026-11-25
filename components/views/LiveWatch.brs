@@ -27,7 +27,7 @@ sub Watch_Init()
     m.ovRows = m.top.findNode("ovRows")
     m.ovTimer = m.top.findNode("ovTimer")
     m.ovTimer.observeField("fire", "onOvTimer")
-    m.ovHint.text = L("OK cambia de canal  ·  Izquierda: grupos")
+    m.ovHint.text = L("OK: canal  ·  Izquierda: grupos  ·  Play/Pausa: opciones")
     m.ovOpen = false
     m.ovSel = 0
     m.ovTop = 0
@@ -99,8 +99,8 @@ sub Overlay_Show()
     end if
     m.overlay.visible = true
     Watch_HideBar()
-    Live_AskGuide()
     Overlay_Render()
+    Live_AskGuide()
     m.ovTimer.control = "stop"
     m.ovTimer.control = "start"
 end sub
@@ -215,7 +215,7 @@ function Overlay_Key(key as string) as boolean
         Watch_ShowBar()
     else if key = "back"
         Overlay_Hide()
-    else if key = "options"
+    else if key = "options" or key = "play"
         m.top.event = Live_Options()
     end if
     return true
@@ -229,9 +229,8 @@ sub Watch_Start()
     m.guideGroup.visible = false
     m.watch.visible = true
     m.watchMsg.text = ""
-    m.video.translation = [0, 0]
-    m.video.width = 1920
-    m.video.height = 1080
+    Screen_Apply(m.video, Screen_Mode("live"), false)
+    m.barAt = invalid
     if c.k <> m.playingKey or m.video.content = invalid
         Live_PlayChannel(c, false)
     else if m.video.hasField("mute")
@@ -286,18 +285,68 @@ sub Watch_HideBar()
     m.watchGrad.visible = false
     m.bar.visible = false
     m.barTimer.control = "stop"
+    m.barAt = invalid
 end sub
 
 sub onBarTimer()
-    if m.watchMsg.text <> "" then return
+    if m.watchMsg.text <> ""
+        if m.barAt <> invalid
+            m.barAt = invalid
+            Watch_Paint()
+        end if
+        return
+    end if
     Watch_HideBar()
 end sub
 
-sub Watch_Paint()
-    if m.mode <> "watch" then return
+function Watch_BarChan() as dynamic
     c = invalid
     if not Bool_Of(m.zapping, false) then c = Live_PlayingChan()
     if c = invalid then c = Live_Chan(m.sel)
+    return c
+end function
+
+function Watch_RemindKey() as boolean
+    if m.barAt = invalid then return false
+    c = Watch_BarChan()
+    if c = invalid then return false
+    pr = Live_At(c, m.barAt)
+    if pr = invalid or pr.a <= Live_Now() then return false
+    m.top.event = { action: "remind", key: c.k, channel: Live_Name(c), logo: Str_Of(c.l), title: Str_Of(pr.t), a: pr.a, b: pr.b, set: m.remind.DoesExist(c.k + "|" + pr.a.ToStr()), inWatch: true }
+    return true
+end function
+
+function Watch_Browse(forward as boolean) as boolean
+    c = Watch_BarChan()
+    if c = invalid then return false
+    progs = Live_Progs(c)
+    if type(progs) <> "roArray" or progs.Count() = 0 then return false
+    now = Live_Now()
+    at = now
+    if m.barAt <> invalid then at = m.barAt
+    cur = Live_At(c, at)
+    target = invalid
+    if forward
+        edge = at
+        if cur <> invalid then edge = cur.b
+        target = Live_After(c, edge)
+    else
+        edge = at
+        if cur <> invalid then edge = cur.a
+        for each pr in progs
+            if pr.b <= edge then target = pr
+        end for
+    end if
+    if target <> invalid
+        if target.a <= now and target.b > now then m.barAt = invalid else m.barAt = target.a
+    end if
+    Watch_ShowBar()
+    return true
+end function
+
+sub Watch_Paint()
+    if m.mode <> "watch" then return
+    c = Watch_BarChan()
     if c = invalid then return
     now = Live_Now()
     m.barLogo.uri = Str_Of(c.l)
@@ -322,7 +371,14 @@ sub Watch_Paint()
     end if
     if m.favs.DoesExist(c.k) then tech.Push(L("Favorito"))
     m.barTech.text = tech.Join("   ·   ")
-    pr = Live_At(c, now)
+    browsing = false
+    pr = invalid
+    if m.barAt <> invalid
+        pr = Live_At(c, m.barAt)
+        browsing = pr <> invalid
+        if not browsing then m.barAt = invalid
+    end if
+    if pr = invalid then pr = Live_At(c, now)
     if pr = invalid
         m.barTitle.text = Live_Name(c)
         m.barStart.text = ""
@@ -338,10 +394,20 @@ sub Watch_Paint()
         m.barFill.visible = true
         span = pr.b - pr.a
         if span < 1 then span = 1
-        m.barFill.width = Int(1350 * (now - pr.a) / span)
+        if browsing
+            if pr.b <= now then m.barFill.width = 1350 else m.barFill.width = 0
+        else
+            m.barFill.width = Int(1350 * (now - pr.a) / span)
+        end if
         nx = Live_After(c, pr.b)
     end if
-    if nx <> invalid
+    if browsing
+        info = Live_DayWord(pr.a) + "  ·  " + Live_Span(pr.a, pr.b)
+        if m.remind.DoesExist(c.k + "|" + pr.a.ToStr()) then info = info + "  ·  " + L("Con recordatorio")
+        desc = Str_Of(pr.d).Replace(Chr(10), " ").Trim()
+        if desc <> "" then info = info + "  ·  " + desc
+        m.barNext.text = info
+    else if nx <> invalid
         m.barNext.text = L("A continuación") + ":  " + Str_Of(nx.t) + "  ·  " + Live_Clock(nx.a)
     else
         m.barNext.text = Str_Of(c.g)
@@ -375,43 +441,43 @@ function Watch_Key(key as string) as boolean
         if m.sel < 0 then m.sel = n - 1
         if m.sel >= n then m.sel = 0
         m.zapping = true
+        m.barAt = invalid
         m.watchMsg.text = ""
         Watch_ShowBar()
         m.zapTimer.control = "stop"
         m.zapTimer.control = "start"
         return true
     else if key = "OK"
+        if m.bar.visible and Watch_RemindKey() then return true
         if m.bar.visible then Overlay_Show() else Watch_ShowBar()
         return true
     else if key = "left" or key = "right"
+        if Watch_Browse(key = "right") then return true
+        if key = "left" then Overlay_Show() else Watch_ShowBar()
+        return true
+    else if key = "rewind" or key = "fastforward"
         c = Live_Chan(m.sel)
         alts = []
         if c <> invalid then alts = Live_Alts(c)
         if alts.Count() > 1
             idx = ToInt(m.altIdx, 0)
             if c.k <> m.playingKey then idx = 0
-            if key = "right" then idx = idx + 1 else idx = idx - 1
+            if key = "fastforward" then idx = idx + 1 else idx = idx - 1
             if idx < 0 then idx = alts.Count() - 1
             if idx >= alts.Count() then idx = 0
             m.zapTimer.control = "stop"
             m.altFails = 0
             m.reconnects = 0
             m.watchMsg.text = ""
+            m.barAt = invalid
             Live_PlayAlt(c, idx)
-            Watch_ShowBar()
-        else if key = "left"
-            Overlay_Show()
-        else
-            Watch_ShowBar()
         end if
+        Watch_ShowBar()
         return true
     else if key = "replay"
         Watch_Previous()
         return true
-    else if key = "play"
-        if m.bar.visible then Watch_HideBar() else Watch_ShowBar()
-        return true
-    else if key = "options"
+    else if key = "options" or key = "play"
         m.top.event = Live_Options()
         return true
     else if key = "back"

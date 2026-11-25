@@ -1076,7 +1076,17 @@ end sub
 sub Ex_CaptionMode(mode as string)
     m.video.globalCaptionMode = mode
     di = CreateObject("roDeviceInfo")
-    if mode = "On" or Str_Of(di.GetCaptionsMode()) = "On" then di.SetCaptionsMode(mode)
+    current = Str_Of(di.GetCaptionsMode())
+    if current = mode then return
+    if m.sysCaptions = invalid then m.sysCaptions = current
+    di.SetCaptionsMode(mode)
+end sub
+
+sub Ex_CaptionRestore()
+    if m.sysCaptions = invalid then return
+    di = CreateObject("roDeviceInfo")
+    if Str_Of(di.GetCaptionsMode()) <> m.sysCaptions then di.SetCaptionsMode(m.sysCaptions)
+    m.sysCaptions = invalid
 end sub
 
 sub Ex_SubOff()

@@ -46,7 +46,7 @@
             <Poster id="nowDot" width="14" height="14" uri="pkg:/images/circle.png" blendColor="0xE53935FF" visible="false" />
             <Label id="status" translation="[300,700]" width="1320" horizAlign="center" wrap="true" color="0x9A9AAAFF" font="font:MediumSystemFont" />
         </Group>
-        <Video id="video" translation="[1302,112]" width="498" height="280" enableUI="false" />
+        <Video id="video" translation="[1302,112]" width="498" height="280" enableUI="false" focusable="false" />
         <Group id="watch" visible="false">
             <Poster id="watchGrad" translation="[0,560]" width="1920" height="520" uri="pkg:/images/grad_bottom.png" loadDisplayMode="scaleToFill" />
             <Group id="bar" translation="[100,0]">
@@ -68,7 +68,7 @@
                 <Poster translation="[0,0]" width="1100" height="1080" uri="pkg:/images/grad_left.png" loadDisplayMode="scaleToFill" blendColor="0x000000FF" />
                 <Rectangle translation="[0,0]" width="760" height="1080" color="0x09090CD8" />
                 <Label id="ovGroup" translation="[72,48]" width="620" height="48" vertAlign="center" maxLines="1" color="0xFFFFFFFF" font="font:MediumBoldSystemFont" />
-                <Label id="ovHint" translation="[72,96]" width="620" height="32" vertAlign="center" maxLines="1" color="0x8E8E9CFF" font="font:MediumSystemFont" />
+                <Label id="ovHint" translation="[72,96]" width="660" height="32" vertAlign="center" maxLines="1" color="0x8E8E9CFF" font="font:MediumSystemFont" />
                 <Group id="ovRows" translation="[56,148]" />
             </Group>
             <Label id="watchMsg" translation="[160,440]" width="1600" horizAlign="center" wrap="true" font="font:MediumBoldSystemFont" color="0xFFFFFFFF" />

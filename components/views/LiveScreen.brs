@@ -282,7 +282,12 @@ sub Live_Load(force as boolean)
     m.loadTask.observeField("channels", "onChannels")
     m.loadTask.observeField("result", "onEpgDone")
     m.loadTask.observeField("progress", "onEpgProgress")
+    m.loadTask.observeField("vod", "onVodReady")
     m.loadTask.control = "RUN"
+end sub
+
+sub onVodReady()
+    m.top.event = { action: "vod" }
 end sub
 
 sub onChannels(event as object)
@@ -306,7 +311,7 @@ sub onChannels(event as object)
     Live_ApplyGroup(true)
     errs = r.errors
     if type(errs) = "roArray" and errs.Count() > 0 then m.top.event = { action: "toast", text: L("No se pudo cargar: {n}").Replace("{n}", errs.Join(", ")) }
-    m.top.event = { action: "channels" }
+    m.top.event = { action: "channels", loaded: true }
     if m.pendingPlay <> invalid
         key = m.pendingPlay
         m.pendingPlay = invalid
@@ -324,9 +329,10 @@ sub onEpgDone(event as object)
     m.epgReady = true
     m.epgText = ""
     r = task.result
-    m.top.event = { action: "epg" }
+    m.top.event = { action: "epg", done: true }
     m.guide = {}
     m.guideAsked = {}
+    m.guideMiss = {}
     if r <> invalid and type(r.failed) = "roArray" and r.failed.Count() > 0 and ToInt(r.count, 0) = 0 then m.top.event = { action: "toast", text: L("No se pudo cargar la guía. Si es un archivo .gz, usa la versión .xml.") }
     onClockTimer()
     Live_AskGuide()
@@ -344,6 +350,7 @@ sub onEpgProgress(event as object)
         m.epgReady = true
         m.guide = {}
         m.guideAsked = {}
+        m.guideMiss = {}
         Live_AskGuide()
         return
     end if
@@ -400,10 +407,21 @@ end function
 sub Live_AskGuide()
     if not m.loaded then return
     if m.epgLoading and not m.epgReady then return
+    now = Live_Now()
     if m.guideTask <> invalid
-        m.guideAgain = true
-        return
+        if now - ToInt(m.guideStart, now) < 30
+            m.guideAgain = true
+            return
+        end if
+        m.guideTask.unobserveField("result")
+        m.guideTask = invalid
+        if type(m.guideIds) = "roArray"
+            for each e in m.guideIds
+                m.guideAsked.Delete(e)
+            end for
+        end if
     end if
+    if m.guideMiss = invalid then m.guideMiss = {}
     ids = []
     first = m.top0 - 6
     if first < 0 then first = 0
@@ -417,7 +435,7 @@ sub Live_AskGuide()
         c = Live_Chan(i)
         if c <> invalid
             e = Live_Eid(c)
-            if e <> "" and not m.guideAsked.DoesExist(e)
+            if e <> "" and not m.guideAsked.DoesExist(e) and now - ToInt(m.guideMiss[e], 0) > 45
                 m.guideAsked[e] = true
                 ids.Push(e)
             end if
@@ -425,12 +443,14 @@ sub Live_AskGuide()
     end for
     if m.mode = "watch" and m.playingKey <> "" and m.keyIndex <> invalid and m.keyIndex.DoesExist(m.playingKey)
         e = Live_Eid(m.all[m.keyIndex[m.playingKey]])
-        if not m.guideAsked.DoesExist(e)
+        if not m.guideAsked.DoesExist(e) and now - ToInt(m.guideMiss[e], 0) > 45
             m.guideAsked[e] = true
             ids.Push(e)
         end if
     end if
     if ids.Count() = 0 then return
+    m.guideIds = ids
+    m.guideStart = now
     m.guideTask = CreateObject("roSGNode", "IptvTask")
     m.guideTask.mode = "guide"
     m.guideTask.params = { ids: ids, shift: ToInt(m.prefs.epgShift, 0) * 60 }
@@ -443,11 +463,26 @@ sub onGuide(event as object)
     if m.guideTask = invalid or not task.isSameNode(m.guideTask) then return
     m.guideTask = invalid
     r = task.result
+    got = {}
     if r <> invalid and type(r.guide) = "roAssociativeArray"
+        got = r.guide
         for each k in r.guide
             m.guide[k] = r.guide[k]
         end for
     end if
+    if m.guideMiss = invalid then m.guideMiss = {}
+    now = Live_Now()
+    if type(m.guideIds) = "roArray"
+        for each e in m.guideIds
+            if not got.DoesExist(e)
+                m.guideAsked.Delete(e)
+                m.guideMiss[e] = now
+            else
+                m.guideMiss.Delete(e)
+            end if
+        end for
+    end if
+    m.guideIds = []
     Live_Render()
     if m.mode = "watch"
         Watch_Paint()
@@ -1141,6 +1176,9 @@ sub onCommand()
         Live_PlayKey(key)
     else if action = "refresh"
         onReload()
+    else if action = "screen"
+        Screen_Save("live", Str_Of(cmd.mode))
+        if m.mode = "watch" then Screen_Apply(m.video, Str_Of(cmd.mode), true)
     else if action = "audio"
         m.video.audioTrack = Str_Of(cmd.track)
         tracks = m.video.availableAudioTracks
@@ -1215,6 +1253,7 @@ sub onCommand()
     else if action = "reminders"
         m.remind = Iptv_ReminderMap()
         Live_Render()
+        if m.mode = "watch" and m.bar.visible then Watch_ShowBar()
     else if action = "previous"
         if m.mode = "watch" then Watch_Previous()
     else if action = "unlock"
@@ -1226,6 +1265,7 @@ end sub
 function Live_HomeData(arg = invalid as dynamic) as object
     out = { recent: [], favs: [] }
     if Live_ProfileChanged() then return out
+    if not m.loaded and not Bool_Of(m.loading, false) then Live_Load(false)
     if not m.loaded or m.keyIndex = invalid then return out
     now = Live_Now()
     for each k in Live_Recent()
@@ -1287,12 +1327,11 @@ function Live_Options() as object
             end for
         end if
     end if
-    return { action: "options", key: c.k, name: Live_Name(c), original: Str_Of(c.n), renamed: m.names.DoesExist(c.k), fav: m.favs.DoesExist(c.k), hidden: m.hidden.DoesExist(c.k), watch: m.mode = "watch", audio: audio, subs: subs, captions: m.video.globalCaptionMode, group: Str_Of(c.g), alts: Live_Alts(c).Count(), prev: m.prevKey <> "" }
+    return { action: "options", key: c.k, name: Live_Name(c), original: Str_Of(c.n), renamed: m.names.DoesExist(c.k), fav: m.favs.DoesExist(c.k), hidden: m.hidden.DoesExist(c.k), watch: m.mode = "watch", audio: audio, subs: subs, captions: m.video.globalCaptionMode, group: Str_Of(c.g), alts: Live_Alts(c).Count(), prev: m.prevKey <> "", screen: Screen_Mode("live") }
 end function
 
 function onKeyEvent(key as string, press as boolean) as boolean
     if not press then return false
-    if key = "options" then Dbg_Log("live key options mode=" + m.mode + " zone=" + m.zone + " ov=" + Bool_Of(m.ovOpen, false).ToStr())
     if m.zone = "groups" then return Groups_Key(key)
     if m.mode = "watch" then return Watch_Key(key)
     if key = "options"
