@@ -5,6 +5,19 @@ end sub
 sub execute()
     kind = m.top.kind
     id = m.top.metaId
+    iptvRef = ""
+    if Vod_IsRef(id)
+        iptvRef = id
+        resolved = ""
+        if m.top.withComments then resolved = Vod_Resolve(id, LCase(kind))
+        if resolved = ""
+            meta = Vod_Meta(id, LCase(kind), m.top.withComments)
+            if Str_Of(meta.poster) = "" then meta.Delete("poster")
+            m.top.meta = Str_CleanDeep(meta)
+            return
+        end if
+        id = resolved
+    end if
     origId = id
     if LCase(Left(id, 5)) = "tmdb:"
         key = Key_Tmdb(St_Integrations())
@@ -52,6 +65,10 @@ sub execute()
         if Str_Of(merged.imdb) <> "" then one[0].id = merged.imdb
         Names_Translate(one)
         merged.name = one[0].title
+    end if
+    if iptvRef <> ""
+        merged.iptv = iptvRef
+        Vod_Link(iptvRef, [Str_Of(merged.imdb), origId])
     end if
     merged = Str_CleanDeep(merged)
     m.top.meta = merged

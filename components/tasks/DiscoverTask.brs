@@ -3,6 +3,10 @@ sub init()
 end sub
 
 sub execute()
+    if m.top.base = "iptv:"
+        m.top.result = Vod_Page(ToInt(m.top.catalogId, -1), m.top.skip, 70)
+        return
+    end if
     kind = m.top.kind
     extras = []
     name = m.top.filter

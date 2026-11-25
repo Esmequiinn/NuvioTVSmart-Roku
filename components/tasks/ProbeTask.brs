@@ -41,7 +41,7 @@ sub execute()
     end if
     file = "tmp:/probe_" + CreateObject("roDeviceInfo").GetRandomUUID() + ".bin"
     if t.AsyncGetToFile(file)
-        msg = wait(10000, port)
+        msg = wait(5000, port)
         if type(msg) = "roUrlEvent"
             out.code = msg.GetResponseCode()
             heads = msg.GetResponseHeaders()

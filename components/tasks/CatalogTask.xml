@@ -23,5 +23,6 @@
     <script type="text/brightscript" uri="pkg:/components/Servers.brs" />
     <script type="text/brightscript" uri="pkg:/components/Plex.brs" />
     <script type="text/brightscript" uri="pkg:/components/ServerRows.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Vod.brs" />
     <script type="text/brightscript" uri="pkg:/components/tasks/CatalogTask.brs" />
 </component>

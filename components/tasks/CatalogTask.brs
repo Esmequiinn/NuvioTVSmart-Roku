@@ -86,13 +86,25 @@ sub execute()
         end if
     end for
 
+    hiddenKeys = prefs.hidden
+    if type(hiddenKeys) <> "roAssociativeArray" then hiddenKeys = {}
+    all.Append(Vod_Catalogs(hiddenKeys))
     ordered = St_ApplyOrder(all, prefs.order)
     visible = []
     urls = []
+    vodShown = 0
     for each c in ordered
         if not c.hidden and not Bool_Of(c.needsExtra, false)
-            visible.Push(c)
-            urls.Push(Addon_ResourceUrl(c.base, "catalog", c.kind, c.id))
+            if c.base = "iptv:"
+                if vodShown < 40
+                    vodShown = vodShown + 1
+                    visible.Push(c)
+                    urls.Push("")
+                end if
+            else
+                visible.Push(c)
+                urls.Push(Addon_ResourceUrl(c.base, "catalog", c.kind, c.id))
+            end if
         end if
     end for
     slim = []
@@ -117,6 +129,13 @@ sub execute()
     m.pattern = Poster_Pattern("home")
     for i = 0 to visible.Count() - 1
         m.rowData.Push(invalid)
+    end for
+    for i = 0 to visible.Count() - 1
+        if visible[i].base = "iptv:"
+            row = Vod_Row(visible[i], ToInt(prefs.rowSize, 20))
+            visible[i].count = row.items.Count()
+            m.rowData[i] = row
+        end if
     end for
     hook = Home_OnResult
     fetched = Http_FetchHook(urls, 30000, prefs.rowSize, 10, hook)

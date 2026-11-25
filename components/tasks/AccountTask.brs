@@ -65,6 +65,8 @@ sub execute()
         result = Plex_Pin()
     else if mode = "plexPoll"
         result = Plex_Poll(Str_Of(p.deviceCode))
+    else if mode = "plexLink"
+        result = Plex_Link(Str_Of(p.token))
     else if mode = "srvRefresh"
         Srv_Refresh(Str_Of(p.id))
         result = { ok: true }

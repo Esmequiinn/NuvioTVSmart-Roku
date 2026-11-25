@@ -11,7 +11,7 @@ sub execute()
     order = 0
     for each entry in m.top.manifests
         for each vid in ids
-            if Addon_Supports(entry.manifest, "stream", kind, vid)
+            if not Vod_IsRef(Str_Of(vid)) and Addon_Supports(entry.manifest, "stream", kind, vid)
                 logo = ""
                 if type(entry.manifest) = "roAssociativeArray" then logo = Str_Of(entry.manifest.logo)
                 targets.Push({ name: entry.name, logo: logo, order: order })
@@ -102,6 +102,20 @@ sub execute()
         end for
         buckets.Unshift(added)
         m.top.batch = { addon: -1, count: added.Count(), streams: added, pending: 0 }
+    end if
+    vod = Vod_Streams(Str_Of(m.top.title), kind, ids)
+    if vod.Count() > 0
+        added = []
+        for each x in vod
+            if not seen.DoesExist(x.url)
+                seen[x.url] = true
+                added.Push(Stream_Build({ name: x.name, title: x.desc, behaviorHints: { filename: x.filename } }, x.url, { name: "IPTV", logo: "", order: -1 }, rules, sizeBadges))
+            end if
+        end for
+        if added.Count() > 0
+            buckets.Unshift(added)
+            m.top.batch = { addon: -1, count: added.Count(), streams: added, pending: 0 }
+        end if
     end if
     if torrents.Count() > 0
         hashes = []

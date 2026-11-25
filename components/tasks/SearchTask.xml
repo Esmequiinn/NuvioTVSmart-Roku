@@ -16,5 +16,6 @@
     <script type="text/brightscript" uri="pkg:/components/Http.brs" />
     <script type="text/brightscript" uri="pkg:/components/Addon.brs" />
     <script type="text/brightscript" uri="pkg:/components/Content.brs" />
+    <script type="text/brightscript" uri="pkg:/components/Vod.brs" />
     <script type="text/brightscript" uri="pkg:/components/tasks/SearchTask.brs" />
 </component>

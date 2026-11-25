@@ -13,15 +13,23 @@ sub execute()
             end for
         end if
     end for
-    m.top.searchable = jobs.Count()
     limit = m.top.limit
     if limit <= 0 then limit = 40
     m.pattern = Poster_Pattern("search")
+    total = 0
+    vodRows = Vod_Search(query, limit)
+    m.top.searchable = jobs.Count() + vodRows.Count()
+    for each vr in vodRows
+        row = Search_Row({ metas: vr.metas }, { kind: vr.kind, addon: "IPTV" })
+        if row <> invalid
+            total = total + row.getChildCount()
+            m.top.row = row
+        end if
+    end for
 
     port = CreateObject("roMessagePort")
     active = {}
     nextIndex = 0
-    total = 0
     clock = CreateObject("roTimespan")
     while true
         while active.Count() < 6 and nextIndex < jobs.Count()
