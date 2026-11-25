@@ -460,6 +460,7 @@ end sub
 sub handleKeyboard(kind as string, text as string, data as object)
     if Conn_Keyboard(kind, text, data) then return
     if Live_Keyboard(kind, text, data) then return
+    if VodUi_Keyboard(kind, text, data) then return
     if Cloud_Keyboard(kind, text) then return
     if kind = "partyCode"
         if text.Trim() = "" then return

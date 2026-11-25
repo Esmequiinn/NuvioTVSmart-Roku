@@ -31,6 +31,7 @@
     <script type="text/brightscript" uri="pkg:/components/IptvLists.brs" />
     <script type="text/brightscript" uri="pkg:/components/IptvPrefs.brs" />
     <script type="text/brightscript" uri="pkg:/components/LiveUi.brs" />
+    <script type="text/brightscript" uri="pkg:/components/VodUi.brs" />
     <children>
         <Rectangle width="1920" height="1080" color="0x0C0C0FFF" />
         <Hero id="hero" />

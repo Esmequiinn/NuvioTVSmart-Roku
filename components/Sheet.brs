@@ -30,6 +30,7 @@ sub onSheetChosen()
     m.sheetHandler = ""
     if Conn_Sheet(handler, choice, data) then return
     if Live_Sheet(handler, choice, data) then return
+    if VodUi_Sheet(handler, choice, data) then return
     if handler = "cw"
         Options_RunContinue(choice, data)
     else if handler = "poster"
@@ -138,6 +139,7 @@ function Options_Open() as boolean
             items.Push({ id: "watched", label: L("Marcar como visto") })
         end if
     end if
+    if Left(Str_Of(item.metaId), 4) = "iptv" then items.Push({ id: "fixmatch", label: L("Corregir coincidencia") })
     Sheet_Open({ title: item.title, subtitle: L("Acciones del título"), items: items, style: "tv" }, "poster", target)
     return true
 end function
@@ -174,6 +176,10 @@ sub Options_RunPoster(choice as string, target as object)
     item = target.item
     if choice = "details"
         openDetails(item)
+        return
+    end if
+    if choice = "fixmatch"
+        VodUi_FixStart(item)
         return
     end if
     if choice = "library"

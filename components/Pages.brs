@@ -393,6 +393,10 @@ end function
 
 sub Grid_SeeAll(tile as object)
     key = Str_Of(tile.gridKey)
+    if Left(key, 5) = "iptv:"
+        Disc_OpenKey(key)
+        return
+    end if
     title = ""
     if m.gridFull <> invalid and m.gridFull.DoesExist(key) then title = m.gridFull[key].title
     if type(m.catalogs) = "roArray"
@@ -632,7 +636,7 @@ sub runSearch(query as string)
     m.lastQuery = text
     m.searchText.text = text
     if m.keyboard.isInFocusChain() then m.searchFocus = "keyboard"
-    if m.manifests.Count() = 0
+    if m.manifests.Count() = 0 and m.livePage = invalid
         m.searchStatus.text = L("Primero agrega addons.")
         m.searchStatus.visible = true
         return

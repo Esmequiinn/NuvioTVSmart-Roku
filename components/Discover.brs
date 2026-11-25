@@ -83,6 +83,14 @@ sub Disc_Show()
     Disc_Load(true)
 end sub
 
+sub Disc_OpenKey(key as string)
+    St_Set("discoverCat_" + St_ActiveProfile().id, key)
+    m.disc.ready = false
+    m.disc.sig = ""
+    m.area = "page"
+    showPage("discover")
+end sub
+
 function Disc_Catalog() as dynamic
     for each c in m.disc.cats
         if c.key = m.disc.catKey then return c

@@ -31,7 +31,13 @@ function Plex_Poll(pinId as string) as object
     if type(r.json) <> "roAssociativeArray" then return { ok: true, status: "pending" }
     token = Str_Of(r.json.authToken)
     if token = "" then return { ok: true, status: "pending" }
+    Dbg_Log("plex token received")
+    return { ok: true, status: "token", token: token }
+end function
+
+function Plex_Link(token as string) as object
     res = Plex_Connect(token)
+    Dbg_Log("plex link ok=" + Bool_Of(res.ok, false).ToStr() + " " + Str_Of(res.error))
     if not Bool_Of(res.ok, false) then return { ok: false, status: "failed", error: Str_Of(res.error) }
     return { ok: true, status: "approved" }
 end function
@@ -44,13 +50,17 @@ function Plex_Connect(token as string) as object
         if userName = "" then userName = Str_Of(user.json.username)
     end if
     r = Http_Request("GET", "https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=1", Plex_Headers(token), invalid, 20000)
+    Dbg_Log("plex resources code=" + r.code.ToStr())
     if type(r.json) <> "roArray" then return { ok: false, error: L("No se pudo conectar con el servidor.") + " (HTTP " + r.code.ToStr() + ")" }
     added = 0
+    servers = 0
     for each res in r.json
         if type(res) = "roAssociativeArray" and Instr(1, Str_Of(res.provides), "server") > 0
+            servers = servers + 1
             access = Str_Of(res.accessToken)
             if access = "" then access = token
             uri = Plex_Reach(res.connections, access)
+            Dbg_Log("plex server " + Str_Of(res.name) + " uri=" + uri)
             if uri <> ""
                 sv = { id: "plex:" + Str_Of(res.clientIdentifier), kind: "plex", address: uri, name: Str_Of(res.name), userId: "", userName: userName, token: access, on: true, libs: [] }
                 old = Srv_Find(sv.id)
@@ -71,6 +81,7 @@ function Plex_Connect(token as string) as object
             end if
         end if
     end for
+    if servers = 0 then return { ok: false, error: L("Tu cuenta de Plex no tiene ningún servidor. Nuvio se conecta a un Plex Media Server con tu propia biblioteca.") }
     if added = 0 then return { ok: false, error: L("No encontramos un servidor de Plex que responda desde esta red.") }
     return { ok: true }
 end function

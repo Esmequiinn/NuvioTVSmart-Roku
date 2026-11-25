@@ -955,6 +955,16 @@ sub onLoginPolled(event as object)
         m.loginTimer.control = "stop"
         return
     end if
+    if status = "token"
+        m.loginTimer.control = "stop"
+        if Bool_Of(m.login.dialog, false) then m.trackAuth.status = L("Buscando tus servidores de Plex...")
+        m.loginPoll = CreateObject("roSGNode", "AccountTask")
+        m.loginPoll.mode = "plexLink"
+        m.loginPoll.params = { token: Str_Of(r.token) }
+        m.loginPoll.observeField("result", "onLoginPolled")
+        m.loginPoll.control = "RUN"
+        return
+    end if
     if status = "failed" and Bool_Of(m.login.dialog, false)
         m.trackAuth.status = Str_Of(r.error)
         m.loginTimer.control = "stop"

@@ -441,7 +441,10 @@ end sub
 sub Home_TakeTask(task as object)
     manifests = task.manifests
     catalogs = task.catalogs
-    if manifests = invalid or manifests.Count() = 0 then return
+    if manifests = invalid or manifests.Count() = 0
+        if catalogs <> invalid then m.catalogs = catalogs
+        return
+    end if
     m.manifests = manifests
     if catalogs <> invalid then m.catalogs = catalogs
     names = {}
@@ -471,6 +474,7 @@ sub onCatalogsLoaded(event as object)
     if task.manifests = invalid or task.manifests.Count() = 0
         m.manifests = []
         m.catalogs = []
+        if task.catalogs <> invalid then m.catalogs = task.catalogs
     end if
     content = task.content
     m.skeleton.visible = false
@@ -566,9 +570,42 @@ sub onPosterCache(event as object)
     end for
 end sub
 
+sub Home_KeepCw(content as object)
+    if content = invalid then return
+    for i = 0 to content.getChildCount() - 1
+        if Cw_IsRow(content.getChild(i))
+            m.cwHad = true
+            return
+        end if
+    end for
+    if not Bool_Of(St_Prefs().continueWatching, true) then return
+    rows = Content_ContinueRows()
+    if rows.Count() = 0
+        old = m.homeRows.content
+        if old <> invalid
+            for i = 0 to old.getChildCount() - 1
+                if Cw_IsRow(old.getChild(i)) then rows.Push(old.getChild(i).clone(true))
+            end for
+        end if
+    end if
+    if rows.Count() = 0
+        if Bool_Of(m.cwHad, false) then Progress_Soon()
+        return
+    end if
+    at = 0
+    first = content.getChild(0)
+    if first <> invalid and first.id = "herocar" then at = 1
+    for i = rows.Count() - 1 to 0 step -1
+        content.insertChild(rows[i], at)
+    end for
+    m.cwHad = true
+    Progress_Soon()
+end sub
+
 sub Home_Show(content as object)
     Poster_Localize(content)
     content = Home_Decorate(content)
+    Home_KeepCw(content)
     Live_HomeInsert(content)
     m.skeleton.visible = false
     m.emptyState.visible = false
@@ -1301,7 +1338,6 @@ function onKeyEvent(key as string, press as boolean) as boolean
         return true
     end if
     if not press then return false
-    if key = "options" then Dbg_Log("scene key options focus=" + Focus_Path(m.top) + " watch=" + Bool_Of(m.liveWatchOn, false).ToStr())
     if key = "options" and m.livePage <> invalid and Bool_Of(m.liveWatchOn, false) and m.livePage.visible and not Bool_Of(m.settingsOpen, false) and m.top.dialog = invalid and not m.pinPad.visible and not overlayOpen()
         data = m.livePage.callFunc("Live_OptionsData", invalid)
         if type(data) = "roAssociativeArray" then Live_OptionsSheet(data)
@@ -1634,8 +1670,12 @@ sub Progress_Soon()
 end sub
 
 sub onProgressTimer()
-    if m.accountTask <> invalid or m.pushTask <> invalid or m.progressTask <> invalid then return
-    if m.player.visible or m.busy then return
+    if m.progressTask <> invalid then return
+    if m.accountTask <> invalid or m.pushTask <> invalid or m.player.visible or m.busy
+        m.progressSoon.control = "stop"
+        m.progressSoon.control = "start"
+        return
+    end if
     integ = St_Integrations()
     if integ.nuvioAccess = "" and Track_CwSource(integ) = "" and Track_LibSource(integ) = "" then return
     m.progressTask = CreateObject("roSGNode", "AccountTask")
@@ -1649,9 +1689,24 @@ sub onProgressRefreshed(event as object)
     if m.progressTask = invalid or not task.isSameNode(m.progressTask) then return
     m.progressTask = invalid
     r = task.result
-    if r = invalid or not Bool_Of(r.ok, false) then return
+    if r = invalid or not Bool_Of(r.ok, false)
+        m.progressFails = ToInt(m.progressFails, 0) + 1
+        if m.progressFails <= 3
+            m.progressSoon.control = "stop"
+            m.progressSoon.control = "start"
+        end if
+        return
+    end if
+    m.progressFails = 0
     m.watchedCache = invalid
     refreshContinueRow()
+    m.cwHad = false
+    root = m.homeRows.content
+    if root <> invalid
+        for i = 0 to root.getChildCount() - 1
+            if Cw_IsRow(root.getChild(i)) then m.cwHad = true
+        end for
+    end if
     if m.page = "library" then buildLibrary()
 end sub
 
@@ -2004,20 +2059,3 @@ sub Gif_CardArt(show as boolean)
     art.opacity = 0
     m.gifHidden = art
 end sub
-
-function Focus_Path(node as object) as string
-    out = []
-    cur = node.focusedChild
-    depth = 0
-    while cur <> invalid and depth < 12
-        id = cur.id
-        if id = "" then id = cur.subtype()
-        out.Push(id)
-        if cur.isSameNode(cur.focusedChild) then exit while
-        cur = cur.focusedChild
-        depth = depth + 1
-    end while
-    if out.Count() = 0 then return "none"
-    return out.Join(">")
-end function
-

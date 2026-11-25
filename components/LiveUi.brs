@@ -44,11 +44,19 @@ sub onLiveEvent()
         focusNav()
     else if action = "toast"
         Toast_Show(Str_Of(ev.text))
+    else if action = "vod"
+        if m.page = "home" and not Bool_Of(m.detailsOpen, false) and not Bool_Of(m.settingsOpen, false) and not Bool_Of(m.liveWatchOn, false)
+            loadHome()
+        else
+            m.needsReload = true
+        end if
     else if action = "channels"
         Live_HomeRefresh()
         if m.settingsOpen then refreshSettings()
+        if Bool_Of(m.cwHad, false) and Bool_Of(ev.loaded, false) then Progress_Soon()
     else if action = "epg"
         if m.settingsOpen then refreshSettings()
+        if Bool_Of(m.cwHad, false) and Bool_Of(ev.done, false) then Progress_Soon()
     else if action = "watch"
         m.liveWatchOn = Bool_Of(ev.on, false)
         m.nav.visible = not (Bool_Of(m.liveWatchOn, false) or Bool_Of(m.livePanelOn, false))
@@ -130,6 +138,7 @@ sub Live_OptionsSheet(ev as object)
         if type(ev.audio) = "roArray" and ev.audio.Count() > 1 then items.Push({ id: "audio", label: L("Audio") })
         items.Push({ id: "subs", label: L("Subtítulos") })
         if Bool_Of(ev.prev, false) then items.Push({ id: "prev", label: L("Canal anterior") })
+        items.Push({ id: "screen", label: L("Pantalla") })
     end if
     if key <> ""
         items.Push({ id: "rename", label: L("Renombrar canal") })
@@ -171,6 +180,14 @@ function Live_Sheet(handler as string, choice as string, data as dynamic) as boo
                 items.Push({ id: Str_Of(a.id), label: Str_Of(a.label) })
             end for
             Sheet_Open({ title: L("Audio"), items: items }, "liveAudio", data)
+            return true
+        else if choice = "screen"
+            cur = Str_Of(data.screen)
+            items = []
+            for each md in [{ id: "original", label: L("Original") }, { id: "zoom1", label: L("Zoom ligero") }, { id: "zoom", label: L("Zoom (llenar pantalla)") }]
+                items.Push({ id: md.id, label: md.label, checked: md.id = cur })
+            end for
+            Sheet_Open({ title: L("Pantalla"), items: items }, "liveScreen", data)
             return true
         else if choice = "subs"
             items = [{ id: "off", label: L("Desactivados"), checked: Str_Of(data.captions) = "Off" or Str_Of(data.captions) = "" }]
@@ -244,6 +261,11 @@ function Live_Sheet(handler as string, choice as string, data as dynamic) as boo
                 m.livePage.command = { action: "group", what: "lock", group: label }
             end if
         end if
+        Live_FocusBack()
+        return true
+    end if
+    if handler = "liveScreen"
+        if choice <> "" and choice <> "close" then m.livePage.command = { action: "screen", mode: choice }
         Live_FocusBack()
         return true
     end if
@@ -795,7 +817,7 @@ end function
 sub Live_RemindSheet(ev as object)
     items = []
     if Bool_Of(ev.set, false) then items.Push({ id: "unset", label: L("Quitar recordatorio") }) else items.Push({ id: "set", label: L("Recordarme cuando empiece") })
-    items.Push({ id: "watch", label: L("Ver el canal ahora") })
+    if not Bool_Of(ev.inWatch, false) then items.Push({ id: "watch", label: L("Ver el canal ahora") })
     items.Push({ id: "close", label: L("Cerrar") })
     sub1 = Str_Of(ev.channel) + "  ·  " + Live_ClockAt(ToInt(ev.a, 0))
     Sheet_Open({ title: Str_Of(ev.title), subtitle: sub1, items: items }, "liveRemind", ev)

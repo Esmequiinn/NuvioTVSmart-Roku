@@ -102,6 +102,16 @@ sub onDetailsMeta(event as object)
     m.ctx.meta = meta
     m.ctx.metaReady = true
     if Str_Of(meta.imdb) <> "" then m.ctx.imdb = meta.imdb
+    if Left(m.ctx.metaId, 4) = "iptv" and Str_Of(meta.iptv) <> ""
+        m.ctx.iptv = Str_Of(meta.iptv)
+        newId = Str_Of(meta.imdb)
+        if Left(newId, 2) <> "tt" then newId = Str_Of(meta.id)
+        if newId <> "" and newId <> m.ctx.metaId
+            m.ctx.metaId = newId
+            if Str_Of(meta.name) <> "" then m.ctx.title = Str_Of(meta.name)
+            cacheMeta(m.ctx.metaId, meta)
+        end if
+    end if
     if LCase(Left(m.ctx.metaId, 5)) = "tmdb:" and Left(Str_Of(meta.imdb), 2) = "tt"
         m.ctx.metaId = meta.imdb
         cacheMeta(m.ctx.metaId, meta)

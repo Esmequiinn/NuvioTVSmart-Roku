@@ -959,17 +959,53 @@ function Str_CleanDeep(v as dynamic) as dynamic
 end function
 
 sub Dbg_Log(text as string)
-    path = "tmp:/nuvio_debug.log"
-    fs = CreateObject("roFileSystem")
-    st = fs.Stat(path)
-    if st <> invalid and st.size <> invalid and st.size > 262144
-        old = ReadAsciiFile(path)
-        WriteAsciiFile(path, Right(old, 131072))
-    end if
-    d = CreateObject("roDateTime")
-    d.ToLocalTime()
-    line = Right("0" + d.GetHours().ToStr(), 2) + ":" + Right("0" + d.GetMinutes().ToStr(), 2) + ":" + Right("0" + d.GetSeconds().ToStr(), 2) + " " + text + Chr(10)
-    ba = CreateObject("roByteArray")
-    ba.FromAsciiString(line)
-    if fs.Exists(path) then ba.AppendFile(path) else ba.WriteFile(path)
+    try
+        path = "tmp:/nuvio_debug.log"
+        fs = CreateObject("roFileSystem")
+        if fs <> invalid
+            st = fs.Stat(path)
+            if st <> invalid and st.size <> invalid and st.size > 262144
+                old = ReadAsciiFile(path)
+                WriteAsciiFile(path, Right(old, 131072))
+            end if
+            d = CreateObject("roDateTime")
+            d.ToLocalTime()
+            line = Right("0" + d.GetHours().ToStr(), 2) + ":" + Right("0" + d.GetMinutes().ToStr(), 2) + ":" + Right("0" + d.GetSeconds().ToStr(), 2) + " " + text + Chr(10)
+            ba = CreateObject("roByteArray")
+            ba.FromAsciiString(line)
+            if fs.Exists(path) then ba.AppendFile(path) else ba.WriteFile(path)
+        end if
+    catch e
+        print "DBG LOG FAIL "; e.message
+    end try
+end sub
+
+function Screen_Rect(mode as string, trim as boolean) as object
+    f = 1.0
+    if mode = "zoom1" then f = 1.15
+    if mode = "zoom" then f = 4.0 / 3.0
+    w = Int(1920 * f + 0.5)
+    h = Int(1080 * f + 0.5)
+    r = { x: -Int((w - 1920) / 2), y: -Int((h - 1080) / 2), w: w, h: h }
+    if trim then r.h = r.h - 1
+    return r
+end function
+
+sub Screen_Apply(video as object, mode as string, trim as boolean)
+    r = Screen_Rect(mode, trim)
+    video.translation = [r.x, r.y]
+    video.width = r.w
+    video.height = r.h
+end sub
+
+function Screen_Mode(key as string) as string
+    sec = CreateObject("roRegistrySection", "nuviotv_screen")
+    if sec.Exists(key) then return sec.Read(key)
+    return "original"
+end function
+
+sub Screen_Save(key as string, mode as string)
+    sec = CreateObject("roRegistrySection", "nuviotv_screen")
+    sec.Write(key, mode)
+    sec.Flush()
 end sub

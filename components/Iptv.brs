@@ -81,11 +81,54 @@ function Iptv_PlayUrl(url as string) as string
     return u
 end function
 
-function Iptv_ParseM3u(text as string, lst as object, out as object, epgs as object) as integer
-    lines = text.Split(Chr(10))
-    pending = invalid
-    count = 0
-    lid = Str_Of(lst.id)
+function Iptv_ParseM3u(path as string, lst as object, out as object, epgs as object) as integer
+    fs = CreateObject("roFileSystem")
+    st = fs.Stat(path)
+    if st = invalid or st.size = invalid or st.size = 0 then return -1
+    size = st.size
+    ba = CreateObject("roByteArray")
+    ba.ReadFile(path, 0, 2)
+    if ba.Count() >= 2 and ba[0] = 31 and ba[1] = 139 then return -1
+    state = { pending: invalid, count: 0, seen: false, lid: Str_Of(lst.id), group: L("Sin grupo") }
+    offset = 0
+    chunk = 262144
+    while offset < size and (state.count < Iptv_MaxChannels() or (Vod_Building() and m.vod.total < Vod_MaxItems()))
+        want = chunk
+        if offset + want > size then want = size - offset
+        ba.ReadFile(path, offset, want)
+        n = ba.Count()
+        if n = 0 then exit while
+        cut = n
+        if offset + n < size
+            while cut > 0 and ba[cut - 1] <> 10
+                cut = cut - 1
+            end while
+            if cut = 0 then cut = n
+        end if
+        if cut < n then ba.ReadFile(path, offset, cut)
+        offset = offset + cut
+        Iptv_M3uLines(ba.ToAsciiString().Split(Chr(10)), state, out, epgs)
+    end while
+    if not state.seen then return -1
+    return state.count
+end function
+
+function Iptv_MaxChannels() as integer
+    return 20000
+end function
+
+function Iptv_IsVod(url as string) as boolean
+    low = LCase(url)
+    if Instr(1, low, "/movie/") > 0 or Instr(1, low, "/series/") > 0 then return true
+    q = Instr(1, low, "?")
+    if q > 0 then low = Left(low, q - 1)
+    for each ext in [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".m4v"]
+        if Right(low, Len(ext)) = ext then return true
+    end for
+    return false
+end function
+
+sub Iptv_M3uLines(lines as object, state as object, out as object, epgs as object)
     for each raw in lines
         line = raw.Trim()
         if line = ""
@@ -99,6 +142,7 @@ function Iptv_ParseM3u(text as string, lst as object, out as object, epgs as obj
                 end if
             end for
         else if Left(line, 7) = "#EXTINF"
+            state.seen = true
             pieces = line.Split(Chr(34))
             last = pieces[pieces.Count() - 1]
             comma = Instr(1, last, ",")
@@ -106,24 +150,28 @@ function Iptv_ParseM3u(text as string, lst as object, out as object, epgs as obj
             if comma > 0 then name = Mid(last, comma + 1).Trim()
             tvgName = Iptv_Attr(line, "tvg-name")
             if name = "" then name = tvgName
-            pending = { n: name, l: Iptv_Attr(line, "tvg-logo"), g: Iptv_Attr(line, "group-title"), e: Iptv_Attr(line, "tvg-id"), t: Iptv_Attr(line, "tvg-id") }
-            if pending.e = "" then pending.e = tvgName
+            state.pending = { n: name, l: Iptv_Attr(line, "tvg-logo"), g: Iptv_Attr(line, "group-title"), e: Iptv_Attr(line, "tvg-id"), t: Iptv_Attr(line, "tvg-id") }
+            if state.pending.e = "" then state.pending.e = tvgName
         else if Left(line, 1) = "#"
-            if pending <> invalid and Left(line, 8) = "#EXTGRP:" then pending.g = Mid(line, 9).Trim()
-        else if pending <> invalid
-            pending.u = line
-            key = pending.e
-            if key = "" then key = pending.n
-            pending.k = lid + ":" + key + ":" + count.ToStr()
-            pending.s = lid
-            if pending.g = "" then pending.g = L("Sin grupo")
-            out.Push(pending)
-            pending = invalid
-            count = count + 1
+            if state.pending <> invalid and Left(line, 8) = "#EXTGRP:" then state.pending.g = Mid(line, 9).Trim()
+        else if state.pending <> invalid
+            pending = state.pending
+            state.pending = invalid
+            if Iptv_IsVod(line)
+                if Vod_Building() then Vod_AddM3u(pending, line)
+            else if state.count < Iptv_MaxChannels()
+                pending.u = line
+                key = pending.e
+                if key = "" then key = pending.n
+                pending.k = state.lid + ":" + key + ":" + state.count.ToStr()
+                pending.s = state.lid
+                if pending.g = "" then pending.g = state.group
+                out.Push(pending)
+                state.count = state.count + 1
+            end if
         end if
     end for
-    return count
-end function
+end sub
 
 function Iptv_Xtream(lst as object, out as object, epgs as object) as integer
     base = Iptv_Server(Str_Of(lst.server))
@@ -150,6 +198,7 @@ function Iptv_Xtream(lst as object, out as object, epgs as object) as integer
             if g = invalid or g = "" then g = L("Sin grupo")
             out.Push({ k: lid + ":" + sid, n: Str_Of(s.name), l: Str_Of(s.stream_icon), g: g, e: Str_Of(s.epg_channel_id), t: Str_Of(s.epg_channel_id), s: lid, u: base + "/live/" + Str_Of(lst.user) + "/" + Str_Of(lst.pass) + "/" + sid + ".m3u8" })
             count = count + 1
+            if count >= Iptv_MaxChannels() then exit for
         end if
     end for
     epgs.Push(base + "/xmltv.php?username=" + user + "&password=" + pass)
@@ -163,7 +212,7 @@ function Iptv_Load(force as boolean) as object
         raw = ReadAsciiFile(cache)
         if raw <> ""
             j = ParseJson(raw)
-            if type(j) = "roAssociativeArray" and type(j.channels) = "roArray" and Str_Of(j.sig) = Iptv_Sig(lists) and Abs(CreateObject("roDateTime").AsSeconds() - ToInt(j.at, 0)) < Iptv_Prefs().listHours * 3600
+            if type(j) = "roAssociativeArray" and type(j.channels) = "roArray" and Str_Of(j.sig) = Iptv_Sig(lists) and Abs(CreateObject("roDateTime").AsSeconds() - ToInt(j.at, 0)) < Iptv_Prefs().listHours * 3600 and Vod_Fresh(Iptv_Sig(lists))
                 if type(j.listEpg) = "roAssociativeArray" then WriteAsciiFile("cachefs:/iptv_epgs_" + Iptv_Pid() + ".json", FormatJson(j.listEpg))
                 return { ok: true, channels: j.channels, epgs: j.epgs, errors: [] }
             end if
@@ -173,15 +222,21 @@ function Iptv_Load(force as boolean) as object
     epgs = []
     errors = []
     listEpg = {}
+    Vod_Begin(Iptv_Sig(lists))
     for each lst in lists
         if lst.on <> false
             extra = []
             n = 0
             if Str_Of(lst.type) = "xtream"
                 n = Iptv_Xtream(lst, channels, extra)
+                if n >= 0 then Vod_QueueXtream(lst)
             else
-                r = Iptv_Fetch(Iptv_RawUrl(Str_Of(lst.url)), 90000)
-                if r.code >= 200 and r.code < 300 and Instr(1, r.body, "#EXTINF") > 0 then n = Iptv_ParseM3u(r.body, lst, channels, extra) else n = -1
+                tmp = "cachefs:/iptv_list.m3u"
+                DeleteFile(tmp)
+                code = Iptv_FetchFile(Iptv_RawUrl(Str_Of(lst.url)), tmp, 180000)
+                if code >= 200 and code < 300 then n = Iptv_ParseM3u(tmp, lst, channels, extra) else n = -1
+                DeleteFile(tmp)
+                Dbg_Log("iptv list " + Str_Of(lst.name) + " code=" + code.ToStr() + " channels=" + n.ToStr())
             end if
             if n < 0 then errors.Push(Str_Of(lst.name))
             own = Iptv_GuideUrls(lst, { list: extra })
@@ -198,7 +253,9 @@ function Iptv_Load(force as boolean) as object
     channels = Iptv_Merge(channels)
     WriteAsciiFile("cachefs:/iptv_epgs_" + Iptv_Pid() + ".json", FormatJson(listEpg))
     WriteAsciiFile(cache, FormatJson({ sig: Iptv_Sig(lists), at: CreateObject("roDateTime").AsSeconds(), channels: channels, epgs: epgs, listEpg: listEpg }))
-    return { ok: true, channels: channels, epgs: epgs, errors: errors }
+    vodChanged = false
+    if m.vod.xtream.Count() = 0 then vodChanged = Vod_Finish()
+    return { ok: true, channels: channels, epgs: epgs, errors: errors, vodChanged: vodChanged }
 end function
 
 function Iptv_RawUrl(url as string) as string
@@ -641,46 +698,6 @@ function Iptv_Guide(ids as object, shift = 0 as integer) as object
     return out
 end function
 
-function Iptv_ArtKey(text as string) as string
-    low = LCase(text)
-    pairs = [["á", "a"], ["é", "e"], ["í", "i"], ["ó", "o"], ["ú", "u"], ["ü", "u"], ["ñ", "n"], ["à", "a"], ["è", "e"], ["ç", "c"], ["ã", "a"], ["õ", "o"], ["ê", "e"], ["â", "a"], ["ô", "o"], ["Á", "a"], ["É", "e"], ["Í", "i"], ["Ó", "o"], ["Ú", "u"], ["Ñ", "n"], ["Ü", "u"]]
-    for each pr in pairs
-        low = low.Replace(pr[0], pr[1])
-    end for
-    out = ""
-    space = false
-    for i = 1 to Len(low)
-        ch = Mid(low, i, 1)
-        if (ch >= "a" and ch <= "z") or (ch >= "0" and ch <= "9")
-            if space and out <> "" then out = out + " "
-            out = out + ch
-            space = false
-        else
-            space = true
-        end if
-    end for
-    return out
-end function
-
-function Iptv_ArtQuery(text as string) as string
-    q = text
-    for each mark in ["(", "[", " - ", " | ", ": T", " T1", " T2", " T3", " T4", " T5", " T6", " T7", " T8", " T9", " Temporada", " Season", " Ep.", " Episodio"]
-        at = Instr(1, q, mark)
-        if at > 3 then q = Left(q, at - 1)
-    end for
-    return q.Trim()
-end function
-
-function Iptv_ArtScore(want as string, got as string) as integer
-    if got = "" then return 0
-    if got = want then return 3
-    words = want.Split(" ").Count()
-    if words < 2 and Len(want) < 8 then return 0
-    if Left(got, Len(want) + 1) = want + " " then return 2
-    if Left(want, Len(got) + 1) = got + " " and got.Split(" ").Count() >= 2 then return 1
-    return 0
-end function
-
 function Iptv_Art(titles as object) as object
     out = {}
     key = Key_Tmdb(St_Integrations())
@@ -693,8 +710,8 @@ function Iptv_Art(titles as object) as object
     changed = false
     asked = 0
     for each t in titles
-        q = Iptv_ArtQuery(Str_Of(t))
-        norm = Iptv_ArtKey(q)
+        q = Vod_Query(Str_Of(t))
+        norm = Vod_Key(q)
         if Len(norm) >= 3
             c = cache[norm]
             if type(c) = "roAssociativeArray" and (Str_Of(c.p) <> "" or now - ToInt(c.at, 0) < 259200)
@@ -714,7 +731,7 @@ function Iptv_Art(titles as object) as object
                         if (kind = "movie" or kind = "tv") and Str_Of(r.poster_path) <> ""
                             score = 0
                             for each nm in [Str_Of(r.title), Str_Of(r.name), Str_Of(r.original_title), Str_Of(r.original_name)]
-                                sc = Iptv_ArtScore(norm, Iptv_ArtKey(nm))
+                                sc = Vod_Score(norm, Vod_Key(nm))
                                 if sc > score then score = sc
                             end for
                             if score > bestScore

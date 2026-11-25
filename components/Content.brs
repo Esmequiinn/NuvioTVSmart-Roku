@@ -24,6 +24,7 @@ function Content_Item(row as object, data as object) as object
         watched: Content_Watched(data)
         portrait: Str_Of(data.portrait)
     })
+    if data.gridKey <> invalid then item.addFields({ gridKey: Str_Of(data.gridKey) })
     return item
 end function
 
